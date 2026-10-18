@@ -1,0 +1,189 @@
+import assert from 'node:assert/strict';
+import { searchCompositions } from '../../src/amr/composition.mjs';
+import { inferRelations, traceRelations } from '../../src/amr/inference.mjs';
+const run = (input) => {
+  const iterator = searchCompositions(input);
+  let step;
+  do {
+    step = iterator.next();
+  } while (!step.done);
+  return step.value;
+};
+const facts = [
+  ['ticket-A', 'concerns', 'failure-A'],
+  ['failure-A', 'frequency', '3'],
+  ['ticket-B', 'concerns', 'failure-B'],
+  ['failure-B', 'frequency', '1'],
+  ['payment-team', 'covers', 'payout'],
+  ['failure-A', 'type', 'payout'],
+].map((triple) => ({ triple, sourceIds: [triple[0]] }));
+const rules = [
+  {
+    id: 'frequency',
+    name: 'Three counts as frequent in this test',
+    when: [['?f', 'frequency', '3']],
+    then: [['?f', 'frequent', 'true']],
+  },
+  {
+    id: 'coverage',
+    name: 'Coverage of a failure type',
+    when: [
+      ['?f', 'frequent', 'true'],
+      ['?f', 'type', '?type'],
+      ['?team', 'covers', '?type'],
+    ],
+    then: [['?f', 'handled-by', '?team']],
+  },
+  {
+    id: 'policy',
+    name: 'Recommend the covering team',
+    when: [
+      ['?ticket', 'concerns', '?f'],
+      ['?f', 'handled-by', '?team'],
+    ],
+    then: [
+      ['$recommendation', 'for-ticket', '?ticket'],
+      ['$recommendation', 'team', '?team'],
+    ],
+  },
+];
+const goals = [
+  ['?r', 'for-ticket', 'ticket-A'],
+  ['?r', 'team', '?answer'],
+];
+const input = { facts, rules, goals };
+const full = run(input);
+assert(full.complete, JSON.stringify(full.stats));
+assert(full.proofs.length);
+assert(full.proofs.every((proof) => proof.bindings['?answer'] === 'payment-team'));
+assert(
+  full.proofs.some((proof) => new Set(proof.applications.map((app) => app.ruleId)).size === 3),
+);
+assert.equal(
+  run({
+    ...input,
+    goals: [
+      ['?r', 'for-ticket', 'ticket-B'],
+      ['?r', 'team', '?answer'],
+    ],
+  }).proofs.length,
+  0,
+);
+assert.equal(
+  run({ ...input, rules: rules.filter((rule) => rule.id !== 'policy') }).proofs.length,
+  0,
+);
+const limited = run({ ...input, limits: { maxStates: 2 } });
+assert(!limited.complete);
+assert(limited.frontier.length);
+const resumed = run({ ...input, initial: limited });
+assert(resumed.complete);
+assert(resumed.proofs.length);
+const capped = run({ ...input, limits: { maxChecks: 2 } });
+assert(!capped.complete);
+assert(capped.stats.checks <= 2);
+const cycle = run({
+  facts: [],
+  goals: [['a', 'p', 'b']],
+  rules: [{ id: 'self', when: [['?a', 'p', '?b']], then: [['?a', 'p', '?b']] }],
+  limits: { maxStates: 100, maxDepth: 5 },
+});
+assert.equal(cycle.proofs.length, 0);
+assert(cycle.complete);
+assert(cycle.stats.cycleStops > 0);
+const mutual = run({
+  facts: [],
+  goals: [['?a', 'p', 'b']],
+  rules: [
+    { id: 'p', when: [['?x', 'q', '?y']], then: [['?x', 'p', '?y']] },
+    { id: 'q', when: [['?x', 'p', '?y']], then: [['?x', 'q', '?y']] },
+  ],
+});
+assert(mutual.complete);
+assert.equal(mutual.proofs.length, 0);
+const alternate = run({
+  ...input,
+  facts: [...facts, { triple: ['another-team', 'covers', 'payout'], sourceIds: ['other'] }],
+});
+assert.deepEqual(
+  new Set(alternate.proofs.map((proof) => proof.bindings['?answer'])),
+  new Set(['payment-team', 'another-team']),
+);
+
+const independent = [
+  {
+    id: 'first',
+    name: 'First witness',
+    when: [['a', 'p', 'b']],
+    then: [['a', 'answer', 'b']],
+    sourceIds: ['policy-one'],
+  },
+  {
+    id: 'second',
+    name: 'Second witness',
+    when: [['a', 'q', 'b']],
+    then: [['a', 'answer', 'b']],
+    sourceIds: ['policy-two'],
+  },
+];
+const evidence = [
+  { triple: ['a', 'p', 'b'], sourceIds: ['one'] },
+  { triple: ['a', 'q', 'b'], sourceIds: ['two'] },
+];
+for (const inputs of [evidence, evidence.slice(1)]) {
+  const inferred = inferRelations(inputs, independent),
+    answer = inferred.facts.find((fact) => fact.triple[1] === 'answer');
+  assert(inferred.complete);
+  assert(answer);
+  assert.equal(answer.alternatives?.length ?? 0, inputs.length - 1);
+  assert.deepEqual(
+    new Set(traceRelations(inferred.facts, [answer.id]).ruleIds),
+    new Set(inputs.length === 2 ? ['first', 'second'] : ['second']),
+  );
+}
+assert(!inferRelations([], independent).facts.some((fact) => fact.triple[1] === 'answer'));
+const duplicate = { triple: ['a', 'same', 'b'], sourceIds: ['one'], bindingIds: ['binding-one'] };
+const copies = inferRelations(
+  [duplicate, duplicate, { ...duplicate, sourceIds: ['two'], bindingIds: ['binding-two'] }],
+  [],
+);
+assert.equal(copies.facts.length, 1);
+assert.equal(copies.facts[0].alternatives.length, 1);
+assert.deepEqual(
+  new Set(traceRelations(copies.facts, [copies.facts[0].id]).bindingIds),
+  new Set(['binding-one', 'binding-two']),
+);
+
+// Equivalent triples may have different polarity guards; support is chosen
+// per occurrence, including when a rule is traced through its own premises.
+const shared = ['person', ':instance', 'person'],
+  guard = ['event', ':polarity', 'minus'];
+const guarded = { triple: shared, sourceIds: ['negative'], guards: [JSON.stringify(guard)] };
+const unguarded = { triple: shared, sourceIds: ['positive'] };
+const reading = {
+  id: 'reading',
+  name: 'Read a person',
+  when: [shared],
+  then: [['answer', '@label', 'person']],
+};
+for (const inputs of [
+  [guarded, unguarded],
+  [unguarded, guarded],
+]) {
+  const inference = inferRelations(inputs, [reading]);
+  const answer = inference.facts.find((fact) => fact.triple[0] === 'answer');
+  assert(answer);
+  assert.deepEqual(traceRelations(inference.facts, [answer.id]).sourceIds, ['positive']);
+  assert(run({ facts: inputs, rules: [], goals: [shared] }).proofs.length);
+}
+assert(!inferRelations([guarded], [reading]).facts.some((fact) => fact.triple[0] === 'answer'));
+assert.equal(run({ facts: [guarded], rules: [], goals: [shared] }).proofs.length, 0);
+const negativeReading = { ...reading, when: [shared, guard] };
+const negativeInference = inferRelations(
+  [guarded, { triple: guard, sourceIds: ['negative'] }],
+  [negativeReading],
+);
+assert(negativeInference.facts.some((fact) => fact.triple[0] === 'answer'));
+console.log(
+  'ok bounded composition joins shared bindings, keeps competing answers, resumes and rejects circular support',
+);

@@ -1,0 +1,3030 @@
+{
+  "version": 1,
+  "purpose": "Unedited acquisition evidence; never corpus premises",
+  "entries": [
+    {
+      "text": "What type of business is Tendora?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 33,
+        "linearized": "<AMR>\n(<pointer:0> business\n  :domain (<pointer:1> person\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit> Tendora </lit>))\n  :mod (<pointer:3> type\n    :mod (<pointer:4> amr-unknown)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> business :domain ( <pointer:1> person :wiki - :name ( <pointer:2> name :op1 <lit> Tendora </lit> ) ) :mod ( <pointer:3> type :mod ( <pointer:4> amr-unknown ) ) )</AMR>",
+        "penman": "(z0 / business\n    :domain (z1 / person\n                :wiki -\n                :name (z2 / name\n                          :op1 \"Tendora\"))\n    :mod (z3 / type\n             :mod (z4 / amr-unknown)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "business",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":domain",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":mod",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "type",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":mod",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who sells services online directly to customers?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 32,
+        "linearized": "<AMR>\n(<pointer:0> sell-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> service)\n  :ARG2 (<pointer:3> customer)\n  :medium (<pointer:4> online)\n  :ARG1-of (<pointer:5> direct-02))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> sell-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> service ) :ARG2 ( <pointer:3> customer ) :medium ( <pointer:4> online ) :ARG1-of ( <pointer:5> direct-02 ) )</AMR>",
+        "penman": "(z0 / sell-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / service)\n    :ARG2 (z3 / customer)\n    :medium (z4 / online)\n    :ARG1-of (z5 / direct-02))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "sell-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "service",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":medium",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "online",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z0",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "direct-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Through what channel does Tendora sell services?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 38,
+        "linearized": "<AMR>\n(<pointer:0> sell-01\n  :ARG0 (<pointer:1> company\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit> Tendora </lit>))\n  :ARG1 (<pointer:3> service)\n  :medium (<pointer:4> channel\n    :mod (<pointer:5> amr-unknown)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> sell-01 :ARG0 ( <pointer:1> company :wiki - :name ( <pointer:2> name :op1 <lit> Tendora </lit> ) ) :ARG1 ( <pointer:3> service ) :medium ( <pointer:4> channel :mod ( <pointer:5> amr-unknown ) ) )</AMR>",
+        "penman": "(z0 / sell-01\n    :ARG0 (z1 / company\n              :wiki -\n              :name (z2 / name\n                        :op1 \"Tendora\"))\n    :ARG1 (z3 / service)\n    :medium (z4 / channel\n                :mod (z5 / amr-unknown)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "sell-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "company",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "service",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":medium",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "channel",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":mod",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "What does Tendora sell to customers?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 33,
+        "linearized": "<AMR>\n(<pointer:0> sell-01\n  :ARG0 (<pointer:1> company\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit> Tendora </lit>))\n  :ARG1 (<pointer:3> amr-unknown)\n  :ARG2 (<pointer:4> customer))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> sell-01 :ARG0 ( <pointer:1> company :wiki - :name ( <pointer:2> name :op1 <lit> Tendora </lit> ) ) :ARG1 ( <pointer:3> amr-unknown ) :ARG2 ( <pointer:4> customer ) )</AMR>",
+        "penman": "(z0 / sell-01\n    :ARG0 (z1 / company\n              :wiki -\n              :name (z2 / name\n                        :op1 \"Tendora\"))\n    :ARG1 (z3 / amr-unknown)\n    :ARG2 (z4 / customer))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "sell-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "company",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Which department answers questions about products?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> answer-01\n  :ARG0 (<pointer:1> department\n    :mod (<pointer:2> amr-unknown))\n  :ARG1 (<pointer:3> question-01\n    :ARG1 (<pointer:4> product)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> answer-01 :ARG0 ( <pointer:1> department :mod ( <pointer:2> amr-unknown ) ) :ARG1 ( <pointer:3> question-01 :ARG1 ( <pointer:4> product ) ) )</AMR>",
+        "penman": "(z0 / answer-01\n    :ARG0 (z1 / department\n              :mod (z2 / amr-unknown))\n    :ARG1 (z3 / question-01\n              :ARG1 (z4 / product)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "answer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "department",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":mod",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "question-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "product",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "By whom are product questions answered?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> answer-01\n  :ARG1 (<pointer:1> question-01\n    :ARG1 (<pointer:2> product))\n  :ARG2 (<pointer:3> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> answer-01 :ARG1 ( <pointer:1> question-01 :ARG1 ( <pointer:2> product ) ) :ARG2 ( <pointer:3> amr-unknown ) )</AMR>",
+        "penman": "(z0 / answer-01\n    :ARG1 (z1 / question-01\n              :ARG1 (z2 / product))\n    :ARG2 (z3 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "answer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "question-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "product",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who takes care of customer orders?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> care-03\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> order-02\n    :ARG0 (<pointer:3> customer)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> care-03 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> order-02 :ARG0 ( <pointer:3> customer ) ) )</AMR>",
+        "penman": "(z0 / care-03\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / order-02\n              :ARG0 (z3 / customer)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "care-03",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "order-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who manages product returns?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> manage-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> return-01\n    :ARG1 (<pointer:3> product)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> manage-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> return-01 :ARG1 ( <pointer:3> product ) ) )</AMR>",
+        "penman": "(z0 / manage-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / return-01\n              :ARG1 (z3 / product)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "manage-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "return-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "product",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "How does customer service deal with issues?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> deal-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG2 (<pointer:3> issue-02)\n  :manner (<pointer:4> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> deal-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG2 ( <pointer:3> issue-02 ) :manner ( <pointer:4> amr-unknown ) )</AMR>",
+        "penman": "(z0 / deal-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG2 (z3 / issue-02)\n    :manner (z4 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "deal-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "issue-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":manner",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Which team is responsible for failed payouts?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 30,
+        "linearized": "<AMR>\n(<pointer:0> responsible-01\n  :ARG0 (<pointer:1> amr-unknown\n    :domain (<pointer:2> team))\n  :ARG1 (<pointer:3> pay-out-03\n    :ARG1-of (<pointer:4> fail-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> responsible-01 :ARG0 ( <pointer:1> amr-unknown :domain ( <pointer:2> team ) ) :ARG1 ( <pointer:3> pay-out-03 :ARG1-of ( <pointer:4> fail-01 ) ) )</AMR>",
+        "penman": "(z0 / responsible-01\n    :ARG0 (z1 / amr-unknown\n              :domain (z2 / team))\n    :ARG1 (z3 / pay-out-03\n              :ARG1-of (z4 / fail-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "responsible-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":domain",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "pay-out-03",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "By which team are payments processed?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> process-01\n  :ARG1 (<pointer:1> pay-01)\n  :ARG2 (<pointer:2> team\n    :mod (<pointer:3> amr-unknown)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> process-01 :ARG1 ( <pointer:1> pay-01 ) :ARG2 ( <pointer:2> team :mod ( <pointer:3> amr-unknown ) ) )</AMR>",
+        "penman": "(z0 / process-01\n    :ARG1 (z1 / pay-01)\n    :ARG2 (z2 / team\n              :mod (z3 / amr-unknown)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "process-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "pay-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who handles problems signing into accounts?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> problem\n    :topic (<pointer:3> sign-01\n      :ARG1 (<pointer:4> account))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> problem :topic ( <pointer:3> sign-01 :ARG1 ( <pointer:4> account ) ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / problem\n              :topic (z3 / sign-01\n                         :ARG1 (z4 / account))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "problem",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":topic",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "sign-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who handles problems accessing an account?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> problem\n    :topic (<pointer:3> access-01\n      :ARG1 (<pointer:4> account))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> problem :topic ( <pointer:3> access-01 :ARG1 ( <pointer:4> account ) ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / problem\n              :topic (z3 / access-01\n                         :ARG1 (z4 / account))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "problem",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":topic",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "access-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Does customer service handle billing and account issues?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 41,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> serve-01\n    :ARG2 (<pointer:3> customer))\n  :ARG1 (<pointer:4> and\n    :op1 (<pointer:5> bill-01)\n    :op2 (<pointer:6> issue-02\n      :ARG0 (<pointer:7> account))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> serve-01 :ARG2 ( <pointer:3> customer ) ) :ARG1 ( <pointer:4> and :op1 ( <pointer:5> bill-01 ) :op2 ( <pointer:6> issue-02 :ARG0 ( <pointer:7> account ) ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / serve-01\n              :ARG2 (z3 / customer))\n    :ARG1 (z4 / and\n              :op1 (z5 / bill-01)\n              :op2 (z6 / issue-02\n                       :ARG0 (z7 / account))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "and",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":op1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "bill-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":op2",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "issue-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG0",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Which named services can I buy from Tendora?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 15,
+        "output_tokens": 49,
+        "linearized": "<AMR>\n(<pointer:0> possible-01\n  :ARG1 (<pointer:1> buy-01\n    :ARG0 (<pointer:2> i)\n    :ARG1 (<pointer:3> service\n      :ARG1-of (<pointer:4> name-01)\n      :mod (<pointer:5> amr-unknown))\n    :ARG2 (<pointer:6> company\n      :wiki -\n      :name (<pointer:7> name\n        :op1 <lit> Tendora </lit>))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> possible-01 :ARG1 ( <pointer:1> buy-01 :ARG0 ( <pointer:2> i ) :ARG1 ( <pointer:3> service :ARG1-of ( <pointer:4> name-01 ) :mod ( <pointer:5> amr-unknown ) ) :ARG2 ( <pointer:6> company :wiki - :name ( <pointer:7> name :op1 <lit> Tendora </lit> ) ) ) )</AMR>",
+        "penman": "(z0 / possible-01\n    :ARG1 (z1 / buy-01\n              :ARG0 (z2 / i)\n              :ARG1 (z3 / service\n                        :ARG1-of (z4 / name-01)\n                        :mod (z5 / amr-unknown))\n              :ARG2 (z6 / company\n                        :wiki -\n                        :name (z7 / name\n                                  :op1 \"Tendora\"))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "possible-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "buy-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "i",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "service",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "name-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":mod",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "company",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":name",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z7",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Are customer tickets always urgent?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> urgent\n  :polarity (<pointer:1> amr-unknown)\n  :domain (<pointer:2> ticket\n    :beneficiary (<pointer:3> customer))\n  :time (<pointer:4> always))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> urgent :polarity ( <pointer:1> amr-unknown ) :domain ( <pointer:2> ticket :beneficiary ( <pointer:3> customer ) ) :time ( <pointer:4> always ) )</AMR>",
+        "penman": "(z0 / urgent\n    :polarity (z1 / amr-unknown)\n    :domain (z2 / ticket\n                :beneficiary (z3 / customer))\n    :time (z4 / always))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "urgent",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":domain",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":beneficiary",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":time",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "always",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Does the account team process payments?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> process-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> team\n    :mod (<pointer:3> account))\n  :ARG1 (<pointer:4> pay-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> process-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> team :mod ( <pointer:3> account ) ) :ARG1 ( <pointer:4> pay-01 ) )</AMR>",
+        "penman": "(z0 / process-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / team\n              :mod (z3 / account))\n    :ARG1 (z4 / pay-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "process-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "pay-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who offers human assistance?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 23,
+        "linearized": "<AMR>\n(<pointer:0> offer-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> assist-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:3> human)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> offer-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> assist-01 :ARG0 <pointer:1> :ARG1 ( <pointer:3> human ) ) )</AMR>",
+        "penman": "(z0 / offer-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / assist-01\n              :ARG0 z1\n              :ARG1 (z3 / human)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "offer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "assist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "human",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who shapes the digital work?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> shape-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> work-01\n    :mod (<pointer:3> digital)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> shape-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> work-01 :mod ( <pointer:3> digital ) ) )</AMR>",
+        "penman": "(z0 / shape-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / work-01\n              :mod (z3 / digital)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "shape-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "work-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "digital",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "What does the programmer use to shape digital work?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 15,
+        "output_tokens": 39,
+        "linearized": "<AMR>\n(<pointer:0> use-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> program-01))\n  :ARG1 (<pointer:3> amr-unknown)\n  :ARG2 (<pointer:4> shape-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:5> work-01\n      :mod (<pointer:6> digital))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> use-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> program-01 ) ) :ARG1 ( <pointer:3> amr-unknown ) :ARG2 ( <pointer:4> shape-01 :ARG0 <pointer:1> :ARG1 ( <pointer:5> work-01 :mod ( <pointer:6> digital ) ) ) )</AMR>",
+        "penman": "(z0 / use-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / program-01))\n    :ARG1 (z3 / amr-unknown)\n    :ARG2 (z4 / shape-01\n              :ARG0 z1\n              :ARG1 (z5 / work-01\n                        :mod (z6 / digital))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "use-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "program-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "shape-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "work-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":mod",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "digital",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "In touchable making, what role does the intelligence play?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 17,
+        "output_tokens": 32,
+        "linearized": "<AMR>\n(<pointer:0> play-02\n  :ARG0 (<pointer:1> intelligence)\n  :ARG1 (<pointer:2> role\n    :mod (<pointer:3> amr-unknown))\n  :topic (<pointer:4> make-01\n    :ARG1-of (<pointer:5> possible-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> play-02 :ARG0 ( <pointer:1> intelligence ) :ARG1 ( <pointer:2> role :mod ( <pointer:3> amr-unknown ) ) :topic ( <pointer:4> make-01 :ARG1-of ( <pointer:5> possible-01 ) ) )</AMR>",
+        "penman": "(z0 / play-02\n    :ARG0 (z1 / intelligence)\n    :ARG1 (z2 / role\n              :mod (z3 / amr-unknown))\n    :topic (z4 / make-01\n               :ARG1-of (z5 / possible-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "play-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "intelligence",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "role",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":topic",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "make-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "possible-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "What do simulations rehearse?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 24,
+        "linearized": "<AMR>\n(<pointer:0> rehearse-01\n  :ARG0 (<pointer:1> thing\n    :ARG1-of (<pointer:2> simulate-01))\n  :ARG1 (<pointer:3> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> rehearse-01 :ARG0 ( <pointer:1> thing :ARG1-of ( <pointer:2> simulate-01 ) ) :ARG1 ( <pointer:3> amr-unknown ) )</AMR>",
+        "penman": "(z0 / rehearse-01\n    :ARG0 (z1 / thing\n              :ARG1-of (z2 / simulate-01))\n    :ARG1 (z3 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "rehearse-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "simulate-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "What is protected by a refusal?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> protect-01\n  :ARG0 (<pointer:1> refuse-01)\n  :ARG1 (<pointer:2> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> protect-01 :ARG0 ( <pointer:1> refuse-01 ) :ARG1 ( <pointer:2> amr-unknown ) )</AMR>",
+        "penman": "(z0 / protect-01\n    :ARG0 (z1 / refuse-01)\n    :ARG1 (z2 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "protect-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "refuse-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "What does a receipt record?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> record-01\n  :ARG0 (<pointer:1> receipt)\n  :ARG1 (<pointer:2> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> record-01 :ARG0 ( <pointer:1> receipt ) :ARG1 ( <pointer:2> amr-unknown ) )</AMR>",
+        "penman": "(z0 / record-01\n    :ARG0 (z1 / receipt)\n    :ARG1 (z2 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "record-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "receipt",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who recognizes intention in the resulting design?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 27,
+        "linearized": "<AMR>\n(<pointer:0> recognize-02\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> intend-01)\n  :ARG2 (<pointer:3> design\n    :ARG1-of (<pointer:4> result-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> recognize-02 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> intend-01 ) :ARG2 ( <pointer:3> design :ARG1-of ( <pointer:4> result-01 ) ) )</AMR>",
+        "penman": "(z0 / recognize-02\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / intend-01)\n    :ARG2 (z3 / design\n              :ARG1-of (z4 / result-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "recognize-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "intend-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "design",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "result-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Where does the programmer recognize intention?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 33,
+        "linearized": "<AMR>\n(<pointer:0> recognize-02\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> program-01))\n  :ARG1 (<pointer:3> thing\n    :ARG1-of (<pointer:4> intend-01))\n  :location (<pointer:5> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> recognize-02 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> program-01 ) ) :ARG1 ( <pointer:3> thing :ARG1-of ( <pointer:4> intend-01 ) ) :location ( <pointer:5> amr-unknown ) )</AMR>",
+        "penman": "(z0 / recognize-02\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / program-01))\n    :ARG1 (z3 / thing\n              :ARG1-of (z4 / intend-01))\n    :location (z5 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "recognize-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "program-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "intend-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":location",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "What does the programmer discern in the resulting design?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 15,
+        "output_tokens": 34,
+        "linearized": "<AMR>\n(<pointer:0> discern-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> program-01))\n  :ARG1 (<pointer:3> amr-unknown)\n  :ARG2 (<pointer:4> design-01\n    :ARG1-of (<pointer:5> result-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> discern-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> program-01 ) ) :ARG1 ( <pointer:3> amr-unknown ) :ARG2 ( <pointer:4> design-01 :ARG1-of ( <pointer:5> result-01 ) ) )</AMR>",
+        "penman": "(z0 / discern-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / program-01))\n    :ARG1 (z3 / amr-unknown)\n    :ARG2 (z4 / design-01\n              :ARG1-of (z5 / result-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "discern-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "program-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "design-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "result-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who probes the digital work with a question and makes a consequential choice?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 19,
+        "output_tokens": 45,
+        "linearized": "<AMR>\n(<pointer:0> and\n  :op1 (<pointer:1> probe-01\n    :ARG0 (<pointer:2> amr-unknown)\n    :ARG1 (<pointer:3> work-01\n      :mod (<pointer:4> digital))\n    :ARG2 (<pointer:5> question-01))\n  :op2 (<pointer:6> choose-01\n    :ARG0 <pointer:2>\n    :ARG1-of (<pointer:7> consequential-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> and :op1 ( <pointer:1> probe-01 :ARG0 ( <pointer:2> amr-unknown ) :ARG1 ( <pointer:3> work-01 :mod ( <pointer:4> digital ) ) :ARG2 ( <pointer:5> question-01 ) ) :op2 ( <pointer:6> choose-01 :ARG0 <pointer:2> :ARG1-of ( <pointer:7> consequential-01 ) ) )</AMR>",
+        "penman": "(z0 / and\n    :op1 (z1 / probe-01\n             :ARG0 (z2 / amr-unknown)\n             :ARG1 (z3 / work-01\n                       :mod (z4 / digital))\n             :ARG2 (z5 / question-01))\n    :op2 (z6 / choose-01\n             :ARG0 z2\n             :ARG1-of (z7 / consequential-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "and",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":op1",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "probe-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "work-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":mod",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "digital",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "question-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":op2",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "choose-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":ARG1",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "consequential-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Is a boundary safeguarded by a refusal?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> safeguard-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> refuse-01)\n  :ARG1 (<pointer:3> boundary))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> safeguard-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> refuse-01 ) :ARG1 ( <pointer:3> boundary ) )</AMR>",
+        "penman": "(z0 / safeguard-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / refuse-01)\n    :ARG1 (z3 / boundary))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "safeguard-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "refuse-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "boundary",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Do rehearsed possibilities count as actual effects?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 44,
+        "linearized": "<AMR>\n(<pointer:0> count-04\n  :polarity (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> thing\n    :ARG1-of (<pointer:3> possible-01)\n    :ARG1-of (<pointer:4> rehearse-01))\n  :prep-as (<pointer:5> affect-01\n    :ARG1-of (<pointer:6> actual-02)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> count-04 :polarity ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> thing :ARG1-of ( <pointer:3> possible-01 ) :ARG1-of ( <pointer:4> rehearse-01 ) ) : prep-as ( <pointer:5> affect-01 :ARG1-of ( <pointer:6> actual-02 ) ) )</AMR>",
+        "penman": "(z0 / count-04\n    :polarity (z1 / amr-unknown)\n    :ARG1 (z2 / thing\n              :ARG1-of (z3 / possible-01)\n              :ARG1-of (z4 / rehearse-01))\n    :prep-as (z5 / affect-01\n                 :ARG1-of (z6 / actual-02)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "count-04",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "possible-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "rehearse-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":prep-as",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "affect-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "actual-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Does a receipt prove causation?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> prove-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> receipt)\n  :ARG1 (<pointer:3> cause-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> prove-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> receipt ) :ARG1 ( <pointer:3> cause-01 ) )</AMR>",
+        "penman": "(z0 / prove-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / receipt)\n    :ARG1 (z3 / cause-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "prove-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "receipt",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "cause-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Do gestures form a mandatory pipeline?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 28,
+        "linearized": "<AMR>\n(<pointer:0> form-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> gesture-01)\n  :ARG1 (<pointer:3> pipeline\n    :ARG1-of (<pointer:4> mandate-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> form-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> gesture-01 ) :ARG1 ( <pointer:3> pipeline :ARG1-of ( <pointer:4> mandate-01 ) ) )</AMR>",
+        "penman": "(z0 / form-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / gesture-01)\n    :ARG1 (z3 / pipeline\n              :ARG1-of (z4 / mandate-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "form-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "gesture-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "pipeline",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "mandate-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Does reachability give authority to alter the whole design?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 16,
+        "output_tokens": 41,
+        "linearized": "<AMR>\n(<pointer:0> give-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> possible-01\n    :ARG1 (<pointer:3> reach-01))\n  :ARG1 (<pointer:4> authority\n    :purpose (<pointer:5> alter-01\n      :ARG1 (<pointer:6> design-01\n        :mod (<pointer:7> whole)))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> give-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> possible-01 :ARG1 ( <pointer:3> reach-01 ) ) :ARG1 ( <pointer:4> authority :purpose ( <pointer:5> alter-01 :ARG1 ( <pointer:6> design-01 :mod ( <pointer:7> whole ) ) ) ) )</AMR>",
+        "penman": "(z0 / give-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / possible-01\n              :ARG1 (z3 / reach-01))\n    :ARG1 (z4 / authority\n              :purpose (z5 / alter-01\n                           :ARG1 (z6 / design-01\n                                     :mod (z7 / whole)))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "give-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "possible-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "reach-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "authority",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":purpose",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "alter-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "design-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":mod",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "whole",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Can material resist expectation?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> possible-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> resist-01\n    :ARG0 (<pointer:3> material)\n    :ARG1 (<pointer:4> expect-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> possible-01 :polarity ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> resist-01 :ARG0 ( <pointer:3> material ) :ARG1 ( <pointer:4> expect-01 ) ) )</AMR>",
+        "penman": "(z0 / possible-01\n    :polarity (z1 / amr-unknown)\n    :ARG1 (z2 / resist-01\n              :ARG0 (z3 / material)\n              :ARG1 (z4 / expect-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "possible-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "resist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "material",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "expect-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Which safety conditions govern the digital work?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 32,
+        "linearized": "<AMR>\n(<pointer:0> govern-01\n  :ARG0 (<pointer:1> amr-unknown\n    :ARG2-of (<pointer:2> condition-01\n      :ARG1 (<pointer:3> safe-01)))\n  :ARG1 (<pointer:4> work-01\n    :mod (<pointer:5> digital)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> govern-01 :ARG0 ( <pointer:1> amr-unknown :ARG2-of ( <pointer:2> condition-01 :ARG1 ( <pointer:3> safe-01 ) ) ) :ARG1 ( <pointer:4> work-01 :mod ( <pointer:5> digital ) ) )</AMR>",
+        "penman": "(z0 / govern-01\n    :ARG0 (z1 / amr-unknown\n              :ARG2-of (z2 / condition-01\n                           :ARG1 (z3 / safe-01)))\n    :ARG1 (z4 / work-01\n              :mod (z5 / digital)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "govern-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG2",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "condition-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "safe-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "work-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":mod",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "digital",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Who is protected by a refusal?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> protect-01\n  :ARG0 (<pointer:1> refuse-01)\n  :ARG1 (<pointer:2> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> protect-01 :ARG0 ( <pointer:1> refuse-01 ) :ARG1 ( <pointer:2> amr-unknown ) )</AMR>",
+        "penman": "(z0 / protect-01\n    :ARG0 (z1 / refuse-01)\n    :ARG1 (z2 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "protect-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "refuse-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    },
+    {
+      "text": "Does material resist expectation?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> resist-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> material)\n  :ARG1 (<pointer:3> expect-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> resist-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> material ) :ARG1 ( <pointer:3> expect-01 ) )</AMR>",
+        "penman": "(z0 / resist-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / material)\n    :ARG1 (z3 / expect-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "resist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "material",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "expect-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:04:00.449Z",
+        "manifestHash": "b8c160abe3e0f29041ccd73629f91961d88632f169fc1682838b998d0f768607"
+      }
+    }
+  ]
+}

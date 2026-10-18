@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tendora-semcat"
+version = "0.4.0"
+description = "Bounded JSON adapter for the pinned Tendora SEMCAT runtime"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+dependencies = ["semcat-runtime @ https://github.com/mirzahusadzic/semcat/archive/e00a02b954e8d6baf3e362844da4e9ae6509efc9.tar.gz#sha256=58e372b36e74632e7a3353951c2d5b5f3e7035ce4a7d0caeab2c9a879cea7fff"]
+
+[project.scripts]
+semcat = "semcat_bridge:main"
+
+[tool.setuptools]
+packages = []
+py-modules = ["semcat_bridge", "semcat_provenance"]
+include-package-data = false
+
+[tool.setuptools.data-files]
+"share/tendora-semcat" = ["UPSTREAM.json", "SOURCE.json", "README.md", "pyproject.toml", "LICENSE"]

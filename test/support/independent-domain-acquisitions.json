@@ -1,0 +1,666 @@
+{
+  "version": 1,
+  "purpose": "Unedited acquisition evidence; never corpus premises",
+  "entries": [
+    {
+      "text": "The curator catalogs manuscripts.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 30,
+        "linearized": "<AMR>\n(<pointer:0> catalogue-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> have-org-role-91\n      :ARG2 (<pointer:3> curmudgeon)))\n  :ARG1 (<pointer:4> document))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> catalogue-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> have-org-role-91 :ARG2 ( <pointer:3> curmudgeon ) ) ) :ARG1 ( <pointer:4> document ) )</AMR>",
+        "penman": "(z0 / catalogue-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / have-org-role-91\n                           :ARG2 (z3 / curmudgeon)))\n    :ARG1 (z4 / document))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "catalogue-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "have-org-role-91",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "curmudgeon",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "document",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "The conservator repairs damaged bindings.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 29,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> conserve-01))\n  :ARG1 (<pointer:3> binding\n    :ARG1-of (<pointer:4> damage-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> conserve-01 ) ) :ARG1 ( <pointer:3> binding :ARG1-of ( <pointer:4> damage-01 ) ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / conserve-01))\n    :ARG1 (z3 / binding\n              :ARG1-of (z4 / damage-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "conserve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "binding",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "damage-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "The archive stores manuscripts in a climate-controlled vault.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 16,
+        "output_tokens": 32,
+        "linearized": "<AMR>\n(<pointer:0> store-01\n  :ARG0 (<pointer:1> archive)\n  :ARG1 (<pointer:2> document)\n  :ARG2 (<pointer:3> vault\n    :ARG1-of (<pointer:4> control-01\n      :ARG0 (<pointer:5> climate))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> store-01 :ARG0 ( <pointer:1> archive ) :ARG1 ( <pointer:2> document ) :ARG2 ( <pointer:3> vault :ARG1-of ( <pointer:4> control-01 :ARG0 ( <pointer:5> climate ) ) ) )</AMR>",
+        "penman": "(z0 / store-01\n    :ARG0 (z1 / archive)\n    :ARG1 (z2 / document)\n    :ARG2 (z3 / vault\n              :ARG1-of (z4 / control-01\n                           :ARG0 (z5 / climate))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "store-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "archive",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "document",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "vault",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "control-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG0",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "climate",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "Who makes a catalog of manuscripts?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 22,
+        "linearized": "<AMR>\n(<pointer:0> make-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> catalogue-01\n    :ARG1 (<pointer:3> manuscript)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> make-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> catalogue-01 :ARG1 ( <pointer:3> manuscript ) ) )</AMR>",
+        "penman": "(z0 / make-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / catalogue-01\n              :ARG1 (z3 / manuscript)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "make-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "catalogue-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "manuscript",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "By whom are damaged bindings repaired?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 28,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> thing\n    :ARG3-of (<pointer:3> bind-01)\n    :ARG1-of (<pointer:4> damage-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> thing :ARG3-of ( <pointer:3> bind-01 ) :ARG1-of ( <pointer:4> damage-01 ) ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / thing\n              :ARG3-of (z3 / bind-01)\n              :ARG1-of (z4 / damage-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG3",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "bind-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "damage-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "Where does the archive keep manuscripts?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> keep-01\n  :ARG0 (<pointer:1> archive)\n  :ARG1 (<pointer:2> document)\n  :location (<pointer:3> amr-unknown))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> keep-01 :ARG0 ( <pointer:1> archive ) :ARG1 ( <pointer:2> document ) :location ( <pointer:3> amr-unknown ) )</AMR>",
+        "penman": "(z0 / keep-01\n    :ARG0 (z1 / archive)\n    :ARG1 (z2 / document)\n    :location (z3 / amr-unknown))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "keep-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "archive",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "document",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":location",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "Are damaged bindings repaired by the conservator?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 40,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> person\n    :ARG0-of (<pointer:3> conserve-01))\n  :ARG1 (<pointer:4> thing\n    :ARG3-of (<pointer:5> bind-01)\n    :ARG1-of (<pointer:6> damage-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> person :ARG0-of ( <pointer:3> conserve-01 ) ) :ARG1 ( <pointer:4> thing :ARG3-of ( <pointer:5> bind-01 ) :ARG1-of ( <pointer:6> damage-01 ) ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / person\n              :ARG0-of (z3 / conserve-01))\n    :ARG1 (z4 / thing\n              :ARG3-of (z5 / bind-01)\n              :ARG1-of (z6 / damage-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "conserve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG3",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "bind-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "damage-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    },
+    {
+      "text": "Does the curator repair damaged bindings?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 41,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> person\n    :ARG0-of (<pointer:3> curate-01))\n  :ARG1 (<pointer:4> thing\n    :ARG3-of (<pointer:5> bind-01)\n    :ARG1-of (<pointer:6> damage-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> person :ARG0-of ( <pointer:3> curate-01 ) ) :ARG1 ( <pointer:4> thing :ARG3-of ( <pointer:5> bind-01 ) :ARG1-of ( <pointer:6> damage-01 ) ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / person\n              :ARG0-of (z3 / curate-01))\n    :ARG1 (z4 / thing\n              :ARG3-of (z5 / bind-01)\n              :ARG1-of (z6 / damage-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "curate-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG3",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "bind-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "damage-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      },
+      "origin": {
+        "kind": "live-evaluation-acquisition",
+        "at": "2026-10-07T21:06:46.316Z",
+        "manifestHash": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+      }
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "name": "Independent archive domain",
+  "createdAt": "2026-10-07",
+  "policy": "A newly authored third domain with three ordinary source sentences. Questions, expected answers and evidence labels are held out from source paraphrase generation. No author repairs or additional domain premises are permitted during evaluation.",
+  "projects": [
+    {
+      "name": "archive",
+      "sourceDirectory": "test/support/evaluation-archive",
+      "cases": [
+        {
+          "id": "catalog-nominalization",
+          "question": "Who makes a catalog of manuscripts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["curator", "curate-01"],
+            "evidenceAll": ["The curator catalogs manuscripts."]
+          }
+        },
+        {
+          "id": "binding-passive",
+          "question": "By whom are damaged bindings repaired?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["conservator", "conserve-01"],
+            "evidenceAll": ["The conservator repairs damaged bindings."]
+          }
+        },
+        {
+          "id": "storage-paraphrase",
+          "question": "Where does the archive keep manuscripts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["vault"],
+            "evidenceAll": ["The archive stores manuscripts in a climate-controlled vault."]
+          }
+        },
+        {
+          "id": "binding-yesno",
+          "question": "Are damaged bindings repaired by the conservator?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "Yes",
+            "evidenceAll": ["The conservator repairs damaged bindings."]
+          }
+        },
+        {
+          "id": "wrong-repairer",
+          "question": "Does the curator repair damaged bindings?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Repairs are attributed to the conservator; no assertion says that the curator performs them."
+          }
+        }
+      ]
+    }
+  ]
+}

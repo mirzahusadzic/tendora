@@ -1,0 +1,363 @@
+{
+  "version": 1,
+  "name": "Current authored projects: independent inquiries",
+  "createdAt": "2026-10-07",
+  "policy": "Questions and expectations are evaluation material only. Source expansion may read the authored corpus, never these questions, expected answers or evidence labels. No author repairs or new domain premises are permitted during a run.",
+  "projects": [
+    {
+      "name": "tendora-customer-service",
+      "scopePlacementId": "2c3097ae-a6b5-4b83-bb47-07056ed241d0",
+      "cases": [
+        {
+          "id": "business-type",
+          "question": "What type of business is Tendora?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["online"],
+            "evidenceAll": ["What kind of company is Tendora? Answer: An online store."]
+          }
+        },
+        {
+          "id": "online-seller",
+          "question": "Who sells services online directly to customers?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["Tendora"],
+            "evidenceAll": ["Who sells services directly to customers over the internet?"]
+          }
+        },
+        {
+          "id": "sales-channel",
+          "question": "Through what channel does Tendora sell services?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["internet", "online"],
+            "evidenceAll": ["Who sells services directly to customers over the internet?"]
+          }
+        },
+        {
+          "id": "sold-material",
+          "question": "What does Tendora sell to customers?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["service"],
+            "evidenceAll": ["Who sells services directly to customers over the internet?"]
+          }
+        },
+        {
+          "id": "product-department",
+          "question": "Which department answers questions about products?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["customer service", "service"],
+            "evidenceAll": ["Who answers product questions?"]
+          }
+        },
+        {
+          "id": "product-passive",
+          "question": "By whom are product questions answered?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["customer service", "service"],
+            "evidenceAll": ["Who answers product questions?"]
+          }
+        },
+        {
+          "id": "orders-paraphrase",
+          "question": "Who takes care of customer orders?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["customer service", "service"],
+            "evidenceAll": ["Are customer orders managed by customer service?"]
+          }
+        },
+        {
+          "id": "returns-active",
+          "question": "Who manages product returns?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["customer service", "service"],
+            "evidenceAll": ["Are product returns managed by customer service?"]
+          }
+        },
+        {
+          "id": "issue-method",
+          "question": "How does customer service deal with issues?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["ticket"],
+            "evidenceAll": ["What does customer service use to handle issues?"]
+          }
+        },
+        {
+          "id": "payout-responsibility",
+          "question": "Which team is responsible for failed payouts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["billing", "bill-01"],
+            "evidenceAll": ["Who handles payout failures?"]
+          }
+        },
+        {
+          "id": "payments-passive",
+          "question": "By which team are payments processed?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["billing", "bill-01"],
+            "evidenceAll": ["Who processes payments?"]
+          }
+        },
+        {
+          "id": "login-paraphrase",
+          "question": "Who handles problems signing into accounts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["account"],
+            "evidenceAll": ["Does the account team handle login failures?"]
+          }
+        },
+        {
+          "id": "access-paraphrase",
+          "question": "Who handles problems accessing an account?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["account"],
+            "evidenceAll": ["Does the account team handle account access problems?"]
+          }
+        },
+        {
+          "id": "billing-account-conjunction",
+          "question": "Does customer service handle billing and account issues?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "Yes",
+            "evidenceAll": ["What does customer service handle?"]
+          }
+        },
+        {
+          "id": "unspecified-service-products",
+          "question": "Which named services can I buy from Tendora?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The corpus states that services are sold but does not name the service products."
+          }
+        },
+        {
+          "id": "unwarranted-urgency",
+          "question": "Are customer tickets always urgent?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Urgency occurs in an antecedent, with no universal urgency premise."
+          }
+        },
+        {
+          "id": "wrong-payment-team",
+          "question": "Does the account team process payments?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Payment processing is attributed to the billing team; no exclusive negative or account-team assertion is supplied."
+          }
+        },
+        {
+          "id": "ungrounded-human-assistance",
+          "question": "Who offers human assistance?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Assistance policies require an actual qualifying ticket and routing; the current project contains no ticket case."
+          }
+        }
+      ]
+    },
+    {
+      "name": "the-hand-remains",
+      "scopePlacementId": "topology:B.touchable::face",
+      "cases": [
+        {
+          "id": "shaping-actor",
+          "question": "Who shapes the digital work?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["programmer", "program-01"],
+            "evidenceAll": ["The programmer shapes digital work through the intelligence."]
+          }
+        },
+        {
+          "id": "shaping-means",
+          "question": "What does the programmer use to shape digital work?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["intelligence"],
+            "evidenceAll": ["The programmer shapes digital work through the intelligence."]
+          }
+        },
+        {
+          "id": "intelligence-role",
+          "question": "In touchable making, what role does the intelligence play?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["workbench"],
+            "evidenceAll": ["The intelligence acts as a workbench in touchable making."]
+          }
+        },
+        {
+          "id": "simulation-object",
+          "question": "What do simulations rehearse?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["possibil", "possible-01"],
+            "evidenceAll": ["A simulation rehearses possibilities in the digital work."]
+          }
+        },
+        {
+          "id": "refusal-passive",
+          "question": "What is protected by a refusal?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["boundary"],
+            "evidenceAll": ["A refusal protects a boundary."]
+          }
+        },
+        {
+          "id": "receipt-object",
+          "question": "What does a receipt record?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["thread", "intention", "consequence", "recognition"],
+            "evidenceAll": ["A receipt records"]
+          }
+        },
+        {
+          "id": "recognition-actor",
+          "question": "Who recognizes intention in the resulting design?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["programmer", "program-01"],
+            "evidenceAll": ["The programmer recognizes intention in the resulting design."]
+          }
+        },
+        {
+          "id": "recognition-location",
+          "question": "Where does the programmer recognize intention?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["design"],
+            "evidenceAll": ["The programmer recognizes intention in"]
+          }
+        },
+        {
+          "id": "recognition-lexical",
+          "question": "What does the programmer discern in the resulting design?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["intention", "intend-01"],
+            "evidenceAll": ["The programmer recognizes intention in the resulting design."]
+          }
+        },
+        {
+          "id": "cross-sentence-programmer",
+          "question": "Who probes the digital work with a question and makes a consequential choice?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": ["programmer", "program-01"],
+            "evidenceAll": [
+              "The programmer probes the digital work with a question.",
+              "The programmer makes a consequential choice."
+            ]
+          }
+        },
+        {
+          "id": "refusal-lexical",
+          "question": "Is a boundary safeguarded by a refusal?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "Yes",
+            "evidenceAll": ["A refusal protects a boundary."]
+          }
+        },
+        {
+          "id": "simulation-negative",
+          "question": "Do rehearsed possibilities count as actual effects?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": ["Rehearsed possibilities are not actual effects."]
+          }
+        },
+        {
+          "id": "receipt-negative",
+          "question": "Does a receipt prove causation?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": ["without proving causation"]
+          }
+        },
+        {
+          "id": "pipeline-negative",
+          "question": "Do gestures form a mandatory pipeline?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": ["These gestures do not form a mandatory pipeline."]
+          }
+        },
+        {
+          "id": "authority-negative",
+          "question": "Does reachability give authority to alter the whole design?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": ["Reachability does not establish authority to alter the whole design."]
+          }
+        },
+        {
+          "id": "modal-resistance",
+          "question": "Can material resist expectation?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "Yes",
+            "evidenceAll": ["Material can resist expectation and reopen inquiry."]
+          }
+        },
+        {
+          "id": "unspecified-safety",
+          "question": "Which safety conditions govern the digital work?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Concrete safety conditions are explicitly unspecified."
+          }
+        },
+        {
+          "id": "unspecified-protected-party",
+          "question": "Who is protected by a refusal?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The protected party is explicitly unspecified; protecting a boundary does not identify a person."
+          }
+        },
+        {
+          "id": "modal-not-actual",
+          "question": "Does material resist expectation?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The corpus asserts possibility, not an actual occurrence of resistance."
+          }
+        },
+        {
+          "id": "original-compound",
+          "question": "Did programmer recognized their intention in design of the workbench and interraction with the touchable interface?",
+          "expected": {
+            "kind": "partial",
+            "supportedEvidence": ["The programmer recognizes intention in the resulting design."],
+            "unresolved": [
+              "Whether the recognized intention belongs to the programmer",
+              "Whether the resulting design is the design of the workbench",
+              "Whether recognition occurs during interaction with the touchable interface"
+            ],
+            "reason": "The complete conjunction is not established. Complete assessment must locate the supported recognition relation and the unresolved connections, retaining the original acquisition."
+          }
+        }
+      ]
+    }
+  ]
+}

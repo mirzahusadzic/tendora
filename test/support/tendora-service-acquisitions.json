@@ -1,0 +1,2210 @@
+{
+  "startedAt": "2026-10-12T21:02:40.558Z",
+  "completedAt": "2026-10-12T21:02:55.248Z",
+  "entries": [
+    {
+      "text": "Tendora is an online store.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 28,
+        "linearized": "<AMR>\n(<pointer:0> store\n  :mod (<pointer:1> online)\n  :domain (<pointer:2> company\n    :wiki -\n    :name (<pointer:3> name\n      :op1 <lit> Tendora </lit>)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> store :mod ( <pointer:1> online ) :domain ( <pointer:2> company :wiki - :name ( <pointer:3> name :op1 <lit> Tendora </lit> ) ) )</AMR>",
+        "penman": "(z0 / store\n    :mod (z1 / online)\n    :domain (z2 / company\n                :wiki -\n                :name (z3 / name\n                          :op1 \"Tendora\")))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "store",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":mod",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "online",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":domain",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "company",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":name",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Tendora sells services directly to customers over the internet.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 17,
+        "output_tokens": 44,
+        "linearized": "<AMR>\n(<pointer:0> sell-01\n  :ARG0 (<pointer:1> company\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit> Tendora </lit>))\n  :ARG1 (<pointer:3> service)\n  :ARG2 (<pointer:4> customer)\n  :ARG1-of (<pointer:5> direct-02)\n  :medium (<pointer:6> internet))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> sell-01 :ARG0 ( <pointer:1> company :wiki - :name ( <pointer:2> name :op1 <lit> Tendora </lit> ) ) :ARG1 ( <pointer:3> service ) :ARG2 ( <pointer:4> customer ) :ARG1-of ( <pointer:5> direct-02 ) :medium ( <pointer:6> internet ) )</AMR>",
+        "penman": "(z0 / sell-01\n    :ARG0 (z1 / company\n              :wiki -\n              :name (z2 / name\n                        :op1 \"Tendora\"))\n    :ARG1 (z3 / service)\n    :ARG2 (z4 / customer)\n    :ARG1-of (z5 / direct-02)\n    :medium (z6 / internet))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "sell-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "company",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "service",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z0",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "direct-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":medium",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "internet",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service provides general assistance.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 22,
+        "linearized": "<AMR>\n(<pointer:0> assist-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1-of (<pointer:3> general-02))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> assist-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1-of ( <pointer:3> general-02 ) )</AMR>",
+        "penman": "(z0 / assist-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1-of (z3 / general-02))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "assist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z0",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "general-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service uses customer tickets to handle issues.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 35,
+        "linearized": "<AMR>\n(<pointer:0> use-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> ticket\n    :poss <pointer:2>)\n  :ARG2 (<pointer:4> handle-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:5> issue-02)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> use-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> ticket :poss <pointer:2> ) :ARG2 ( <pointer:4> handle-01 :ARG0 <pointer:1> :ARG1 ( <pointer:5> issue-02 ) ) )</AMR>",
+        "penman": "(z0 / use-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / ticket\n              :poss z2)\n    :ARG2 (z4 / handle-01\n              :ARG0 z1\n              :ARG1 (z5 / issue-02)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "use-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":poss",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "issue-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service answers product questions.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> answer-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> question-01\n    :ARG1 (<pointer:4> product)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> answer-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> question-01 :ARG1 ( <pointer:4> product ) ) )</AMR>",
+        "penman": "(z0 / answer-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / question-01\n              :ARG1 (z4 / product)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "answer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "question-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "product",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service manages customer orders.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 23,
+        "linearized": "<AMR>\n(<pointer:0> manage-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> order-02\n    :ARG0 <pointer:2>))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> manage-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> order-02 :ARG0 <pointer:2> ) )</AMR>",
+        "penman": "(z0 / manage-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / order-02\n              :ARG0 z2))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "manage-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "order-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service manages product returns.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> manage-01\n  :ARG0 (<pointer:1> service\n    :mod (<pointer:2> customer))\n  :ARG1 (<pointer:3> return-02\n    :ARG1 (<pointer:4> product)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> manage-01 :ARG0 ( <pointer:1> service :mod ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> return-02 :ARG1 ( <pointer:4> product ) ) )</AMR>",
+        "penman": "(z0 / manage-01\n    :ARG0 (z1 / service\n              :mod (z2 / customer))\n    :ARG1 (z3 / return-02\n              :ARG1 (z4 / product)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "manage-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "service",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":mod",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "return-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "product",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service handles billing issues.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> issue-02\n    :ARG0 (<pointer:4> bill-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> issue-02 :ARG0 ( <pointer:4> bill-01 ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / issue-02\n              :ARG0 (z4 / bill-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "issue-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "bill-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The billing team processes payments.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 22,
+        "linearized": "<AMR>\n(<pointer:0> process-01\n  :ARG0 (<pointer:1> team\n    :ARG0-of (<pointer:2> bill-01))\n  :ARG1 (<pointer:3> pay-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> process-01 :ARG0 ( <pointer:1> team :ARG0-of ( <pointer:2> bill-01 ) ) :ARG1 ( <pointer:3> pay-01 ) )</AMR>",
+        "penman": "(z0 / process-01\n    :ARG0 (z1 / team\n              :ARG0-of (z2 / bill-01))\n    :ARG1 (z3 / pay-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "process-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "bill-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "pay-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The billing team handles payout failures.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 30,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> team\n    :ARG0-of (<pointer:2> bill-01))\n  :ARG1 (<pointer:3> fail-01\n    :ARG2 (<pointer:4> pay-out-03)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> team :ARG0-of ( <pointer:2> bill-01 ) ) :ARG1 ( <pointer:3> fail-01 :ARG2 ( <pointer:4> pay-out-03 ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / team\n              :ARG0-of (z2 / bill-01))\n    :ARG1 (z3 / fail-01\n              :ARG2 (z4 / pay-out-03)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "bill-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "pay-out-03",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "If a ticket concerns a payout failure, customer service routes the ticket to the billing team.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 23,
+        "output_tokens": 53,
+        "linearized": "<AMR>\n(<pointer:0> route-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> ticket)\n  :ARG2 (<pointer:4> team\n    :ARG0-of (<pointer:5> bill-01))\n  :condition (<pointer:6> concern-02\n    :ARG0 <pointer:3>\n    :ARG1 (<pointer:7> fail-01\n      :ARG1 (<pointer:8> pay-out-03))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> route-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> ticket ) :ARG2 ( <pointer:4> team :ARG0-of ( <pointer:5> bill-01 ) ) :condition ( <pointer:6> concern-02 :ARG0 <pointer:3> :ARG1 ( <pointer:7> fail-01 :ARG1 ( <pointer:8> pay-out-03 ) ) ) )</AMR>",
+        "penman": "(z0 / route-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / ticket)\n    :ARG2 (z4 / team\n              :ARG0-of (z5 / bill-01))\n    :condition (z6 / concern-02\n                   :ARG0 z3\n                   :ARG1 (z7 / fail-01\n                             :ARG1 (z8 / pay-out-03))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "route-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG0",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "bill-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":condition",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "concern-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG0",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG1",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z7",
+            "relation": ":ARG1",
+            "target": "z8",
+            "target_kind": "node"
+          },
+          {
+            "source": "z8",
+            "relation": ":instance",
+            "target": "pay-out-03",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Customer service handles account issues.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> issue-02\n    :ARG0 (<pointer:4> account)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> issue-02 :ARG0 ( <pointer:4> account ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / issue-02\n              :ARG0 (z4 / account)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "issue-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The account team handles login failures.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 29,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> team\n    :mod (<pointer:2> account))\n  :ARG1 (<pointer:3> fail-01\n    :ARG1 (<pointer:4> log-on-02)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> team :mod ( <pointer:2> account ) ) :ARG1 ( <pointer:3> fail-01 :ARG1 ( <pointer:4> log-on-02 ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / team\n              :mod (z2 / account))\n    :ARG1 (z3 / fail-01\n              :ARG1 (z4 / log-on-02)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":mod",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "log-on-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "If a ticket concerns a login failure, customer service routes the ticket to the account team.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 23,
+        "output_tokens": 52,
+        "linearized": "<AMR>\n(<pointer:0> route-01\n  :ARG0 (<pointer:1> serve-01\n    :ARG2 (<pointer:2> customer))\n  :ARG1 (<pointer:3> ticket)\n  :ARG2 (<pointer:4> team\n    :mod (<pointer:5> account))\n  :condition (<pointer:6> concern-02\n    :ARG0 <pointer:3>\n    :ARG1 (<pointer:7> fail-01\n      :ARG1 (<pointer:8> log-on-02))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> route-01 :ARG0 ( <pointer:1> serve-01 :ARG2 ( <pointer:2> customer ) ) :ARG1 ( <pointer:3> ticket ) :ARG2 ( <pointer:4> team :mod ( <pointer:5> account ) ) :condition ( <pointer:6> concern-02 :ARG0 <pointer:3> :ARG1 ( <pointer:7> fail-01 :ARG1 ( <pointer:8> log-on-02 ) ) ) )</AMR>",
+        "penman": "(z0 / route-01\n    :ARG0 (z1 / serve-01\n              :ARG2 (z2 / customer))\n    :ARG1 (z3 / ticket)\n    :ARG2 (z4 / team\n              :mod (z5 / account))\n    :condition (z6 / concern-02\n                   :ARG0 z3\n                   :ARG1 (z7 / fail-01\n                             :ARG1 (z8 / log-on-02))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "route-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":ARG2",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG2",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":mod",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":condition",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "concern-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG0",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG1",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z7",
+            "relation": ":ARG1",
+            "target": "z8",
+            "target_kind": "node"
+          },
+          {
+            "source": "z8",
+            "relation": ":instance",
+            "target": "log-on-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The account team handles account access problems.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 28,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> team\n    :mod (<pointer:2> account))\n  :ARG1 (<pointer:3> problem\n    :topic (<pointer:4> access-01\n      :ARG1 <pointer:2>)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> team :mod ( <pointer:2> account ) ) :ARG1 ( <pointer:3> problem :topic ( <pointer:4> access-01 :ARG1 <pointer:2> ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / team\n              :mod (z2 / account))\n    :ARG1 (z3 / problem\n              :topic (z4 / access-01\n                         :ARG1 z2)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":mod",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "problem",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":topic",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "access-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "If a ticket concerns an urgent failure and customer service routes the ticket to a team, the team offers human assistance.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 28,
+        "output_tokens": 68,
+        "linearized": "<AMR>\n(<pointer:0> offer-01\n  :ARG0 (<pointer:1> team)\n  :ARG1 (<pointer:2> assist-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:3> human))\n  :condition (<pointer:4> and\n    :op1 (<pointer:5> concern-02\n      :ARG0 (<pointer:6> ticket)\n      :ARG1 (<pointer:7> fail-01\n        :mod (<pointer:8> urgent)))\n    :op2 (<pointer:9> route-01\n      :ARG0 (<pointer:10> serve-01\n        :ARG2 (<pointer:11> customer))\n      :ARG1 <pointer:6>\n      :ARG2 <pointer:1>)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> offer-01 :ARG0 ( <pointer:1> team ) :ARG1 ( <pointer:2> assist-01 :ARG0 <pointer:1> :ARG1 ( <pointer:3> human ) ) :condition ( <pointer:4> and :op1 ( <pointer:5> concern-02 :ARG0 ( <pointer:6> ticket ) :ARG1 ( <pointer:7> fail-01 :mod ( <pointer:8> urgent ) ) ) :op2 ( <pointer:9> route-01 :ARG0 ( <pointer:10> serve-01 :ARG2 ( <pointer:11> customer ) ) :ARG1 <pointer:6> :ARG2 <pointer:1> ) ) )</AMR>",
+        "penman": "(z0 / offer-01\n    :ARG0 (z1 / team)\n    :ARG1 (z2 / assist-01\n              :ARG0 z1\n              :ARG1 (z3 / human))\n    :condition (z4 / and\n                   :op1 (z5 / concern-02\n                            :ARG0 (z6 / ticket)\n                            :ARG1 (z7 / fail-01\n                                      :mod (z8 / urgent)))\n                   :op2 (z9 / route-01\n                            :ARG0 (z10 / serve-01\n                                       :ARG2 (z11 / customer))\n                            :ARG1 z6\n                            :ARG2 z1)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "offer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "assist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "human",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":condition",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "and",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":op1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "concern-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG0",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z7",
+            "relation": ":mod",
+            "target": "z8",
+            "target_kind": "node"
+          },
+          {
+            "source": "z8",
+            "relation": ":instance",
+            "target": "urgent",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":op2",
+            "target": "z9",
+            "target_kind": "node"
+          },
+          {
+            "source": "z9",
+            "relation": ":instance",
+            "target": "route-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z9",
+            "relation": ":ARG0",
+            "target": "z10",
+            "target_kind": "node"
+          },
+          {
+            "source": "z10",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z10",
+            "relation": ":ARG2",
+            "target": "z11",
+            "target_kind": "node"
+          },
+          {
+            "source": "z11",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z9",
+            "relation": ":ARG1",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z9",
+            "relation": ":ARG2",
+            "target": "z1",
+            "target_kind": "node"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "If customer service routes a ticket to a team and the ticket concerns frequent failures, the team offers human assistance.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 27,
+        "output_tokens": 69,
+        "linearized": "<AMR>\n(<pointer:0> offer-01\n  :ARG0 (<pointer:1> team)\n  :ARG1 (<pointer:2> assist-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:3> human))\n  :condition (<pointer:4> and\n    :op1 (<pointer:5> route-01\n      :ARG0 (<pointer:6> serve-01\n        :ARG2 (<pointer:7> customer))\n      :ARG1 (<pointer:8> ticket)\n      :ARG2 <pointer:1>)\n    :op2 (<pointer:9> concern-02\n      :ARG0 <pointer:8>\n      :ARG1 (<pointer:10> fail-01\n        :ARG1-of (<pointer:11> frequent-02)))))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> offer-01 :ARG0 ( <pointer:1> team ) :ARG1 ( <pointer:2> assist-01 :ARG0 <pointer:1> :ARG1 ( <pointer:3> human ) ) :condition ( <pointer:4> and :op1 ( <pointer:5> route-01 :ARG0 ( <pointer:6> serve-01 :ARG2 ( <pointer:7> customer ) ) :ARG1 ( <pointer:8> ticket ) :ARG2 <pointer:1> ) :op2 ( <pointer:9> concern-02 :ARG0 <pointer:8> :ARG1 ( <pointer:10> fail-01 :ARG1-of ( <pointer:11> frequent-02 ) ) ) ) )</AMR>",
+        "penman": "(z0 / offer-01\n    :ARG0 (z1 / team)\n    :ARG1 (z2 / assist-01\n              :ARG0 z1\n              :ARG1 (z3 / human))\n    :condition (z4 / and\n                   :op1 (z5 / route-01\n                            :ARG0 (z6 / serve-01\n                                      :ARG2 (z7 / customer))\n                            :ARG1 (z8 / ticket)\n                            :ARG2 z1)\n                   :op2 (z9 / concern-02\n                            :ARG0 z8\n                            :ARG1 (z10 / fail-01\n                                       :ARG1-of (z11 / frequent-02)))))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "offer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "assist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "human",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":condition",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "and",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":op1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "route-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG0",
+            "target": "z6",
+            "target_kind": "node"
+          },
+          {
+            "source": "z6",
+            "relation": ":instance",
+            "target": "serve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z6",
+            "relation": ":ARG2",
+            "target": "z7",
+            "target_kind": "node"
+          },
+          {
+            "source": "z7",
+            "relation": ":instance",
+            "target": "customer",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG1",
+            "target": "z8",
+            "target_kind": "node"
+          },
+          {
+            "source": "z8",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z5",
+            "relation": ":ARG2",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":op2",
+            "target": "z9",
+            "target_kind": "node"
+          },
+          {
+            "source": "z9",
+            "relation": ":instance",
+            "target": "concern-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z9",
+            "relation": ":ARG0",
+            "target": "z8",
+            "target_kind": "node"
+          },
+          {
+            "source": "z9",
+            "relation": ":ARG1",
+            "target": "z10",
+            "target_kind": "node"
+          },
+          {
+            "source": "z10",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z11",
+            "relation": ":ARG1",
+            "target": "z10",
+            "target_kind": "node"
+          },
+          {
+            "source": "z11",
+            "relation": ":instance",
+            "target": "frequent-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who processes payments?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 9,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> process-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> pay-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> process-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> pay-01 ) )</AMR>",
+        "penman": "(z0 / process-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / pay-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "process-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "pay-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who handles payout failures?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 24,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> fail-01\n    :ARG2 (<pointer:3> pay-out-03)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> fail-01 :ARG2 ( <pointer:3> pay-out-03 ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / fail-01\n              :ARG2 (z3 / pay-out-03)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "pay-out-03",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who handles login failures?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 24,
+        "linearized": "<AMR>\n(<pointer:0> handle-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> fail-01\n    :ARG1 (<pointer:3> log-on-02)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> handle-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> fail-01 :ARG1 ( <pointer:3> log-on-02 ) ) )</AMR>",
+        "penman": "(z0 / handle-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / fail-01\n              :ARG1 (z3 / log-on-02)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "handle-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "log-on-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who manages product returns?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> manage-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> return-01\n    :ARG1 (<pointer:3> product)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> manage-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> return-01 :ARG1 ( <pointer:3> product ) ) )</AMR>",
+        "penman": "(z0 / manage-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / return-01\n              :ARG1 (z3 / product)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "manage-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "return-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "product",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Does the account team process payments?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 26,
+        "linearized": "<AMR>\n(<pointer:0> process-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> team\n    :mod (<pointer:3> account))\n  :ARG1 (<pointer:4> pay-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> process-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> team :mod ( <pointer:3> account ) ) :ARG1 ( <pointer:4> pay-01 ) )</AMR>",
+        "penman": "(z0 / process-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / team\n              :mod (z3 / account))\n    :ARG1 (z4 / pay-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "process-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "account",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "pay-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who offers human assistance?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 23,
+        "linearized": "<AMR>\n(<pointer:0> offer-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> assist-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:3> human)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> offer-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> assist-01 :ARG0 <pointer:1> :ARG1 ( <pointer:3> human ) ) )</AMR>",
+        "penman": "(z0 / offer-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / assist-01\n              :ARG0 z1\n              :ARG1 (z3 / human)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "offer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "assist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "human",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Through what channel does Tendora sell services?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 14,
+        "output_tokens": 38,
+        "linearized": "<AMR>\n(<pointer:0> sell-01\n  :ARG0 (<pointer:1> company\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit> Tendora </lit>))\n  :ARG1 (<pointer:3> service)\n  :medium (<pointer:4> channel\n    :mod (<pointer:5> amr-unknown)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> sell-01 :ARG0 ( <pointer:1> company :wiki - :name ( <pointer:2> name :op1 <lit> Tendora </lit> ) ) :ARG1 ( <pointer:3> service ) :medium ( <pointer:4> channel :mod ( <pointer:5> amr-unknown ) ) )</AMR>",
+        "penman": "(z0 / sell-01\n    :ARG0 (z1 / company\n              :wiki -\n              :name (z2 / name\n                        :op1 \"Tendora\"))\n    :ARG1 (z3 / service)\n    :medium (z4 / channel\n                :mod (z5 / amr-unknown)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "sell-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "company",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"Tendora\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "service",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":medium",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "channel",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":mod",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "A ticket concerns an urgent payout failure.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 29,
+        "linearized": "<AMR>\n(<pointer:0> concern-02\n  :ARG0 (<pointer:1> ticket)\n  :ARG1 (<pointer:2> fail-01\n    :ARG1 (<pointer:3> pay-out-03)\n    :mod (<pointer:4> urgent)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> concern-02 :ARG0 ( <pointer:1> ticket ) :ARG1 ( <pointer:2> fail-01 :ARG1 ( <pointer:3> pay-out-03 ) :mod ( <pointer:4> urgent ) ) )</AMR>",
+        "penman": "(z0 / concern-02\n    :ARG0 (z1 / ticket)\n    :ARG1 (z2 / fail-01\n              :ARG1 (z3 / pay-out-03)\n              :mod (z4 / urgent)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "concern-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "pay-out-03",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "urgent",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "A ticket concerns an urgent login failure.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 29,
+        "linearized": "<AMR>\n(<pointer:0> concern-02\n  :ARG0 (<pointer:1> ticket)\n  :ARG1 (<pointer:2> fail-01\n    :ARG1 (<pointer:3> log-on-02)\n    :mod (<pointer:4> urgent)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> concern-02 :ARG0 ( <pointer:1> ticket ) :ARG1 ( <pointer:2> fail-01 :ARG1 ( <pointer:3> log-on-02 ) :mod ( <pointer:4> urgent ) ) )</AMR>",
+        "penman": "(z0 / concern-02\n    :ARG0 (z1 / ticket)\n    :ARG1 (z2 / fail-01\n              :ARG1 (z3 / log-on-02)\n              :mod (z4 / urgent)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "concern-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "fail-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "log-on-02",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":mod",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "urgent",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    }
+  ]
+}

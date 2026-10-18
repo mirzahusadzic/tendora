@@ -1,0 +1,3 @@
+vendor/** linguist-vendored
+.proj/** linguist-generated
+test/support/*.json linguist-generated

@@ -1,0 +1,3 @@
+# Preserve hashed resource bytes, including upstream license whitespace.
+LICENSE -text -whitespace
+lexicon.json -text

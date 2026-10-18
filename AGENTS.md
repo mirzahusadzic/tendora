@@ -1,0 +1,51 @@
+# Repository guide
+
+Tendora is a research workbench for authoring knowledge through language and
+checking questions against scoped sources. Keep its CLI small; the TUI is the
+main authoring interface.
+
+## Start here
+
+- [README.md](README.md): setup and the payments demo.
+- [docs/architecture.md](docs/architecture.md): boundaries and limitations.
+- [docs/development.md](docs/development.md): tests and dependency updates.
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): licensing scope.
+
+Use Node.js 24+ and `npm ci`; `npm run setup:python` installs the local Python
+environment with uv. Test without a running model service: `npm run check`.
+Run `npm run format:check` before committing.
+
+## Preserve the architecture
+
+- Separate text-to-AMR acquisition from deterministic reasoning. Do not add a
+  second generative pass for source interpretation, paraphrases or alignment.
+- Extend the AMR/HRG compiler, query chart and attributed answer checking.
+  Grammar recognition and semantic similarity alone do not establish entailment.
+- Preserve assertion, role, polarity, modality, reference and source boundaries.
+  A question is not evidence of its own truth.
+- Retain supported parts and located openings when the whole relation is unresolved.
+  Never turn a limit or missing acquisition into a supported answer.
+- Keep domain premises in authored material. Do not add word-specific fixes or
+  require hand-written formal rules to make a domain example work.
+- Author through language; keep graph IDs and production editing out of ordinary
+  product flows. Advanced diagnostics can expose them.
+
+## Work safely
+
+Use disposable copies under `tmp/` or ignored `.proj/` directories. Preserve the
+canonical `.proj/payments-on-call` snapshot. It is the only bundled demo;
+synthetic regression fixtures and external research harnesses live under `test/`
+and `tools/`.
+
+Keep the demo's retained material in `material.sqlite` and its computed results
+in `engine/artifacts.sqlite`. Preserve decoded bytes and content hashes when
+repacking. These two bundled databases are explicitly tracked.
+
+Register every new test once in `test/suites.mjs`. Add focused regressions for
+behavior changes and run the affected tests, then `npm run check`. Documentation
+changes need factual and link checks, not a full engine run.
+
+Keep credentials, personal corpora and generated runtime state out of Git.
+Update SEMCAT behavior in its fork, then update its pin and
+source hashes together; see [the integration guide](python/semcat/README.md).
+Keep all third-party notices when changing packaging.

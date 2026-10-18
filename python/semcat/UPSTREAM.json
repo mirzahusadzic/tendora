@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "repository": "https://github.com/mirzahusadzic/semcat",
+  "commit": "e00a02b954e8d6baf3e362844da4e9ae6509efc9",
+  "package": "semcat-runtime",
+  "version": "0.1.0",
+  "upstream": {
+    "repository": "https://github.com/snucclab/ssharp",
+    "commit": "5c5d4bd5a15cf1e1a0db05b16610ee39a90f7c2d"
+  },
+  "files": {
+    "amr_normalization.py": "331abb29d8036a43d269a1761ceb73e7e05a91bcc74928c0e3568b7b17493068",
+    "calc_SEMCAT.py": "c27315a48864d35f1c4e992b10b3d7950f6de7360b57ffe4416e70b6a892d495",
+    "rose/__init__.py": "769b421df0fb78bf0fa86b6484c6a23d7d71433142e8fc7c0572982315bd6704",
+    "rose/main.py": "1d4a2dc971eb289fb09574975ce730e7adc91f9af85b852e251a1ed84aeca2ae",
+    "rose/scorer_hash.py": "d270dd3d2c792dcb352d72c99edd07a1213c966d10c5f131f78af8485e04d786",
+    "smatchpp/__init__.py": "921fed3d766f4f43e8c925be80a234a58f1dd295f2e7330293f35e41b710e144",
+    "smatchpp/__main__.py": "4178ce8d8c5fdd493ae1f1bf8931632adaa3ea09f8ea24c7213b1169d3edcd23",
+    "smatchpp/align.py": "8d04f068b3988155cb9144dce5203f287c45d7af62875b351c6343963f9806cb",
+    "smatchpp/bindings.py": "09aaadb453470d99294f80fb278f8a31d750fba64375e5a8fb4352e06199ee31",
+    "smatchpp/data_helpers.py": "2ef0fc051b87f95fbe5f18009d6329d956e0c2a153e8c6c34371b663a116e9dc",
+    "smatchpp/eval_statistics.py": "957c9fee3e76e8b93e1abd193a8cda535488114d74f95d2022ac974315f27942",
+    "smatchpp/interfaces.py": "6520af2098e8368a81b16a8f76a10e549351429badde7761bd91ebe1480c66a1",
+    "smatchpp/log_helper.py": "231c4df91b99f6f0cc419383564bf1cd7a43b5425f5a76edfb41c4ad43ecca72",
+    "smatchpp/preprocess.py": "b21558d61e24ccfcb42df798db71b99a9649a31f3076c44d89479b16c36679f5",
+    "smatchpp/resource/amr_aspects.json": "efe2bd5bd02557a2c0013a797ff21afcdfd71920ac5e4bf8f3bae53f44b82c2d",
+    "smatchpp/resource/concept_groups.json": "1ca311aeffa17b8d9f66a4a8f2aee5044f116f361c21611911094711c9bcde1f",
+    "smatchpp/resource/propbank-amr-frames-arg-descr.txt": "11ff9fdfdb3bb23842a311a6fbea10d841696a628bf9885b5c753f4ee2645315",
+    "smatchpp/resource/reify_table.txt": "3d4a18c92cad05a1f15ef55f6b8214afe841bdd2d278d533b7642585242363ce",
+    "smatchpp/score.py": "183541e03f82ea0992c132f44d49ef9486a018ec20608996d754bca24f88437c",
+    "smatchpp/solvers.py": "df54be970040a8d7d4b4b8ee2b44a1cc88ae403e93fb539f8eba6340156d6887",
+    "smatchpp/standardizer.py": "ac18f6b125253786a95449b5e0f8d3f687bda4cc20fb750b90193bdc56813749",
+    "smatchpp/subgraph_extraction.py": "5a40dfe5913888c25a1ca14b6324470bd7cc1ea3149d45d8ebfb2b463075c200",
+    "smatchpp/util.py": "baae1de25572d7ba911465fdc6e71268369d9f59f90581593863f1876a90b7af",
+    "standardizer_rose.py": "2828e7f49e13670e2fffdc165da3041d8a02cae17d0e68033b28239c01c03b17"
+  },
+  "archive": {
+    "url": "https://github.com/mirzahusadzic/semcat/archive/e00a02b954e8d6baf3e362844da4e9ae6509efc9.tar.gz",
+    "sha256": "58e372b36e74632e7a3353951c2d5b5f3e7035ce4a7d0caeab2c9a879cea7fff"
+  }
+}

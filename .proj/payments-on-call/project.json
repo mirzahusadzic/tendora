@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "id": "b2abd7d7-9dc7-47d5-8644-886a172992cf",
+  "name": "Payments On-Call",
+  "placements": [
+    {
+      "id": "117c16ca-4392-4a94-935d-706fbd8e34c1",
+      "conceptId": "82c6ea04-efd9-4c01-82c2-389fa51472a8",
+      "parentId": null
+    },
+    {
+      "id": "7cf5310b-f4d1-4496-aacb-8bc6be53c924",
+      "conceptId": "bca78209-2876-40e7-bde7-a64c8809dabd",
+      "parentId": "117c16ca-4392-4a94-935d-706fbd8e34c1"
+    },
+    {
+      "id": "0c5d2c21-286f-42d0-b9a8-54cc45602ac5",
+      "conceptId": "e5ebdb88-9367-4a57-833a-27ed5212658e",
+      "parentId": "117c16ca-4392-4a94-935d-706fbd8e34c1"
+    },
+    {
+      "id": "646f3c8a-cef8-47de-b880-7847649436ce",
+      "conceptId": "43d8eee6-b0c6-458f-91be-9aaf4305511c",
+      "parentId": "117c16ca-4392-4a94-935d-706fbd8e34c1"
+    },
+    {
+      "id": "b52ad62d-d1e4-404e-9a95-e54c4698037a",
+      "conceptId": "011d704b-de7c-47b1-aba3-df6287bfd585",
+      "parentId": "117c16ca-4392-4a94-935d-706fbd8e34c1"
+    },
+    {
+      "id": "b463ae8f-d57d-4b26-b298-e76a2aed1c17",
+      "conceptId": "f8c65c57-5ab4-4410-b1ca-f76c497703b9",
+      "parentId": "117c16ca-4392-4a94-935d-706fbd8e34c1"
+    }
+  ],
+  "corpora": [
+    "a745a032e9c1d5ccfe09dd38aef76eba6b0e6c3cd4b23c894a6134083b011f04",
+    "c26eb67a668b69a34e7a7d55da9314b6f2ef12e2d4233aaa1b7d89093e8e316c",
+    "dc16f285664cf67d0961703cd104322b48a7a0df01e2197640fa301e057ab212",
+    "78309959d62be5fa5a4771c6a2e44a7119d08968881cc007ef5f6a05a04bc216",
+    "f3e69044fbcba661931281bbab980feee90618eb898228949d3e6e33b56bc7f8",
+    "077272bf83f9cffcf039674874efbebfa532801052b6d7fa380685516423ab35"
+  ],
+  "records": {
+    "contributions": [
+      "86a5004ea703e264573ee697f1441e94ccd32f76ea80af3e64c88413e6e640e3",
+      "1b49e99832be23907f5761eb3173743fff85a7aa80e673bfb9e2305d86bcc9d7",
+      "95a0f78f59093f371eb8c61e55371c7dc0c80bd830df051577f3fb64405bcf6e",
+      "4929cbf940c7e5a82536f13a09899a390055c8ad6631762422be1baf3591228b",
+      "78fc02d94c86fbcc864289f6af4efc67d004362ac9ef62d02666acbbaeb5eb70",
+      "162a3d15cd79c42d8bbacf97b819ab20aed39bdbf9c7b3b0c246fa9a652819ad",
+      "eec5cae15d876fe1e942c9feb2f43206e2f8c6f19e68de565ec8994360ad1385"
+    ]
+  }
+}

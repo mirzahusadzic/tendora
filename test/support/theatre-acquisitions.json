@@ -1,0 +1,1708 @@
+{
+  "startedAt": "2026-10-12T17:04:37.395Z",
+  "completedAt": "2026-10-12T17:04:48.702Z",
+  "amr": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2@12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+  "entries": [
+    {
+      "text": "The theatre prepares a public performance.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 22,
+        "linearized": "<AMR>\n(<pointer:0> prepare-01\n  :ARG0 (<pointer:1> theater)\n  :ARG1 (<pointer:2> perform-01\n    :ARG1-of (<pointer:3> public-02)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> prepare-01 :ARG0 ( <pointer:1> theater ) :ARG1 ( <pointer:2> perform-01 :ARG1-of ( <pointer:3> public-02 ) ) )</AMR>",
+        "penman": "(z0 / prepare-01\n    :ARG0 (z1 / theater)\n    :ARG1 (z2 / perform-01\n              :ARG1-of (z3 / public-02)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "prepare-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "theater",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "perform-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "public-02",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The director coordinates the rehearsal.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 29,
+        "linearized": "<AMR>\n(<pointer:0> coordinate-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> have-org-role-91\n      :ARG2 (<pointer:3> director)))\n  :ARG1 (<pointer:4> rehearse-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> coordinate-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> have-org-role-91 :ARG2 ( <pointer:3> director ) ) ) :ARG1 ( <pointer:4> rehearse-01 ) )</AMR>",
+        "penman": "(z0 / coordinate-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / have-org-role-91\n                           :ARG2 (z3 / director)))\n    :ARG1 (z4 / rehearse-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "coordinate-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "have-org-role-91",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "director",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "rehearse-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The technical team maintains the stage.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> maintain-01\n  :ARG0 (<pointer:1> team\n    :mod (<pointer:2> technical))\n  :ARG1 (<pointer:3> stage))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> maintain-01 :ARG0 ( <pointer:1> team :mod ( <pointer:2> technical ) ) :ARG1 ( <pointer:3> stage ) )</AMR>",
+        "penman": "(z0 / maintain-01\n    :ARG0 (z1 / team\n              :mod (z2 / technical))\n    :ARG1 (z3 / stage))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "maintain-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "team",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":mod",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "technical",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "stage",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "If the technician checks the lights, the technician approves the rehearsal.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 18,
+        "output_tokens": 30,
+        "linearized": "<AMR>\n(<pointer:0> approve-01\n  :ARG0 (<pointer:1> technician)\n  :ARG1 (<pointer:2> rehearse-01)\n  :condition (<pointer:3> check-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:4> light)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> approve-01 :ARG0 ( <pointer:1> technician ) :ARG1 ( <pointer:2> rehearse-01 ) :condition ( <pointer:3> check-01 :ARG0 <pointer:1> :ARG1 ( <pointer:4> light ) ) )</AMR>",
+        "penman": "(z0 / approve-01\n    :ARG0 (z1 / technician)\n    :ARG1 (z2 / rehearse-01)\n    :condition (z3 / check-01\n                   :ARG0 z1\n                   :ARG1 (z4 / light)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "approve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "technician",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "rehearse-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":condition",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "check-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "light",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The technician inspects the rig.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> inspect-01\n  :ARG0 (<pointer:1> technician)\n  :ARG1 (<pointer:2> rig))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> inspect-01 :ARG0 ( <pointer:1> technician ) :ARG1 ( <pointer:2> rig ) )</AMR>",
+        "penman": "(z0 / inspect-01\n    :ARG0 (z1 / technician)\n    :ARG1 (z2 / rig))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "inspect-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "technician",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "rig",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The rig supports the lights.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> support-01\n  :ARG0 (<pointer:1> rig)\n  :ARG1 (<pointer:2> light))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> support-01 :ARG0 ( <pointer:1> rig ) :ARG1 ( <pointer:2> light ) )</AMR>",
+        "penman": "(z0 / support-01\n    :ARG0 (z1 / rig)\n    :ARG1 (z2 / light))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "support-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "rig",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "light",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The rig does not support the curtain.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 13,
+        "output_tokens": 18,
+        "linearized": "<AMR>\n(<pointer:0> support-01\n  :polarity -\n  :ARG0 (<pointer:1> rig)\n  :ARG1 (<pointer:2> curtain))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> support-01 :polarity - :ARG0 ( <pointer:1> rig ) :ARG1 ( <pointer:2> curtain ) )</AMR>",
+        "penman": "(z0 / support-01\n    :polarity -\n    :ARG0 (z1 / rig)\n    :ARG1 (z2 / curtain))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "support-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "rig",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "curtain",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "If the technician inspects the rig, the technician checks the lights.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 19,
+        "output_tokens": 28,
+        "linearized": "<AMR>\n(<pointer:0> check-01\n  :ARG0 (<pointer:1> technician)\n  :ARG1 (<pointer:2> light)\n  :condition (<pointer:3> inspect-01\n    :ARG0 <pointer:1>\n    :ARG1 (<pointer:4> rig)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> check-01 :ARG0 ( <pointer:1> technician ) :ARG1 ( <pointer:2> light ) :condition ( <pointer:3> inspect-01 :ARG0 <pointer:1> :ARG1 ( <pointer:4> rig ) ) )</AMR>",
+        "penman": "(z0 / check-01\n    :ARG0 (z1 / technician)\n    :ARG1 (z2 / light)\n    :condition (z3 / inspect-01\n                   :ARG0 z1\n                   :ARG1 (z4 / rig)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "check-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "technician",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "light",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":condition",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "inspect-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "rig",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The lights illuminate the stage.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 17,
+        "linearized": "<AMR>\n(<pointer:0> illuminate-01\n  :ARG0 (<pointer:1> light)\n  :ARG1 (<pointer:2> stage))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> illuminate-01 :ARG0 ( <pointer:1> light ) :ARG1 ( <pointer:2> stage ) )</AMR>",
+        "penman": "(z0 / illuminate-01\n    :ARG0 (z1 / light)\n    :ARG1 (z2 / stage))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "illuminate-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "light",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "stage",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The lighting designer adjusts the colours.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 33,
+        "linearized": "<AMR>\n(<pointer:0> adjust-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> design-01\n      :ARG1 (<pointer:3> thing\n        :ARG0-of (<pointer:4> light-04))))\n  :ARG1 (<pointer:5> color))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> adjust-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> design-01 :ARG1 ( <pointer:3> thing :ARG0-of ( <pointer:4> light-04 ) ) ) ) :ARG1 ( <pointer:5> color ) )</AMR>",
+        "penman": "(z0 / adjust-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / design-01\n                           :ARG1 (z3 / thing\n                                     :ARG0-of (z4 / light-04))))\n    :ARG1 (z5 / color))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "adjust-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "design-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "thing",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z4",
+            "relation": ":ARG0",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "light-04",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z5",
+            "target_kind": "node"
+          },
+          {
+            "source": "z5",
+            "relation": ":instance",
+            "target": "color",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The sound engineer tests the microphones.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 27,
+        "linearized": "<AMR>\n(<pointer:0> test-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> engineer-01\n      :ARG1 (<pointer:3> sound)))\n  :ARG1 (<pointer:4> microphone))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> test-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> engineer-01 :ARG1 ( <pointer:3> sound ) ) ) :ARG1 ( <pointer:4> microphone ) )</AMR>",
+        "penman": "(z0 / test-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / engineer-01\n                           :ARG1 (z3 / sound)))\n    :ARG1 (z4 / microphone))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "test-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "engineer-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "sound",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "microphone",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The microphones amplify the performers.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 22,
+        "linearized": "<AMR>\n(<pointer:0> accelerate-01\n  :ARG0 (<pointer:1> mic)\n  :ARG1 (<pointer:2> person\n    :ARG0-of (<pointer:3> perform-01)))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> accelerate-01 :ARG0 ( <pointer:1> mic ) :ARG1 ( <pointer:2> person :ARG0-of ( <pointer:3> perform-01 ) ) )</AMR>",
+        "penman": "(z0 / accelerate-01\n    :ARG0 (z1 / mic)\n    :ARG1 (z2 / person\n              :ARG0-of (z3 / perform-01)))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "accelerate-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "mic",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "perform-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Sam repairs bicycles.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 9,
+        "output_tokens": 27,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :ARG0 (<pointer:1> person\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit> Sam </lit>))\n  :ARG1 (<pointer:3> bicycle))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :ARG0 ( <pointer:1> person :wiki - :name ( <pointer:2> name :op1 <lit> Sam </lit> ) ) :ARG1 ( <pointer:3> bicycle ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :ARG0 (z1 / person\n              :wiki -\n              :name (z2 / name\n                        :op1 \"Sam\"))\n    :ARG1 (z3 / bicycle))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"Sam\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "bicycle",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The bicycles are stage props.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> prop\n  :mod (<pointer:1> stage)\n  :domain (<pointer:2> bicycle))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> prop :mod ( <pointer:1> stage ) :domain ( <pointer:2> bicycle ) )</AMR>",
+        "penman": "(z0 / prop\n    :mod (z1 / stage)\n    :domain (z2 / bicycle))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "prop",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":mod",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "stage",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":domain",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "bicycle",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The costume designer repairs the costumes.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 27,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> design-01\n      :ARG1 (<pointer:3> costume)))\n  :ARG1 (<pointer:4> costume))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> design-01 :ARG1 ( <pointer:3> costume ) ) ) :ARG1 ( <pointer:4> costume ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / design-01\n                           :ARG1 (z3 / costume)))\n    :ARG1 (z4 / costume))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "design-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "costume",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "costume",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The wardrobe assistant stores the costumes.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 27,
+        "linearized": "<AMR>\n(<pointer:0> store-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> assist-01\n      :ARG2 (<pointer:3> dress-01)))\n  :ARG1 (<pointer:4> costume))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> store-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> assist-01 :ARG2 ( <pointer:3> dress-01 ) ) ) :ARG1 ( <pointer:4> costume ) )</AMR>",
+        "penman": "(z0 / store-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / assist-01\n                           :ARG2 (z3 / dress-01)))\n    :ARG1 (z4 / costume))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "store-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "assist-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG2",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "dress-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "costume",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Nora checks the tickets.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 27,
+        "linearized": "<AMR>\n(<pointer:0> check-01\n  :ARG0 (<pointer:1> person\n    :wiki -\n    :name (<pointer:2> name\n      :op1 <lit>ora </lit>))\n  :ARG1 (<pointer:3> ticket))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> check-01 :ARG0 ( <pointer:1> person :wiki - :name ( <pointer:2> name :op1 <lit>ora </lit> ) ) :ARG1 ( <pointer:3> ticket ) )</AMR>",
+        "penman": "(z0 / check-01\n    :ARG0 (z1 / person\n              :wiki -\n              :name (z2 / name\n                        :op1 \"ora\"))\n    :ARG1 (z3 / ticket))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "check-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z1",
+            "relation": ":name",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":op1",
+            "target": "\"ora\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "ticket",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The ushers guide the audience.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 23,
+        "linearized": "<AMR>\n(<pointer:0> guide-01\n  :ARG0 (<pointer:1> person\n    :ARG0-of (<pointer:2> usher-01))\n  :ARG1 (<pointer:3> audience))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> guide-01 :ARG0 ( <pointer:1> person :ARG0-of ( <pointer:2> usher-01 ) ) :ARG1 ( <pointer:3> audience ) )</AMR>",
+        "penman": "(z0 / guide-01\n    :ARG0 (z1 / person\n              :ARG0-of (z2 / usher-01))\n    :ARG1 (z3 / audience))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "guide-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "usher-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "audience",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "The audience enters the hall.",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> enter-01\n  :ARG0 (<pointer:1> audience)\n  :ARG1 (<pointer:2> hall))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> enter-01 :ARG0 ( <pointer:1> audience ) :ARG1 ( <pointer:2> hall ) )</AMR>",
+        "penman": "(z0 / enter-01\n    :ARG0 (z1 / audience)\n    :ARG1 (z2 / hall))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "enter-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "audience",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "hall",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who approves the rehearsal?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 18,
+        "linearized": "<AMR>\n(<pointer:0> approve-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> rehearse-01))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> approve-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> rehearse-01 ) )</AMR>",
+        "penman": "(z0 / approve-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / rehearse-01))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "approve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "rehearse-01",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who inspects the rig?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 11,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> inspect-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> rig))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> inspect-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> rig ) )</AMR>",
+        "penman": "(z0 / inspect-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / rig))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "inspect-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "rig",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Does the rig support the curtain?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 12,
+        "output_tokens": 21,
+        "linearized": "<AMR>\n(<pointer:0> support-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> rig)\n  :ARG1 (<pointer:3> curtain))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> support-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> rig ) :ARG1 ( <pointer:3> curtain ) )</AMR>",
+        "penman": "(z0 / support-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / rig)\n    :ARG1 (z3 / curtain))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "support-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "rig",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "curtain",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who approves the curtain?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> approve-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> curtain))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> approve-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> curtain ) )</AMR>",
+        "penman": "(z0 / approve-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / curtain))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "approve-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "curtain",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who repairs bikes?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 9,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> bike))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> bike ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / bike))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "bike",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Does Sam repair bikes?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 32,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> person\n    :wiki -\n    :name (<pointer:3> name\n      :op1 <lit> Sam </lit>))\n  :ARG1 (<pointer:4> bike))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> person :wiki - :name ( <pointer:3> name :op1 <lit> Sam </lit> ) ) :ARG1 ( <pointer:4> bike ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / person\n              :wiki -\n              :name (z3 / name\n                        :op1 \"Sam\"))\n    :ARG1 (z4 / bike))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":name",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":op1",
+            "target": "\"Sam\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "bike",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Does Sam repair bicycles?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 32,
+        "linearized": "<AMR>\n(<pointer:0> repair-01\n  :polarity (<pointer:1> amr-unknown)\n  :ARG0 (<pointer:2> person\n    :wiki -\n    :name (<pointer:3> name\n      :op1 <lit> Sam </lit>))\n  :ARG1 (<pointer:4> bicycle))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> repair-01 :polarity ( <pointer:1> amr-unknown ) :ARG0 ( <pointer:2> person :wiki - :name ( <pointer:3> name :op1 <lit> Sam </lit> ) ) :ARG1 ( <pointer:4> bicycle ) )</AMR>",
+        "penman": "(z0 / repair-01\n    :polarity (z1 / amr-unknown)\n    :ARG0 (z2 / person\n              :wiki -\n              :name (z3 / name\n                        :op1 \"Sam\"))\n    :ARG1 (z4 / bicycle))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "repair-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":polarity",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "person",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":wiki",
+            "target": "-",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z2",
+            "relation": ":name",
+            "target": "z3",
+            "target_kind": "node"
+          },
+          {
+            "source": "z3",
+            "relation": ":instance",
+            "target": "name",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z3",
+            "relation": ":op1",
+            "target": "\"Sam\"",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z4",
+            "target_kind": "node"
+          },
+          {
+            "source": "z4",
+            "relation": ":instance",
+            "target": "bicycle",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    },
+    {
+      "text": "Who stores the costumes?",
+      "acquisition": {
+        "model": "xfbai/AMRBART-large-finetuned-AMR3.0-AMRParsing-v2",
+        "revision": "12f7e78e3dfa6f37ddbbf77c4c152b4fc39bc512",
+        "device": "mps",
+        "input_tokens": 10,
+        "output_tokens": 16,
+        "linearized": "<AMR>\n(<pointer:0> store-01\n  :ARG0 (<pointer:1> amr-unknown)\n  :ARG1 (<pointer:2> costume))\n</AMR>",
+        "linearized_raw": "<AMR> ( <pointer:0> store-01 :ARG0 ( <pointer:1> amr-unknown ) :ARG1 ( <pointer:2> costume ) )</AMR>",
+        "penman": "(z0 / store-01\n    :ARG0 (z1 / amr-unknown)\n    :ARG1 (z2 / costume))",
+        "top": "z0",
+        "triples": [
+          {
+            "source": "z0",
+            "relation": ":instance",
+            "target": "store-01",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG0",
+            "target": "z1",
+            "target_kind": "node"
+          },
+          {
+            "source": "z1",
+            "relation": ":instance",
+            "target": "amr-unknown",
+            "target_kind": "literal"
+          },
+          {
+            "source": "z0",
+            "relation": ":ARG1",
+            "target": "z2",
+            "target_kind": "node"
+          },
+          {
+            "source": "z2",
+            "relation": ":instance",
+            "target": "costume",
+            "target_kind": "literal"
+          }
+        ],
+        "fragments": [],
+        "decode_status": "ok",
+        "decode_error": null
+      }
+    }
+  ]
+}

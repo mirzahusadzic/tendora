@@ -1,0 +1,136 @@
+{
+  "note": "Retained question reading and answer diagnostics from the reported open ticket question. Source identities shortened; no answer expectations supplied to the engine.",
+  "question": "Which team should handle this ticket?",
+  "graph": {
+    "top": "z0",
+    "assertionTop": "z0",
+    "nodes": [
+      {
+        "id": "z0",
+        "concept": "recommend-01"
+      },
+      {
+        "id": "z1",
+        "concept": "handle-01"
+      },
+      {
+        "id": "z2",
+        "concept": "team"
+      },
+      {
+        "id": "z3",
+        "concept": "amr-unknown"
+      },
+      {
+        "id": "z4",
+        "concept": "ticket"
+      },
+      {
+        "id": "z5",
+        "concept": "this"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "z0",
+        "role": ":ARG1",
+        "to": "z1"
+      },
+      {
+        "id": "e3",
+        "from": "z1",
+        "role": ":ARG0",
+        "to": "z2"
+      },
+      {
+        "id": "e5",
+        "from": "z2",
+        "role": ":mod",
+        "to": "z3"
+      },
+      {
+        "id": "e7",
+        "from": "z1",
+        "role": ":ARG1",
+        "to": "z4"
+      },
+      {
+        "id": "e9",
+        "from": "z4",
+        "role": ":mod",
+        "to": "z5"
+      }
+    ]
+  },
+  "openings": [
+    {
+      "kind": "assertion",
+      "concept": "recommend-01",
+      "state": "unmatched",
+      "reason": "No source or applicable rule asserts the requested predicate."
+    },
+    {
+      "kind": "relation",
+      "id": "e1",
+      "from": "recommend-01",
+      "role": ":ARG1",
+      "to": "handle-01",
+      "state": "unmatched",
+      "reason": "No attributed relation with these roles and concepts is available.",
+      "sourceIds": [],
+      "ruleIds": []
+    },
+    {
+      "kind": "relation",
+      "id": "e3",
+      "from": "handle-01",
+      "role": ":ARG0",
+      "to": "team",
+      "state": "unjoined",
+      "reason": "This relation occurs, but no complete, consistently bound assertion satisfies the question.",
+      "sourceIds": ["team-source-0"],
+      "ruleIds": []
+    },
+    {
+      "kind": "relation",
+      "id": "e5",
+      "from": "team",
+      "role": ":mod",
+      "to": "amr-unknown",
+      "state": "unjoined",
+      "reason": "This relation occurs, but no complete, consistently bound assertion satisfies the question.",
+      "sourceIds": ["team-source-1"],
+      "ruleIds": []
+    },
+    {
+      "kind": "relation",
+      "id": "e7",
+      "from": "handle-01",
+      "role": ":ARG1",
+      "to": "ticket",
+      "state": "unmatched",
+      "reason": "No attributed relation with these roles and concepts is available.",
+      "sourceIds": [],
+      "ruleIds": []
+    },
+    {
+      "kind": "relation",
+      "id": "e9",
+      "from": "ticket",
+      "role": ":mod",
+      "to": "this",
+      "state": "unmatched",
+      "reason": "No attributed relation with these roles and concepts is available.",
+      "sourceIds": [],
+      "ruleIds": []
+    },
+    {
+      "kind": "concept",
+      "id": "z0",
+      "concept": "recommend-01",
+      "state": "unmatched",
+      "reason": "This question concept has no source occurrence or authored interpretation."
+    }
+  ]
+}

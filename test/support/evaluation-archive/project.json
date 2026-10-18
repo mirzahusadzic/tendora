@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "66a1f0ee-7b91-4537-9bca-68f1a9a5945a",
+  "name": "Archive evaluation",
+  "concepts": [
+    {
+      "id": "64db8be5-4ff4-4b4b-81e4-2b92e6c8b108",
+      "name": "Archive",
+      "passages": [
+        "The curator catalogs manuscripts.",
+        "The conservator repairs damaged bindings.",
+        "The archive stores manuscripts in a climate-controlled vault."
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "id": "19971cfd-5c66-4b06-8876-2cd078e04c3b",
+      "conceptId": "64db8be5-4ff4-4b4b-81e4-2b92e6c8b108",
+      "parentId": null
+    }
+  ]
+}
