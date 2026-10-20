@@ -84,7 +84,7 @@ try {
   await key('LEFT');
   const form = state.form,
     cursor = form.fields[0].cursor;
-  for (const hidden of ['ALT_I', 'ALT_H', 'ALT_B', 'ALT_R']) {
+  for (const hidden of ['ALT_H', 'ALT_B', 'ALT_R']) {
     assert(!state.actionProvider().some((action) => action.key === hidden));
     await key(hidden);
     assert.equal(state.form, form, `${hidden} cannot open an unadvertised legacy view`);

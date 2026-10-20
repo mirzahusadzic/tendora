@@ -19,6 +19,7 @@ import {
 } from '../storage/engine-runs.mjs';
 import { matchQuestionRoles } from './role-matching.mjs';
 import { roleExplorationProfile } from '../../engine/role-exploration.mjs';
+import { finalizedContinuationFrame } from './frame.mjs';
 
 export function projectInquiryAsset(project, placementId, query) {
   const placement = project.data.placements.find((p) => p.id === placementId);
@@ -72,8 +73,11 @@ export function prepareProjectInquiry(
     validateContinuation(continuation);
     if (
       continuation.parent.project.id !== project.data.id ||
-      continuation.question !== query ||
-      continuation.scopePlacementId !== placementId
+      (continuation.version >= 2 && continuation.question !== query) ||
+      (continuation.version >= 2 && continuation.scopePlacementId !== placementId) ||
+      (continuation.version === 1 &&
+        continuation.parent?.project?.placementId &&
+        continuation.parent.project.placementId !== placementId)
     )
       throw new Error('Continuation inquiry scope mismatch');
   }
@@ -192,8 +196,18 @@ async function captureInquiry(project, placementId, query, progress, signal, opt
     error.client = engine.calls.findLast((call) => call.status === 'failed')?.client;
     throw error;
   }
+  const finalizedContinuation = continuation
+    ? finalizedContinuationFrame(project, continuation, {
+        reasoning,
+        ask,
+        engineProjectDigest: engine.projectDigest,
+        scopePlacementId: placementId,
+        caseSelection: options.caseSelection ?? null,
+      })
+    : null;
   return retainInquiryTraversal(project, engine, reasoning, asset, progress, signal, {
     ...options,
+    ...(finalizedContinuation ? { continuation: finalizedContinuation } : {}),
     routing,
     acquireMissing: options.acquireMissing ?? true,
   });

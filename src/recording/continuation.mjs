@@ -5,6 +5,12 @@ import { interpretationEdge } from '../amr/interpretation.mjs';
 import { reviseGraph } from '../amr/revision.mjs';
 import { acceptedInterpretation, interpretedIndex } from './interpretation.mjs';
 import { interpretationRevision, graphRevision } from './revisions.mjs';
+import {
+  createFrameCarry,
+  createInquiryFrame,
+  validateFrameCarry,
+  validateInquiryFrame,
+} from './frame.mjs';
 
 /** Openings may originate in either graph or in a source without an occurrence. */
 export function evidenceOpenings(ix, selection, decisions = []) {
@@ -44,7 +50,44 @@ export function evidenceOpenings(ix, selection, decisions = []) {
   }
   return result;
 }
-export function authoredContinuation(ix, selection, path, opening = null, decisions = []) {
+function recordingFrame(ix, query) {
+  const project = ix.recording.project;
+  return createInquiryFrame({
+    projectId: project.id,
+    projectRevision: project.digest,
+    question: ix.recording.inquiry.text,
+    questionRevision: graphRevision(query),
+    intention: ix.recording.ask?.intention ?? null,
+    scope: {
+      placementId: project.placementId,
+      label:
+        ix.nodes.get(project.placementId)?.label ??
+        ix.nodes.get(project.placementId)?.concept ??
+        project.placementId,
+    },
+    caseSelection: ix.recording.caseState?.selection ?? null,
+    sources: ix.recording.sources.map((source) => ({
+      id: source.id,
+      nodeId: source.nodeId,
+      sentenceId: source.sentenceId,
+      revision: source.revision,
+      graphRevision: ix.graphs.get(source.graphId)
+        ? graphRevision(ix.graphs.get(source.graphId))
+        : null,
+      textDigest: ix.recording.amrs.find((amr) => amr.graphId === source.graphId)?.textDigest,
+      text: source.text,
+    })),
+  });
+}
+
+export function authoredContinuation(
+  ix,
+  selection,
+  path,
+  opening = null,
+  decisions = [],
+  { action, rationale } = {},
+) {
   if (!ix.recording.project) throw new Error('Project required');
   const occurrence = ix.occurrences.get(selection?.occurrenceId),
     source = ix.sources.get(opening?.sourceId ?? occurrence?.sourceId);
@@ -53,11 +96,48 @@ export function authoredContinuation(ix, selection, path, opening = null, decisi
     occurrence ?? (source ? { id: null, sourceId: source.id } : null),
     decisions,
   );
+  const query = accepted?.review.query ?? ix.graphs.get(ix.recording.inquiry.graphId);
+  const originFrame = recordingFrame(ix, query);
+  const receivingFrame = createInquiryFrame({
+    projectId: originFrame.project.id,
+    projectRevision: originFrame.project.revision,
+    question: '',
+    questionRevision: null,
+    intention: originFrame.intention,
+    scope: originFrame.scope,
+    caseSelection: originFrame.case,
+    sources: originFrame.sources,
+  });
+  const carryAction = action ?? (opening ? 'continue-opening' : 'revise-question');
+  const carryRationale =
+    rationale ??
+    (opening
+      ? 'Continue from this unresolved connection.'
+      : 'Revise the retained question and its frame.');
+  const carry = createFrameCarry({
+    origin: originFrame,
+    receiving: receivingFrame,
+    opening,
+    action: carryAction,
+    rationale: carryRationale,
+    actor: 'participant',
+    originRecording: { path, revision: interpretationRevision(ix.recording) },
+    status: 'pending',
+    support: 'recheck',
+    reason: 'The receiving inquiry has not been checked yet.',
+  });
   return {
     schema: 'tendora.continuation',
-    version: 2,
+    version: 3,
     author: 'participant',
     contextUse: 'review-only',
+    question: ix.recording.inquiry.text,
+    scopePlacementId: ix.recording.project.placementId,
+    action: carryAction,
+    rationale: carryRationale,
+    originFrame,
+    frame: receivingFrame,
+    carry,
     parent: {
       path,
       revision: interpretationRevision(ix.recording),
@@ -89,6 +169,8 @@ export function authoredContinuation(ix, selection, path, opening = null, decisi
         scopePlacementId: ix.recording.project.placementId,
         scopeLabel:
           ix.nodes.get(ix.recording.project.placementId)?.label ?? ix.recording.project.placementId,
+        purpose: originFrame.intention?.text ?? '',
+        frameRevision: originFrame.id,
       },
     ],
   };
@@ -230,6 +312,71 @@ export function validateContinuation(context) {
   const text = (value) => typeof value === 'string' && value.length > 0;
   const parent = context?.parent,
     edge = context?.opening?.edge;
+  if (context?.version === 3) {
+    validateInquiryFrame(context.originFrame);
+    validateInquiryFrame(context.frame);
+    validateFrameCarry(context.carry);
+    if (
+      context.schema !== 'tendora.continuation' ||
+      context.author !== 'participant' ||
+      context.contextUse !== 'review-only' ||
+      !text(context.question) ||
+      !text(context.scopePlacementId) ||
+      !text(context.action) ||
+      !text(context.rationale) ||
+      !text(parent?.path) ||
+      !text(parent?.revision) ||
+      !text(parent?.project?.id) ||
+      !text(parent?.question) ||
+      !text(parent?.nodeId) ||
+      !text(parent?.project?.path) ||
+      !text(parent?.project?.placementId) ||
+      !text(context.opening?.id) ||
+      !['query', 'source', 'source-edge', 'parse', 'question'].includes(context.opening.kind) ||
+      !text(context.opening?.label) ||
+      !Array.isArray(context.history) ||
+      !context.history.length ||
+      context.history.at(-1).revision !== parent.revision ||
+      context.history.at(-1).question !== parent.question ||
+      context.originFrame.question.text !== parent.question ||
+      context.carry.origin.frameRevision !== context.originFrame.id ||
+      context.carry.receiving.frameRevision !== context.frame.id ||
+      context.carry.origin.recordingPath !== parent.path ||
+      context.carry.origin.recordingRevision !== parent.revision ||
+      (context.carry.origin.opening?.id ?? null) !==
+        (context.originOpening?.id ?? context.opening.id) ||
+      (context.assumption &&
+        (!text(context.assumption.decisionId) ||
+          context.assumption.proposal?.scope.recordingRevision !== parent.revision))
+    )
+      throw new Error('Invalid continuation context');
+    if (context.opening.sourceId && context.opening.sourceId !== parent.source?.id)
+      throw new Error('Invalid opening source');
+    if (parent.source?.graphId && parent.source.graphId !== parent.sourceGraph?.id)
+      throw new Error('Invalid source graph');
+    if (context.interpretedGraphs) {
+      const proposal = context.assumption?.proposal;
+      if (
+        proposal?.kind !== 'local-interpretation-v2' ||
+        proposal.scope.sourceId !== parent.source?.id ||
+        graphRevision(reviseGraph(parent.queryGraph, proposal.queryEdits)) !==
+          graphRevision(context.interpretedGraphs.query) ||
+        (parent.sourceGraph &&
+          graphRevision(reviseGraph(parent.sourceGraph, proposal.sourceEdits)) !==
+            graphRevision(context.interpretedGraphs.source))
+      )
+        throw new Error('Invalid interpreted continuation graphs');
+    }
+    if (edge) {
+      const graph =
+        context.opening.kind === 'query'
+          ? (context.interpretedGraphs?.query ?? parent.queryGraph)
+          : (context.interpretedGraphs?.source ?? parent.sourceGraph);
+      if (!graph?.edges.some((item) => JSON.stringify(item) === JSON.stringify(edge)))
+        throw new Error('Invalid opening edge');
+    }
+    return context;
+  }
   if (context?.version === 2) {
     if (
       context.schema !== 'tendora.continuation' ||
@@ -245,6 +392,8 @@ export function validateContinuation(context) {
       !text(context.opening?.id) ||
       !['query', 'source', 'source-edge', 'parse', 'question'].includes(context.opening.kind) ||
       !text(context.opening?.label) ||
+      !text(context.question) ||
+      !text(context.scopePlacementId) ||
       !Array.isArray(context.history) ||
       !context.history.length ||
       context.history.at(-1).revision !== parent.revision ||

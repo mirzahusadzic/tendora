@@ -33,6 +33,20 @@ The workbench can preserve supported parts alongside unresolved relations
 source can invalidate a dependent part without erasing its history. Saved
 questions and partial contributions can be revisited through Development.
 
+Workbench Asks retain a versioned inquiry frame: the question reading when
+acquired, intention/purpose, scope, selected case, source identities and source
+revisions.
+Following an opening creates a distinct receiving frame linked to the originating
+recording and opening. The carry records its actor, rationale, changed frame
+dimensions and support consequence. An identical acquired question can reuse its
+checked reading. A changed graph can produce a candidate correspondence, but graph
+mapping or compiled wording does not by itself establish preservation. Scope,
+case, source or project changes invalidate earlier support and require a fresh
+check. A purpose-only change preserves the earlier assessment when the question
+revision and checking context are unchanged; it does not manufacture a new proof.
+Version 1 and 2 continuations remain readable without being rewritten as framed
+records.
+
 Projects keep their manifest in `project.json`. Compressed, hash-checked blocks
 in `material.sqlite` retain authored records, acquisitions, role vectors and
 questions, preserving their decoded bytes and references. sqlite-vec stores
@@ -57,6 +71,10 @@ CLI `ask` and the TUI use the same checking engine.
 Acquired graphs can misread language; lexical audits and source inspection
 help review those readings. Offline replay uses retained wording. Search and
 alignment have explicit budgets and report when a limit is reached.
+
+The cooperative frame is a first vertical slice. It does not yet provide a
+general hypothetical-premise overlay, branch merging, or neural answer
+realization. Those remain proposals rather than engine behavior.
 
 The payments project demonstrates role-scoped questions about written incident
 procedures. Storage and interfaces are evolving with the research prototype.

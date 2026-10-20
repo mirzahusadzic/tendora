@@ -11,6 +11,8 @@ import {
   retainInquiryTraversal,
 } from '../../project/inquiries/inquiry.mjs';
 import { indexRecording, initialSelection } from '../recordings/view.mjs';
+import { authoredContinuation, evidenceOpenings } from '../../recording/continuation.mjs';
+import { interpretationRevision } from '../../recording/revisions.mjs';
 import { relationMeaning } from '../concepts/meaning.mjs';
 import { placementLabel } from '../concepts/placement-label.mjs';
 import { retainedReadingAuditor, prepareRetainedReading } from '../../engine/preparation.mjs';
@@ -560,6 +562,7 @@ export function createQuestionWorkflow({
       current.recording = retained.recording;
     }
     if (current.recording) {
+      current.recordingPath = run.recording?.path ?? current.recordingPath ?? null;
       state.ix = indexRecording(current.recording);
       state.selection = initialSelection(state.ix);
     }
@@ -629,6 +632,7 @@ export function createQuestionWorkflow({
         ]);
         if (pending !== work || work.controller.signal.aborted) return;
         current = { project, run, input, result, recording };
+        current.recordingPath = run.recording?.path ?? null;
         state.ix = indexRecording(recording);
         state.selection = initialSelection(state.ix);
         await projects.refreshOutline();
@@ -767,6 +771,92 @@ export function createQuestionWorkflow({
     }
     development.materialEditor(null, anchor);
   }
+  async function startContinuation(selected) {
+    if (!current?.recording || !selected) return;
+    const openings = evidenceOpenings(state.ix, state.selection, state.interpretationDecisions);
+    const anchor = selected?.anchor;
+    const relationOf = (item) =>
+      item?.edge ?? item?.anchor ?? (item?.from && item?.role && item?.to ? item : null);
+    const wanted = relationOf(selected);
+    const sameRelation = (item) => {
+      const edge = relationOf(item);
+      return Boolean(
+        edge &&
+        wanted &&
+        item?.role !== 'concept' &&
+        edge.role === wanted.role &&
+        edge.from === wanted.from &&
+        edge.to === wanted.to,
+      );
+    };
+    const provenance = (item) =>
+      item.sourceId === (selected?.sourceId ?? null) &&
+      [item.id, item.edge?.id, item.anchor?.edgeId].some((id) =>
+        [selected?.id, selected?.edge?.id, anchor?.edgeId, selected?.edgeId].includes(id),
+      );
+    const opening =
+      openings.find(provenance) ??
+      openings.find(
+        (item) =>
+          sameRelation(item) && (!selected?.sourceId || item.sourceId === selected.sourceId),
+      );
+    if (!opening) return false;
+    const path = current.recordingPath ?? current.run.recording?.path;
+    if (!path) return;
+    const continuation = authoredContinuation(
+      state.ix,
+      state.selection,
+      path,
+      opening,
+      state.interpretationDecisions,
+      {
+        action: 'continue-opening',
+        rationale: `Continue from the open connection: ${opening.label ?? opening.id}.`,
+      },
+    );
+    const originOpening = selected
+      ? {
+          id: selected.id,
+          kind: selected.kind ?? 'query',
+          label: selected.label ?? selected.id,
+          ...(selected.anchor
+            ? { anchor: structuredClone(selected.anchor) }
+            : opening.anchor
+              ? { anchor: structuredClone(opening.anchor) }
+              : {}),
+          ...(selected.edge
+            ? { edge: structuredClone(selected.edge) }
+            : opening.edge
+              ? { edge: structuredClone(opening.edge) }
+              : {}),
+          sourceId: selected.sourceId ?? opening.sourceId ?? null,
+        }
+      : continuation.opening;
+    const origin = {
+      path,
+      recordingRevision: interpretationRevision(current.recording),
+      nodeId: state.selection.nodeId,
+      occurrenceId: state.selection.occurrenceId,
+      sourceId: opening.sourceId ?? null,
+      askId: current.recording.ask?.askId ?? null,
+      opening,
+    };
+    continuation.originOpening = originOpening;
+    continuation.retainedOpening = structuredClone(continuation.opening);
+    await investigation.startAsk({
+      followup: true,
+      continuation,
+      origin,
+      question: current.input.question.text,
+      scopePlacementId: current.run.scopePlacementId,
+      caseSelection: current.input.caseSelection ?? null,
+    });
+    return true;
+  }
+  async function continueCurrentQuestion() {
+    if (!current?.recording) return;
+    await startContinuation(gap?.openings?.[0] ?? selectedRow()?.openings?.[0] ?? null);
+  }
   function inspectReading() {
     const selected = selectedRow();
     const source =
@@ -860,6 +950,7 @@ export function createQuestionWorkflow({
               command('n', 'add statement here', addStatementAtGap),
             ]
           : []),
+        ...(current?.recording ? [command('c', 'continue question', continueCurrentQuestion)] : []),
         command('i', 'question reading', inspectReading),
         command('ESCAPE', 'back to question', back),
       ];
@@ -881,6 +972,9 @@ export function createQuestionWorkflow({
     );
     if (developmentItems().length)
       result.push(command('ENTER', 'work on question', resumeQuestion, 'development'));
+    const selectedPurpose = selectedQuestion();
+    if (selectedPurpose?.investigationId && selectedPurpose?.askId && !selectedPurpose.scopeMissing)
+      result.push(command('i', 'purpose', () => investigation.reframe(), 'development'));
     result.push(command('c', 'add child', () => projects.handleProjectKey('c'), 'nodes'));
     result.push(command('ENTER', 'edit role', () => projects.editSelected(), 'nodes'));
     for (const [key, description] of [
@@ -1032,6 +1126,11 @@ export function createQuestionWorkflow({
             ? entries.length - 1
             : Math.max(0, Math.min(entries.length - 1, index + delta));
       await openDevelopment(entries[next].id);
+      return true;
+    }
+    const action = actions().find((item) => item.pane === state.focus && item.key === key);
+    if (action) {
+      await action.run();
       return true;
     }
     if (state.focus === 'nodes' && ['LEFT', 'RIGHT'].includes(key)) {

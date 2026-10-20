@@ -4,6 +4,7 @@ import { branch, treeRows, detailRows } from './tree.mjs';
 import { projectEntryTree } from '../concepts/project-outline.mjs';
 import { readingDevelopment } from './state.mjs';
 import { graphEditorRows } from '../recordings/graph-preview.mjs';
+import { frameLineageRows } from '../../recording/frame.mjs';
 
 import { engineSections } from '../engine/view.mjs';
 
@@ -212,17 +213,38 @@ export function createContent({ state, text, recordingContent, selectedConcept }
       purpose && purpose !== form.fields[0].value ? [labeledRow([['Purpose', purpose]])] : [];
     if (form.revisesRecording && form.revisesRecording.question !== form.fields[0].value)
       rows.push(labeledRow([['Recorded question', form.revisesRecording.question]]));
-    const context = form.continuation,
+    const context = form.carry
+        ? {
+            originFrame: form.carry.origin,
+            frame: form.carry.receiving,
+            carry: form.carry,
+            opening:
+              form.originOpening ?? form.continuation?.originOpening ?? form.carry.origin.opening,
+          }
+        : form.continuation,
       opening = form.origin?.opening ?? context?.opening;
-    if (!opening) return rows;
+    if (!opening)
+      return [
+        ...rows,
+        ...frameLineageRows(context).map(([label, value, tone]) =>
+          labeledRow([[label, value, tone]]),
+        ),
+      ];
+    const parent = context?.parent ?? form.continuation?.parent;
     const graph =
       opening.kind === 'query'
-        ? (context?.interpretedGraphs?.query ?? context?.parent.queryGraph)
-        : (context?.interpretedGraphs?.source ?? context?.parent.sourceGraph);
-    const sentence =
-      opening.kind === 'query' ? context?.parent.question : context?.parent.source?.text;
+        ? (context?.interpretedGraphs?.query ??
+          form.continuation?.interpretedGraphs?.query ??
+          parent?.queryGraph)
+        : (context?.interpretedGraphs?.source ??
+          form.continuation?.interpretedGraphs?.source ??
+          parent?.sourceGraph);
+    const sentence = opening.kind === 'query' ? parent?.question : parent?.source?.text;
     return [
       ...rows,
+      ...frameLineageRows(context).map(([label, value, tone]) =>
+        labeledRow([[label, value, tone]]),
+      ),
       labeledRow([
         [
           'Opening',
@@ -231,9 +253,7 @@ export function createContent({ state, text, recordingContent, selectedConcept }
             : opening.label,
         ],
       ]),
-      ...(context?.parent.source
-        ? [labeledRow([['Source', context.parent.source.text, 'input']])]
-        : []),
+      ...(parent?.source ? [labeledRow([['Source', parent.source.text, 'input']])] : []),
       row(),
     ];
   }

@@ -508,6 +508,10 @@ try {
       assert.equal(ui.state.form, null);
       assert.match(ui.term.frame, /The role where this question started was removed/u);
       assert.equal(ui.state.workflow.activity(), null, 'A missing scope cannot cause a retry loop');
+      assert(
+        !ui.state.actionProvider().some((action) => action.description === 'purpose'),
+        'A removed scope cannot expose the purpose action',
+      );
     },
   );
   await row(

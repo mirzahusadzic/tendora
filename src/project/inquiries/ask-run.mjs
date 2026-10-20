@@ -67,6 +67,12 @@ export async function requestProjectInquiry(
       projectDigest: project.digest,
       caseSelection,
       ...(result.recording.reasoning ? { engineRunId: result.recording.reasoning.runId } : {}),
+      ...(result.recording.continuation?.frame
+        ? {
+            frame: result.recording.continuation.frame,
+            carry: result.recording.continuation.carry,
+          }
+        : {}),
     });
     await saveInvestigation(project, next, saved.digest);
     return result;

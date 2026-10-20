@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { sourceCatalog, scopedSources } from '../authoring/sources.mjs';
 import { isContextualSource } from '../../recording/case-sources.mjs';
 import { readDataFile, writeDataFile, listDataFiles } from '../storage/data-files.mjs';
+import { validateFrameCarry, validateInquiryFrame } from '../../recording/frame.mjs';
 
 export const textDigest = (text) => createHash('sha256').update(text).digest('hex');
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
@@ -153,6 +154,8 @@ export function addAsk(
     caseSelection = null,
     origin = null,
     continuation = null,
+    frame = null,
+    carry = null,
   } = {},
 ) {
   const next = structuredClone(data);
@@ -163,9 +166,13 @@ export function addAsk(
     caseSelection,
     origin,
     continuation,
+    ...(frame ? { frame } : {}),
+    ...(carry ? { carry } : {}),
     intentionId: next.intentions.at(-1).id,
     revision: 0,
     runs: [],
+    checkedFrame: null,
+    originFrame: null,
     status: 'draft',
     cursor: Array.from(question).length,
   };
@@ -268,6 +275,10 @@ export function validateInvestigation(data) {
     )
       throw new Error('Invalid ask');
     if (ask.caseSelection) validateCase(ask.caseSelection, data.projectId);
+    if (ask.frame) validateInquiryFrame(ask.frame);
+    if (ask.carry) validateFrameCarry(ask.carry);
+    if (ask.checkedFrame) validateInquiryFrame(ask.checkedFrame);
+    if (ask.originFrame) validateInquiryFrame(ask.originFrame);
     for (const run of ask.runs) {
       if (
         !nonempty(run.path) ||
@@ -279,6 +290,8 @@ export function validateInvestigation(data) {
       )
         throw new Error('Invalid ask run');
       if (run.caseSelection) validateCase(run.caseSelection, data.projectId);
+      if (run.frame) validateInquiryFrame(run.frame);
+      if (run.carry) validateFrameCarry(run.carry);
     }
     asks.add(ask.id);
   }

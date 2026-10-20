@@ -2,6 +2,7 @@
 import { relationMeaning } from '../concepts/meaning.mjs';
 import { placementLabel } from '../concepts/placement-label.mjs';
 import { questionExplanation } from './question-explanation.mjs';
+import { frameLineageRows } from '../../recording/frame.mjs';
 
 const unique = (values) => [...new Set(values)];
 const count = (n, label) => `${n} ${label}${n === 1 ? '' : 's'}`;
@@ -276,6 +277,8 @@ export function journeySection({ project, run, input, result, recording }, place
   const matching = (id) => index.occurrences.get(id) ?? [];
   const queryAudit = reading(inputs.find((entry) => entry.kind === 'question'));
   const groups = [];
+  const lineage = frameLineageRows(recording?.continuation);
+  if (lineage.length) groups.push(section('How this question was reached', lineage));
   const candidateSourceIds = new Set(
     !answers.length
       ? (run.answer?.candidates ?? []).flatMap((candidate) => candidate.sourceIds ?? [])

@@ -269,8 +269,9 @@ export function validateRecording(data) {
   if (data.continuation) {
     validateContinuation(data.continuation);
     if (
-      data.continuation.question !== data.inquiry?.text ||
-      data.continuation.scopePlacementId !== data.project?.placementId ||
+      (data.continuation.version >= 2 &&
+        (data.continuation.question !== data.inquiry?.text ||
+          data.continuation.scopePlacementId !== data.project?.placementId)) ||
       data.continuation.parent.project.id !== data.project?.id
     )
       throw new Error('Continuation inquiry scope mismatch');

@@ -20,6 +20,14 @@ import {
   textDigest,
   followupFor,
 } from '../../project/inquiries/investigation.mjs';
+import {
+  buildInquiryFrame,
+  currentFrameContext,
+  draftContinuationFrame,
+  finalizeAskFrame,
+  purposeOnlyCarry,
+  refreshAskFrame,
+} from '../../project/inquiries/frame.mjs';
 
 import { interpretationRevision } from '../../recording/revisions.mjs';
 import {
@@ -46,6 +54,19 @@ import { placementLabel } from '../concepts/placement-label.mjs';
 import { evaluateAnswer } from '../../recording/answers.mjs';
 import { knowledgeSnapshot } from '../../project/authoring/knowledge.mjs';
 import { sourceCatalog, scopedSources } from '../../project/authoring/sources.mjs';
+import { carryStatusLabel, frameLineageRows } from '../../recording/frame.mjs';
+
+const lineageForAsk = (ask) =>
+  ask?.carry
+    ? {
+        originFrame: ask.carry.origin,
+        frame: ask.carry.receiving,
+        carry: ask.carry,
+        opening: ask.originOpening ?? ask.continuation?.originOpening ?? ask.carry.origin.opening,
+      }
+    : ask?.continuation?.carry
+      ? ask.continuation
+      : null;
 
 const caseRoles = new WeakMap();
 function hasCaseSources(data, placementId) {
@@ -78,7 +99,7 @@ export function createInvestigation({
     revoked: 'Assessment revoked',
   };
   const origin = () => {
-    if (state.mode !== 'recording') return null;
+    if (state.mode !== 'recording' && !state.ix?.recording) return null;
     const opening =
       state.page === 'scope'
         ? evidenceOpenings(state.ix, state.selection, state.interpretationDecisions)[
@@ -86,7 +107,7 @@ export function createInvestigation({
           ]
         : null;
     return {
-      path: state.activeRecordingPath,
+      path: state.activeRecordingPath ?? state.ix?.recording?.reasoning?.path ?? null,
       recordingRevision: interpretationRevision(state.ix.recording),
       nodeId: state.selection.nodeId,
       occurrenceId: state.selection.occurrenceId,
@@ -314,6 +335,10 @@ export function createInvestigation({
       ask.caseSelection.binding = null;
     if (data.intentions.length === 1 && data.asks.length === 1 && !ask.runs.length)
       data.intentions[0].text = question;
+    if (!ask.checkedFrame) {
+      const intention = data.intentions.find((item) => item.id === ask.intentionId) ?? null;
+      ask.frame = refreshAskFrame(state.project, { ...ask, intention });
+    }
     data.activeAskId = ask.id;
     await persist(data);
     active.draftStatus = 'Saved';
@@ -469,18 +494,43 @@ export function createInvestigation({
         scopePlacementId: options.scopePlacementId ?? state.placementId,
         caseSelection: options.caseSelection ?? null,
       });
+      const ask = currentAsk(state.investigation.data);
+      ask.frame = buildInquiryFrame(state.project, {
+        question: ask.question,
+        intention: state.investigation.data.intentions.at(-1),
+        scopePlacementId: ask.scopePlacementId,
+        caseSelection: ask.caseSelection,
+      });
     }
     if (options.followup || options.continuation) {
       const previous = currentAsk(state.investigation.data);
       const caseSelection = options.caseSelection ?? previous?.caseSelection ?? null;
+      const continuation = options.continuation ?? null;
       const data = addAsk(state.investigation.data, {
         question: options.question ?? '',
         scopePlacementId:
           options.scopePlacementId ?? previous?.scopePlacementId ?? state.placementId,
         caseSelection,
         origin: options.origin ?? origin(),
-        continuation: options.continuation ?? null,
+        continuation,
       });
+      const ask = currentAsk(data);
+      if (continuation) {
+        const optionData = draftContinuationFrame(state.project, continuation, {
+          ...ask,
+          intention: data.intentions.find((item) => item.id === ask.intentionId),
+        });
+        ask.continuation = optionData;
+        ask.frame = optionData.frame;
+        ask.carry = optionData.carry;
+      } else {
+        ask.frame = buildInquiryFrame(state.project, {
+          question: ask.question,
+          intention: data.intentions.find((item) => item.id === ask.intentionId),
+          scopePlacementId: ask.scopePlacementId,
+          caseSelection: ask.caseSelection,
+        });
+      }
       await persist(data);
     }
     const ask = currentAsk(state.investigation.data);
@@ -497,10 +547,14 @@ export function createInvestigation({
         const active = state.form;
         await saveDraft(active);
         const project = state.project;
+        const submitted = structuredClone(state.investigation.data),
+          revision = currentAsk(submitted);
         const disk = await openProject(dirname(project.path));
         if (disk.digest !== project.digest)
           throw Object.assign(new Error('Project changed'), { code: 'PROJECT_CHANGED' });
         const draft = currentAsk(state.investigation.data);
+        const draftIntention = submitted.intentions.find((item) => item.id === draft.intentionId);
+        draft.intention = structuredClone(draftIntention);
         if (draft.origin?.path) {
           const parent = indexRecording(await readSavedRecording(draft.origin.path));
           if (interpretationRevision(parent.recording) !== draft.origin.recordingRevision)
@@ -515,8 +569,6 @@ export function createInvestigation({
               throw new Error('Interpretation changed');
           }
         }
-        const submitted = structuredClone(state.investigation.data),
-          revision = currentAsk(submitted);
         revision.revision++;
         revision.status = 'running';
         await persist(submitted);
@@ -524,9 +576,7 @@ export function createInvestigation({
           investigationId: submitted.id,
           askId: revision.id,
           revision: revision.revision,
-          intention: structuredClone(
-            submitted.intentions.find((item) => item.id === revision.intentionId),
-          ),
+          intention: structuredClone(draftIntention),
           question: query,
           origin: revision.origin,
         };
@@ -536,13 +586,32 @@ export function createInvestigation({
         active.error = '';
         active.recovery = null;
         for (const client of ['egemma', 'penman', 'semcat']) state.serviceStatus[client] = 'idle';
+        const continuationIntention = submitted.intentions.find(
+          (item) => item.id === revision.intentionId,
+        );
         const continuation = revision.continuation
-          ? {
-              ...revision.continuation,
+          ? draftContinuationFrame(project, revision.continuation, {
+              ...revision,
               question: query,
-              scopePlacementId: revision.scopePlacementId,
-            }
+              intention: continuationIntention,
+            })
           : null;
+        if (continuation) {
+          // The submitted draft may already carry the origin selected before the form opened.
+          const originOpening =
+            revision.originOpening ??
+            draft.originOpening ??
+            continuation.originOpening ??
+            continuation.opening;
+          revision.originOpening = originOpening;
+          draft.originOpening = originOpening;
+          revision.retainedOpening =
+            revision.retainedOpening ?? continuation.retainedOpening ?? continuation.opening;
+          revision.carry = continuation.carry;
+          revision.frame = continuation.frame;
+          revision.continuation = continuation;
+          revision.intention = structuredClone(continuationIntention);
+        }
         const submittedInvestigationId = submitted.id;
         active.execution = (config.captureInquiry ?? captureProjectInquiry)(
           project,
@@ -592,6 +661,28 @@ export function createInvestigation({
                 caseSelection: revision.caseSelection,
                 ...(recording.reasoning ? { engineRunId: recording.reasoning.runId } : {}),
               });
+              const settled = finalizeAskFrame(
+                project,
+                {
+                  ...item,
+                  intention: submitted.intentions.find((entry) => entry.id === item.intentionId),
+                  origin:
+                    item.origin ??
+                    (item.continuation?.parent
+                      ? {
+                          path: item.continuation.parent.path,
+                          recordingRevision: item.continuation.parent.revision,
+                        }
+                      : null),
+                },
+                recording,
+              );
+              item.frame = settled.frame;
+              item.checkedFrame = settled.frame;
+              item.carry = settled.carry;
+              item.continuation = recording.continuation ?? item.continuation;
+              item.runs.at(-1).frame = settled.frame;
+              item.runs.at(-1).carry = settled.carry;
               return next;
             };
             if (state.investigation?.data.id === submittedInvestigationId) await persist(update);
@@ -664,6 +755,9 @@ export function createInvestigation({
       askId: ask.id,
       caseSelection: structuredClone(ask.caseSelection),
       continuation: ask.continuation,
+      originOpening: ask.originOpening ?? ask.continuation?.originOpening,
+      frame: ask.frame,
+      carry: ask.carry,
       origin: ask.origin,
       revisesRecording: options.revisesRecording ?? null,
       onProjectReload: () => {
@@ -698,8 +792,22 @@ export function createInvestigation({
     const revisesRecording = {
       path: state.activeRecordingPath,
       question: state.ix.recording.inquiry.text,
+      frame: buildInquiryFrame(state.project, {
+        question: state.ix.recording.inquiry.text,
+        questionGraph: state.ix.graphs.get(state.ix.recording.inquiry.graphId),
+        intention: state.ix.recording.ask?.intention ?? null,
+        scopePlacementId: state.ix.recording.project.placementId,
+        caseSelection: state.ix.recording.caseState?.selection ?? null,
+      }),
     };
     await attach();
+    const data = structuredClone(state.investigation.data),
+      ask = currentAsk(data);
+    ask.originFrame = revisesRecording.frame;
+    ask.continuationAction = 'revise-question';
+    ask.continuationRationale =
+      'Revise the retained question after reviewing its current support and openings.';
+    await persist(data);
     await startAsk({ returnTo, revisesRecording });
   }
   async function followup(opening = null, fresh = false) {
@@ -716,8 +824,15 @@ export function createInvestigation({
         state.activeRecordingPath,
         opening,
         state.interpretationDecisions,
+        {
+          action: 'continue-opening',
+          rationale: opening
+            ? `Continue from the open relation: ${opening.label ?? opening.id}.`
+            : 'Continue the retained inquiry with a new question.',
+        },
       );
     await attach();
+    if (!parent) throw new Error('No retained inquiry origin is available to continue.');
     const existing =
       !fresh && followupFor(state.investigation.data, parent, continuation.opening.id);
     const returnTo = Object.fromEntries(
@@ -807,7 +922,18 @@ export function createInvestigation({
           details: [['Recorded', [item.at]]],
         })),
         ...data.asks.flatMap((ask) => [
-          { label: `${ask.status} - ${ask.question}`, group: 'Asks', kind: 'ask', item: ask },
+          {
+            label: `${ask.status} - ${ask.question}`,
+            group: 'Asks',
+            kind: 'ask',
+            item: ask,
+            details: ask.carry
+              ? [
+                  ...(ask.frame?.intention?.text ? [['Purpose', [ask.frame.intention.text]]] : []),
+                  ['Carry', [carryStatusLabel(ask.carry)]],
+                ]
+              : [],
+          },
           ...ask.runs.map((run) => ({
             label: `Run ${run.revision} - ${run.question}`,
             group: 'Runs',
@@ -829,10 +955,17 @@ export function createInvestigation({
       async (choice, back) => {
         if (state.form?.workspace) await saveDraft();
         if (choice.kind === 'ask') {
-          const next = structuredClone(state.investigation.data);
-          next.activeAskId = choice.item.id;
-          await persist(next);
-          await startAsk();
+          forms.startForm('Past question', [], () => forms.backForm(), {
+            submitLabel: 'back',
+          });
+          state.form.inspectRows = [
+            ...frameLineageRows(lineageForAsk(choice.item)),
+            ...(choice.item.frame?.intention?.text
+              ? [['Purpose', choice.item.frame.intention.text]]
+              : []),
+            ['State', choice.item.status],
+          ].filter(([, value]) => value);
+          state.form.confirm = true;
         } else if (choice.kind === 'run') {
           const previous = { ...recordingSnapshot(), ...back };
           state.form = null;
@@ -879,15 +1012,67 @@ export function createInvestigation({
       [['Purpose', state.investigation.data.intentions.at(-1).text, true]],
       async ([value]) => {
         const next = reviseIntention(state.investigation.data, value, reference);
-        if (active?.workspace) currentAsk(next).intentionId = next.intentions.at(-1).id;
+        const ask = currentAsk(next);
+        ask.intentionId = next.intentions.at(-1).id;
+        const current = currentFrameContext(state.project, {
+          ...ask,
+          intention: next.intentions.at(-1),
+        });
+        const prior = ask.checkedFrame ?? ask.frame ?? current;
+        const purpose = purposeOnlyCarry(
+          {
+            ...ask,
+            currentProjectRevision: current.project.revision,
+            currentScope: current.scope,
+            currentCase: current.case,
+            currentSources: current.sources,
+          },
+          prior,
+          next.intentions.at(-1),
+          'Changed the purpose of the retained inquiry.',
+          current,
+        );
+        ask.frame = purpose?.frame ?? current;
+        if (purpose?.carry) {
+          ask.checkedFrame = prior;
+          ask.carry = purpose.carry;
+          ask.continuationAction = 'revise-purpose';
+          ask.continuationRationale = 'Changed the purpose of the retained inquiry.';
+          if (active?.workspace) {
+            active.frame = ask.frame;
+            active.continuation = {
+              ...(active.continuation ?? {
+                schema: 'tendora.continuation',
+                version: 3,
+                author: 'participant',
+                contextUse: 'review-only',
+                question: ask.question,
+                scopePlacementId: ask.scopePlacementId,
+                parent: { queryGraph: {}, sourceGraph: null },
+                opening: { id: 'question', kind: 'question', label: ask.question },
+                history: [],
+              }),
+              ...(prior
+                ? {
+                    originFrame: prior,
+                    frame: ask.frame,
+                    carry: purpose.carry,
+                    action: 'revise-purpose',
+                    rationale: 'Changed the purpose of the retained inquiry.',
+                  }
+                : {}),
+            };
+          }
+        }
+        if (active?.workspace) {
+          active.intentionId = ask.intentionId;
+          active.frame = ask.frame;
+          active.carry = ask.carry;
+          active.continuation = ask.continuation ?? active.continuation;
+        }
         await persist(next);
         forms.cancelForm();
-        if (!active?.workspace)
-          await startAsk({
-            followup: true,
-            question: currentAsk(next).question,
-            origin: reference,
-          });
+        if (!active?.workspace) await startAsk();
       },
     );
     state.form.returnForm = active;
@@ -897,6 +1082,9 @@ export function createInvestigation({
         active?.workspace ? active.fields[0].value : currentAsk(state.investigation.data).question,
         'input',
       ],
+      ...(currentAsk(state.investigation?.data)?.carry
+        ? [['Carry', carryStatusLabel(currentAsk(state.investigation.data).carry)]]
+        : []),
     ].filter(([, value]) => value);
   }
   function currentAssessments(reference = origin()) {
@@ -1180,9 +1368,6 @@ export function createInvestigation({
         command('reading', 'ALT_S', 'scope', chooseScope),
         command('reading', 'ALT_C', 'case', chooseCase),
       ];
-      // The live editor has one Ask surface. Its footer and key handler must
-      // share the same commands, including when a key falls through formKey.
-      if (state.workflow?.active()) return primary;
       const data = state.investigation?.data;
       const hasHistory =
         data &&
@@ -1335,5 +1520,6 @@ export function createInvestigation({
     persist,
     origin,
     history,
+    reframe,
   };
 }
