@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { questionExplanation } from '../../../src/tui/inquiries/question-explanation.mjs';
-import { journeySection } from '../../../src/tui/inquiries/journey-view.mjs';
+import { journeySection, sourceStatements } from '../../../src/tui/inquiries/journey-view.mjs';
 import { relationMeaning } from '../../../src/tui/concepts/meaning.mjs';
 
 const fixture = JSON.parse(
@@ -384,6 +384,41 @@ assert.deepEqual(
     ['Source', 'The conservator repairs bindings.', 'input'],
   ],
 );
+// Selecting a statement presents why its reading is flagged, or how it was read.
+const repairs = {
+  top: 'r',
+  nodes: [
+    { id: 'r', concept: 'repair-01' },
+    { id: 's', concept: 'steward' },
+  ],
+  edges: [{ id: 'e', from: 'r', role: ':ARG0', to: 's' }],
+};
+const [plain, flagged, unread] = sourceStatements(
+  [
+    { id: 'a', text: 'The steward repairs.', graph: repairs },
+    {
+      id: 'b',
+      text: 'The steward marks the binding.',
+      graph: repairs,
+      lexicalAudit: {
+        findings: [
+          {
+            predicate: 'tattoo-01',
+            status: 'unverified',
+            description: 'to mark the skin with permanent colors and patterns',
+          },
+        ],
+      },
+    },
+    { id: 'c', text: 'Not yet read.' },
+  ],
+  {},
+).entries.map((entry) => entry.preview);
+assert.match(plain[0], /^Read as repair: .*steward$/u);
+assert.deepEqual(flagged, [
+  'Read as “to mark the skin with permanent colors and patterns” (tattoo), but no word in the text says so.',
+]);
+assert.deepEqual(unread, ['No reading retained for this text yet.']);
 console.log(
-  'ok open questions explain global evidence gaps, preserve diagnostic states and expose related sources without claiming an answer',
+  'ok open questions explain global evidence gaps, preserve diagnostic states and expose related sources without claiming an answer; selected statements preview their reading',
 );

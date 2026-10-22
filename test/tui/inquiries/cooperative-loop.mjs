@@ -36,8 +36,8 @@ try {
   assert(row);
   await ui.key('HOME');
   for (let i = 0; i < choices.indexOf(row); i++) await ui.key('DOWN');
-  await ui.key('ENTER');
-  assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
+  // The selected gap offers continuation directly.
+  assert.equal(ui.state.workflow.readingView().title, 'Develop question');
   assert(
     ui.state.workflow
       .actions()
@@ -134,8 +134,7 @@ try {
   assert(reopenedRow);
   await ui.key('HOME');
   for (let i = 0; i < reopenedChoices.indexOf(reopenedRow); i++) await ui.key('DOWN');
-  await ui.key('ENTER');
-  assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
+  assert.equal(ui.state.workflow.readingView().title, 'Develop question');
   await ui.key('c');
   assert.equal(ui.state.form.title, 'Ask');
   const secondOrigin = ui.state.form.origin;

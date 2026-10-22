@@ -326,10 +326,9 @@ export function createQuestionWorkflow({
         } else if (item?.placementId) {
           remember();
           select(item.placementId, 'reading', true);
-        } else if (item?.openings) {
-          remember();
-          gap = item;
-          state.offset = 0;
+        } else if (item?.openings && selectedGapAnchor()) {
+          // The selected gap already shows what it touches; Enter acts on it.
+          return addStatementAtGap();
         }
       },
     };
@@ -401,28 +400,6 @@ export function createQuestionWorkflow({
         },
         'Language reading',
       );
-    if (gap && ready()) {
-      const ids = new Set(gap.openings.flatMap((item) => item.sourceIds ?? []));
-      const sources = current.result.inputs.filter(
-        (source) => source.kind === 'question' || ids.has(source.id),
-      );
-      return view(
-        {
-          rows: [
-            ['Question', question(), 'input'],
-            ['Connection', gap.cells[0], 'warning'],
-            ['Missing', gap.cells[1]],
-          ],
-          groups: [
-            {
-              heading: 'Readings for this connection',
-              table: sourceStatements(sources, { audit: auditFor, readings: true }),
-            },
-          ],
-        },
-        'Connection gap',
-      );
-    }
     if (atCurrentProject() && (pending || current.error || !ready()))
       return view(
         {
@@ -933,35 +910,21 @@ export function createQuestionWorkflow({
       ? [
           { ...command('UP', 'select row', () => handleKey('UP')), displayKey: '↑↓' },
           { ...command('DOWN', 'next row', () => handleKey('DOWN')), helpOnly: true },
-          command(
-            'ENTER',
-            selected.source
-              ? 'read selected text'
-              : selected.openings
-                ? 'inspect gap'
-                : 'follow selected role',
-            () => readingView().onChoice(readingView().activeChoice),
-          ),
+          ...(selected.openings && !selectedGapAnchor()
+            ? []
+            : [
+                command(
+                  'ENTER',
+                  selected.source
+                    ? 'read selected text'
+                    : selected.openings
+                      ? 'add statement here'
+                      : 'follow selected role',
+                  () => readingView().onChoice(readingView().activeChoice),
+                ),
+              ]),
         ]
       : [];
-    if (gap)
-      return [
-        ...selectionActions,
-        ...(selectedGapAnchor()
-          ? [
-              ...(selectedGapAnchor().contributionId
-                ? [command('d', 'elaborate connection', developSelectedGap)]
-                : []),
-              command('n', 'add statement here', addStatementAtGap),
-            ]
-          : []),
-        // Offer continuation only where a recorded opening can carry it.
-        ...(continuationOpening(selectedGapOpening())
-          ? [command('c', 'continue question', continueCurrentQuestion)]
-          : []),
-        command('i', 'question reading', inspectReading),
-        command('ESCAPE', 'back to question', back),
-      ];
     const common = [
       command('a', 'ask here', () => ask()),
       command('n', 'add statements', () => development.statementsEditor({ add: true })),
@@ -978,8 +941,21 @@ export function createQuestionWorkflow({
         'development',
       ),
     );
-    if (developmentItems().length)
-      result.push(command('ENTER', 'work on question', resumeQuestion, 'development'));
+    if (developmentItems().length) {
+      // Selecting a checked question already shows its answer; Enter only
+      // matters for drafts.
+      const item = selectedQuestion();
+      const checked = Boolean(item?.run && !item.scopeMissing);
+      result.push({
+        ...command(
+          'ENTER',
+          checked ? 'work on question' : 'finish question',
+          resumeQuestion,
+          'development',
+        ),
+        ...(checked ? { helpOnly: true } : {}),
+      });
+    }
     const selectedPurpose = selectedQuestion();
     if (selectedPurpose?.investigationId && selectedPurpose?.askId && !selectedPurpose.scopeMissing)
       result.push(command('i', 'purpose', () => investigation.reframe(), 'development'));
@@ -996,6 +972,17 @@ export function createQuestionWorkflow({
           helpOnly: true,
         });
     result.push(...selectionActions);
+    if (selected?.openings && selectedGapAnchor())
+      result.push(
+        // Enter adds the statement; n stays bound to the same action.
+        { ...command('n', 'add statement here', addStatementAtGap), helpOnly: true },
+        ...(selectedGapAnchor().contributionId
+          ? [command('d', 'elaborate connection', developSelectedGap)]
+          : []),
+      );
+    // Offer continuation only where a recorded opening can carry it.
+    if (selected?.openings && continuationOpening(selectedGapOpening()))
+      result.push(command('c', 'continue question', continueCurrentQuestion));
     if (!current && !selected)
       result.push(
         state.projectReadingOrigin === 'development' && selectedQuestion()
@@ -1068,8 +1055,13 @@ export function createQuestionWorkflow({
     for (const item of result.filter(
       (item) => item.pane === 'reading' && ['d', 'r', 'i', 'u', 'ESCAPE'].includes(item.key),
     ))
-      for (const pane of ['nodes', 'development'])
-        result.push({ ...item, pane, helpOnly: item.key !== 'd' });
+      for (const pane of ['nodes', 'development']) {
+        // A pane's own key keeps its meaning there.
+        if (result.some((own) => own.pane === pane && own.key === item.key)) continue;
+        // Development shows the selected question's answer, so its check is listed there.
+        const listed = item.key === 'd' || (pane === 'development' && item.key === 'r');
+        result.push({ ...item, pane, helpOnly: !listed });
+      }
     return result;
   }
   async function handleKey(key) {

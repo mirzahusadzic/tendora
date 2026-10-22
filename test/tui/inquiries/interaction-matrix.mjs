@@ -335,12 +335,15 @@ try {
     'Selection does not run a new question',
   );
   await releaseCache();
+  // Selecting a checked question already shows its answer; its check works
+  // from Development, and Enter is not advertised as a separate step.
+  assert.doesNotMatch(ui.term.frame, /enter work on question/u);
   await row(
     'Development',
     'current question',
-    'Enter',
-    'enter work on question',
-    () => ui.key('ENTER'),
+    'Shift+Tab',
+    'r check again',
+    () => ui.key('SHIFT_TAB'),
     () => {
       assert.equal(ui.state.focus, 'reading');
       sameQuestion(question);

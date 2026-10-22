@@ -270,6 +270,21 @@ export function createText({ noColor = false } = {}) {
     }
     if (item.table) {
       const { headers, entries } = item.table;
+      // Selection presents: a selected row shows its preview without another key.
+      const preview = (entry) =>
+        entry.selected
+          ? (entry.preview ?? []).flatMap((text) =>
+              wrap(
+                {
+                  ...row(`↳ ${text}`, 'muted', 4),
+                  hangingIndent: 2,
+                  surface: item.surface,
+                  choiceIndex: entry.choiceIndex,
+                },
+                width,
+              ),
+            )
+          : [];
       const widths = tableWidths(
         {
           ...item.table,
@@ -284,47 +299,45 @@ export function createText({ noColor = false } = {}) {
         editorMeasure,
       );
       if (!widths || width < (item.table.minWidth ?? 104))
-        return entries
-          .flatMap((entry, index) => {
-            const previous = entries[index - 1]?.cells;
-            const sameGroup =
-              previous &&
-              !(item.table.groupColumns ?? []).some(
-                (column) => previous[column] !== entry.cells[column],
-              );
-            return [
-              ...(index ? [sameGroup ? row() : row('─'.repeat(width), 'border')] : []),
-              ...entry.cells.flatMap((value, column) => {
-                if (
-                  value === '' ||
-                  value === '—' ||
-                  (sameGroup &&
-                    column < (item.table.repeatColumns ?? 2) &&
-                    previous[0] === entry.cells[0] &&
-                    previous[column] === value)
-                )
-                  return [];
-                const tone = entry.selected
-                  ? 'selected'
-                  : (entry.cellTones?.[column] ?? entry.tone);
-                return [
-                  {
-                    ...labeledRow([
-                      [
-                        `${column === 0 && entry.selected ? '› ' : ''}${headers[column]}`,
-                        value,
-                        tone,
-                      ],
-                    ]),
-                    indent: 0,
-                    selectorIndex: entry.selectorIndex,
-                    choiceIndex: entry.choiceIndex,
-                  },
-                ];
-              }),
-            ];
-          })
-          .flatMap((line) => wrap({ ...line, surface: item.surface }, width));
+        return entries.flatMap((entry, index) => {
+          const previous = entries[index - 1]?.cells;
+          const sameGroup =
+            previous &&
+            !(item.table.groupColumns ?? []).some(
+              (column) => previous[column] !== entry.cells[column],
+            );
+          return [
+            ...(index ? [sameGroup ? row() : row('─'.repeat(width), 'border')] : []),
+            ...entry.cells.flatMap((value, column) => {
+              if (
+                value === '' ||
+                value === '—' ||
+                (sameGroup &&
+                  column < (item.table.repeatColumns ?? 2) &&
+                  previous[0] === entry.cells[0] &&
+                  previous[column] === value)
+              )
+                return [];
+              const tone = entry.selected ? 'selected' : (entry.cellTones?.[column] ?? entry.tone);
+              return [
+                {
+                  ...labeledRow([
+                    [
+                      `${column === 0 && entry.selected ? '› ' : ''}${headers[column]}`,
+                      value,
+                      tone,
+                    ],
+                  ]),
+                  indent: 0,
+                  selectorIndex: entry.selectorIndex,
+                  choiceIndex: entry.choiceIndex,
+                },
+              ];
+            }),
+          ]
+            .flatMap((line) => wrap({ ...line, surface: item.surface }, width))
+            .concat(preview(entry));
+        });
       const result = [];
       let previous;
       const divider = () => ({
@@ -391,6 +404,7 @@ export function createText({ noColor = false } = {}) {
           });
         }
         if (!index) result.push({ ...divider(), keepWithNext: true });
+        else result.push(...preview(entry));
         previous = entry.cells;
       }
       return result;

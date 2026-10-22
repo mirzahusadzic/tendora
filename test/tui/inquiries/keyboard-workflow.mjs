@@ -326,18 +326,16 @@ try {
     { limit: 'Explaining missing proof does not create the absent source connection.' },
   );
   const openGap = await selectRow((row) => row.openings?.length);
-  await ui.key('ENTER');
-  assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
-  readText('Readings for this connection');
+  // Selection presents the gap: statements it records show under the row.
+  assert.equal(ui.state.workflow.readingView().title, 'Develop question');
+  assert.equal(ui.term.frame.includes('↳ '), Boolean(openGap.preview.length));
   await ui.key('i');
   assert.equal(ui.state.workflow.readingView().title, 'Language reading');
-  await ui.key('ESCAPE');
-  assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
   await ui.key('ESCAPE');
   assert.equal(ui.state.workflow.readingView().activeChoice, openGap.choiceIndex);
   record(
     'question.gap',
-    'A selected gap opens only its context and relevant readings; nested Escape returns through gap to the original row.',
+    'A selected gap shows its related statements in place; its reading opens with i and Escape returns to the same row.',
     {
       limit: 'A gap with no proposal remains unresolved; inspection does not supply new evidence.',
     },
@@ -599,16 +597,19 @@ try {
       [message],
       'Injected result status over a real question; renderer/controller only, not a new inference outcome.',
     );
-    await selectRow((row) => row.openings);
-    await ui.key('ENTER');
-    assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
-    await ui.key('ESCAPE');
+    const statusGap = await selectRow((row) => row.openings);
+    assert.equal(
+      ui.term.frame.includes('↳ '),
+      Boolean(statusGap.preview.length),
+      'The selected gap previews only the statements it records',
+    );
+    assert.equal(ui.state.workflow.readingView().title, 'Develop question');
     assert.equal(ui.state.workflow.current().run.status, status);
     await stateFrame(
-      status + '-back',
-      ['Enter selected gap', 'Escape'],
+      status + '-gap',
+      ['Select gap'],
       ['Develop question'],
-      'Back path from a gap in an injected result-status fixture.',
+      'A selected gap previews in place in an injected result-status fixture.',
     );
     record(
       'question.' + status,

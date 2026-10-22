@@ -153,6 +153,30 @@ export function readingWarnings(audit) {
     : [];
 }
 
+const sense = (predicate) => predicate.replace(/-\d+$/u, '').replaceAll('-', ' ');
+/** What selecting a statement shows: why its reading is flagged, or how it was read. */
+function readingPreview(source, findings) {
+  if (!source.graph) return ['No reading retained for this text yet.'];
+  if (findings.length)
+    return findings.map((finding) =>
+      finding.status === 'unlisted' && finding.evidence?.text
+        ? `“${finding.evidence.text}” is read in a sense the vocabulary does not list.`
+        : finding.status === 'unverified' && finding.description
+          ? `Read as “${finding.description}” (${sense(finding.predicate)}), but no word in the text says so.`
+          : (finding.reason ?? `Check how “${sense(finding.predicate)}” was read.`),
+    );
+  // The main clause: the root's own participants, not every nested relation.
+  const top = source.graph.top;
+  const main = relationMeaning(source.graph, { text: source.text }).relations.filter(({ edgeId }) =>
+    source.graph.edges.some((edge) => edge.id === edgeId && edge.from === top),
+  );
+  return main.length
+    ? [
+        `Read as ${main[0].cells[0]}: ${main.map(({ cells }) => `${cells[1]} ${cells[2]}`).join('; ')}`,
+      ]
+    : [];
+}
+
 /** Sources stay beside their contribution and the action that opens that exact reading. */
 export function sourceStatements(
   sources,
@@ -177,7 +201,8 @@ export function sourceStatements(
     rowSpacing: 1,
     entries: sources.map((source, i) => {
       const support = contribution?.(source);
-      const flagged = Boolean((audit?.(source) ?? source.lexicalAudit)?.findings.length);
+      const findings = (audit?.(source) ?? source.lexicalAudit)?.findings ?? [];
+      const flagged = Boolean(findings.length);
       const readingColumn = (contribution ? 2 : 1) + (readings ? 1 : 0);
       return {
         cells: [
@@ -201,6 +226,7 @@ export function sourceStatements(
         },
         choiceIndex: choice(i),
         source,
+        preview: readingPreview(source, findings),
       };
     }),
   };
@@ -370,7 +396,17 @@ export function journeySection({ project, run, input, result, recording }, place
       }),
     );
   if (!answers.length) {
-    groups.push(questionExplanation(run, answerRows));
+    const explanation = questionExplanation(run, answerRows);
+    for (const entry of explanation.table.entries) {
+      const ids = new Set((entry.openings ?? []).flatMap((opening) => opening.sourceIds ?? []));
+      const touching = sources.filter((source) => ids.has(source.id));
+      // Only statements the gap records; no preview claims an absence.
+      entry.preview = touching.map(
+        (source) =>
+          `${nodes.get(source.placementId)?.label ?? placementLabel(project.data, source.placementId)}: ${source.text}`,
+      );
+    }
+    groups.push(explanation);
     for (const candidate of run.answer?.candidates ?? []) {
       const ids = new Set(candidate.sourceIds ?? []);
       groups.push({

@@ -61,15 +61,20 @@ try {
   assert(target?.anchor?.edgeId);
   await ui.key('HOME');
   for (let i = 0; i < index; i++) await ui.key('DOWN');
-  await ui.key('ENTER');
-  assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
-  assert(ui.state.workflow.actions().some((a) => a.key === 'n'));
+  // Selecting the gap presents it and its actions; Enter acts on it.
+  assert.equal(ui.state.workflow.readingView().title, 'Develop question');
+  assert.doesNotMatch(ui.term.frame, /↳ /u, 'A gap without recorded statements claims nothing');
   assert(
-    !ui.state.workflow.actions().some((a) => a.key === 'c'),
+    ui.state.workflow
+      .actions()
+      .some((a) => a.key === 'ENTER' && a.description === 'add statement here'),
+  );
+  assert(
+    !ui.state.workflow.actions().some((a) => a.key === 'c' && a.pane === 'reading'),
     'Continuation is offered only where a recorded opening can carry it',
   );
   assert.doesNotMatch(ui.term.frame, /c continue question/u);
-  await ui.key('n');
+  await ui.key('ENTER');
   assert.equal(ui.state.form.title, 'Add statements');
   const retained = ui.state.project.data.contributions.find((c) => c.question?.text === question);
   assert(retained);
@@ -105,7 +110,7 @@ try {
     'No AMR request is allowed',
   );
   console.log(
-    'ok keyboard n retains a wholly open connection and anchors language without asserting its question; no dead continue action',
+    'ok keyboard n retains a wholly open connection and anchors language without asserting its question; no dead continue action; selection presents the gap',
   );
 } finally {
   ui?.app.dispose();
