@@ -684,10 +684,10 @@ export function createQuestionWorkflow({
       options = {
         question: selectedQuestion().question,
         scopePlacementId: role().id,
-        resumeDraft: false,
         ...options,
       };
-    await investigation.startAsk({ fresh: true, resumeDraft: !current, ...options });
+    // Ask starts a new question; saved drafts resume from Development.
+    await investigation.startAsk({ fresh: true, ...options });
   }
   async function openQuestion() {
     await projects.refreshOutline();
@@ -771,8 +771,9 @@ export function createQuestionWorkflow({
     }
     development.materialEditor(null, anchor);
   }
-  async function startContinuation(selected) {
-    if (!current?.recording || !selected) return;
+  /** The recorded opening a selected gap continues from, if this recording has one. */
+  function continuationOpening(selected) {
+    if (!current?.recording || !selected) return null;
     const openings = evidenceOpenings(state.ix, state.selection, state.interpretationDecisions);
     const anchor = selected?.anchor;
     const relationOf = (item) =>
@@ -794,12 +795,17 @@ export function createQuestionWorkflow({
       [item.id, item.edge?.id, item.anchor?.edgeId].some((id) =>
         [selected?.id, selected?.edge?.id, anchor?.edgeId, selected?.edgeId].includes(id),
       );
-    const opening =
+    return (
       openings.find(provenance) ??
       openings.find(
         (item) =>
           sameRelation(item) && (!selected?.sourceId || item.sourceId === selected.sourceId),
-      );
+      ) ??
+      null
+    );
+  }
+  async function startContinuation(selected) {
+    const opening = continuationOpening(selected);
     if (!opening) return false;
     const path = current.recordingPath ?? current.run.recording?.path;
     if (!path) return;
@@ -854,8 +860,7 @@ export function createQuestionWorkflow({
     return true;
   }
   async function continueCurrentQuestion() {
-    if (!current?.recording) return;
-    await startContinuation(gap?.openings?.[0] ?? selectedRow()?.openings?.[0] ?? null);
+    await startContinuation(selectedGapOpening());
   }
   function inspectReading() {
     const selected = selectedRow();
@@ -950,7 +955,10 @@ export function createQuestionWorkflow({
               command('n', 'add statement here', addStatementAtGap),
             ]
           : []),
-        ...(current?.recording ? [command('c', 'continue question', continueCurrentQuestion)] : []),
+        // Offer continuation only where a recorded opening can carry it.
+        ...(continuationOpening(selectedGapOpening())
+          ? [command('c', 'continue question', continueCurrentQuestion)]
+          : []),
         command('i', 'question reading', inspectReading),
         command('ESCAPE', 'back to question', back),
       ];
@@ -1043,7 +1051,10 @@ export function createQuestionWorkflow({
     }
     if (ready() || selected?.source)
       result.push(
-        command('i', selected?.source ? 'read selected text' : 'question reading', inspectReading),
+        // Enter already reads a selected text; list the key once.
+        selected?.source
+          ? { ...command('i', 'read selected text', inspectReading), helpOnly: true }
+          : command('i', 'question reading', inspectReading),
       );
     if (!current && trail.length) result.push(command('ESCAPE', 'back to role', back));
     if (

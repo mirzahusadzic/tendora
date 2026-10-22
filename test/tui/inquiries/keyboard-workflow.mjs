@@ -241,6 +241,13 @@ try {
   await ui.key('ESCAPE');
   assert(ui.state.workflow.developmentItems().some((q) => q.question === theatreQuestions[0]));
   record('draft.save', 'Leaving Ask retains the exact question as a draft.');
+  await ui.key('a');
+  assert.equal(
+    ui.state.form.fields[0].value,
+    '',
+    'Ask starts empty; typing never appends to a saved draft',
+  );
+  await ui.key('ESCAPE');
   await ui.key('o');
   await ui.choose(theatreQuestions[0]);
   assert.equal(ui.state.form.fields[0].value, theatreQuestions[0]);

@@ -34,7 +34,7 @@ export function questionExplanation(run, relations) {
     const referent = item.role === ':mod' && reference.has(item.to);
     const needed =
       item.kind === 'assertion' || item.kind === 'concept'
-        ? `“${words(item.concept)}” in the question reading`
+        ? `“${words(item.concept)}”`
         : referent
           ? `“${words(item.to)} ${words(item.from)}”`
           : relationship

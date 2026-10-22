@@ -356,7 +356,17 @@ export function createRenderer({
       actions: globalLabels,
       reserve: globalLabels,
       pack,
-      statusWidth: engineActivity ? Math.min(72, Math.floor(width / 2)) : 16,
+      // Fit the status message in the space the shortcuts leave, without rewrapping them.
+      statusWidth: engineActivity
+        ? Math.min(72, Math.floor(width / 2))
+        : Math.max(
+            16,
+            Math.min(
+              Math.floor(width / 2),
+              width - terminalKit.stringWidth(pack(globalLabels, width)[0] ?? '') - 4,
+              terminalKit.stringWidth(state.notice ?? '') + 2,
+            ),
+          ),
     });
     const bodyHeight = height - headerHeight - footerLayout.rows.length;
     let readingPane = layoutPane({

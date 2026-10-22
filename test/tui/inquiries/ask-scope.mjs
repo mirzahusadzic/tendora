@@ -165,6 +165,11 @@ try {
   assert.deepEqual(saved.caseSelection, selectedCase);
   await key('ESCAPE');
   await key('a');
+  assert.equal(state.form.fields[0].value, '', 'Ask starts a new question, never the draft');
+  await key('ESCAPE');
+  // The saved draft resumes from Development with its scope and case.
+  await key('o');
+  await key('ENTER');
   assert.equal(state.placementId, 'ticket');
   assert.equal(state.form.fields[0].value, question);
   assert.deepEqual(state.form.caseSelection, selectedCase);

@@ -119,8 +119,8 @@ try {
   await key('HOME');
   await key('DOWN');
   assert.equal(state.focus, 'development');
-  await key('ESCAPE');
-  await key('a');
+  // The unsent Ask resumes from Development; a fresh Ask never adopts it.
+  await key('ENTER');
   const resumed = currentAsk(state.investigation.data);
   assert.equal(resumed.id, purposeful.id);
   assert.equal(resumed.frame.intention.text, 'Explain authority for the maintenance plan.');
@@ -204,7 +204,15 @@ try {
     await app.idle();
     assert.equal(reopenedState.failure, '');
   };
-  await reopenedKey('a');
+  // After reload the unsent Ask is still listed in Development.
+  await reopenedKey('o');
+  await reopenedKey('HOME');
+  const draftAt = reopenedState.workflow
+    .developmentItems()
+    .findIndex((item) => item.askId === revisedPurpose.id);
+  assert(draftAt >= 0, 'The unsent Ask survives reload');
+  for (let i = 0; i < draftAt; i++) await reopenedKey('DOWN');
+  await reopenedKey('ENTER');
   const reloaded = currentAsk(reopenedState.investigation.data);
   assert.ok(reloaded.frame, 'Reload restores the versioned frame');
   assert.ok(reloaded.carry, 'Reload restores the carry lineage');

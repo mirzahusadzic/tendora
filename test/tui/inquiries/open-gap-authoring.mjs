@@ -64,6 +64,11 @@ try {
   await ui.key('ENTER');
   assert.equal(ui.state.workflow.readingView().title, 'Connection gap');
   assert(ui.state.workflow.actions().some((a) => a.key === 'n'));
+  assert(
+    !ui.state.workflow.actions().some((a) => a.key === 'c'),
+    'Continuation is offered only where a recorded opening can carry it',
+  );
+  assert.doesNotMatch(ui.term.frame, /c continue question/u);
   await ui.key('n');
   assert.equal(ui.state.form.title, 'Add statements');
   const retained = ui.state.project.data.contributions.find((c) => c.question?.text === question);
@@ -100,7 +105,7 @@ try {
     'No AMR request is allowed',
   );
   console.log(
-    'ok keyboard n retains a wholly open connection and anchors language without asserting its question',
+    'ok keyboard n retains a wholly open connection and anchors language without asserting its question; no dead continue action',
   );
 } finally {
   ui?.app.dispose();

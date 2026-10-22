@@ -850,7 +850,7 @@ export function createDevelopment({ state, forms, projects, investigation, draw,
             return investigation.startAsk(
               c?.question
                 ? { fresh: true, question: c.question.text, caseSelection: input?.caseSelection }
-                : { fresh: true, resumeDraft: true },
+                : { fresh: true },
             );
           },
           pane,

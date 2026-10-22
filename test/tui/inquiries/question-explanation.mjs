@@ -20,7 +20,7 @@ const before = structuredClone(run);
 const explanation = questionExplanation(run, relations);
 const needs = explanation.table.entries.map((entry) => entry.cells[0]);
 assert.equal(needs.length, 3, 'One missing assertion, one relationship and one reference');
-assert(needs.includes('“recommend” in the question reading'));
+assert(needs.includes('“recommend”'));
 assert(needs.includes('handle / thing handled: ticket'));
 assert(needs.includes('“this ticket”'));
 assert.doesNotMatch(

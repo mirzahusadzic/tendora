@@ -463,22 +463,6 @@ export function createInvestigation({
   }
   async function startAsk(options = {}) {
     await ensureProject();
-    if (options.resumeDraft) {
-      const drafts = [state.investigation, ...(await listInvestigations(state.project))];
-      const pending = drafts.find((entry) => {
-        const ask = entry && currentAsk(entry.data);
-        return (
-          entry?.data.projectId === state.project.data.id &&
-          ask?.status === 'draft' &&
-          ask.question.trim() &&
-          ask.scopePlacementId === state.placementId
-        );
-      });
-      if (pending) {
-        state.investigation = pending;
-        options = { ...options, fresh: false };
-      }
-    }
     if (!options.fresh && !state.investigation && state.mode === 'project') await attach();
     if (
       options.fresh ||

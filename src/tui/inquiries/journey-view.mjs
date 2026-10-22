@@ -192,9 +192,7 @@ export function sourceStatements(
               ]
             : []),
           ...(support ? [support.text] : []),
-          ...(readable
-            ? [source.graph ? (flagged ? 'Needs review' : 'Available') : 'Not acquired']
-            : []),
+          ...(readable ? [source.graph ? (flagged ? 'Review' : 'Read') : 'Not read yet'] : []),
         ],
         cellTones: {
           0: 'input',
@@ -287,7 +285,7 @@ export function journeySection({ project, run, input, result, recording }, place
   const outcome = answers.length
     ? answers.flatMap((answer) => [
         ['Answer', answer.text, 'located'],
-        ...(answer.qualifications ?? []).map((text) => ['Only with', text, 'warning']),
+        ...(answer.qualifications ?? []).map((text) => ['Depends on', text, 'input']),
       ])
     : [
         [
@@ -338,7 +336,13 @@ export function journeySection({ project, run, input, result, recording }, place
           ]
         : []),
       ...(queryAudit?.findings?.length
-        ? [['Reading', 'Possible meaning mismatch in the question.', 'warning']]
+        ? [
+            [
+              'Reading',
+              'A word may have been read with another meaning; select the question to review.',
+              'warning',
+            ],
+          ]
         : []),
       ...(recording?.routing?.status === 'unavailable'
         ? [
@@ -373,7 +377,7 @@ export function journeySection({ project, run, input, result, recording }, place
         heading: run.status === 'conflict' ? 'Conflicting answer' : 'Possible answer',
         rows: [
           ['Candidate', candidate.text, 'warning'],
-          ...(candidate.qualifications ?? []).map((text) => ['Only with', text, 'warning']),
+          ...(candidate.qualifications ?? []).map((text) => ['Depends on', text, 'input']),
         ],
         table: sourceTable(sources.filter((source) => ids.has(source.id))),
       });
@@ -491,9 +495,14 @@ export function journeySection({ project, run, input, result, recording }, place
         ? 'Used in the answer proof.'
         : partIds.has(source.id)
           ? 'Supports part of the question.'
-          : 'Related structure; no answer established here.',
+          : 'Related; not used in an answer.',
       tone: answerIds.has(source.id) || partIds.has(source.id) ? 'located' : 'muted',
     }));
+  // Lead with the evidence: when this role holds none of it, show where it is first.
+  const supporting = answerIds.size ? proofSources() : [];
+  const evidence = supporting.length ? section('Answer comes from', [], supporting) : null;
+  if (evidence && !localStatements.some((source) => answerIds.has(source.id)))
+    groups.push(evidence);
   if (localSection.table || localSection.rows.length) groups.push(localSection);
   for (const source of relevantLocal) {
     if (answerIds.has(source.id) || partIds.has(source.id) || candidateSourceIds.has(source.id))
@@ -543,7 +552,11 @@ export function journeySection({ project, run, input, result, recording }, place
         })),
       },
     });
-  const children = (visit.return?.childVisitIds ?? []).map((id) => visits.get(id));
+  const contributes = (child) => Boolean((index.branch.get(child.nodeId) ?? 0) & 3);
+  const visited = (visit.return?.childVisitIds ?? []).map((id) => visits.get(id));
+  // Roles holding evidence come first; the rest keep the checked order.
+  const children = [...visited.filter(contributes), ...visited.filter((c) => !contributes(c))];
+  const reordered = children.some((child, i) => child !== visited[i]);
   if (children.length) {
     groups.push({
       heading:
@@ -579,7 +592,7 @@ export function journeySection({ project, run, input, result, recording }, place
                     ? 'Possible answer; not resolved'
                     : related
                       ? 'Related wording; no answer proof'
-                      : 'No contribution to the answer',
+                      : 'No contribution',
             ],
             choiceIndex,
             placementId: child.nodeId,
@@ -590,12 +603,19 @@ export function journeySection({ project, run, input, result, recording }, place
     });
   }
   if (children.length && recording.routing?.status === 'matched')
-    groups.push(section('', [['', 'Ordered by language similarity.', 'muted']]));
+    groups.push(
+      section('', [
+        [
+          '',
+          reordered
+            ? 'Roles with evidence first, then by language similarity.'
+            : 'Ordered by language similarity.',
+          'muted',
+        ],
+      ]),
+    );
   if (carried.length) groups.push(section('Carried from above', carried));
-  if (answerIds.size) {
-    const supporting = proofSources();
-    if (supporting.length) groups.push(section('Answer comes from', [], supporting));
-  }
+  if (evidence && !groups.includes(evidence)) groups.push(evidence);
   for (const wording of interpretations)
     groups.push(
       section('Uses your confirmed connection', [

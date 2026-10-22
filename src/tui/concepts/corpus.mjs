@@ -432,7 +432,7 @@ export function createProjectReading({ state }) {
               : []),
             command('n', 'add material', () => state.addCorpusMaterial()),
             command('d', 'new question', () => state.developQuestion({ question: '' })),
-            command('a', 'ask corpus', () => state.startAsk({ fresh: true, resumeDraft: true })),
+            command('a', 'ask corpus', () => state.startAsk({ fresh: true })),
             ...(rows[choice]?.kind === 'Question'
               ? [
                   command('x', 'delete question', () =>

@@ -353,7 +353,8 @@ try {
     null,
     async () => {
       await selectReadingRow((entry) => entry.source?.kind === 'question');
-      assert.match(ui.term.frame, /i read selected text/u);
+      assert.match(ui.term.frame, /enter read selected text/u);
+      assert.doesNotMatch(ui.term.frame, /i read selected text/u, 'One hint per action');
       await ui.key('i');
       assert.match(ui.term.frame, /Check the language reading/u);
       explanatoryContent();

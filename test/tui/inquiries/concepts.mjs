@@ -40,7 +40,7 @@ try {
   const current = await ui.ask(originalHandQuestion);
   assert.equal(current.run.status, 'open');
   const before = JSON.stringify(current.result.inputs.find((i) => i.kind === 'question').graph);
-  assert.match(ui.term.frame, /Possible meaning mismatch in the question/u);
+  assert.match(ui.term.frame, /A word may have been read with another meaning/u);
   assert.doesNotMatch(ui.term.frame, /Why flagged:/u, 'Details stay in the reading review');
   assert(ui.state.viewport.developmentHeight > 0);
   assert.equal(ui.state.viewport.recordingsHeight, 0);
@@ -102,7 +102,7 @@ try {
   ui = journeyWorkbench(await openProject(path), directory);
   await ui.key('o');
   await ui.choose(originalHandQuestion);
-  assert.match(ui.term.frame, /Possible meaning mismatch/u, 'The warning survives reopening');
+  assert.match(ui.term.frame, /read with another meaning/u, 'The warning survives reopening');
   ui.app.dispose();
   ui = journeyWorkbench(
     await createProject(join(directory, 'label'), 'Label only', 'Sam repairs bicycles.'),

@@ -36,7 +36,7 @@ npm run demo
 npm run workbench -- --project .proj/payments-demo
 ```
 
-Choose a role; `n` adds statements, `a` asks a question, and `o` opens Development. Select a saved question to see its answer and evidence. From an unsupported connection, `c` continues the question and keeps the originating question, opening and purpose visible. In Development, `i` changes the purpose of the selected saved question. Use `Ctrl+S` to save, `Esc` to return, and `?` for help.
+Choose a role; `n` adds statements, `a` asks a new question, and `o` opens Development, where unsent questions wait as drafts. Select a saved question to see its answer and evidence. From an unsupported connection, `c` continues the question and keeps the originating question, opening and purpose visible. In Development, `i` changes the purpose of the selected saved question. Use `Ctrl+S` to save, `Esc` to return, and `?` for help.
 
 ## Try a question
 

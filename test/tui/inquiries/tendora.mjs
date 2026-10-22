@@ -108,7 +108,7 @@ try {
   );
   assert.match(ui.term.frame, /These sources complete the answer/u);
   assert.match(ui.term.frame, /Source statement.*Contribution.*Reading/u);
-  assert.match(ui.term.frame, /Needs review/u);
+  assert.match(ui.term.frame, /│ Review/u);
   assert.doesNotMatch(ui.term.frame, /Meaning:|Why flagged:/u);
   const row = ui.state.workflow
     .readingView()
