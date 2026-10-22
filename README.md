@@ -11,6 +11,18 @@ Write statements, organize them by role, and ask questions within a scope. Tendo
 
 **Research prototype.** Language acquisition uses [eGemma](https://github.com/mirzahusadzic/egemma); reasoning over retained readings runs locally. The bundled demo works offline after setup.
 
+## Where it stands
+
+Tendora is a domain corpus engine: each project develops the narrow part of language its domain needs, through the statements written for it.
+
+It answers only what its sources support. Answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it.
+
+The open problem is answering questions worded independently of a domain's statements. The demo's seventeen questions were written together with its statements. On the frozen independent-domain benchmark the engine currently supports 0 of 4 warranted answers, keeps its 1 unknown open and supports nothing false:
+
+```sh
+node test/acceptance/independent-domain.mjs
+```
+
 ## Start
 
 Requires **Node.js 24+**, **[uv](https://docs.astral.sh/uv/)** and Git on macOS or Linux. Setup creates a local Python 3.14 environment.
@@ -39,6 +51,10 @@ npm run engine -- ask --project .proj/payments-demo \
 Returns **leaked payment key**, marked **conditional**, with the supporting source attached.
 
 Use `--explain` for evidence, `--json` for structured output, and `--offline` to prohibit new acquisitions. For scripts, `npm run --silent engine -- …` keeps npm's banner off stdout; diagnostics go to stderr. `npm run engine -- --help` lists commands.
+
+## The name
+
+Tendora comes from _tendon_: the tissue that carries load between muscle and bone, and where resistance is felt. A tendon can be touched gently to ease pain or pressed firmly. Tendora is the firm press: a question is compressed into a bounded check against scoped sources, and whatever cannot be supported stays visible as an opening. Gentle reflection may propose; what holds is settled by the sources and by agreement among the participants.
 
 ## Stack
 

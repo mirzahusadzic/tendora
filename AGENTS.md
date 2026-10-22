@@ -41,6 +41,10 @@ Keep the demo's retained material in `material.sqlite` and its computed results
 in `engine/artifacts.sqlite`. Preserve decoded bytes and content hashes when
 repacking. These two bundled databases are explicitly tracked.
 
+Introduce a new concept, term or layer only with a test that could show it
+failing. Prefer the cheapest discriminating test to new apparatus, and never
+lower a benchmark floor to make a change pass.
+
 Register every new test once in `test/suites.mjs`. Add focused regressions for
 behavior changes and run the affected tests, then `npm run check`. Documentation
 changes need factual and link checks, not a full engine run.

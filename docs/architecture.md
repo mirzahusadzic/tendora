@@ -74,7 +74,8 @@ alignment have explicit budgets and report when a limit is reached.
 
 The cooperative frame is a first vertical slice. It does not yet provide a
 general hypothetical-premise overlay, branch merging, or neural answer
-realization. Those remain proposals rather than engine behavior.
+realization. Those remain proposals rather than engine behavior, as does
+[proposing premises at openings](consensual-premises.md).
 
 The payments project demonstrates role-scoped questions about written incident
 procedures. Storage and interfaces are evolving with the research prototype.
