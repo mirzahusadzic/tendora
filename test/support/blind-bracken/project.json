@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "id": "30c5fa57-7205-41ec-8f42-010989ff8cd3",
+  "name": "Bracken Field Seeds: Packing Floor Decisions",
+  "concepts": [
+    {
+      "id": "d43adb71-50b1-4895-8eff-7af8413e1e41",
+      "name": "Packing Superintendent",
+      "passages": [
+        "The Packing Superintendent may authorize overtime only after the Stock Controller confirms that sealed seed is available.",
+        "The Packing Superintendent must approve a change to a printed cultivar name before the Label Clerk issues a revised proof bearing that change.",
+        "Approval of a cultivar name change by the Packing Superintendent does not authorize release of a held seed lot.",
+        "The Packing Superintendent may cancel a packing order before the Line Lead records the first sealed packet, but must not cancel the order after that record is made."
+      ]
+    },
+    {
+      "id": "13e5747a-6503-4008-81cf-2e55fe709251",
+      "name": "Stock Controller",
+      "passages": [
+        "The Stock Controller records the received mass of every delivered seed lot.",
+        "The Stock Controller must place a seed lot on a moisture hold when its first sample measures more than 8.0 percent moisture.",
+        "The Stock Controller may remove a moisture hold only after the Quality Examiner records a moisture result of 8.0 percent or less from a second sample of the same lot.",
+        "The Stock Controller must reserve exactly 2 kilograms from each cleared seed lot before assigning any of the remaining seed to a packing order."
+      ]
+    },
+    {
+      "id": "6c7d7f2d-1d99-4ee1-8255-95ac03585a14",
+      "name": "Quality Examiner",
+      "passages": [
+        "The Quality Examiner must test a second sample from every seed lot placed on a moisture hold.",
+        "The Quality Examiner records moisture results to one decimal place.",
+        "A second-sample moisture result of 8.0 percent or less recorded by the Quality Examiner permits the Stock Controller to remove the moisture hold but does not automatically remove that hold.",
+        "The Quality Examiner must retain each sample envelope until 30 days after the date that sample was tested."
+      ]
+    },
+    {
+      "id": "0b7af798-fedf-4e42-8cf0-ec7d6d8c3d42",
+      "name": "Line Lead",
+      "passages": [
+        "The Line Lead may start a packing order only after the Stock Controller has removed all holds on its seed lot and the Label Clerk has approved its label proof.",
+        "The Line Lead must stop the packing line when a packet with a torn seal is found.",
+        "After a stop for a torn seal, the Line Lead may restart the line only after the Seal Inspector records a passed check of a replacement sealing jaw.",
+        "The Line Lead records the time of the first sealed packet for every packing order."
+      ]
+    },
+    {
+      "id": "1ba6239a-5345-4ec7-853b-3c85cf7e5a10",
+      "name": "Label Clerk",
+      "passages": [
+        "The Label Clerk must compare the cultivar name on each proof with the packing order before approving that proof.",
+        "The Label Clerk must keep every superseded proof with the packing order.",
+        "A proof approved by the Label Clerk is valid only for the packing order named on that proof.",
+        "The Label Clerk must mark a superseded proof as withdrawn before approving its replacement."
+      ]
+    },
+    {
+      "id": "486a6371-55a2-4a65-8eb7-e07138b33212",
+      "name": "Seal Inspector",
+      "passages": [
+        "The Seal Inspector must examine five consecutive packets after a replacement sealing jaw is fitted.",
+        "The Seal Inspector may record a passed check of a replacement sealing jaw when all five examined packets have intact seals, and must not record a passed check otherwise.",
+        "The Seal Inspector must record a failed check if any of the five examined packets has a split seal.",
+        "A passed check recorded by the Seal Inspector does not itself restart the packing line."
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "id": "d48f989e-0506-43a1-8826-c044c4387683",
+      "conceptId": "d43adb71-50b1-4895-8eff-7af8413e1e41",
+      "parentId": null
+    },
+    {
+      "id": "42bbc20c-e4bb-4fd7-8c28-596d119bd4da",
+      "conceptId": "13e5747a-6503-4008-81cf-2e55fe709251",
+      "parentId": "d48f989e-0506-43a1-8826-c044c4387683"
+    },
+    {
+      "id": "e856237a-29e8-4d27-8d38-a4d74094d470",
+      "conceptId": "6c7d7f2d-1d99-4ee1-8255-95ac03585a14",
+      "parentId": "d48f989e-0506-43a1-8826-c044c4387683"
+    },
+    {
+      "id": "b7a90cb6-9ad3-4f4d-860a-8c67696a624d",
+      "conceptId": "0b7af798-fedf-4e42-8cf0-ec7d6d8c3d42",
+      "parentId": "d48f989e-0506-43a1-8826-c044c4387683"
+    },
+    {
+      "id": "9468cd62-815e-453f-8325-f09f084102e7",
+      "conceptId": "1ba6239a-5345-4ec7-853b-3c85cf7e5a10",
+      "parentId": "b7a90cb6-9ad3-4f4d-860a-8c67696a624d"
+    },
+    {
+      "id": "940efea5-7806-4b47-84d7-2474d264ffc4",
+      "conceptId": "486a6371-55a2-4a65-8eb7-e07138b33212",
+      "parentId": "b7a90cb6-9ad3-4f4d-860a-8c67696a624d"
+    }
+  ]
+}

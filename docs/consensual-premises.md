@@ -15,6 +15,7 @@ independent-domain benchmark supports 0 of 4 warranted answers this way.
 ```text
 located opening
   -> a model proposes one bridging premise in plain language
+  -> the premise is read, and its reading and consequence are shown
   -> the person accepts, edits, rejects or asks again
   -> only a saved statement becomes authored material
   -> ordinary acquisition, then the unchanged deterministic check
@@ -50,6 +51,23 @@ seen:
    than judgment;
 4. no gain over a person writing premises unaided, measured by edits and time
    to reach support.
+
+## First test (2026-10-22)
+
+A person-written premise, on a disposable copy of the independent-domain
+project, with the frozen source and question readings unchanged:
+
+- "The archive keeps manuscripts in a vault if it stores them in that vault."
+  made "Where does the archive keep manuscripts?" supported, answering
+  "climate-controlled vault" with both the source and the premise as
+  evidence. False support stayed at 0 and the unknown stayed open.
+- The premise has to be read correctly. Of about ten natural wordings, one
+  parsed into the needed shape. The others dropped the shared location from
+  the conclusion, used `have-condition-91` (which the engine does not yet read
+  as a rule), failed to decode, or read "curator" as `curmudgeon`.
+
+So the loop needs one more step before saving: show the person how their
+premise was read and what it would let the engine conclude.
 
 ## The decision this needs
 

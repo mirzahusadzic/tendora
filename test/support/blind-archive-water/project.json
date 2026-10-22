@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "id": "d9343d09-5060-4eaa-8864-ff796e58f0d7",
+  "name": "Municipal Archive Water-Damage Recovery Unit",
+  "concepts": [
+    {
+      "id": "888f3049-3008-4798-8600-ba8ba12e3df8",
+      "name": "Recovery coordinator",
+      "passages": [
+        "The recovery unit accepts municipal paper records damaged by clean water.",
+        "Every incoming crate is assigned an intake number before it enters the recovery wing.",
+        "The recovery coordinator may authorize use of the overflow drying room.",
+        "Weekend recovery shifts begin at eight in the morning."
+      ]
+    },
+    {
+      "id": "fef6084e-05d7-4960-838f-5e8dd6dc802e",
+      "name": "Intake registrar",
+      "passages": [
+        "The intake registrar records the originating department for every crate.",
+        "The intake registrar attaches a blue tag to each crate scheduled for freezing.",
+        "The intake registrar sends the daily crate list to the transport scheduler.",
+        "The daily crate list states the intake number and destination of each listed crate.",
+        "The intake registrar stores the original transfer forms in the intake cabinet."
+      ]
+    },
+    {
+      "id": "d5db114a-061b-46b8-82bd-12c0dfc1d1bb",
+      "name": "Drying room supervisor",
+      "passages": [
+        "The drying room supervisor assigns each crate accepted for drying to a drying rack.",
+        "The drying room supervisor sends the evening rack occupancy report to the recovery coordinator.",
+        "The evening rack occupancy report lists the rack numbers still holding records at six in the evening.",
+        "Only crates with written clearance from the collections conservator may leave the drying room.",
+        "The drying room supervisor keeps the key to the overflow drying room."
+      ]
+    },
+    {
+      "id": "14ddf290-eb38-4631-81ae-0c71607ebc72",
+      "name": "Facilities custodian",
+      "passages": [
+        "The facilities custodian measures the relative humidity in the drying room at noon.",
+        "The facilities custodian enters the noon humidity reading in the room log.",
+        "If the noon humidity reading exceeds sixty percent, the facilities custodian asks the drying room supervisor to start the portable dehumidifier.",
+        "The drying room supervisor starts the portable dehumidifier when the facilities custodian requests it."
+      ]
+    },
+    {
+      "id": "d2a78601-4011-489d-8ede-bf14cf797dd2",
+      "name": "Collections conservator",
+      "passages": [
+        "The collections conservator signs release slips for crates scheduled for freezing.",
+        "The collections conservator examines crates with visible mould before any drying treatment.",
+        "The collections conservator may issue written clearance for a crate to leave the drying room once its paper records are dry.",
+        "The collections conservator gives the intake registrar a copy of each signed release slip.",
+        "The collections conservator keeps the moisture meter in the locked assessment cupboard."
+      ]
+    },
+    {
+      "id": "76641ba8-a75b-4506-8ee4-55b420f7f459",
+      "name": "Transport scheduler",
+      "passages": [
+        "The transport scheduler books the freezer van for crates with signed release slips.",
+        "The freezer van collects booked crates at four in the afternoon on weekdays.",
+        "The transport scheduler receives the daily crate list from the intake registrar and gives it to the freezer van driver before collection.",
+        "The transport scheduler telephones the recovery coordinator if the freezer van is delayed.",
+        "The freezer van driver and the facilities custodian both carry keys to the loading bay."
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "id": "f8362821-b222-4cff-8c4a-891310606f91",
+      "conceptId": "888f3049-3008-4798-8600-ba8ba12e3df8",
+      "parentId": null
+    },
+    {
+      "id": "b172124b-0f06-4184-871a-29f9f16e5e2d",
+      "conceptId": "fef6084e-05d7-4960-838f-5e8dd6dc802e",
+      "parentId": "f8362821-b222-4cff-8c4a-891310606f91"
+    },
+    {
+      "id": "5c95908f-08ec-47d8-83d9-c87772a143a0",
+      "conceptId": "d5db114a-061b-46b8-82bd-12c0dfc1d1bb",
+      "parentId": "f8362821-b222-4cff-8c4a-891310606f91"
+    },
+    {
+      "id": "18bbbad8-ffde-437c-8d14-c81a88c438e6",
+      "conceptId": "14ddf290-eb38-4631-81ae-0c71607ebc72",
+      "parentId": "5c95908f-08ec-47d8-83d9-c87772a143a0"
+    },
+    {
+      "id": "02cfd449-f8a7-4012-819d-4aaf6248fe2d",
+      "conceptId": "d2a78601-4011-489d-8ede-bf14cf797dd2",
+      "parentId": "f8362821-b222-4cff-8c4a-891310606f91"
+    },
+    {
+      "id": "f2475607-7be2-4f5e-8dc1-8b9f38c775db",
+      "conceptId": "76641ba8-a75b-4506-8ee4-55b420f7f459",
+      "parentId": "b172124b-0f06-4184-871a-29f9f16e5e2d"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import { sourceCatalog } from '../src/project/authoring/sources.mjs';
 import { acquiredTexts, retainAcquisitions } from '../src/project/storage/acquisitions.mjs';
 import { parseTexts } from '../src/models/acquisition.mjs';
 import { inputFromProject } from '../src/engine/input.mjs';
+import { authorCase } from '../src/project/inquiries/investigation.mjs';
 import { runEngine } from '../src/engine/run.mjs';
 import { checkAnswer } from '../src/engine/answer.mjs';
 import { readEngineArtifact } from '../src/project/storage/engine-runs.mjs';
@@ -171,6 +172,7 @@ for (const descriptor of projects) {
       inputFromProject(project, {
         scopePlacementId: specification.scopePlacementId,
         question: test.question,
+        caseSelection: test.case ? authorCase(project, test.case) : null,
       }),
     ),
   );
@@ -338,9 +340,11 @@ try {
     const reuse = options.deterministicReuse ? await createRetainedPreparation(item.project) : null;
     for (const test of item.specification.cases) {
       const started = performance.now();
+      // A case is the question's own circumstances; it never becomes corpus evidence.
       let input = await inputFromProject(item.project, {
         scopePlacementId: item.specification.scopePlacementId,
         question: test.question,
+        caseSelection: test.case ? authorCase(item.project, test.case) : null,
       });
       const retained = reuse ? await reuse(input) : null;
       if (retained) input = retained.input;
@@ -354,6 +358,7 @@ try {
         project: item.specification.name,
         id: test.id,
         question: test.question,
+        ...(test.case ? { case: test.case } : {}),
         expected: test.expected,
         status: run.status,
         answers: run.answer?.answers ?? [],
