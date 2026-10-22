@@ -350,7 +350,11 @@ export function createRenderer({
       }
     }
     const bottomRows = readingControls;
-    const globalLabels = controls.global.map((item) => item.label);
+    const allGlobal = controls.global.map((item) => item.label);
+    const globalLabels =
+      pack(allGlobal, width - 18).length > 1
+        ? controls.global.filter((item) => !item.optional).map((item) => item.label)
+        : allGlobal;
     const footerLayout = layoutFooter({
       width,
       actions: globalLabels,
@@ -527,8 +531,13 @@ export function createRenderer({
     const recordingControls = controlRows('recordings', leftWidth);
     const recordingsAvailable =
       !workflow && state.project && (state.mode === 'project' || hasRecordingProject(state));
+    // Roles get room for their tree and hints before Development, up to 60%.
     const minimumNodeHeight = workflow
-      ? Math.max(10, Math.floor(bodyHeight * 0.48))
+      ? Math.max(
+          10,
+          Math.floor(bodyHeight * 0.48),
+          Math.min(nodeContent.length + nodeControls.length + 4, Math.floor(bodyHeight * 0.6)),
+        )
       : Math.max(8, nodeControls.length + 8);
     const developmentItems =
       (projectNavigation || hasRecordingProject(state)) &&

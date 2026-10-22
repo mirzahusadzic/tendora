@@ -274,6 +274,9 @@ try {
 
     assert.match(first.paneText('nodes'), /c add child/);
     assert.match(first.paneText('nodes'), /a ask here/);
+    // The roles pane lists what acts on the selected role; app-wide keys live in the footer.
+    assert.doesNotMatch(first.paneText('nodes'), /w projects|o development|first child/);
+    assert.match(first.paneText('global'), /w projects/);
     assert.doesNotMatch(first.paneText('nodes'), /n add material|d develop|a ask corpus/);
     assert.equal(state.viewport.recordingsHeight, 0);
     assert.equal(first.paneText('recordings'), '');

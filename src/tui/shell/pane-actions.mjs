@@ -131,9 +131,13 @@ export function paneActions({ state, view, projectActionEnabled, canDeleteSenten
     } else if (state.workflow?.active()) {
       add('nodes', '↑↓', 'select role');
       add('development', '↑↓', 'select question');
-      add('nodes', 'w', 'projects');
-      if (state.workflow.role()?.parentId) add('nodes', 'LEFT', 'parent role');
-      if (state.workflow.role()?.children.length) add('nodes', 'RIGHT', 'first child');
+      // The roles pane lists what acts on the selected role. Projects is
+      // app-wide; parent and child moves are navigation like ↑↓ (in help).
+      add('global', 'w', 'projects');
+      if (state.workflow.role()?.parentId)
+        result.nodes.push({ ...action('nodes', 'LEFT', 'parent role'), helpOnly: true });
+      if (state.workflow.role()?.children.length)
+        result.nodes.push({ ...action('nodes', 'RIGHT', 'first child'), helpOnly: true });
     } else if (state.mode === 'project') {
       const selected = state.projectReadingEntry?.();
       const readOnly = selected?.readOnly;
@@ -352,7 +356,8 @@ export function paneActions({ state, view, projectActionEnabled, canDeleteSenten
       if (state.mode !== 'home') add('global', '?', 'help');
       add('global', 'q', 'quit');
     }
-    add('global', 'Shift+drag', 'copy');
+    // A mouse hint, not a key: it yields first when the footer would wrap.
+    result.global.push({ ...action('global', 'Shift+drag', 'copy'), optional: true });
   }
   return result;
 }

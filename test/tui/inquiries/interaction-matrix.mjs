@@ -280,8 +280,13 @@ try {
     'Roles',
     'child selected',
     'Left',
-    'left parent',
-    () => ui.key('LEFT'),
+    // Tree arrows are navigation like ↑↓: the visible hint names the family,
+    // and help lists the parent move.
+    '↑↓ select role',
+    () => {
+      assert(ui.state.helpActionChoices.some((item) => item.label === 'left parent role'));
+      return ui.key('LEFT');
+    },
     () => {
       assert.equal(ui.state.workflow.role().label, 'Technical production');
       sameQuestion(question);

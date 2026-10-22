@@ -928,10 +928,11 @@ export function createQuestionWorkflow({
     const common = [
       command('a', 'ask here', () => ask()),
       command('n', 'add statements', () => development.statementsEditor({ add: true })),
-      command('o', 'development', openQuestion),
       ...(localSources().length ? [command('e', 'edit statements', editSources)] : []),
     ];
     const result = common.flatMap((item) => [item, { ...item, pane: 'nodes' }]);
+    // Development is a pane of its own, reachable from anywhere.
+    result.push(command('o', 'development', openQuestion, 'global'));
     result.push(command('a', 'ask here', () => ask(), 'development'));
     result.push(
       command(
