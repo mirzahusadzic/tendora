@@ -26,6 +26,25 @@ export function backgroundEngineStorage(project, signal) {
   return projectProcess(project, { maintenance: true }, undefined, signal);
 }
 
+/** Ask a child to stop, then escalate; a child that ignores SIGTERM is still reclaimed. */
+export function stopChild(child, { termAfterMs = 2000, killAfterMs = 2000 } = {}) {
+  const exited = () => child.exitCode !== null || child.signalCode !== null;
+  let killTimer;
+  const termTimer = setTimeout(() => {
+    if (exited()) return;
+    child.kill('SIGTERM');
+    killTimer = setTimeout(() => {
+      if (!exited()) child.kill('SIGKILL');
+    }, killAfterMs);
+  }, termAfterMs);
+  const clear = () => {
+    clearTimeout(termTimer);
+    clearTimeout(killTimer);
+  };
+  child.once('exit', clear);
+  return clear;
+}
+
 function projectProcess(project, request, progress, signal, onEngineUpdate) {
   signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
@@ -36,7 +55,7 @@ function projectProcess(project, request, progress, signal, onEngineUpdate) {
     });
     let settled = false,
       failure = '',
-      killTimer;
+      stopping = null;
     const finish = (error, value) => {
       if (settled) return;
       settled = true;
@@ -45,8 +64,7 @@ function projectProcess(project, request, progress, signal, onEngineUpdate) {
     };
     const cancel = () => {
       if (child.connected) child.send({ cancel: true }, () => {});
-      killTimer = setTimeout(() => child.kill('SIGTERM'), 2000);
-      killTimer.unref();
+      stopping ??= stopChild(child);
       finish(signal.reason ?? new DOMException('Question cancelled', 'AbortError'));
     };
     child.stderr.on('data', (chunk) => {
@@ -63,7 +81,7 @@ function projectProcess(project, request, progress, signal, onEngineUpdate) {
     });
     child.on('error', (error) => finish(error));
     child.on('close', (code, stopped) => {
-      clearTimeout(killTimer);
+      stopping?.();
       finish(
         new Error(failure.trim() || `Question process ended (${stopped ?? code}). Check again.`),
       );

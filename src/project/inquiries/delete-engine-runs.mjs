@@ -1,5 +1,5 @@
 /** Remove saved assessments, or a whole question and its owned contributions. */
-import { open, readFile, readdir, unlink, rm, rmdir } from 'node:fs/promises';
+import { readFile, readdir, rm, rmdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import {
@@ -9,6 +9,7 @@ import {
   readEngineArtifact,
 } from '../storage/engine-runs.mjs';
 import { readAcquisitions, withAcquisitionIndexLease } from '../storage/acquisitions.mjs';
+import { acquireFileLease } from '../storage/locks.mjs';
 import { listProjectRecordings } from './recordings.mjs';
 import { listInvestigations, saveInvestigation } from './investigation.mjs';
 import { interpretationRevision } from '../../recording/revisions.mjs';
@@ -92,12 +93,10 @@ const questionTexts = (c) =>
 async function deleteEngineData(project, { ids = [], all = false, question = null, persist }) {
   const directory = dirname(project.path),
     lockPath = engineDeletionLockPath(project);
-  const lock = await open(lockPath, 'wx').catch((error) => {
-    if (error.code === 'EEXIST') throw new Error('Engine data is being deleted elsewhere.');
-    throw error;
+  const release = await acquireFileLease(lockPath, {
+    busyMessage: 'Engine data is being deleted elsewhere.',
   });
   try {
-    await lock.writeFile(`${JSON.stringify({ pid: process.pid, at: new Date().toISOString() })}\n`);
     if ((await activeEngineRunIds(project)).length)
       throw new Error('Wait for the running engine or cancel it before deleting engine data.');
     const runs = await listEngineRuns(project);
@@ -349,8 +348,11 @@ async function deleteEngineData(project, { ids = [], all = false, question = nul
       reset: false,
       ...(question ? { project } : {}),
     };
+  } catch (error) {
+    // Lease cleanup must not replace the deletion failure.
+    await release().catch(() => {});
+    throw error;
   } finally {
-    await lock.close();
-    await unlink(lockPath);
+    await release();
   }
 }

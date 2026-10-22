@@ -1,6 +1,6 @@
 /** Run the shared engine and retain its evidence in the existing Ask workspace. */
-import { mkdir, writeFile, unlink } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { mkdir, rename, writeFile, unlink } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { runCrossing } from '../../inquiry/cross-run.mjs';
 import { validateContinuation } from '../../recording/continuation.mjs';
@@ -316,15 +316,16 @@ async function retainTraversal(
     directory,
     `${new Date().toISOString().replace(/[:.]/gu, '-')}-${randomUUID().slice(0, 8)}.json`,
   );
+  // Publish whole recordings only; an interrupted write leaves an ignored dot file.
+  const staged = join(directory, `.${basename(path)}.${randomUUID()}.tmp`);
   try {
-    await writeFile(path, JSON.stringify(recording, null, 2) + '\n', { flag: 'wx', signal });
+    await writeFile(staged, JSON.stringify(recording, null, 2) + '\n', { flag: 'wx', signal });
     signal?.throwIfAborted();
-  } catch (error) {
-    if (error.code !== 'EEXIST')
-      await unlink(path).catch((cleanup) => {
-        if (cleanup.code !== 'ENOENT') throw cleanup;
-      });
-    throw error;
+    await rename(staged, path);
+  } finally {
+    await unlink(staged).catch((cleanup) => {
+      if (cleanup.code !== 'ENOENT') throw cleanup;
+    });
   }
   engine.recording = { path, id: recording.id, ask: ask ?? null };
   await saveEngineRun(project, engine);

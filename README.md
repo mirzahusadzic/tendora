@@ -20,7 +20,7 @@ git clone https://github.com/mirzahusadzic/tendora.git
 cd tendora
 npm ci
 npm run setup:python
-cp -R .proj/payments-on-call .proj/payments-demo
+npm run demo
 npm run workbench -- --project .proj/payments-demo
 ```
 
@@ -50,4 +50,10 @@ Optional grammar checks use our [Bolinas fork](https://github.com/mirzahusadzic/
 
 ## License
 
-Original application code and the payments demo are [MIT](LICENSE). The SEMCAT adapter/runtime and bundled data retain their own terms; the integrated runtime is subject to GPLv3 obligations. See [license scopes and attribution](THIRD_PARTY_NOTICES.md).
+Tendora's original code, tests, tools, documentation and payments demo are [MIT](LICENSE). Some parts carry other terms:
+
+- `python/semcat/adapter/` is GPL-3.0-only; the SEMCAT runtime that setup installs is GPL-3.0-only AND MIT. Distributing Tendora integrated with SEMCAT must comply with GPLv3.
+- `vendor/propbank/lexicon.json` is PropBank-derived data under CC BY-SA 4.0.
+- [`load-bearing.md`](load-bearing.md) is CC BY 4.0.
+
+See [licensing and attribution](THIRD_PARTY_NOTICES.md) for every path, installed component and notice.

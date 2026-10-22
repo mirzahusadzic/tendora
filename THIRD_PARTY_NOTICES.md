@@ -1,16 +1,45 @@
 # Licensing and attribution
 
 Copyright © 2026 Mirza Husadzic for original Tendora contributions.
-The [MIT license](LICENSE) covers original application code, tests, tools,
-documentation and the synthetic payments demo, with the component scopes below.
 
-| Component                             | License                                                                                         | Source and notices                                                                                                          |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| SEMCAT Python adapter                 | GPL-3.0-only                                                                                    | [Adapter license](python/semcat/adapter/LICENSE)                                                                            |
-| Installed SEMCAT runtime              | GPL-3.0-only AND MIT                                                                            | [Fork licensing](https://github.com/mirzahusadzic/semcat/blob/e00a02b954e8d6baf3e362844da4e9ae6509efc9/LICENSING.md)        |
-| Bundled PropBank-derived data         | CC BY-SA 4.0                                                                                    | [License and attribution](vendor/propbank/README.md)                                                                        |
-| Optional Bolinas checkout             | MIT core; bundled utilities under Apache-2.0, MIT and LGPL-3.0-or-later, plus ColorBrewer terms | [Fork component notices](https://github.com/mirzahusadzic/bolinas/blob/70fbac4afe7177d28f9658df4c88b2e1b4bcbfbb/NOTICES.md) |
-| [Load-bearing essay](load-bearing.md) | CC BY 4.0                                                                                       | [License](licenses/CC-BY-4.0.txt), Mirza Husadzic                                                                           |
+Tendora is not under a single license. Its original code is MIT; a small
+adapter and two bundled resources carry their own terms, and setup installs
+further components under theirs. The [LICENSE](LICENSE) file is the MIT text
+for original contributions only.
+
+## In this repository
+
+| Path                                                                                                       | License      | Notices                                              |
+| ---------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------- |
+| Everything not listed below: application code, tests, tools, documentation and the synthetic payments demo | MIT          | [LICENSE](LICENSE)                                   |
+| `python/semcat/adapter/` (SEMCAT Python adapter)                                                           | GPL-3.0-only | [Adapter license](python/semcat/adapter/LICENSE)     |
+| `vendor/propbank/lexicon.json` (PropBank-derived data; the `build.py` beside it is MIT)                    | CC BY-SA 4.0 | [License and attribution](vendor/propbank/README.md) |
+| [`load-bearing.md`](load-bearing.md) (essay)                                                               | CC BY 4.0    | [License](licenses/CC-BY-4.0.txt), Mirza Husadzic    |
+
+`package.json` states the same scope as an SPDX expression:
+`MIT AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0`.
+
+## Installed by setup, not stored here
+
+| Component                                                           | License                                                                                         | Notices                                                                                                                     |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| SEMCAT runtime, into `.venv/` by `npm run setup:python`             | GPL-3.0-only AND MIT                                                                            | [Fork licensing](https://github.com/mirzahusadzic/semcat/blob/e00a02b954e8d6baf3e362844da4e9ae6509efc9/LICENSING.md)        |
+| Optional Bolinas checkout, into `.deps/` by `npm run setup:bolinas` | MIT core; bundled utilities under Apache-2.0, MIT and LGPL-3.0-or-later, plus ColorBrewer terms | [Fork component notices](https://github.com/mirzahusadzic/bolinas/blob/70fbac4afe7177d28f9658df4c88b2e1b4bcbfbb/NOTICES.md) |
+| npm and Python dependencies                                         | As supplied with each installed distribution                                                    | Their package metadata                                                                                                      |
+
+## What this means in practice
+
+This is a summary, not legal advice; the license texts govern.
+
+- The MIT-licensed files can be reused under MIT on their own, with the
+  copyright notice retained.
+- Running, studying and modifying Tendora locally places no further
+  conditions on you.
+- Distributing Tendora together with the SEMCAT adapter or runtime, as an
+  integrated application, must comply with GPLv3, including its
+  corresponding-source obligations, while preserving the MIT notices.
+- Redistributing the PropBank-derived lexicon, or adaptations of it, requires
+  attribution and the same CC BY-SA 4.0 terms.
 
 ## Dependency attribution
 

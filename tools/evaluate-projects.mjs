@@ -1,8 +1,8 @@
-/** Evaluate current projects in place on independent questions; retain acquisition and engine history. */
+/** Evaluate projects on independent questions, in place or on disposable copies under tmp/. */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openProject } from '../src/project/authoring/project.mjs';
 import { sourceCatalog } from '../src/project/authoring/sources.mjs';
@@ -32,6 +32,7 @@ const flags = new Map([
   ['--resume', 'resume'],
   ['--cases', 'cases'],
   ['--report', 'report'],
+  ['--copy-to', 'copyTo'],
 ]);
 for (let i = 2; i < process.argv.length; i++) {
   const arg = process.argv[i];
@@ -44,8 +45,8 @@ for (let i = 2; i < process.argv.length; i++) {
   else if (flags.has(arg)) options[flags.get(arg)] = process.argv[++i];
   else if (arg === '--help') {
     console.log(
-      'Usage: node tools/evaluate-projects.mjs [--manifest FILE] [--prepare-only] [--acquire] [--acquisitions FILE] [--source-root DIR] [--output DIR] [--compare REPORT] [--replay REPORT | --resume REPORT] [--project NAME] [--engine-options JSON]\n' +
-        'Projects are evaluated in place; Ask history is retained in .proj. Reasoning is deterministic and runs with network forbidden. --acquire captures missing original AMRs separately before reasoning. --cases selects predeclared case IDs. Expected answers never enter the engine.',
+      'Usage: node tools/evaluate-projects.mjs [--manifest FILE] [--copy-to tmp/DIR] [--prepare-only] [--acquire] [--acquisitions FILE] [--source-root DIR] [--output DIR] [--compare REPORT] [--replay REPORT | --resume REPORT] [--project NAME] [--engine-options JSON]\n' +
+        'Projects are evaluated in place and Ask history is retained in .proj, unless --copy-to evaluates disposable copies beneath tmp/; manifest sourceDirectory entries require --copy-to. Reasoning is deterministic and runs with network forbidden. --acquire captures missing original AMRs separately before reasoning. --cases selects predeclared case IDs. Expected answers never enter the engine.',
     );
     process.exit(0);
   } else throw new Error(`Unknown argument: ${arg}`);
@@ -90,11 +91,25 @@ if (replay) {
     'Replay requires the exact frozen benchmark',
   );
 }
+const beneath = (parent, child) => {
+  const path = relative(parent, child);
+  return path === '' || (!path.startsWith('..') && !path.startsWith('/'));
+};
+const copyRoot = options.copyTo ? resolve(options.copyTo) : null;
+if (copyRoot)
+  assert(
+    beneath(join(root, 'tmp'), copyRoot) && copyRoot !== join(root, 'tmp'),
+    'Disposable evaluation copies belong beneath tmp/',
+  );
 const evidenceRoot = join(root, 'evaluations/automatic-semantics');
-const output = options.output ? resolve(options.output) : evidenceRoot;
+const output = options.output
+  ? resolve(options.output)
+  : copyRoot
+    ? join(copyRoot, 'evidence')
+    : evidenceRoot;
 assert(
-  output === evidenceRoot || output.startsWith(evidenceRoot + '/'),
-  'Evaluation evidence belongs under evaluations/automatic-semantics/',
+  beneath(evidenceRoot, output) || (copyRoot && beneath(copyRoot, output)),
+  'Evaluation evidence belongs under evaluations/automatic-semantics/ or the --copy-to directory',
 );
 await mkdir(output, { recursive: true });
 const reportPath = join(
@@ -118,15 +133,25 @@ const captured = new Map(bundle.entries.map((entry) => [entry.text, entry]));
 const prepared = [];
 const missing = new Set();
 for (const descriptor of projects) {
-  const originalPath = resolve(
-    options.sourceRoot,
-    descriptor.name === 'archive' ? 'editor-archive' : descriptor.name,
-  );
-  assert(
-    originalPath.startsWith(join(root, '.proj') + '/'),
-    'Evaluate actual repository projects in place',
-  );
-  const original = await openProject(originalPath);
+  const originalPath = descriptor.sourceDirectory
+    ? resolve(root, descriptor.sourceDirectory)
+    : resolve(
+        options.sourceRoot,
+        descriptor.name === 'archive' ? 'editor-archive' : descriptor.name,
+      );
+  let projectPath = originalPath;
+  if (copyRoot) {
+    // Acquisition and engine history land in the copy; the source stays byte-identical.
+    projectPath = join(copyRoot, 'projects', descriptor.name);
+    await mkdir(dirname(projectPath), { recursive: true });
+    await cp(originalPath, projectPath, { recursive: true, errorOnExist: true, force: false });
+  } else
+    assert(
+      originalPath.startsWith(join(root, '.proj') + '/'),
+      'Evaluate actual repository projects in place, or pass --copy-to tmp/DIR',
+    );
+  const originalFileHash = hash(await readFile(join(originalPath, 'project.json')));
+  const original = await openProject(projectPath);
   const specification = {
     ...descriptor,
     scopePlacementId:
@@ -167,7 +192,7 @@ for (const descriptor of projects) {
     project,
     originalPath,
     originalDigest: original.digest,
-    originalFileHash: hash(await readFile(join(originalPath, 'project.json'))),
+    originalFileHash,
     needed: [...needed],
     catalog: catalog.map(({ text, sentenceId, revision, nodeId }) => ({
       text,
@@ -278,7 +303,7 @@ function assess(expected, run) {
 }
 const report = {
   version: 1,
-  mode: 'in-place',
+  mode: copyRoot ? 'disposable-copy' : 'in-place',
   at: new Date().toISOString(),
   manifest: resolve(options.manifest),
   manifestHash: hash(manifestBytes),
@@ -448,7 +473,13 @@ try {
 } finally {
   globalThis.fetch = originalFetch;
   for (const item of prepared) {
-    const current = await openProject(item.originalPath);
+    if (copyRoot)
+      assert.equal(
+        hash(await readFile(join(item.originalPath, 'project.json'))),
+        item.originalFileHash,
+        'A disposable evaluation leaves its source project unchanged',
+      );
+    const current = await openProject(dirname(item.project.path));
     const currentSources = sourceCatalog(current.data).map(
       ({ text, sentenceId, revision, nodeId }) => ({ text, sentenceId, revision, nodeId }),
     );

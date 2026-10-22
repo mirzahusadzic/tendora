@@ -33,7 +33,7 @@ import { installPaste } from './paste.mjs';
 /** Construction has no terminal effects, allowing the real controllers to run in tests. */
 export function createWorkbench({ state, config, term, onExit = (code) => process.exit(code) }) {
   const text = createText({ noColor: config.noColor });
-  const queue = { pending: Promise.resolve() };
+  const queue = { pending: Promise.resolve(), wheel: 0 };
   let noticeTimer,
     activityTimer,
     removePaste,

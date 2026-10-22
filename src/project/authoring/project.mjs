@@ -1,11 +1,12 @@
 /** Local authored material. Placements are context, not crossings or evidence. */
-import { readFile, readdir, writeFile, mkdir, open, rename, unlink } from 'node:fs/promises';
+import { readFile, readdir, writeFile, mkdir, rename, unlink } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 
 import { reconcileSources } from './sources.mjs';
 import { loadProject, storeProject } from '../storage/objects.mjs';
 import { validateContributions } from './development.mjs';
+import { withFileLease } from '../storage/locks.mjs';
 
 const digest = (text) => createHash('sha256').update(text).digest('hex');
 const encode = (data) => JSON.stringify(data, null, 2) + '\n';
@@ -130,34 +131,29 @@ export async function saveProject(project, data) {
   data = reconcileSources(data, project.data);
   validateProject(data);
   if (data.id !== project.data.id) throw new Error('Cannot change project identity while saving.');
-  const lockPath = project.path + '.lock';
-  let lock;
-  try {
-    lock = await open(lockPath, 'wx');
-  } catch (error) {
-    if (error.code === 'EEXIST')
-      throw new Error('Project is being saved elsewhere. Retry after that save completes.');
-    throw error;
-  }
-  const temporary = `${project.path}.${id()}.tmp`;
-  try {
-    if (digest(await readFile(project.path, 'utf8')) !== project.digest)
-      throw Object.assign(
-        new Error('Project changed on disk. Reload before applying further edits.'),
-        { code: 'PROJECT_CHANGED' },
-      );
-    const storage = await storeProject(dirname(project.path), data, project),
-      text = encode(storage);
-    await writeFile(temporary, text, { flag: 'wx' });
-    await rename(temporary, project.path);
-    return { ...project, data, digest: digest(text), storage };
-  } finally {
-    await unlink(temporary).catch((error) => {
-      if (error.code !== 'ENOENT') throw error;
-    });
-    await lock.close();
-    await unlink(lockPath);
-  }
+  return withFileLease(
+    project.path + '.lock',
+    async () => {
+      const temporary = `${project.path}.${id()}.tmp`;
+      try {
+        if (digest(await readFile(project.path, 'utf8')) !== project.digest)
+          throw Object.assign(
+            new Error('Project changed on disk. Reload before applying further edits.'),
+            { code: 'PROJECT_CHANGED' },
+          );
+        const storage = await storeProject(dirname(project.path), data, project),
+          text = encode(storage);
+        await writeFile(temporary, text, { flag: 'wx' });
+        await rename(temporary, project.path);
+        return { ...project, data, digest: digest(text), storage };
+      } finally {
+        await unlink(temporary).catch((error) => {
+          if (error.code !== 'ENOENT') throw error;
+        });
+      }
+    },
+    { busyMessage: 'Project is being saved elsewhere. Retry after that save completes.' },
+  );
 }
 export function addConcept(data, parentId, name) {
   if (parentId !== null && !data.placements.some((p) => p.id === parentId))

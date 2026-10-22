@@ -10,7 +10,7 @@ export async function compareGraphs(
   if (!Array.isArray(comparisons) || comparisons.length > 128)
     throw new Error('At most 128 comparisons');
   signal?.throwIfAborted();
-  const request = JSON.stringify({ comparisons, ...parameters });
+  const request = JSON.stringify({ ...parameters, comparisons });
   if (Buffer.byteLength(request) > 16 * 1024 * 1024)
     throw new Error('Comparison input exceeds 16 MB');
   const python = await penmanPython();

@@ -4,7 +4,7 @@
   "private": true,
   "description": "A terminal workbench for developing knowledge through natural language, with traceable reasoning across roles.",
   "type": "module",
-  "license": "MIT",
+  "license": "MIT AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mirzahusadzic/tendora.git"
@@ -19,6 +19,7 @@
     "check": "node test/run.mjs",
     "test": "node test/run.mjs",
     "capture:workbench": "node tools/capture-workbench.mjs",
+    "demo": "node tools/payments-demo.mjs",
     "workbench": "node src/tui/workbench.mjs",
     "engine": "node src/cli/engine.mjs",
     "setup:bolinas": ".venv/bin/python tools/bolinas.py install",

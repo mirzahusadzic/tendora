@@ -110,6 +110,11 @@ assert.equal(limited[0].score, null);
 assert.equal(limited[1].score, 1);
 const wiki = [{ reference: '(p / person :wiki "A")', hypothesis: '(p / person :wiki "B")' }];
 assert.equal((await compareGraphs(wiki)).results[0].score, 1);
+assert.equal(
+  (await compareGraphs(wiki, { comparisons: [] })).results.length,
+  1,
+  'Options cannot replace the validated comparison list',
+);
 const retainedWiki = (await compareGraphs(wiki, { ignoreWiki: false })).results[0];
 assert(retainedWiki.complete && retainedWiki.local.score < 1 && retainedWiki.global.score < 1);
 const invalid = (

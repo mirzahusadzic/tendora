@@ -187,6 +187,14 @@ try {
   const again = await compactEngineStorage(project, { force: true });
   assert(again.after.bytes <= engineStorageBudget);
   assert.equal((await listEngineRuns(project)).length, questions.size);
+  // A recording truncated by an older interrupted write does not block compaction.
+  const truncated = join(directory, 'recordings', '1999-01-01T00-00-00-000Z-truncated.json');
+  await writeFile(truncated, '{"schema":"tendora.workbench.recording","id":');
+  const tolerant = await compactEngineStorage(project, { force: true });
+  assert.deepEqual(tolerant.unreadable, [truncated]);
+  assert.equal(await readFile(truncated, 'utf8'), '{"schema":"tendora.workbench.recording","id":');
+  assert.equal((await listEngineRuns(project)).length, questions.size);
+  await rm(truncated);
   const victim = saved.find((r) => r.cache === 'recheck');
   const handle = await readFile(victim.recording.path);
   // Simulate interruption after database publication, before the old recording was rewritten.

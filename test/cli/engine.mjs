@@ -1,11 +1,16 @@
 /** Real engine processes: useful arguments, pure JSON, offline proof and cancellation. */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, writeFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { editConcept, openProject, saveProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
-import { listEngineRuns } from '../../src/project/storage/engine-runs.mjs';
+import {
+  listEngineRuns,
+  readEngineRun,
+  saveEngineRun,
+} from '../../src/project/storage/engine-runs.mjs';
 import { captureProjectInquiry } from '../../src/project/inquiries/inquiry.mjs';
 
 await mkdir('tmp', { recursive: true });
@@ -249,6 +254,17 @@ successful(human);
 assert.match(human.stdout, /Answer: Sam/u);
 assert.match(human.stdout, /Evidence: Sam repairs bicycles/u);
 assert.equal(human.stderr, '');
+// A run retained before item-level lexical audits still renders its answer.
+const legacyRun = {
+  ...structuredClone(await readEngineRun(project, answer.id)),
+  id: randomUUID(),
+  lexicalAudit: { status: 'unverified' },
+};
+await saveEngineRun(project, legacyRun);
+const legacy = await command(['show', '--project', location, '--run', legacyRun.id]);
+successful(legacy);
+assert.match(legacy.stdout, /Answer: Sam/u);
+assert.doesNotMatch(legacy.stdout, /AMR vocabulary/u);
 const alias = machine(await command(['run', ...args.slice(1)]));
 assert.equal(alias.status, answer.status);
 const open = machine(

@@ -157,12 +157,22 @@ export async function compactEngineStorage(
     const latest = new Map(),
       protectedRuns = new Set(),
       requiredRecordings = new Set();
-    const recordings = [];
+    const recordings = [],
+      unreadable = [];
     for (const file of await files(recordingDirectory)) {
       if (!file.endsWith('.json') || file.startsWith('._')) continue;
-      const path = join(recordingDirectory, file),
+      const path = join(recordingDirectory, file);
+      let header;
+      try {
         header = await json(path);
-      if (header.schema !== 'tendora.workbench.recording') continue;
+      } catch (error) {
+        // An interrupted older write cannot block compaction of every other question.
+        // It is left in place, unreferenced and unchanged, for the author to inspect.
+        if (!(error instanceof SyntaxError)) throw error;
+        unreadable.push(path);
+        continue;
+      }
+      if (header?.schema !== 'tendora.workbench.recording') continue;
       recordings.push({ path, header });
       if (!header.reasoning?.runId) requiredRecordings.add(path);
       if (header.continuation?.parent?.path)
@@ -178,6 +188,7 @@ export async function compactEngineStorage(
         questions: 0,
         runs: 0,
         cached: 0,
+        unreadable,
       };
     const recordingPaths = new Set(recordings.map((record) => record.path));
     // An authored continuation must retain its original parent, even if it is not the latest check.
@@ -383,6 +394,7 @@ export async function compactEngineStorage(
           runs: kept.size,
           cached: cached.size,
           protectedRecordings: requiredRecordings.size,
+          unreadable,
         };
       db.close();
       closed = true;
@@ -405,6 +417,7 @@ export async function compactEngineStorage(
         questions: latest.size,
         runs: kept.size,
         cached: cached.size,
+        unreadable,
       };
     } finally {
       if (!closed) db.close();

@@ -1,6 +1,7 @@
 /** Legacy continuation capture and purpose-only persistence without live models. */
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createProject, saveProject, openProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
@@ -13,6 +14,7 @@ import {
   reviseIntention,
 } from '../../src/project/inquiries/investigation.mjs';
 import { captureProjectInquiry } from '../../src/project/inquiries/inquiry.mjs';
+import { readContinuationDraft } from '../../src/project/inquiries/continuation.mjs';
 import {
   buildInquiryFrame,
   finalizedContinuationFrame,
@@ -107,6 +109,38 @@ try {
       });
     assert(opening, 'The accepted interpretation exposes a query opening');
     assert(continuation.interpretedGraphs, 'The continuation retains the accepted reading');
+    // Legacy query-edge drafts prefill only while their project scope still exists.
+    const draftDirectory = join(directory, '.continuations'),
+      draftKey = createHash('sha256')
+        .update(
+          JSON.stringify([
+            continuation.parent.revision,
+            continuation.parent.occurrenceId,
+            continuation.opening.edge.id,
+          ]),
+        )
+        .digest('hex'),
+      draftFile = join(draftDirectory, `${draftKey}.json`),
+      writeDraft = async (scopePlacementId) => {
+        await mkdir(draftDirectory, { recursive: true });
+        await writeFile(
+          draftFile,
+          JSON.stringify({ ...continuation, question: 'Legacy draft?', scopePlacementId }),
+        );
+      };
+    await writeDraft(project.data.placements[0].id);
+    assert.equal((await readContinuationDraft(project, continuation)).question, 'Legacy draft?');
+    await writeDraft('removed-scope');
+    assert.equal(await readContinuationDraft(project, continuation), null);
+    assert.equal(
+      await readContinuationDraft(project, {
+        ...continuation,
+        opening: { id: 'source:s1', kind: 'source' },
+      }),
+      null,
+      'Openings without a query edge have no legacy draft',
+    );
+    await rm(draftDirectory, { recursive: true });
     assert.notEqual(
       graphRevision(continuation.interpretedGraphs.query),
       graphRevision(parentQuery),

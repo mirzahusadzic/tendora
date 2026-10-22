@@ -93,15 +93,16 @@ try {
             ': ' +
             opening.reason,
         );
-      if (run.lexicalAudit?.items.length) {
+      // Runs saved before item-level audits keep only a summary; show what they retain.
+      if (run.lexicalAudit?.items?.length) {
         const items = run.lexicalAudit.items;
         lines.push(
           `AMR vocabulary: ${items.length} input${items.length === 1 ? '' : 's'} with unverified lexical readings.`,
         );
         for (const item of items.filter((item) => values.explain || item.kind === 'question')) {
           lines.push(`  ${item.kind}: ${item.text}`);
-          for (const finding of item.findings) lines.push('  Check: ' + finding.reason);
-          for (const candidate of item.candidates)
+          for (const finding of item.findings ?? []) lines.push('  Check: ' + finding.reason);
+          for (const candidate of item.candidates ?? [])
             lines.push(
               `  Lexical hint: ${JSON.stringify(candidate.evidence.text)} matches ${candidate.evidence.method === 'propbank-inflection' ? 'an inflection of ' : ''}PropBank alias ${JSON.stringify(candidate.evidence.lexeme)} for ${candidate.predicate} (${candidate.description}); this does not establish a replacement or its roles.`,
             );

@@ -7,6 +7,7 @@ export const suites = {
   check: [
     'acceptance/payments.mjs',
     'acceptance/blind-holdout.mjs',
+    'acceptance/independent-domain.mjs',
     'acceptance/load-bearing.mjs',
     'inquiry/traversal.mjs',
     'engine/semantic-chain.mjs',
@@ -48,6 +49,7 @@ export const suites = {
     'architecture/test-layout.mjs',
     'project/storage.mjs',
     'project/examples.mjs',
+    'project/payments-demo-copy.mjs',
     'project/data-files.mjs',
     'project/engine-storage.mjs',
     'project/cooperative-frame.mjs',

@@ -19,14 +19,15 @@ Run `.venv/bin/python python/semcat/manage.py verify` to check installed sources
 ## Work on a copy
 
 ```sh
-cp -R .proj/payments-on-call .proj/payments-demo
+npm run demo
 npm run workbench -- --project .proj/payments-demo
 ```
 
 The demo contains `project.json`, retained material in `material.sqlite`, and
 seventeen computed results with their evidence in `engine/artifacts.sqlite`.
 Work on a copy to keep the bundled snapshot unchanged; generated databases and
-engine data elsewhere are ignored.
+engine data elsewhere are ignored. `npm run demo` leaves an existing copy
+unchanged; `npm run demo -- --reset` discards it and starts again.
 The payments sources and acquisitions contain synthetic incident material.
 
 The editor starts with a role tree. Use `n` to add statements, `e` to edit,

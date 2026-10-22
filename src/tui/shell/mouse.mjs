@@ -130,6 +130,10 @@ export function createMouse({
         draw();
         return;
       }
+      // Trackpad momentum can outpace drawing. Keep a short backlog so scrolling
+      // stops promptly instead of replaying every queued step after release.
+      if (queue.wheel >= 4) return;
+      queue.wheel++;
       queue.pending = queue.pending
         .then(async () => {
           if (state.closed || !state.viewport || state.quitPrompt || state.form?.busy) return;
@@ -171,7 +175,8 @@ export function createMouse({
         .catch((error) => {
           state.failure = error.message;
           draw();
-        });
+        })
+        .finally(() => queue.wheel--);
       return;
     }
     if (name === 'MOUSE_LEFT_BUTTON_PRESSED' && !state.resizing) {

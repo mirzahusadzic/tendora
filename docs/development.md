@@ -35,6 +35,24 @@ Refresh all bundled answers offline with `node tools/refresh-payments-demo.mjs`.
 It computes results on a disposable copy, verifies the retained material and
 portable evidence, then replaces the demo's two compact SQLite stores.
 
+## External research profiles
+
+Three profiles in `test/suites.mjs` run against private, retained projects that
+are not bundled. They are opt-in and do not run in CI:
+
+| Profile              | Command                                | Requires                                   |
+| -------------------- | -------------------------------------- | ------------------------------------------ |
+| `acceptance:tendora` | `node test/run.mjs acceptance:tendora` | `TENDORA_CONTRACT_SOURCE`: service project |
+| `acceptance:hand`    | `node test/run.mjs acceptance:hand`    | `HAND_CONTRACT_SOURCE`: hand project       |
+| `research:hand`      | `node test/run.mjs research:hand`      | `HAND_CONTRACT_SOURCE`: hand project       |
+
+Each copies its source into a new `tmp/` directory and reasons offline with
+retained acquisitions only. The two acceptance profiles are strict product
+gates: they write `manifest.json` and terminal captures, and any failed or
+unexecuted requirement fails the profile. `research:hand` is diagnostic and
+checks that the original project files are unchanged. A clean checkout cannot
+run these profiles without the corresponding project.
+
 ## Dependencies and references
 
 The application depends on terminal-kit and sqlite-vec through the npm lockfile.

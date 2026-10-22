@@ -77,6 +77,20 @@ const normalize = (row) => {
   if (row.length !== 768 || !(length > 0)) throw new Error('expected a nonzero 768d embedding');
   return cut.map((value) => value / length);
 };
+const identity = (value) => typeof value === 'string' && value.trim() !== '';
+// Model identities become provenance; malformed responses must not become "undefined@undefined".
+function modelIdentity(response, service) {
+  if (!identity(response?.model) || !identity(response?.revision))
+    throw new Error(`${service} response lacks a model identity`);
+  return `${response.model}@${response.revision}`;
+}
+function parsedItem(item) {
+  modelIdentity(item, 'AMR');
+  if (!identity(item.decode_status)) throw new Error('AMR response lacks a decode status');
+  if (item.decode_status === 'ok' && !identity(item.penman))
+    throw new Error('AMR response marked ok without PENMAN');
+  return item;
+}
 export const dot = (left, right) => left.reduce((sum, value, i) => sum + value * right[i], 0);
 
 export async function embedTexts(texts, signal) {
@@ -91,11 +105,12 @@ export async function embedTexts(texts, signal) {
     { texts, dimensions: 768, prompt_name: 'STS' },
     signal,
   );
-  if (embedded.embeddings?.length !== texts.length || embedded.dimensions !== 768)
+  if (embedded?.embeddings?.length !== texts.length || embedded.dimensions !== 768)
     throw new Error('embedding cohort mismatch');
+  const model = modelIdentity(embedded, 'Embedding');
   return {
     vectors: embedded.embeddings.map(normalize),
-    model: `${embedded.model}@${embedded.revision}`,
+    model,
     embedding: {
       prompt: 'STS',
       acquiredDimensions: 768,
@@ -128,7 +143,7 @@ export async function parseTexts(texts, progress = () => {}, signal) {
     if (!Array.isArray(batch) || batch.length !== Math.min(10, texts.length - i)) {
       throw new Error('AMR batch size mismatch');
     }
-    parsed.push(...batch);
+    parsed.push(...batch.map(parsedItem));
   }
   if (new Set(parsed.map((item) => `${item.model}@${item.revision}`)).size !== 1) {
     throw new Error('AMR model revision changed during acquisition');

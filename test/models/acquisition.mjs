@@ -125,6 +125,30 @@ try {
     await assert.rejects(parseTexts(['Exact source.']), /Unauthorized/u);
     assert.equal(calls, 1, 'Authentication failures are never retried');
   }
+  // Every returned item carries its own provenance; malformed items fail at the boundary.
+  for (const [item, message] of [
+    [{ penman: '(t / test-01)', decode_status: 'ok' }, /AMR response lacks a model identity/u],
+    [{ penman: '(t / test-01)', model: 'test', revision: '1' }, /lacks a decode status/u],
+    [{ decode_status: 'ok', model: 'test', revision: '1' }, /marked ok without PENMAN/u],
+    [null, /AMR response lacks a model identity/u],
+  ]) {
+    globalThis.fetch = async () => ({ ok: true, json: async () => [item] });
+    await assert.rejects(parseTexts(['Exact source.']), message);
+  }
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => [{ penman: null, decode_status: 'failed', model: 'test', revision: '1' }],
+  });
+  assert.equal((await parseTexts(['Exact source.'])).versions.amr, 'test@1');
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      embeddings: [Array.from({ length: 768 }, (_, i) => (i ? 0 : 1))],
+      dimensions: 768,
+      model: 'transport-fixture',
+    }),
+  });
+  await assert.rejects(embedTexts(['Exact source.']), /Embedding response lacks a model identity/u);
   console.log(
     'ok model transport retries a closed socket once and identifies the failed stage without losing cancellation',
   );

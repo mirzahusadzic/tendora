@@ -82,7 +82,12 @@ export async function requestProjectInquiry(
     failed.status = 'draft';
     failed.lastFailure = error.message;
     if (error.engineRunId) failed.lastEngineRunId = error.engineRunId;
-    await saveInvestigation(project, next, saved.digest);
+    // The engine failure and its run linkage outrank the Ask's status note.
+    try {
+      await saveInvestigation(project, next, saved.digest);
+    } catch (failure) {
+      if (error && typeof error === 'object') error.investigationSaveError = failure;
+    }
     throw error;
   }
 }

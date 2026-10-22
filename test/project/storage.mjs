@@ -1,7 +1,17 @@
 /** Projects retain source identity while saving only changed concept objects. */
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, open, readFile, writeFile, rm, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import {
+  chmod,
+  mkdtemp,
+  mkdir,
+  open,
+  readFile,
+  writeFile,
+  rm,
+  unlink,
+  utimes,
+} from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { randomUUID } from 'node:crypto';
@@ -25,6 +35,11 @@ import {
   engineDeletionLockPath,
 } from '../../src/project/storage/engine-runs.mjs';
 import { deleteEngineRuns } from '../../src/project/inquiries/delete-engine-runs.mjs';
+import {
+  fileLeaseActive,
+  malformedLeaseStaleMs,
+  withFileLease,
+} from '../../src/project/storage/locks.mjs';
 import {
   projectOutlineIndex,
   conceptOutline,
@@ -129,6 +144,44 @@ try {
     },
   ]);
   assert.equal(Object.keys((await readAcquisitions(concurrent)).entries).length, 3);
+
+  // A crashed saver's lease is recovered: a dead owner at once, an unreadable one once stale.
+  const projectLease = `${concurrent.path}.lock`;
+  await writeFile(projectLease, `${JSON.stringify({ pid: 1_073_741_824 })}\n`);
+  let recovered = await saveProject(concurrent, structuredClone(concurrent.data));
+  await assert.rejects(readFile(projectLease), { code: 'ENOENT' });
+  await writeFile(projectLease, '');
+  assert.equal(await fileLeaseActive(projectLease), true, 'A just-created lease may be publishing');
+  const old = new Date(Date.now() - 2 * malformedLeaseStaleMs);
+  await utimes(projectLease, old, old);
+  recovered = await saveProject(recovered, structuredClone(recovered.data));
+  await assert.rejects(readFile(projectLease), { code: 'ENOENT' });
+  const investigationLease = join(directory, 'concurrent', 'investigations', 'stale.json.lock');
+  await mkdir(join(directory, 'concurrent', 'investigations'), { recursive: true });
+  await writeFile(investigationLease, '{"pid":');
+  await utimes(investigationLease, old, old);
+  assert.equal(await fileLeaseActive(investigationLease), false);
+  await assert.rejects(readFile(investigationLease), { code: 'ENOENT' });
+  const failure = new Error('operation failed');
+  await assert.rejects(
+    withFileLease(projectLease, async () => {
+      // Make the lease unremovable; root may still remove it, which is equally correct.
+      await chmod(dirname(projectLease), 0o555);
+      throw failure;
+    }).finally(() => chmod(dirname(projectLease), 0o755)),
+    (error) => error === failure,
+    'Lease cleanup never replaces the operation failure',
+  );
+  await rm(projectLease, { force: true });
+  await withFileLease(projectLease, () =>
+    assert.rejects(
+      withFileLease(projectLease, async () => {}, { timeoutMs: 20, busyMessage: 'busy' }),
+      /busy/u,
+      'A live owner still excludes other writers',
+    ),
+  );
+  await assert.rejects(readFile(projectLease), { code: 'ENOENT' });
+  concurrent.digest = recovered.digest;
 
   const deletionPath = engineDeletionLockPath(concurrent),
     deletion = await open(deletionPath, 'wx');

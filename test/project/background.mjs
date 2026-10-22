@@ -1,11 +1,12 @@
 /** Real process isolation, cancellation and bounded reasoning at 10,000 sourced roles. */
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createProject, saveProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
-import { backgroundProjectInquiry } from '../../src/project/inquiries/background.mjs';
+import { backgroundProjectInquiry, stopChild } from '../../src/project/inquiries/background.mjs';
 import { activeEngineRunIds } from '../../src/project/storage/engine-runs.mjs';
 import { journeyWorkbench } from '../support/journey-workbench.mjs';
 
@@ -159,7 +160,21 @@ await assert.rejects(
   backgroundProjectInquiry({ ...project, path: `${directory}/absent/project.json` }, root, query),
   /ENOENT/u,
 );
+// A cancelled child that ignores SIGTERM is still reclaimed within a bounded time.
+const stubborn = spawn(
+  process.execPath,
+  ['-e', "process.on('SIGTERM', () => {}); process.send?.('ready'); setInterval(() => {}, 1000);"],
+  { stdio: ['ignore', 'ignore', 'ignore', 'ipc'] },
+);
+await new Promise((ready) => stubborn.once('message', ready));
+const exited = new Promise((done) => stubborn.once('exit', (code, signal) => done(signal)));
+stopChild(stubborn, { termAfterMs: 0, killAfterMs: 200 });
+assert.equal(
+  await Promise.race([exited, delay(5000).then(() => 'alive')]),
+  'SIGKILL',
+  'A child ignoring SIGTERM is killed',
+);
 await writeFile(`${directory}/performance.json`, JSON.stringify(timing, null, 2) + '\n');
 console.log(
-  `ok background questions: 10,000 sourced roles, live progress, bounded completeness, scoped proof, immediate cancellation, lease cleanup and errors; ${JSON.stringify(timing)}; ${directory}/performance.json`,
+  `ok background questions: 10,000 sourced roles, live progress, bounded completeness, scoped proof, immediate cancellation, SIGKILL escalation, lease cleanup and errors; ${JSON.stringify(timing)}; ${directory}/performance.json`,
 );

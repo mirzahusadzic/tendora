@@ -1,5 +1,5 @@
 /** Durable engine runs and immutable input/client artifacts, owned by a project. */
-import { open, readFile, mkdir, readdir, unlink, access } from 'node:fs/promises';
+import { readFile, mkdir, readdir, access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import {
@@ -10,7 +10,7 @@ import {
   storeRun,
   storedRuns,
 } from './engine-artifacts.mjs';
-import { fileLeaseActive } from './locks.mjs';
+import { acquireFileLease, fileLeaseActive } from './locks.mjs';
 
 const root = (project) => dirname(project.path);
 export const engineDeletionLockPath = (project) => join(root(project), '.engine-delete.lock');
@@ -46,40 +46,17 @@ export async function acquireEngineRunLease(project, id, { timeoutMs = 10_000 } 
         throw new Error('Engine data is being deleted. Try the inquiry again when it finishes.');
       await delay(10);
     }
-    await mkdir(activeRunDirectory(project), { recursive: true });
-    const path = activeRunPath(project, id);
-    let handle;
+    const release = await acquireFileLease(activeRunPath(project, id), {
+      timeoutMs,
+      owner: { id },
+    });
     try {
-      handle = await open(path, 'wx');
-      await handle.writeFile(
-        `${JSON.stringify({ id, pid: process.pid, at: new Date().toISOString() })}\n`,
-      );
-      if (await fileLeaseActive(engineDeletionLockPath(project))) {
-        await handle.close();
-        handle = null;
-        await unlink(path).catch((error) => {
-          if (error.code !== 'ENOENT') throw error;
-        });
-        continue;
-      }
-      let released = false;
-      return async () => {
-        if (released) return;
-        released = true;
-        await handle.close();
-        await unlink(path).catch((error) => {
-          if (error.code !== 'ENOENT') throw error;
-        });
-      };
+      if (!(await fileLeaseActive(engineDeletionLockPath(project)))) return release;
     } catch (error) {
-      if (handle) {
-        await handle.close();
-        await unlink(path).catch((failure) => {
-          if (failure.code !== 'ENOENT') throw failure;
-        });
-      }
+      await release().catch(() => {});
       throw error;
     }
+    await release();
   }
 }
 export async function putEngineArtifact(project, value) {

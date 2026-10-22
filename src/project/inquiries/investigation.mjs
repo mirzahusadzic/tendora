@@ -1,10 +1,11 @@
 /** Participant-authored investigation state; recordings retain their own lifecycle. */
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, unlink, open } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { sourceCatalog, scopedSources } from '../authoring/sources.mjs';
 import { isContextualSource } from '../../recording/case-sources.mjs';
 import { readDataFile, writeDataFile, listDataFiles } from '../storage/data-files.mjs';
+import { withFileLease } from '../storage/locks.mjs';
 import { validateFrameCarry, validateInquiryFrame } from '../../recording/frame.mjs';
 
 export const textDigest = (text) => createHash('sha256').update(text).digest('hex');
@@ -343,24 +344,21 @@ export async function saveInvestigation(project, data, expectedDigest = null) {
   if (data.projectId !== project.data.id) throw new Error('Investigation project mismatch');
   const path = pathFor(project, data.id);
   await mkdir(dirname(path), { recursive: true });
-  const lock = await open(`${path}.lock`, 'wx').catch((error) => {
-    if (error.code === 'EEXIST') throw new Error('Investigation busy');
-    throw error;
-  });
-  try {
-    let current = null;
-    try {
-      current = textDigest(await readDataFile(dirname(project.path), path));
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-    }
-    if (current !== expectedDigest) throw new Error('Investigation changed');
-    const saved = { ...data, updatedAt: new Date().toISOString() },
-      bytes = JSON.stringify(saved, null, 2) + '\n';
-    await writeDataFile(dirname(project.path), path, bytes);
-    return { path, data: saved, digest: textDigest(bytes) };
-  } finally {
-    await lock.close();
-    await unlink(`${path}.lock`);
-  }
+  return withFileLease(
+    `${path}.lock`,
+    async () => {
+      let current = null;
+      try {
+        current = textDigest(await readDataFile(dirname(project.path), path));
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+      if (current !== expectedDigest) throw new Error('Investigation changed');
+      const saved = { ...data, updatedAt: new Date().toISOString() },
+        bytes = JSON.stringify(saved, null, 2) + '\n';
+      await writeDataFile(dirname(project.path), path, bytes);
+      return { path, data: saved, digest: textDigest(bytes) };
+    },
+    { busyMessage: 'Investigation busy' },
+  );
 }
