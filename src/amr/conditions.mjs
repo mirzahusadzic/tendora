@@ -2,7 +2,31 @@
 import { claimRoot } from './patterns.mjs';
 import { sourceSemanticTypes } from './semantic-types.mjs';
 
-export function conditionalReading(graph, literals = new Map()) {
+/** `have-condition-91` is AMR's reified `:condition`: read its :ARG1 under its :ARG2. */
+function dereifiedCondition(graph) {
+  const top = claimRoot(graph),
+    node = graph.nodes.find((n) => n.id === top);
+  if (node?.concept !== 'have-condition-91') return graph;
+  const out = graph.edges.filter((edge) => edge.from === top),
+    conclusion = out.find((edge) => edge.role === ':ARG1'),
+    condition = out.find((edge) => edge.role === ':ARG2');
+  if (out.length !== 2 || !conclusion || !condition || graph.edges.some((e) => e.to === top))
+    return { reason: 'A reified condition with other roles requires an explicit interpretation.' };
+  return {
+    ...graph,
+    top: conclusion.to,
+    assertionTop: conclusion.to,
+    nodes: graph.nodes.filter((n) => n.id !== top),
+    edges: [
+      ...graph.edges.filter((edge) => edge.from !== top),
+      { ...condition, from: conclusion.to, role: ':condition' },
+    ],
+  };
+}
+
+export function conditionalReading(reading, literals = new Map()) {
+  const graph = dereifiedCondition(reading);
+  if (graph.reason) return graph;
   const root = claimRoot(graph),
     conditions = graph.edges.filter((edge) => edge.from === root && edge.role === ':condition');
   if (!conditions.length) return null;

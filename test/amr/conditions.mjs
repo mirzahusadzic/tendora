@@ -186,6 +186,31 @@ assert.equal(
   'open',
   'Negated policies remain unsupported, without dropping their negation',
 );
+// AMR may reify the same policy as have-condition-91 :ARG1 conclusion :ARG2 condition.
+const reified = modify(policy, (g) => {
+  g.nodes.push({ id: 'w', concept: 'have-condition-91' });
+  g.edges = g.edges.filter((e) => e.role !== ':condition');
+  g.edges.push(
+    { id: 'conclusion', from: 'w', role: ':ARG1', to: 'r' },
+    { id: 'condition', from: 'w', role: ':ARG2', to: 'c' },
+  );
+  g.top = 'w';
+});
+const reifiedResult = evaluateAnswer(record([reified, evidence]));
+assert.equal(reifiedResult.status, 'supported', 'A reified condition reads like :condition');
+assert.equal(reifiedResult.answers[0].text, 'payment');
+assert.deepEqual(new Set(reifiedResult.answers[0].sourceIds), new Set(['policy', 'evidence']));
+assert.equal(
+  evaluateAnswer(record([reified])).status,
+  'open',
+  'A reified template cannot assert its own antecedent or conclusion',
+);
+const reifiedExtra = modify(reified, (g) => {
+  g.nodes.push({ id: 'neg', concept: '-' });
+  g.edges.push({ id: 'neg', from: 'w', role: ':polarity', to: 'neg' });
+});
+assert(conditionalReading(reifiedExtra).reason, 'Other roles on the reification are not dropped');
+assert.equal(evaluateAnswer(record([reifiedExtra, evidence])).status, 'open');
 console.log(
-  'ok explicit AMR conditions retain shared participants, assertion, conjunction, negation, modality and exact policy qualification',
+  'ok explicit AMR conditions retain shared participants, assertion, conjunction, negation, modality, reified form and exact policy qualification',
 );
