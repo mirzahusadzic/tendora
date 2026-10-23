@@ -181,10 +181,47 @@ const negativeQuery = modify(query, (g) => {
   g.nodes.push({ id: 'neg', concept: '-' });
   g.edges.push({ id: 'neg', from: 'r', role: ':polarity', to: 'neg' });
 });
+const negated = evaluateAnswer(record([negativePolicy, evidence], negativeQuery));
+assert.equal(negated.status, 'supported', 'A grounded negative conclusion answers its negation');
+assert.equal(negated.answers[0].text, 'payment');
 assert.equal(
-  evaluateAnswer(record([negativePolicy, evidence], negativeQuery)).status,
+  evaluateAnswer(record([negativePolicy], negativeQuery)).status,
   'open',
-  'Negated policies remain unsupported, without dropping their negation',
+  'An ungrounded negative conclusion answers nothing',
+);
+// A yes/no question reads a grounded negative conclusion as No, never as Yes.
+const polar = modify(query, (g) => (g.nodes.find((n) => n.id === 'p').concept = 'payment'));
+const denied = evaluateAnswer(record([negativePolicy, evidence], polar));
+assert.equal(denied.status, 'supported');
+assert.equal(denied.answers[0].polarity, 'negative');
+assert.equal(evaluateAnswer(record([negativePolicy], polar)).status, 'open');
+assert.equal(
+  evaluateAnswer(
+    record([policy, modify(negativePolicy, (g) => (g.id = 'negative')), evidence], polar),
+  ).status,
+  'conflict',
+  'Opposite conclusions from one case remain a conflict',
+);
+// A derived negation cannot satisfy a later rule's positive condition.
+const escalation = graph(
+  'escalation',
+  'e',
+  { e: 'escalate-01', x: 'ticket', r: 'recommend-01', h: 'handle-01', t: 'team', p: 'payment' },
+  [
+    ['e', ':ARG1', 'x'],
+    ['e', ':condition', 'r'],
+    ['r', ':ARG1', 'h'],
+    ['h', ':ARG0', 't'],
+    ['t', ':mod', 'p'],
+    ['h', ':ARG1', 'x'],
+  ],
+);
+const escalated = graph('escalated', 'e', { e: 'escalate-01', x: 'ticket' }, [['e', ':ARG1', 'x']]);
+assert.equal(evaluateAnswer(record([policy, evidence, escalation], escalated)).status, 'supported');
+assert.equal(
+  evaluateAnswer(record([negativePolicy, evidence, escalation], escalated)).status,
+  'open',
+  'The negation guards every fact its rule derives',
 );
 // AMR may reify the same policy as have-condition-91 :ARG1 conclusion :ARG2 condition.
 const reified = modify(policy, (g) => {

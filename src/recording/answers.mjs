@@ -405,7 +405,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
     if (extracted.reason)
       skipped.push({ kind: 'clause boundary', sourceId: source.id, reason: extracted.reason });
     for (const fragment of semanticFragments) {
-      const reading = conditionalReading(fragment.graph, literals);
+      const reading = conditionalReading(fragment.graph, literals, { negativeConclusions: true });
       if (reading?.reason)
         skipped.push({
           kind: 'conditional parse',
@@ -428,6 +428,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
             [reading.root, '@asserted', 'true'],
             [reading.root, '@qualification', source.text],
           ],
+          ...(reading.guards ? { guards: reading.guards } : {}),
         });
       // An unresolved question in a case or corpus is not a positive assertion.
       if (

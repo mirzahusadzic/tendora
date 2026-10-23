@@ -24,7 +24,11 @@ function dereifiedCondition(graph) {
   };
 }
 
-export function conditionalReading(reading, literals = new Map()) {
+export function conditionalReading(
+  reading,
+  literals = new Map(),
+  { negativeConclusions = false } = {},
+) {
   const graph = dereifiedCondition(reading);
   if (graph.reason) return graph;
   const root = claimRoot(graph),
@@ -70,8 +74,11 @@ export function conditionalReading(reading, literals = new Map()) {
     head.add(id);
   // An explicitly asserted negative antecedent can be matched structurally.
   // Keep its polarity and modal wrapper; absence of a positive fact is not proof.
-  // Negative conclusions still need output-guard support in the rule engine.
-  if (edges.some((edge) => edge.role === ':polarity' && head.has(edge.from)))
+  // A negative conclusion carries its polarity as an output guard: every fact
+  // it derives can be read only with the negation as a witness. Callers that
+  // cannot carry guards keep refusing it.
+  const negations = edges.filter((edge) => edge.role === ':polarity' && head.has(edge.from));
+  if (negations.length && !negativeConclusions)
     return fail('Negative conclusions require an explicit interpretation.');
   const conjunctions = new Set(),
     roots = [];
@@ -143,6 +150,9 @@ export function conditionalReading(reading, literals = new Map()) {
   return {
     when,
     then,
+    ...(negations.length
+      ? { guards: negations.map((edge) => [names.get(edge.from), edge.role, names.get(edge.to)]) }
+      : {}),
     root: names.get(root),
     conclusion: {
       top: root,
