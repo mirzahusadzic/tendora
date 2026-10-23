@@ -393,7 +393,7 @@ const repairs = {
   ],
   edges: [{ id: 'e', from: 'r', role: ':ARG0', to: 's' }],
 };
-const [plain, flagged, unread] = sourceStatements(
+const [plain, flagged, unread, timed] = sourceStatements(
   [
     { id: 'a', text: 'The steward repairs.', graph: repairs },
     {
@@ -411,6 +411,21 @@ const [plain, flagged, unread] = sourceStatements(
       },
     },
     { id: 'c', text: 'Not yet read.' },
+    {
+      id: 'd',
+      text: 'The van collects crates at four in the afternoon.',
+      graph: repairs,
+      lexicalAudit: {
+        findings: [
+          {
+            predicate: '14:00',
+            status: 'unattested',
+            description: 'A clock time',
+            reason: 'The reading has 14:00, but the text gives no such time.',
+          },
+        ],
+      },
+    },
   ],
   {},
 ).entries.map((entry) => entry.preview);
@@ -419,6 +434,7 @@ assert.deepEqual(flagged, [
   'Read as “to mark the skin with permanent colors and patterns” (tattoo), but no word in the text says so.',
 ]);
 assert.deepEqual(unread, ['No reading retained for this text yet.']);
+assert.deepEqual(timed, ['The reading has 14:00, but the text gives no such time.']);
 console.log(
   'ok open questions explain global evidence gaps, preserve diagnostic states and expose related sources without claiming an answer; selected statements preview their reading',
 );

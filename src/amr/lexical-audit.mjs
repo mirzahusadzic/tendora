@@ -1,5 +1,5 @@
 /** Lexical evidence for acquired predicates, not a semantic correctness test. */
-export const lexicalAuditProfile = 'amr-propbank-lexical-v2';
+export const lexicalAuditProfile = 'amr-propbank-lexical-v3';
 const tokensOf = (text) =>
   [...text.matchAll(/[\p{L}\p{N}]+(?:['’][\p{L}]+)?/gu)].map((match) => ({
     text: match[0],
@@ -28,6 +28,70 @@ const operators = new Set([
   'cause-01',
   'contrast-01',
 ]);
+const units =
+  'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(
+    ' ',
+  );
+const counted = Object.fromEntries([
+  ...'twenty thirty forty fifty sixty seventy eighty ninety'
+    .split(' ')
+    .map((word, i) => [word, 20 + i * 10]),
+  ...'first second third fourth fifth sixth seventh eighth ninth tenth'
+    .split(' ')
+    .map((word, i) => [word, i + 1]),
+  ...'january february march april may june july august september october november december'
+    .split(' ')
+    .map((word, i) => [word, i + 1]),
+  ['once', 1],
+  ['twice', 2],
+  ['thrice', 3],
+  ['dozen', 12],
+  ['half', 0.5],
+]);
+const clock = (hour, minute = '00') => `${hour}:${minute}`;
+/** Numbers and clock times a text gives, in digits or words. A reading's
+ * number or time is checked against these; nothing is inferred beyond them.
+ */
+function givenValues(text) {
+  const numbers = new Set(),
+    times = new Set();
+  for (const match of text.matchAll(/\d+(?:\.\d+)?/gu)) numbers.add(Number(match[0]));
+  for (const match of text.matchAll(/\b(\d{1,2}):(\d{2})\b/gu))
+    times.add(clock(Number(match[1]), match[2]));
+  const tokens = tokensOf(text);
+  for (let i = 0; i < tokens.length; i++) {
+    const word = tokens[i].word,
+      next = tokens[i + 1];
+    let value = units.includes(word)
+      ? units.indexOf(word)
+      : (counted[word] ?? (/^\d+$/u.test(word) ? Number(word) : undefined));
+    if (value === undefined) continue;
+    // “sixty-four” and “sixty four” give 64, not 60.
+    if (
+      word in counted &&
+      counted[word] >= 20 &&
+      units.indexOf(next?.word) > 0 &&
+      /^[-\s]$/u.test(text.slice(tokens[i].end, next.start))
+    ) {
+      value += units.indexOf(next.word);
+      i++;
+    }
+    numbers.add(value);
+    if (Number.isInteger(value) && value >= 1 && value <= 12) {
+      const after = tokens
+        .slice(i + 1, i + 4)
+        .map((token) => token.word)
+        .join(' ');
+      const pm = /^(?:in the (?:afternoon|evening)|pm|p m)\b/u.test(after),
+        am = /^(?:in the morning|am|a m)\b/u.test(after);
+      if (!am) times.add(clock((value % 12) + 12));
+      if (!pm) times.add(clock(value % 12 || (am ? 0 : 12)));
+    }
+  }
+  if (/\bnoon\b/iu.test(text)) times.add(clock(12));
+  if (/\bmidnight\b/iu.test(text)) times.add(clock(0));
+  return { numbers, times };
+}
 const regularForms = (word) => {
   const forms = new Set([word, word + 's', word + 'ed', word + 'ing']);
   if (/(?:s|x|z|ch|sh|o)$/u.test(word)) forms.add(word + 'es');
@@ -77,6 +141,7 @@ export function createLexicalAuditor(resource) {
       used = new Set(),
       checks = [],
       stats = { fastMatches: 0, dictionaryChecks: 0, dictionaryMatches: 0 };
+    let given;
     const evidence = (first, count, lexeme, method) => ({
       text: text.slice(tokens[first].start, tokens[first + count - 1].end),
       start: tokens[first].start,
@@ -105,6 +170,25 @@ export function createLexicalAuditor(resource) {
       if (node.literal !== undefined) {
         const match = find(String(node.literal), 'literal', false);
         if (match) consume(match);
+        else {
+          // AMR spells “a”, “daily” and “each” as 1, so 1 needs no word.
+          const value = String(node.literal).replace(/^"|"$/gu, ''),
+            time = value.match(/^(\d{1,2}):(\d{2})$/u);
+          given ??= givenValues(text);
+          if (
+            time
+              ? !given.times.has(clock(Number(time[1]), time[2]))
+              : /^\d+(?:\.\d+)?$/u.test(value) &&
+                Number(value) !== 1 &&
+                !given.numbers.has(Number(value))
+          )
+            checks.push({
+              nodeId: node.id,
+              predicate: value,
+              status: 'unattested',
+              description: time ? 'A clock time' : 'A number',
+            });
+        }
         continue;
       }
       const parts = node.concept.match(predicate);
@@ -193,7 +277,9 @@ export function createLexicalAuditor(resource) {
         ...(frame ? { description: frame[0], roles: frame[3], files: frame[4] } : {}),
       });
     }
-    const findings = checks.filter((check) => ['unverified', 'unlisted'].includes(check.status));
+    const findings = checks.filter((check) =>
+      ['unverified', 'unlisted', 'unattested'].includes(check.status),
+    );
     const candidates = [];
     if (findings.length)
       for (let i = 0; i < tokens.length; i++)
@@ -229,9 +315,11 @@ export function createLexicalAuditor(resource) {
       findings: findings.map((check) => ({
         ...check,
         reason:
-          check.status === 'unlisted'
-            ? `${check.predicate} is not listed in PropBank ${resource.source.release}; frame inventories may differ.`
-            : `${check.predicate} has no matched source word, PropBank alias or attested predicate form. The reading is unverified; an implicit or abstract expression is also possible.`,
+          check.status === 'unattested'
+            ? `The reading has ${check.predicate}, but the text gives no such ${check.description === 'A clock time' ? 'time' : 'number'}.`
+            : check.status === 'unlisted'
+              ? `${check.predicate} is not listed in PropBank ${resource.source.release}; frame inventories may differ.`
+              : `${check.predicate} has no matched source word, PropBank alias or attested predicate form. The reading is unverified; an implicit or abstract expression is also possible.`,
       })),
     };
   };

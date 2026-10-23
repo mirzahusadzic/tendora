@@ -80,6 +80,40 @@ try {
     'unverified',
     'An agent noun needs the participant it names',
   );
+  // A reading's number or clock time must be one the text gives, in digits or words.
+  const valued = (literal, concept = 'percentage-entity', role = ':value') => ({
+    top: 'v',
+    nodes: [
+      { id: 'v', concept },
+      { id: 'n', concept: literal, literal },
+    ],
+    edges: [{ id: 'e0', from: 'v', role, to: 'n' }],
+  });
+  const unattested = (text, graph) =>
+    audit(text, graph)
+      .findings.filter((finding) => finding.status === 'unattested')
+      .map((finding) => finding.predicate);
+  const humidity = 'The relative humidity is sixty-four percent.';
+  assert.deepEqual(unattested(humidity, valued('60.4')), ['60.4']);
+  assert.deepEqual(unattested(humidity, valued('64')), []);
+  assert.deepEqual(unattested('It exceeds sixty percent.', valued('60')), []);
+  assert.deepEqual(unattested('The result was 8.0 percent.', valued('8.0')), []);
+  assert.deepEqual(unattested('A second sample.', valued('2', 'ordinal-entity')), []);
+  assert.deepEqual(
+    unattested('Reports arrive in October.', valued('10', 'date-entity', ':month')),
+    [],
+  );
+  assert.deepEqual(unattested('A daily list.', valued('1', 'temporal-quantity', ':quant')), []);
+  const pickup = 'The van collects crates at four in the afternoon.';
+  const time = (value) => valued(`"${value}"`, 'date-entity', ':time');
+  assert.deepEqual(unattested(pickup, time('14:00')), ['14:00']);
+  assert.deepEqual(unattested(pickup, time('16:00')), []);
+  assert.deepEqual(unattested('Shifts begin at eight in the morning.', time('20:00')), ['20:00']);
+  assert.deepEqual(unattested('The check runs at 11:00.', time('11:00')), []);
+  assert.match(
+    audit(pickup, time('14:00')).findings[0].reason,
+    /reading has 14:00, but the text gives no such time/u,
+  );
   const literal = {
     top: 'name',
     nodes: [{ id: 'name', concept: 'intercede-01', literal: 'intercede-01' }],

@@ -39,9 +39,12 @@ unrepaired; the evaluator reports these trials separately.
 
 ## Reading errors seen along the way
 
-These are acquisition errors, retained as acquired:
+These are acquisition errors, retained as acquired. The vocabulary check now
+flags a number or clock time the text does not give, so the first two are shown
+for review:
 
-- "four in the afternoon" read as `14:00`;
+- "four in the afternoon" read as `14:00`, and "six in the evening" as `16:00`;
+- "sixty-four percent" read as `60.4`;
 - "8.0 percent or less" read once as `at-least` 8.0, the opposite bound;
 - "curator" read as `curmudgeon`, and "manuscripts" as `document`;
 - lot and order codes read as named entities: "Aster-17" as the spaceship
