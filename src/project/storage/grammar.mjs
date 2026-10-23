@@ -36,11 +36,19 @@ export async function readGrammarCache(project, context) {
     throw error;
   }
 }
-export async function writeGrammarCache(project, context, value) {
+/** Store the grammars a run used. When they are exactly the cached ones, only
+ * the entry's recency changes; re-encoding an unchanged grammar costs time. */
+export async function writeGrammarCache(project, context, value, { unchanged = false } = {}) {
   const path = artifactDatabasePath(project);
   await mkdir(dirname(path), { recursive: true });
   const db = openArtifactDatabase(path);
   try {
+    if (
+      unchanged &&
+      db.prepare('UPDATE grammars SET updated = ? WHERE key = ?').run(Date.now(), cacheKey(context))
+        .changes
+    )
+      return;
     const ref = storeArtifact(db, value);
     db.prepare('INSERT OR REPLACE INTO grammars VALUES (?, ?, ?)').run(
       cacheKey(context),

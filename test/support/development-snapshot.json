@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "calibrationMs": 228,
+  "calibrationMs": 216,
   "benchmarks": {
     "independent-domain": {
-      "engineMs": 278,
+      "engineMs": 269,
       "results": [
         {
           "id": "archive/catalog-nominalization",
@@ -95,7 +95,7 @@
       ]
     },
     "blind-domain": {
-      "engineMs": 2844,
+      "engineMs": 2674,
       "results": [
         {
           "id": "archive-water/q01",

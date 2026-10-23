@@ -380,11 +380,22 @@ async function executeEngineRun(
             elapsedMs: explored.exploration.elapsedMs,
           };
         }
-        if (answer.complete)
-          await writeGrammarCache(project, context, {
-            profile: answer.grammar.profile,
-            grammars: answer.grammar.corpora,
-          });
+        if (answer.complete) {
+          const cached = grammarCache?.profile === answer.grammar.profile && grammarCache.grammars;
+          await writeGrammarCache(
+            project,
+            context,
+            { profile: answer.grammar.profile, grammars: answer.grammar.corpora },
+            {
+              unchanged:
+                Boolean(cached) &&
+                cached.length === answer.grammar.corpora.length &&
+                cached.every(
+                  (grammar, i) => grammar.signature === answer.grammar.corpora[i].signature,
+                ),
+            },
+          );
+        }
         result.answer = answer;
         const summarize = ({ facts: _facts, ...binding }) => binding;
         const sourceIds = new Set(

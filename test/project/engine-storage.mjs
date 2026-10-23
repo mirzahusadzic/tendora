@@ -30,6 +30,11 @@ import {
 } from '../../src/project/inquiries/engine-storage.mjs';
 import { deleteEngineRuns } from '../../src/project/inquiries/delete-engine-runs.mjs';
 import { readSavedRecording } from '../../src/project/storage/recordings.mjs';
+import {
+  listGrammarCaches,
+  readGrammarCache,
+  writeGrammarCache,
+} from '../../src/project/storage/grammar.mjs';
 
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/engine-storage-'));
@@ -320,6 +325,25 @@ try {
   );
   assert.deepEqual(await readObject(totalRoot, 'records', largerRef), larger);
   assert.equal((await listEngineRuns(totalProject)).length, 1);
+  // An unchanged grammar refreshes only its recency; without an entry it is written.
+  const grammarContext = ['grammar-cache-test', null];
+  const first = { profile: 'test', grammars: [{ signature: 'a' }] };
+  await writeGrammarCache(totalProject, ['fresh', null], first, { unchanged: true });
+  assert.deepEqual(await readGrammarCache(totalProject, ['fresh', null]), first);
+  await writeGrammarCache(totalProject, grammarContext, first);
+  const recency = async () =>
+    (await listGrammarCaches(totalProject)).find(
+      (entry) =>
+        entry.key === createHash('sha256').update(JSON.stringify(grammarContext)).digest('hex'),
+    ).updated;
+  const before = await recency();
+  await new Promise((done) => setTimeout(done, 5));
+  await writeGrammarCache(totalProject, grammarContext, first, { unchanged: true });
+  assert((await recency()) > before, 'An unchanged grammar stays recently used');
+  assert.deepEqual(await readGrammarCache(totalProject, grammarContext), first);
+  const second = { profile: 'test', grammars: [{ signature: 'b' }] };
+  await writeGrammarCache(totalProject, grammarContext, second);
+  assert.deepEqual(await readGrammarCache(totalProject, grammarContext), second);
   console.log(
     `ok shared fragments, unchanged hashes, legacy read, bounded cache (${report.after.bytes} bytes), whole-project budget, durable questions/cases, active-run exclusion, repeat compaction, deletion and corruption`,
   );
