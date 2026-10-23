@@ -304,6 +304,21 @@ assert(
   ),
   'Resolved answers do not render open diagnostics or internal partial summaries',
 );
+// A clause the source adds qualifies the answer; it is not presented as a dependency.
+const qualified = structuredClone(resolvedWithParts);
+qualified.run.answer.answers[0] = {
+  ...qualified.run.answer.answers[0],
+  text: 'affected customer reports',
+  dependsOn: ['in the incident channel'],
+};
+assert.deepEqual(
+  journeySection(qualified, 'root').rows.filter(([label]) => label === 'Qualified by'),
+  [['Qualified by', 'in the incident channel', 'input']],
+);
+assert(
+  !journeySection(qualified, 'root').rows.some(([label]) => label === 'Depends on'),
+  'A location is not a condition',
+);
 
 // A descendant's part is materialized at its source role, while an ancestor
 // role says only that the support lies below. It must not claim the part itself.

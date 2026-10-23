@@ -338,8 +338,10 @@ export function journeySection({ project, run, input, result, recording }, place
               ],
             ]
           : []),
+        // A source's clause qualifies the answer; it is a condition only when
+        // the source says so (“in the incident channel” is where, not if).
         ...(answer.dependsOn ?? answer.qualifications ?? []).map((text) => [
-          'Depends on',
+          'Qualified by',
           text,
           'input',
         ]),
@@ -445,7 +447,7 @@ export function journeySection({ project, run, input, result, recording }, place
         rows: [
           ['Candidate', candidate.text, 'warning'],
           ...(candidate.dependsOn ?? candidate.qualifications ?? []).map((text) => [
-            'Depends on',
+            'Qualified by',
             text,
             'input',
           ]),
