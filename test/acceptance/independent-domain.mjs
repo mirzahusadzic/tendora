@@ -1,8 +1,13 @@
-/** The frozen held-out benchmarks run offline on disposable copies. */
+/** The frozen benchmarks run offline on disposable copies. Their questions were
+ * held out when written; since the 2026-10-23 diagnosis they are development
+ * sets. A committed snapshot records each question's behaviour and the engine
+ * time, so a refactor shows any change in answers, evidence, gaps or cost.
+ * Regenerate it deliberately: UPDATE_DEVELOPMENT_SNAPSHOT=1 node <this file>.
+ */
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -38,6 +43,51 @@ const fixtureHash = async (fixtures) => {
       hash.update(name).update(await readFile(join(fixture, name)).catch(() => ''));
   return hash.digest('hex');
 };
+// A fixed workload measures this machine, so the time budget scales with it.
+const calibrate = () => {
+  const started = performance.now();
+  for (let round = 0; round < 5; round++) {
+    const index = new Map();
+    for (let i = 0; i < 200_000; i++) index.set(`node-${i % 5000}#${i}`, [i, String(i)]);
+    let hash = createHash('sha256');
+    for (const [key] of index) hash = hash.update(key);
+    hash.digest('hex');
+  }
+  return performance.now() - started;
+};
+const sorted = (values) => [...values].sort();
+// Behaviour that a refactor must keep; an improvement changes it on purpose.
+const behaviour = (report) =>
+  report.results.map((result) => ({
+    id: `${result.project}/${result.id}`,
+    status: result.status,
+    answers: sorted(result.answers.map((answer) => answer.text)),
+    evidence: sorted(new Set(result.sources.map((source) => source.text))),
+    openings: sorted(
+      new Set(
+        (result.openings ?? []).map((opening) =>
+          [opening.kind, opening.state, opening.from ?? opening.concept, opening.role, opening.to]
+            .filter(Boolean)
+            .join(' '),
+        ),
+      ),
+    ),
+    ...(result.confirmation
+      ? {
+          proposals: result.confirmation.trials.map((trial) => ({
+            source: trial.source,
+            status: trial.status,
+            answers: sorted(trial.answers),
+          })),
+        }
+      : {}),
+  }));
+const snapshotPath = 'test/support/development-snapshot.json';
+const updating = process.env.UPDATE_DEVELOPMENT_SNAPSHOT === '1';
+const snapshot = updating
+  ? { version: 1, calibrationMs: 0, benchmarks: {} }
+  : JSON.parse(await readFile(snapshotPath, 'utf8'));
+const calibration = Math.min(calibrate(), calibrate(), calibrate());
 await mkdir('tmp', { recursive: true });
 for (const benchmark of benchmarks) {
   const before = await fixtureHash(benchmark.fixtures);
@@ -88,6 +138,22 @@ for (const benchmark of benchmarks) {
     summary.confirmationFalseSupport <= benchmark.confirmationFalseSupportCeiling,
     `${benchmark.name}: more proposals would turn an unknown into an answer: ${summary.confirmationFalseSupport}`,
   );
+  const engineMs = report.results.reduce((total, result) => total + result.elapsedMs, 0);
+  if (updating) snapshot.benchmarks[benchmark.name] = { engineMs, results: behaviour(report) };
+  else {
+    const recorded = snapshot.benchmarks[benchmark.name];
+    assert.deepEqual(
+      behaviour(report),
+      recorded.results,
+      `${benchmark.name}: behaviour changed; if intended, regenerate ${snapshotPath}`,
+    );
+    // Twice the recorded engine time, scaled to this machine's speed.
+    const budget = 2 * recorded.engineMs * Math.max(1, calibration / snapshot.calibrationMs);
+    assert(
+      engineMs <= budget,
+      `${benchmark.name}: engine time ${Math.round(engineMs)} ms exceeds its budget of ${Math.round(budget)} ms`,
+    );
+  }
   assert.equal(
     await fixtureHash(benchmark.fixtures),
     before,
@@ -96,6 +162,12 @@ for (const benchmark of benchmarks) {
   console.log(
     `ok ${benchmark.name} benchmark: ${summary.warrantedPassed}/${summary.warranted} warranted, ` +
       `${summary.unknownsPreserved}/${summary.unknowns} unknowns open, no false support; ` +
-      `${summary.oneConfirmationAway} more one confirmation away (${directory})`,
+      `${summary.oneConfirmationAway} more one confirmation away; ` +
+      `engine ${Math.round(engineMs)} ms (${directory})`,
   );
+}
+if (updating) {
+  snapshot.calibrationMs = Math.round(calibration);
+  await writeFile(snapshotPath, JSON.stringify(snapshot, null, 2) + '\n');
+  console.log(`Wrote ${snapshotPath}`);
 }

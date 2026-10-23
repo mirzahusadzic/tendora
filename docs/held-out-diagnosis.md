@@ -3,7 +3,9 @@
 Diagnosis of the 18 warranted answers in the held-out benchmarks
 (`node test/acceptance/independent-domain.mjs`), as of 2026-10-23. Each
 question's retained reading was compared with the readings of its expected
-evidence, offline and with the frozen acquisitions unchanged.
+evidence, offline and with the frozen acquisitions unchanged. After this
+diagnosis the benchmarks serve as development sets; their behaviour is
+recorded in `test/support/development-snapshot.json`.
 
 | Where it is lost                                                      | Questions | One confirmation away |
 | --------------------------------------------------------------------- | --------- | --------------------- |

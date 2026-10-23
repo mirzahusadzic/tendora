@@ -31,6 +31,22 @@ timings are reported everywhere; the 100 ms target is enforced locally because
 hosted runner scheduling varies. Navigation, event-loop responsiveness and
 cancellation assertions run on every platform.
 
+The benchmark domains in `test/acceptance/independent-domain.mjs` are
+development sets: their questions were held out when written, but have since
+been diagnosed in detail. A committed snapshot,
+`test/support/development-snapshot.json`, records each question's status,
+answers, evidence, gaps and proposals, and the total engine time. A change that
+alters any of them fails the test. When the change is intended, regenerate the
+snapshot in the same commit, so the diff shows what changed:
+
+```sh
+UPDATE_DEVELOPMENT_SNAPSHOT=1 node test/acceptance/independent-domain.mjs
+```
+
+The time budget is twice the recorded engine time, scaled by a short
+calibration workload so that slower machines are not penalised. A claim about
+generalisation needs a new sealed domain that has not been diagnosed.
+
 Refresh all bundled answers offline with `node tools/refresh-payments-demo.mjs`.
 It computes results on a disposable copy, verifies the retained material and
 portable evidence, then replaces the demo's two compact SQLite stores.
