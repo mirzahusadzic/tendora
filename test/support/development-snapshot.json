@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "calibrationMs": 208,
+  "calibrationMs": 224,
   "benchmarks": {
     "independent-domain": {
-      "engineMs": 272,
+      "engineMs": 297,
       "results": [
         {
           "id": "archive/catalog-nominalization",
@@ -73,7 +73,7 @@
       ]
     },
     "blind-domain": {
-      "engineMs": 2817,
+      "engineMs": 3016,
       "results": [
         {
           "id": "archive-water/q01",
@@ -507,6 +507,1056 @@
             "relation unmatched restart-01 :ARG1 aircraft-type",
             "relation unmatched restart-01 :ARG1 order",
             "relation unmatched restart-01 :time by"
+          ]
+        }
+      ]
+    },
+    "requestioned": {
+      "engineMs": 5110,
+      "results": [
+        {
+          "id": "archive/catalog-nominalization~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched put-01",
+            "concept unmatched manuscript",
+            "concept unmatched put-01",
+            "concept unmatched together",
+            "relation unmatched catalogue-01 :ARG1 manuscript",
+            "relation unmatched put-01 :ARG0 amr-unknown",
+            "relation unmatched put-01 :ARG1 catalogue-01",
+            "relation unmatched put-01 :ARG2 together"
+          ]
+        },
+        {
+          "id": "archive/catalog-nominalization~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched create-01",
+            "concept unmatched create-01",
+            "concept unmatched manuscript",
+            "concept unmatched role",
+            "relation unmatched catalogue-01 :ARG1 manuscript",
+            "relation unmatched create-01 :ARG0 role",
+            "relation unmatched create-01 :ARG1 catalogue-01",
+            "relation unmatched role :mod amr-unknown"
+          ]
+        },
+        {
+          "id": "archive/binding-passive~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched fix-02",
+            "concept unmatched bind-01",
+            "concept unmatched fix-02",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG3 thing",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched fix-02 :ARG0 amr-unknown",
+            "relation unmatched fix-02 :ARG1 thing"
+          ]
+        },
+        {
+          "id": "archive/binding-passive~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched bind-01",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG3 thing",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched repair-01 :ARG1 thing"
+          ],
+          "proposals": [
+            {
+              "source": "The conservator repairs damaged bindings.",
+              "status": "supported",
+              "answers": [
+                "conservator"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "archive/storage-paraphrase~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched be-located-at-91",
+            "concept unmatched be-located-at-91",
+            "concept unmatched hold-01",
+            "relation unmatched be-located-at-91 :ARG1 document",
+            "relation unmatched be-located-at-91 :ARG2 amr-unknown",
+            "relation unmatched hold-01 :ARG1 document",
+            "relation unmatched hold-01 :location archive"
+          ]
+        },
+        {
+          "id": "archive/storage-paraphrase~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "relation unmatched document :poss archive"
+          ],
+          "proposals": [
+            {
+              "source": "The archive stores manuscripts in a climate-controlled vault.",
+              "status": "supported",
+              "answers": [
+                "climate-controlled vault"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "archive/binding-yesno~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched fix-02",
+            "concept unmatched Conservator-01",
+            "concept unmatched bind-01",
+            "concept unmatched fix-02",
+            "concept unmatched thing",
+            "relation unmatched Conservator-01 :ARG0 person",
+            "relation unmatched bind-01 :ARG1 thing",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched fix-02 :ARG0 person",
+            "relation unmatched fix-02 :ARG1 thing"
+          ]
+        },
+        {
+          "id": "archive/binding-yesno~2",
+          "status": "supported",
+          "answers": [
+            "Yes"
+          ],
+          "evidence": [
+            "The conservator repairs damaged bindings."
+          ],
+          "openings": []
+        },
+        {
+          "id": "archive/wrong-repairer~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched fix-02",
+            "concept unmatched bind-01",
+            "concept unmatched curate-01",
+            "concept unmatched fix-02",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG1 thing",
+            "relation unmatched curate-01 :ARG0 person",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched fix-02 :ARG0 person",
+            "relation unmatched fix-02 :ARG1 thing"
+          ]
+        },
+        {
+          "id": "archive/wrong-repairer~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched fix-02",
+            "concept unmatched bind-01",
+            "concept unmatched curate-01",
+            "concept unmatched fix-02",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG3 thing",
+            "relation unmatched curate-01 :ARG0 person",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched fix-02 :ARG0 person",
+            "relation unmatched fix-02 :ARG1 thing"
+          ]
+        },
+        {
+          "id": "archive-water/q01~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "relation unjoined freeze-01 :ARG1 crate",
+            "relation unjoined release-01 :ARG1 crate",
+            "relation unjoined slip :purpose release-01",
+            "relation unmatched sign-01 :location slip"
+          ],
+          "proposals": [
+            {
+              "source": "The collections conservator signs release slips for crates scheduled for freezing.",
+              "status": "supported",
+              "answers": [
+                "collections conservator"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "archive-water/q01~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched cover-02",
+            "concept unmatched set-01",
+            "relation unjoined freeze-01 :ARG1 crate",
+            "relation unmatched cover-02 :ARG0 slip",
+            "relation unmatched cover-02 :ARG1 crate",
+            "relation unmatched release-01 :instrument slip",
+            "relation unmatched set-01 :ARG1 crate",
+            "relation unmatched set-01 :ARG2 freeze-01"
+          ],
+          "proposals": [
+            {
+              "source": "The collections conservator signs release slips for crates scheduled for freezing.",
+              "status": "supported",
+              "answers": [
+                "collections conservator"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "archive-water/q02~1",
+          "status": "conditional",
+          "answers": [
+            "crates"
+          ],
+          "evidence": [
+            "The collections conservator signs release slips for crates scheduled for freezing."
+          ],
+          "openings": []
+        },
+        {
+          "id": "archive-water/q02~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted have-03",
+            "relation unjoined conserve-01 :ARG0 person",
+            "relation unjoined conserve-01 :ARG1 collect-01",
+            "relation unjoined crate :mod amr-unknown",
+            "relation unjoined have-03 :ARG0 crate",
+            "relation unjoined have-03 :ARG1 slip",
+            "relation unjoined release-01 :ARG1 crate",
+            "relation unjoined sign-01 :ARG0 person",
+            "relation unjoined sign-01 :ARG1 slip",
+            "relation unmatched release-01 :instrument slip"
+          ]
+        },
+        {
+          "id": "archive-water/q03~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched graduate-01",
+            "relation unjoined form :mod original",
+            "relation unjoined form :mod transfer-01",
+            "relation unjoined keep-01 :ARG0 person",
+            "relation unjoined register-02 :ARG0 person",
+            "relation unjoined register-02 :ARG1 person",
+            "relation unmatched graduate-01 :ARG0 person",
+            "relation unmatched keep-01 :ARG1 form"
+          ]
+        },
+        {
+          "id": "archive-water/q03~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched be-located-at-91",
+            "concept unmatched be-located-at-91",
+            "concept unmatched file-01",
+            "relation unjoined form :mod original",
+            "relation unjoined form :mod transfer-01",
+            "relation unjoined register-02 :ARG0 person",
+            "relation unjoined register-02 :ARG1 intake",
+            "relation unmatched be-located-at-91 :ARG1 form",
+            "relation unmatched be-located-at-91 :ARG2 amr-unknown",
+            "relation unmatched file-01 :ARG0 person",
+            "relation unmatched file-01 :ARG1 form"
+          ]
+        },
+        {
+          "id": "archive-water/q04~1",
+          "status": "supported",
+          "answers": [
+            "original transfer forms"
+          ],
+          "evidence": [
+            "The intake registrar stores the original transfer forms in the intake cabinet."
+          ],
+          "openings": []
+        },
+        {
+          "id": "archive-water/q04~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted hold-01",
+            "concept unmatched item",
+            "relation unjoined cabinet :mod intake",
+            "relation unjoined register-02 :ARG0 person",
+            "relation unjoined register-02 :ARG1 intake",
+            "relation unmatched hold-01 :ARG0 person",
+            "relation unmatched hold-01 :ARG1 item",
+            "relation unmatched hold-01 :location cabinet",
+            "relation unmatched item :mod amr-unknown"
+          ]
+        },
+        {
+          "id": "archive-water/q05~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched recommend-01",
+            "assertion unmatched show-01",
+            "concept unmatched 2",
+            "concept unmatched ahead",
+            "concept unmatched particular",
+            "concept unmatched recommend-01",
+            "concept unmatched show-01",
+            "relation unjoined crate :mod each",
+            "relation unjoined give-01 :ARG2 amr-unknown",
+            "relation unjoined list-01 :ARG1 crate",
+            "relation unmatched ahead :op1 collect-01",
+            "relation unmatched give-01 :ARG1 it",
+            "relation unmatched particular :mod amr-unknown",
+            "relation unmatched particular :prep-for crate",
+            "relation unmatched particular :quant 2",
+            "relation unmatched recommend-01 :ARG1 give-01",
+            "relation unmatched recommend-01 :time ahead",
+            "relation unmatched show-01 :ARG0 it",
+            "relation unmatched show-01 :ARG1 particular"
+          ]
+        },
+        {
+          "id": "archive-water/q06~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted hold-01",
+            "assertion unmatched permit-01",
+            "concept unmatched permit-01",
+            "relation unjoined dry-02 :ARG0 room",
+            "relation unjoined hold-01 :ARG0 amr-unknown",
+            "relation unjoined overflow-01 :ARG1 room",
+            "relation unjoined use-01 :ARG1 room",
+            "relation unmatched hold-01 :ARG1 key",
+            "relation unmatched key :poss room",
+            "relation unmatched permit-01 :ARG0 amr-unknown",
+            "relation unmatched permit-01 :ARG1 use-01",
+            "relation unmatched permit-01 :ARG2 amr-unknown",
+            "relation unmatched possible-01 :ARG1 permit-01"
+          ]
+        },
+        {
+          "id": "archive-water/q06~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "relation unmatched key :poss room"
+          ],
+          "proposals": [
+            {
+              "source": "The recovery coordinator may authorize use of the overflow drying room.",
+              "status": "open",
+              "answers": []
+            }
+          ]
+        },
+        {
+          "id": "archive-water/q07~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched recommend-01",
+            "concept unmatched assume-02",
+            "concept unmatched get-01",
+            "concept unmatched on",
+            "concept unmatched procedure",
+            "concept unmatched recommend-01",
+            "concept unmatched stick-01",
+            "concept unmatched switch-01",
+            "relation unjoined dehumidifier :mod portable",
+            "relation unjoined have-org-role-91 :ARG0 person",
+            "relation unjoined have-org-role-91 :ARG2 custodian",
+            "relation unmatched assume-02 :ARG1 stick-01",
+            "relation unmatched get-01 :ARG0 person",
+            "relation unmatched get-01 :ARG1 switch-01",
+            "relation unmatched procedure :mod humidity",
+            "relation unmatched recommend-01 :ARG1 get-01",
+            "relation unmatched recommend-01 :ARG2 amr-unknown",
+            "relation unmatched recommend-01 :condition assume-02",
+            "relation unmatched stick-01 :ARG1 person",
+            "relation unmatched stick-01 :ARG2 procedure",
+            "relation unmatched switch-01 :ARG0 person",
+            "relation unmatched switch-01 :ARG1 dehumidifier",
+            "relation unmatched switch-01 :ARG2 on"
+          ]
+        },
+        {
+          "id": "archive-water/q08~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched get-01",
+            "concept unmatched get-01",
+            "relation unmatched get-01 :ARG0 amr-unknown",
+            "relation unmatched get-01 :ARG1 key"
+          ]
+        },
+        {
+          "id": "archive-water/q09~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched at-least",
+            "concept unmatched take-01",
+            "concept unmatched volume-quantity",
+            "relation unjoined van :mod freezer",
+            "relation unmatched at-least :op1 volume-quantity",
+            "relation unmatched possible-01 :ARG1 take-01",
+            "relation unmatched take-01 :ARG0 van",
+            "relation unmatched take-01 :ARG1 at-least",
+            "relation unmatched volume-quantity :quant 1",
+            "relation unmatched volume-quantity :unit crate"
+          ]
+        },
+        {
+          "id": "archive-water/q09~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched have-degree-91",
+            "concept unmatched have-degree-91",
+            "concept unmatched large",
+            "concept unmatched most",
+            "relation unjoined van :mod freezer",
+            "relation unmatched carry-01 :ARG0 van",
+            "relation unmatched carry-01 :ARG1 crate",
+            "relation unmatched crate :quant number",
+            "relation unmatched have-degree-91 :ARG1 number",
+            "relation unmatched have-degree-91 :ARG2 large",
+            "relation unmatched have-degree-91 :ARG3 most",
+            "relation unmatched have-degree-91 :ARG5 amr-unknown",
+            "relation unmatched possible-01 :ARG1 carry-01"
+          ]
+        },
+        {
+          "id": "archive-water/q10~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched arrange-01",
+            "assertion unmatched settle-02",
+            "concept unmatched arrange-01",
+            "concept unmatched bill-01",
+            "concept unmatched carrier",
+            "concept unmatched settle-02",
+            "relation unjoined book-03 :ARG1 van",
+            "relation unjoined van :mod freezer",
+            "relation unmatched arrange-01 :ARG0 amr-unknown",
+            "relation unmatched arrange-01 :ARG1 book-03",
+            "relation unmatched bill-01 :ARG2 carrier",
+            "relation unmatched settle-02 :ARG0 amr-unknown",
+            "relation unmatched settle-02 :ARG1 bill-01"
+          ]
+        },
+        {
+          "id": "archive-water/q10~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched pay-01",
+            "concept unmatched bill-01",
+            "concept unmatched carrier",
+            "concept unmatched pay-01",
+            "relation unmatched bill-01 :ARG2 carrier",
+            "relation unmatched pay-01 :ARG0 amr-unknown",
+            "relation unmatched pay-01 :ARG3 bill-01"
+          ]
+        },
+        {
+          "id": "bracken/q01~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched act-02",
+            "assertion unmatched wish-01",
+            "concept unmatched A17-P",
+            "concept unmatched act-02",
+            "concept unmatched aircraft-type",
+            "concept unmatched begin-01",
+            "concept unmatched further",
+            "concept unmatched lift-01",
+            "concept unmatched need-01",
+            "concept unmatched still",
+            "concept unmatched wish-01",
+            "relation unjoined date-entity :time 11:00",
+            "relation unjoined hold-01 :ARG1 moisture",
+            "relation unjoined lead-02 :ARG0 person",
+            "relation unjoined lead-02 :ARG1 line",
+            "relation unmatched act-02 :ARG0 person",
+            "relation unmatched act-02 :mod further",
+            "relation unmatched aircraft-type :name name",
+            "relation unmatched aircraft-type :wiki -",
+            "relation unmatched begin-01 :ARG0 person",
+            "relation unmatched begin-01 :ARG1 order-02",
+            "relation unmatched begin-01 :time date-entity",
+            "relation unmatched lift-01 :ARG0 person",
+            "relation unmatched lift-01 :ARG1 hold-01",
+            "relation unmatched name :op1 A17-P",
+            "relation unmatched need-01 :ARG1 act-02",
+            "relation unmatched need-01 :mod still",
+            "relation unmatched need-01 :purpose lift-01",
+            "relation unmatched order-02 :ARG0 person",
+            "relation unmatched order-02 :ARG1 aircraft-type",
+            "relation unmatched wish-01 :ARG1 begin-01"
+          ]
+        },
+        {
+          "id": "bracken/q01~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched A17-P",
+            "concept unmatched Lockheed Martin A-17 Globemaster III",
+            "concept unmatched act-02",
+            "concept unmatched aircraft-type",
+            "concept unmatched need-01",
+            "concept unmatched still",
+            "concept unmatched you",
+            "relation unjoined date-entity :time 11:00",
+            "relation unjoined hold :mod moisture",
+            "relation unjoined lead-02 :ARG0 person",
+            "relation unjoined lead-02 :ARG1 line",
+            "relation unjoined start-01 :ARG0 person",
+            "relation unmatched act-02 :ARG0 person",
+            "relation unmatched aircraft-type :name name",
+            "relation unmatched aircraft-type :wiki Lockheed Martin A-17 Globemaster III",
+            "relation unmatched before :op1 clear-01",
+            "relation unmatched clear-01 :ARG2 hold",
+            "relation unmatched name :op1 A17-P",
+            "relation unmatched need-01 :ARG1 act-02",
+            "relation unmatched need-01 :mod still",
+            "relation unmatched need-01 :time before",
+            "relation unmatched order-02 :ARG0 you",
+            "relation unmatched order-02 :ARG1 start-01",
+            "relation unmatched order-02 :time date-entity",
+            "relation unmatched possible-01 :ARG1 order-02",
+            "relation unmatched start-01 :ARG1 aircraft-type"
+          ]
+        },
+        {
+          "id": "bracken/q02~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched leave-17",
+            "concept unmatched Ariane 4",
+            "concept unmatched free-04",
+            "concept unmatched leave-17",
+            "concept unmatched put-01",
+            "concept unmatched require-01",
+            "relation unjoined after :op1 and",
+            "relation unjoined mass-quantity :quant 42",
+            "relation unjoined mass-quantity :quant amr-unknown",
+            "relation unjoined mass-quantity :unit kilogram",
+            "relation unjoined spaceship :name name",
+            "relation unmatched and :op1 clear-01",
+            "relation unmatched and :op2 put-01",
+            "relation unmatched assign-01 :ARG1 mass-quantity",
+            "relation unmatched assign-01 :ARG2 pack-01",
+            "relation unmatched clear-01 :ARG1 spaceship",
+            "relation unmatched free-04 :ARG1 mass-quantity",
+            "relation unmatched include-91 :ARG1 mass-quantity",
+            "relation unmatched include-91 :ARG2 mass-quantity",
+            "relation unmatched leave-17 :ARG1 mass-quantity",
+            "relation unmatched leave-17 :time after",
+            "relation unmatched mass-quantity :poss kilogram",
+            "relation unmatched name :op1 Aster-17",
+            "relation unmatched put-01 :ARG1 reserve-01",
+            "relation unmatched put-01 :ARG2 aside",
+            "relation unmatched require-01 :ARG1 reserve-01",
+            "relation unmatched spaceship :wiki Ariane 4"
+          ]
+        },
+        {
+          "id": "bracken/q02~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted available-02",
+            "concept unmatched allocate-01",
+            "concept unmatched asteroid",
+            "concept unmatched clear-02",
+            "concept unmatched give-01",
+            "concept unmatched require-01",
+            "concept unmatched still",
+            "relation unjoined mass-quantity :quant 42",
+            "relation unjoined mass-quantity :quant amr-unknown",
+            "relation unjoined mass-quantity :unit kilogram",
+            "relation unmatched allocate-01 :ARG1 mass-quantity",
+            "relation unmatched allocate-01 :ARG2 pack-01",
+            "relation unmatched allocate-01 :time remove-01",
+            "relation unmatched asteroid :name name",
+            "relation unmatched asteroid :quant mass-quantity",
+            "relation unmatched asteroid :wiki -",
+            "relation unmatched available-02 :ARG2 mass-quantity",
+            "relation unmatched available-02 :mod still",
+            "relation unmatched available-02 :purpose allocate-01",
+            "relation unmatched available-02 :time give-01",
+            "relation unmatched clear-02 :ARG1 asteroid",
+            "relation unmatched give-01 :ARG1 clear-02",
+            "relation unmatched mass-quantity :quant mass-quantity",
+            "relation unmatched name :op1 Aster-17",
+            "relation unmatched remove-01 :ARG1 reserve-01",
+            "relation unmatched require-01 :ARG1 reserve-01"
+          ]
+        },
+        {
+          "id": "bracken/q03~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched 11:00",
+            "concept unmatched school",
+            "relation unjoined name :op1 Reed-26",
+            "relation unmatched cancel-01 :ARG1 school",
+            "relation unmatched date-entity :time 11:00",
+            "relation unmatched possible-01 :time date-entity",
+            "relation unmatched school :name name",
+            "relation unmatched school :wiki -"
+          ]
+        },
+        {
+          "id": "bracken/q03~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched 11:00",
+            "concept unmatched call-off-08",
+            "concept unmatched event",
+            "relation unjoined have-org-role-91 :ARG0 person",
+            "relation unjoined have-org-role-91 :ARG2 superintendent",
+            "relation unjoined name :op1 Reed-26",
+            "relation unjoined superintendent :topic pack-01",
+            "relation unmatched call-off-08 :ARG0 person",
+            "relation unmatched call-off-08 :ARG1 event",
+            "relation unmatched call-off-08 :time date-entity",
+            "relation unmatched date-entity :time 11:00",
+            "relation unmatched event :name name",
+            "relation unmatched event :wiki -",
+            "relation unmatched possible-01 :ARG1 call-off-08"
+          ]
+        },
+        {
+          "id": "bracken/q04~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched see-01",
+            "concept unmatched check",
+            "concept unmatched down",
+            "concept unmatched fit-01",
+            "concept unmatched new-01",
+            "concept unmatched product",
+            "concept unmatched put-01",
+            "concept unmatched see-01",
+            "concept unmatched support-01",
+            "relation unjoined name :op1 Reed-26",
+            "relation unmatched after :op1 fit-01",
+            "relation unmatched check-01 :ARG1 packet",
+            "relation unmatched check-01 :ARG2 amr-unknown",
+            "relation unmatched fit-01 :ARG1 jaw",
+            "relation unmatched fit-01 :ARG2 product",
+            "relation unmatched new-01 :ARG1 jaw",
+            "relation unmatched obligate-01 :ARG2 check-01",
+            "relation unmatched obligate-01 :time after",
+            "relation unmatched pass-07 :ARG1 check",
+            "relation unmatched product :name name",
+            "relation unmatched product :wiki -",
+            "relation unmatched put-01 :ARG0 seal",
+            "relation unmatched put-01 :ARG1 check",
+            "relation unmatched put-01 :ARG2 down",
+            "relation unmatched see-01 :ARG0 seal",
+            "relation unmatched see-01 :ARG1 support-01",
+            "relation unmatched support-01 :ARG1 put-01"
+          ]
+        },
+        {
+          "id": "bracken/q04~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched call-03",
+            "assertion unmatched log-03",
+            "concept unmatched call-03",
+            "concept unmatched fit-01",
+            "concept unmatched log-03",
+            "concept unmatched observe-01",
+            "concept unmatched product",
+            "concept unmatched warrant-01",
+            "relation unjoined name :op1 Reed-26",
+            "relation unjoined pass-07 :ARG1 check-01",
+            "relation unjoined replace-01 :ARG1 jaw",
+            "relation unmatched call-03 :ARG0 check-01",
+            "relation unmatched call-03 :ARG1 fit-01",
+            "relation unmatched check-01 :ARG1 packet",
+            "relation unmatched check-01 :mod amr-unknown",
+            "relation unmatched fit-01 :ARG1 jaw",
+            "relation unmatched fit-01 :ARG2 product",
+            "relation unmatched log-03 :ARG1 check-01",
+            "relation unmatched observe-01 :ARG1 seal",
+            "relation unmatched product :name name",
+            "relation unmatched product :wiki -",
+            "relation unmatched warrant-01 :ARG0 seal",
+            "relation unmatched warrant-01 :ARG1 check-01"
+          ]
+        },
+        {
+          "id": "bracken/q05~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched cause-01",
+            "concept unmatched come-out-09",
+            "concept unmatched do-02",
+            "concept unmatched need-01",
+            "concept unmatched new-01",
+            "concept unmatched old",
+            "concept unmatched prior",
+            "concept unmatched version",
+            "relation unjoined and :op2 obligate-01",
+            "relation unjoined approve-01 :ARG0 amr-unknown",
+            "relation unjoined approve-01 :ARG0 person",
+            "relation unjoined approve-01 :ARG1 proof",
+            "relation unjoined change-01 :ARG1 thing",
+            "relation unjoined check-01 :ARG0 person",
+            "relation unjoined clerk-01 :ARG0 person",
+            "relation unjoined clerk-01 :ARG1 label-01",
+            "relation unjoined name-01 :ARG1 thing",
+            "relation unjoined name-01 :ARG2 thing",
+            "relation unjoined obligate-01 :ARG1 person",
+            "relation unjoined replace-01 :ARG1 proof",
+            "relation unmatched and :condition replace-01",
+            "relation unmatched and :op1 do-02",
+            "relation unmatched and :op1 need-01",
+            "relation unmatched and :op1 proof",
+            "relation unmatched and :op2 check-01",
+            "relation unmatched approve-01 :ARG1 version",
+            "relation unmatched before :op1 come-out-09",
+            "relation unmatched cause-01 :ARG0 change-01",
+            "relation unmatched cause-01 :ARG1 replace-01",
+            "relation unmatched come-out-09 :ARG1 proof",
+            "relation unmatched cultivate-01 :ARG2 thing",
+            "relation unmatched do-02 :ARG0 person",
+            "relation unmatched do-02 :ARG1 amr-unknown",
+            "relation unmatched do-02 :ARG2 and",
+            "relation unmatched do-02 :time prior",
+            "relation unmatched need-01 :ARG0 amr-unknown",
+            "relation unmatched need-01 :ARG1 approve-01",
+            "relation unmatched need-01 :time before",
+            "relation unmatched new-01 :ARG1 version",
+            "relation unmatched obligate-01 :ARG2 and",
+            "relation unmatched prior :op1 approve-01",
+            "relation unmatched proof :mod old",
+            "relation unmatched revise-01 :ARG1 proof"
+          ]
+        },
+        {
+          "id": "bracken/q05~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched be-temporally-at-91",
+            "concept unmatched be-temporally-at-91",
+            "concept unmatched call-03",
+            "concept unmatched do-02",
+            "concept unmatched instead-of-91",
+            "concept unmatched okay-01",
+            "concept unmatched old",
+            "relation unjoined approve-01 :ARG1 change-01",
+            "relation unjoined approve-01 :ARG1 thing",
+            "relation unjoined before :op1 issue-01",
+            "relation unjoined change-01 :ARG1 thing",
+            "relation unjoined check-01 :ARG0 person",
+            "relation unjoined cultivate-01 :ARG1 thing",
+            "relation unjoined issue-01 :ARG1 thing",
+            "relation unjoined name-01 :ARG2 thing",
+            "relation unjoined prove-01 :ARG0 thing",
+            "relation unjoined revise-01 :ARG1 thing",
+            "relation unmatched and :op1 do-02",
+            "relation unmatched and :op2 check-01",
+            "relation unmatched and :time before",
+            "relation unmatched be-temporally-at-91 :ARG2 before",
+            "relation unmatched before :op1 okay-01",
+            "relation unmatched call-03 :ARG1 approve-01",
+            "relation unmatched do-02 :ARG0 person",
+            "relation unmatched do-02 :ARG1 amr-unknown",
+            "relation unmatched do-02 :ARG2 thing",
+            "relation unmatched instead-of-91 :ARG1 thing",
+            "relation unmatched instead-of-91 :ARG2 change-01",
+            "relation unmatched obligate-01 :ARG2 and",
+            "relation unmatched okay-01 :ARG0 person",
+            "relation unmatched okay-01 :ARG1 replace-01",
+            "relation unmatched replace-01 :ARG0 thing",
+            "relation unmatched replace-01 :ARG1 thing",
+            "relation unmatched thing :mod old"
+          ]
+        },
+        {
+          "id": "bracken/q06~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched kick-off-04",
+            "concept unmatched event",
+            "concept unmatched hold-on-06",
+            "concept unmatched kick-off-04",
+            "concept unmatched period",
+            "relation unjoined envelope :mod sample-01",
+            "relation unmatched event :mod amr-unknown",
+            "relation unmatched hold-on-06 :ARG0 person",
+            "relation unmatched hold-on-06 :ARG1 envelope",
+            "relation unmatched hold-on-06 :duration period",
+            "relation unmatched kick-off-04 :ARG0 event",
+            "relation unmatched kick-off-04 :ARG1 period",
+            "relation unmatched obligate-01 :ARG2 hold-on-06",
+            "relation unmatched period :mod amr-unknown"
+          ]
+        },
+        {
+          "id": "bracken/q06~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted mark-01",
+            "assertion unmatched long-03",
+            "concept unmatched event",
+            "concept unmatched long-03",
+            "relation unjoined envelope :mod sample-01",
+            "relation unjoined have-org-role-91 :ARG0 person",
+            "relation unjoined have-org-role-91 :ARG3 inspect-01",
+            "relation unjoined inspect-01 :ARG1 quality",
+            "relation unjoined keep-01 :ARG0 person",
+            "relation unmatched event :mod amr-unknown",
+            "relation unmatched keep-01 :ARG1 envelope",
+            "relation unmatched keep-01 :duration time",
+            "relation unmatched long-03 :ARG1 time",
+            "relation unmatched long-03 :ARG2 amr-unknown",
+            "relation unmatched mark-01 :ARG0 event",
+            "relation unmatched mark-01 :ARG1 start-01",
+            "relation unmatched start-01 :ARG1 keep-01"
+          ]
+        },
+        {
+          "id": "bracken/q07~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched another",
+            "concept unmatched stand-08",
+            "relation unjoined approve-01 :ARG0 person",
+            "relation unjoined approve-01 :ARG1 thing",
+            "relation unjoined have-org-role-91 :ARG0 person",
+            "relation unjoined have-org-role-91 :ARG2 clerk",
+            "relation unjoined name-01 :ARG1 order",
+            "relation unjoined order :mod pack-01",
+            "relation unjoined prove-01 :ARG0 thing",
+            "relation unmatched clerk :mod label",
+            "relation unmatched name-01 :ARG0 thing",
+            "relation unmatched order :mod another",
+            "relation unmatched order :quant 1",
+            "relation unmatched possible-01 :ARG1 stand-08",
+            "relation unmatched prove-01 :ARG1 order",
+            "relation unmatched stand-08 :ARG0 thing",
+            "relation unmatched stand-08 :ARG1 thing",
+            "relation unmatched valid-02 :ARG1 prove-01"
+          ]
+        },
+        {
+          "id": "bracken/q07~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted have-condition-91",
+            "concept unmatched count-02",
+            "concept unmatched differ-02",
+            "relation unjoined approve-01 :ARG0 person",
+            "relation unjoined approve-01 :ARG1 thing",
+            "relation unjoined have-org-role-91 :ARG0 person",
+            "relation unjoined have-org-role-91 :ARG2 clerk",
+            "relation unjoined name-01 :ARG1 order",
+            "relation unjoined order :mod pack-01",
+            "relation unjoined prove-01 :ARG0 thing",
+            "relation unmatched clerk :mod label",
+            "relation unmatched count-02 :ARG1 person",
+            "relation unmatched count-02 :ARG2 prove-01",
+            "relation unmatched differ-02 :ARG1 order",
+            "relation unmatched have-condition-91 :ARG1 possible-01",
+            "relation unmatched have-condition-91 :ARG2 approve-01",
+            "relation unmatched possible-01 :ARG1 count-02",
+            "relation unmatched prove-01 :ARG1 order"
+          ]
+        },
+        {
+          "id": "bracken/q08~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched empower-01",
+            "concept unmatched carrier",
+            "concept unmatched empower-01",
+            "concept unmatched okay-01",
+            "concept unmatched pick-up-04",
+            "relation unmatched empower-01 :ARG1 amr-unknown",
+            "relation unmatched empower-01 :ARG2 okay-01",
+            "relation unmatched okay-01 :ARG0 amr-unknown",
+            "relation unmatched okay-01 :ARG1 time",
+            "relation unmatched pack-01 :ARG1 seed",
+            "relation unmatched pick-up-04 :ARG0 carrier",
+            "relation unmatched pick-up-04 :ARG1 seed",
+            "relation unmatched pick-up-04 :time time"
+          ]
+        },
+        {
+          "id": "bracken/q08~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched rest-02",
+            "concept unmatched carrier",
+            "concept unmatched pick-up-04",
+            "concept unmatched rest-02",
+            "relation unmatched approve-01 :ARG1 time",
+            "relation unmatched pack-01 :ARG1 seed",
+            "relation unmatched pick-up-04 :ARG0 carrier",
+            "relation unmatched pick-up-04 :ARG1 seed",
+            "relation unmatched pick-up-04 :time time",
+            "relation unmatched rest-02 :ARG1 approve-01",
+            "relation unmatched rest-02 :ARG2 amr-unknown"
+          ]
+        },
+        {
+          "id": "bracken/q09~1",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched put-out-10",
+            "concept unmatched put-out-10",
+            "relation unjoined date-entity :time 14:00",
+            "relation unjoined have-org-role-91 :ARG0 amr-unknown",
+            "relation unjoined have-org-role-91 :ARG2 clerk",
+            "relation unjoined proof :mod string-entity",
+            "relation unjoined revise-01 :ARG1 proof",
+            "relation unjoined string-entity :value C31-B",
+            "relation unmatched clerk :mod label",
+            "relation unmatched put-out-10 :ARG0 amr-unknown",
+            "relation unmatched put-out-10 :ARG1 proof",
+            "relation unmatched put-out-10 :time date-entity"
+          ]
+        },
+        {
+          "id": "bracken/q09~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unasserted issue-01",
+            "relation unjoined date-entity :time 14:00",
+            "relation unjoined have-org-role-91 :ARG0 amr-unknown",
+            "relation unjoined have-org-role-91 :ARG2 clerk",
+            "relation unjoined issue-01 :ARG0 amr-unknown",
+            "relation unjoined proof :mod string-entity",
+            "relation unjoined revise-01 :ARG1 proof",
+            "relation unjoined string-entity :value C31-B",
+            "relation unmatched clerk :topic label-01",
+            "relation unmatched issue-01 :ARG1 proof",
+            "relation unmatched issue-01 :time date-entity"
+          ]
+        },
+        {
+          "id": "bracken/q10~2",
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "assertion unmatched achieve-01",
+            "concept unmatched 11:00",
+            "concept unmatched McDonnell Douglas F-26 Raptor",
+            "concept unmatched achieve-01",
+            "concept unmatched again",
+            "concept unmatched aircraft-type",
+            "concept unmatched as-of",
+            "concept unmatched check",
+            "concept unmatched get-04",
+            "concept unmatched go-01",
+            "concept unmatched need-01",
+            "concept unmatched that",
+            "relation unjoined lead-02 :ARG0 person",
+            "relation unjoined lead-02 :ARG1 line",
+            "relation unjoined name :op1 Reed-26",
+            "relation unmatched achieve-01 :ARG1 thing",
+            "relation unmatched achieve-01 :time as-of",
+            "relation unmatched aircraft-type :name name",
+            "relation unmatched aircraft-type :wiki McDonnell Douglas F-26 Raptor",
+            "relation unmatched as-of :op1 date-entity",
+            "relation unmatched date-entity :time 11:00",
+            "relation unmatched get-04 :ARG0 person",
+            "relation unmatched get-04 :ARG1 go-01",
+            "relation unmatched go-01 :ARG1 order",
+            "relation unmatched go-01 :mod again",
+            "relation unmatched need-01 :ARG1 thing",
+            "relation unmatched need-01 :purpose restart-01",
+            "relation unmatched obligate-01 :ARG2 get-04",
+            "relation unmatched order :mod that",
+            "relation unmatched pass-07 :ARG1 check",
+            "relation unmatched restart-01 :ARG1 aircraft-type",
+            "relation unmatched thing :topic check"
           ]
         }
       ]

@@ -95,3 +95,21 @@ for review:
   "Who had collected the key?" is offered "The freezer van collects booked
   crates". It maps one participant onto a different one and is left for the
   person to reject; the benchmark caps such proposals at their current count.
+
+## Blind requestioning (2026-10-23)
+
+Muse Spark 1.3 Contributor reworded the 25 questions from the questions alone,
+with no tools or files (its event log shows only its reply). Of 50 rewordings,
+four were rejected before any engine run because they asked something else:
+Muse and Claude each checked every pair independently, and a rewording was
+kept only when neither found a change in meaning. The run, the review and both
+checks are in `test/support/requestioning/`.
+
+On the 46 accepted rewordings the engine supports 2 of 34 warranted answers,
+keeps all 9 unknowns open, supports nothing wrong, and proposes the right
+connection for 4 more. On the original wording it supports 4 of 18. Most of
+the shared-wording gains depend on the question reusing its source's words,
+as expected; one rewording ("What is stored in the intake cabinet by the
+intake registrar?") is answered where the original was not. One answer is
+right but underspecified: "crates", depending on "crates scheduled for
+freezing", where the question asks which crates.

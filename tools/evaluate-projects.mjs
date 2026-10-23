@@ -302,7 +302,24 @@ function assess(expected, run) {
   const evidenceMatch = expected.evidenceAll.every((fragment) =>
     evidence.some((text) => text.includes(fragment)),
   );
-  return { passed: supported && textMatch && evidenceMatch, supported, textMatch, evidenceMatch };
+  // A supported answer that names neither the expected answer (in its text or
+  // what it depends on) nor its evidence is wrong, not merely incomplete.
+  const named = answers.some((answer) =>
+    [answer.text, ...(answer.dependsOn ?? answer.qualifications ?? [])].some((text) =>
+      expected.answerExact
+        ? normalized(text) === normalized(expected.answerExact)
+        : expected.answerIncludesAny.some((fragment) =>
+            normalized(text).includes(normalized(fragment)),
+          ),
+    ),
+  );
+  return {
+    passed: supported && textMatch && evidenceMatch,
+    supported,
+    textMatch,
+    evidenceMatch,
+    wrongSupport: supported && answers.length > 0 && !(named && evidenceMatch),
+  };
 }
 const report = {
   version: 1,
@@ -550,6 +567,7 @@ report.summary = {
   unknownsPreserved: report.results.filter((r) => r.expected.kind === 'unknown' && r.checks.passed)
     .length,
   falseSupport: report.results.filter((r) => r.checks.falseSupport).length,
+  wrongSupport: report.results.filter((r) => r.checks.wrongSupport).length,
   // Open warranted answers that one confirmed proposal completes, out of those still open.
   oneConfirmationAway: report.results.filter((r) => r.confirmation?.reachable).length,
   // Unknowns that a single confirmed proposal would turn into a supported answer.

@@ -1,0 +1,673 @@
+{
+  "version": 1,
+  "name": "Blind requestioning of the development sets",
+  "policy": "Rewordings were written by a model given only the questions (and any case text), with no tools, files or repository access. Each was judged to ask the same thing before any engine run; rejected rewordings are excluded. Every rewording keeps its original expected answer. No author repairs or additional premises are permitted during evaluation.",
+  "requestioning": {
+    "model": "openrouter/meta/muse-spark-1.3-contributor",
+    "packetSha256": "8d444b722d0759af52ae5ec832d4bd40ea211e20c57fed4872e23cc329e1fa39",
+    "responsesSha256": "0913731a06e82fc6fca2c050e59e5e07440c431ed145187af7d36de20b333816",
+    "eventsSha256": "8b49d536107079a566a4040e227f93b515fcade56b134676f505ecff13e7ce27",
+    "reviewSha256": "72e54e732d92dd874f0d8f742bf9760b2ef41db7195d20a609b14005bf8402f3",
+    "accepted": 46,
+    "rejected": 4
+  },
+  "projects": [
+    {
+      "name": "archive",
+      "sourceDirectory": "test/support/evaluation-archive",
+      "cases": [
+        {
+          "id": "catalog-nominalization~1",
+          "question": "Who puts together a catalog of the manuscripts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "curator",
+              "curate-01"
+            ],
+            "evidenceAll": [
+              "The curator catalogs manuscripts."
+            ]
+          },
+          "requestionedFrom": "Who makes a catalog of manuscripts?"
+        },
+        {
+          "id": "catalog-nominalization~2",
+          "question": "Which role creates the catalog for manuscripts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "curator",
+              "curate-01"
+            ],
+            "evidenceAll": [
+              "The curator catalogs manuscripts."
+            ]
+          },
+          "requestionedFrom": "Who makes a catalog of manuscripts?"
+        },
+        {
+          "id": "binding-passive~1",
+          "question": "Who fixes damaged bindings?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "conservator",
+              "conserve-01"
+            ],
+            "evidenceAll": [
+              "The conservator repairs damaged bindings."
+            ]
+          },
+          "requestionedFrom": "By whom are damaged bindings repaired?"
+        },
+        {
+          "id": "binding-passive~2",
+          "question": "Which person repairs bindings that are damaged?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "conservator",
+              "conserve-01"
+            ],
+            "evidenceAll": [
+              "The conservator repairs damaged bindings."
+            ]
+          },
+          "requestionedFrom": "By whom are damaged bindings repaired?"
+        },
+        {
+          "id": "storage-paraphrase~1",
+          "question": "Where are manuscripts held in the archive?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "vault"
+            ],
+            "evidenceAll": [
+              "The archive stores manuscripts in a climate-controlled vault."
+            ]
+          },
+          "requestionedFrom": "Where does the archive keep manuscripts?"
+        },
+        {
+          "id": "storage-paraphrase~2",
+          "question": "In what location does the archive store its manuscripts?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "vault"
+            ],
+            "evidenceAll": [
+              "The archive stores manuscripts in a climate-controlled vault."
+            ]
+          },
+          "requestionedFrom": "Where does the archive keep manuscripts?"
+        },
+        {
+          "id": "binding-yesno~1",
+          "question": "Is it the conservator who fixes damaged bindings?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "Yes",
+            "evidenceAll": [
+              "The conservator repairs damaged bindings."
+            ]
+          },
+          "requestionedFrom": "Are damaged bindings repaired by the conservator?"
+        },
+        {
+          "id": "binding-yesno~2",
+          "question": "Does the conservator do the repair of damaged bindings?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "Yes",
+            "evidenceAll": [
+              "The conservator repairs damaged bindings."
+            ]
+          },
+          "requestionedFrom": "Are damaged bindings repaired by the conservator?"
+        },
+        {
+          "id": "wrong-repairer~1",
+          "question": "Is the curator the one who fixes damaged bindings?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Repairs are attributed to the conservator; no assertion says that the curator performs them."
+          },
+          "requestionedFrom": "Does the curator repair damaged bindings?"
+        },
+        {
+          "id": "wrong-repairer~2",
+          "question": "Are damaged bindings fixed by the curator?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "Repairs are attributed to the conservator; no assertion says that the curator performs them."
+          },
+          "requestionedFrom": "Does the curator repair damaged bindings?"
+        }
+      ]
+    },
+    {
+      "name": "archive-water",
+      "sourceDirectory": "test/support/blind-archive-water",
+      "packetSha256": "29ca6a9adddceb8fa37bea06c1f772130583dfa1a865d010f85ee7304752196c",
+      "oracleSha256": "804eee50efa8f9197c9ebb4a0af99756a3103511bc064e1d453b72b6cc87a773",
+      "cases": [
+        {
+          "id": "q01~1",
+          "question": "Whose signature goes on the release slips for crates due to be frozen?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "conservator"
+            ],
+            "evidenceAll": [
+              "The collections conservator signs release slips for crates scheduled for freezing."
+            ]
+          },
+          "requestionedFrom": "Who signs release slips for crates scheduled for freezing?"
+        },
+        {
+          "id": "q01~2",
+          "question": "Who is to sign the release slips covering crates set for freezing?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "conservator"
+            ],
+            "evidenceAll": [
+              "The collections conservator signs release slips for crates scheduled for freezing."
+            ]
+          },
+          "requestionedFrom": "Who signs release slips for crates scheduled for freezing?"
+        },
+        {
+          "id": "q02~1",
+          "question": "Release slips for what crates get signed by the collections conservator?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "freez"
+            ],
+            "evidenceAll": [
+              "The collections conservator signs release slips for crates scheduled for freezing."
+            ]
+          },
+          "requestionedFrom": "For which crates does the collections conservator sign release slips?"
+        },
+        {
+          "id": "q02~2",
+          "question": "Which crates have their release slips signed by the collections conservator?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "freez"
+            ],
+            "evidenceAll": [
+              "The collections conservator signs release slips for crates scheduled for freezing."
+            ]
+          },
+          "requestionedFrom": "For which crates does the collections conservator sign release slips?"
+        },
+        {
+          "id": "q03~1",
+          "question": "Where does the intake registrar keep the originals of the transfer forms?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "cabinet"
+            ],
+            "evidenceAll": [
+              "The intake registrar stores the original transfer forms in the intake cabinet."
+            ]
+          },
+          "requestionedFrom": "Where does the intake registrar store the original transfer forms?"
+        },
+        {
+          "id": "q03~2",
+          "question": "In what place are the original transfer forms filed by the intake registrar?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "cabinet"
+            ],
+            "evidenceAll": [
+              "The intake registrar stores the original transfer forms in the intake cabinet."
+            ]
+          },
+          "requestionedFrom": "Where does the intake registrar store the original transfer forms?"
+        },
+        {
+          "id": "q04~1",
+          "question": "What is stored in the intake cabinet by the intake registrar?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "form"
+            ],
+            "evidenceAll": [
+              "The intake registrar stores the original transfer forms in the intake cabinet."
+            ]
+          },
+          "requestionedFrom": "What does the intake registrar keep in the intake cabinet?"
+        },
+        {
+          "id": "q04~2",
+          "question": "What items does the intake registrar hold in the intake cabinet?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "form"
+            ],
+            "evidenceAll": [
+              "The intake registrar stores the original transfer forms in the intake cabinet."
+            ]
+          },
+          "requestionedFrom": "What does the intake registrar keep in the intake cabinet?"
+        },
+        {
+          "id": "q05~2",
+          "question": "Ahead of collection, who should be given it, and for each crate on the list, which two particulars does it show?",
+          "case": "The intake registrar has prepared today's daily crate list. The transport scheduler has received it, and a weekday collection is due.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "driver",
+              "intake number",
+              "destination"
+            ],
+            "evidenceAll": [
+              "The daily crate list states the intake number and destination of each listed crate.",
+              "The transport scheduler receives the daily crate list from the intake registrar and gives it to the freezer van driver before collection."
+            ]
+          },
+          "requestionedFrom": "Who should receive it before collection, and which two details does it give for each listed crate?"
+        },
+        {
+          "id": "q06~1",
+          "question": "Whose permission may allow use of the overflow drying room, and who holds the key to it?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "coordinator",
+              "supervisor"
+            ],
+            "evidenceAll": [
+              "The recovery coordinator may authorize use of the overflow drying room.",
+              "The drying room supervisor keeps the key to the overflow drying room."
+            ]
+          },
+          "requestionedFrom": "Who may authorize use of the overflow drying room, and who keeps its key?"
+        },
+        {
+          "id": "q06~2",
+          "question": "Use of the overflow drying room may be authorized by whom, and by whom is its key kept?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "coordinator",
+              "supervisor"
+            ],
+            "evidenceAll": [
+              "The recovery coordinator may authorize use of the overflow drying room.",
+              "The drying room supervisor keeps the key to the overflow drying room."
+            ]
+          },
+          "requestionedFrom": "Who may authorize use of the overflow drying room, and who keeps its key?"
+        },
+        {
+          "id": "q07~1",
+          "question": "Assuming the facilities custodian sticks to the humidity procedure, who should the custodian get to switch on the portable dehumidifier?",
+          "case": "During Tuesday's noon check, the relative humidity in the drying room is sixty-four percent.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "supervisor"
+            ],
+            "evidenceAll": [
+              "If the noon humidity reading exceeds sixty percent, the facilities custodian asks the drying room supervisor to start the portable dehumidifier."
+            ]
+          },
+          "requestionedFrom": "If the facilities custodian follows the humidity procedure, whom should the custodian ask to start the portable dehumidifier?"
+        },
+        {
+          "id": "q08~2",
+          "question": "Who was it that had gotten the key?",
+          "case": "The freezer van driver, Daniel, met the facilities custodian, Omar, beside the loading bay after he had collected the key.",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this ambiguous; a single committed answer is unwarranted."
+          },
+          "requestionedFrom": "Who had collected the key?"
+        },
+        {
+          "id": "q09~1",
+          "question": "How many crates can the freezer van take at most?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this open; no statement establishes an answer."
+          },
+          "requestionedFrom": "What is the freezer van's maximum crate capacity?"
+        },
+        {
+          "id": "q09~2",
+          "question": "What is the largest number of crates the freezer van can carry?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this open; no statement establishes an answer."
+          },
+          "requestionedFrom": "What is the freezer van's maximum crate capacity?"
+        },
+        {
+          "id": "q10~1",
+          "question": "Who arranges the freezer van booking, and who settles the carrier's invoice?",
+          "expected": {
+            "kind": "partial",
+            "supportedEvidence": [
+              "The transport scheduler books the freezer van for crates with signed release slips."
+            ]
+          },
+          "requestionedFrom": "Who books the freezer van, and who pays the carrier's invoice?"
+        },
+        {
+          "id": "q10~2",
+          "question": "The freezer van is booked by whom, and the carrier's invoice is paid by whom?",
+          "expected": {
+            "kind": "partial",
+            "supportedEvidence": [
+              "The transport scheduler books the freezer van for crates with signed release slips."
+            ]
+          },
+          "requestionedFrom": "Who books the freezer van, and who pays the carrier's invoice?"
+        }
+      ]
+    },
+    {
+      "name": "bracken",
+      "sourceDirectory": "test/support/blind-bracken",
+      "packetSha256": "229f17cb9d209fea7190494a7fe63f0df54cc21da9814af5098e95e99a2e6233",
+      "oracleSha256": "7d38eb987480484d854f730623d7aea0a91dc4f087d0401acd5a825fb7b5cb1b",
+      "cases": [
+        {
+          "id": "q01~1",
+          "question": "May the Line Lead begin order A17-P at 11:00, and whose further action is still needed to lift the moisture hold?",
+          "case": "Lot Aster-17 arrived at 09:10 with 42 kilograms of seed, received a moisture hold after a first-sample result of 8.6 percent, and had a second-sample result of 7.8 percent recorded by the Quality Examiner at 10:40. At 11:00 all 42 kilograms remained in the lot, the Stock Controller had not removed the hold or set aside the reserve, and the Label Clerk had approved the proof for the intended packing order A17-P.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "no",
+              "stock controller"
+            ],
+            "evidenceAll": [
+              "The Stock Controller may remove a moisture hold only after the Quality Examiner records a moisture result of 8.0 percent or less from a second sample of the same lot.",
+              "A second-sample moisture result of 8.0 percent or less recorded by the Quality Examiner permits the Stock Controller to remove the moisture hold but does not automatically remove that hold.",
+              "The Line Lead may start a packing order only after the Stock Controller has removed all holds on its seed lot and the Label Clerk has approved its label proof."
+            ]
+          },
+          "requestionedFrom": "At 11:00, may the Line Lead start order A17-P, and whose action is still needed to clear the moisture hold?"
+        },
+        {
+          "id": "q01~2",
+          "question": "At 11:00, may order A17-P be started by the Line Lead, and whose action is still needed before the moisture hold is cleared?",
+          "case": "Lot Aster-17 arrived at 09:10 with 42 kilograms of seed, received a moisture hold after a first-sample result of 8.6 percent, and had a second-sample result of 7.8 percent recorded by the Quality Examiner at 10:40. At 11:00 all 42 kilograms remained in the lot, the Stock Controller had not removed the hold or set aside the reserve, and the Label Clerk had approved the proof for the intended packing order A17-P.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "no",
+              "stock controller"
+            ],
+            "evidenceAll": [
+              "The Stock Controller may remove a moisture hold only after the Quality Examiner records a moisture result of 8.0 percent or less from a second sample of the same lot.",
+              "A second-sample moisture result of 8.0 percent or less recorded by the Quality Examiner permits the Stock Controller to remove the moisture hold but does not automatically remove that hold.",
+              "The Line Lead may start a packing order only after the Stock Controller has removed all holds on its seed lot and the Label Clerk has approved its label proof."
+            ]
+          },
+          "requestionedFrom": "At 11:00, may the Line Lead start order A17-P, and whose action is still needed to clear the moisture hold?"
+        },
+        {
+          "id": "q02~1",
+          "question": "After Aster-17 is cleared and the required reserve has been put aside, how many kilograms out of its 42 kilograms are left free to assign to packing?",
+          "case": "Lot Aster-17 arrived at 09:10 with 42 kilograms of seed, received a moisture hold after a first-sample result of 8.6 percent, and had a second-sample result of 7.8 percent recorded by the Quality Examiner at 10:40. At 11:00 all 42 kilograms remained in the lot, the Stock Controller had not removed the hold or set aside the reserve, and the Label Clerk had approved the proof for the intended packing order A17-P.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "40",
+              "forty"
+            ],
+            "evidenceAll": [
+              "The Stock Controller must reserve exactly 2 kilograms from each cleared seed lot before assigning any of the remaining seed to a packing order."
+            ]
+          },
+          "requestionedFrom": "Once Aster-17 is cleared, how many kilograms of its 42 kilograms remain available for assignment to packing after the required reserve is set aside?"
+        },
+        {
+          "id": "q02~2",
+          "question": "Once clearance is given for Aster-17, what quantity of its 42 kilograms is still available to allocate to packing once the required reserve is removed?",
+          "case": "Lot Aster-17 arrived at 09:10 with 42 kilograms of seed, received a moisture hold after a first-sample result of 8.6 percent, and had a second-sample result of 7.8 percent recorded by the Quality Examiner at 10:40. At 11:00 all 42 kilograms remained in the lot, the Stock Controller had not removed the hold or set aside the reserve, and the Label Clerk had approved the proof for the intended packing order A17-P.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "40",
+              "forty"
+            ],
+            "evidenceAll": [
+              "The Stock Controller must reserve exactly 2 kilograms from each cleared seed lot before assigning any of the remaining seed to a packing order."
+            ]
+          },
+          "requestionedFrom": "Once Aster-17 is cleared, how many kilograms of its 42 kilograms remain available for assignment to packing after the required reserve is set aside?"
+        },
+        {
+          "id": "q03~1",
+          "question": "At 11:00, may Reed-26 be cancelled by the Packing Superintendent?",
+          "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": [
+              "The Packing Superintendent may cancel a packing order before the Line Lead records the first sealed packet, but must not cancel the order after that record is made."
+            ]
+          },
+          "requestionedFrom": "May the Packing Superintendent cancel Reed-26 at 11:00?"
+        },
+        {
+          "id": "q03~2",
+          "question": "May the Packing Superintendent call off Reed-26 at 11:00?",
+          "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": [
+              "The Packing Superintendent may cancel a packing order before the Line Lead records the first sealed packet, but must not cancel the order after that record is made."
+            ]
+          },
+          "requestionedFrom": "May the Packing Superintendent cancel Reed-26 at 11:00?"
+        },
+        {
+          "id": "q04~1",
+          "question": "After the new jaw was fitted on Reed-26, what packet check had to be done, and did the seals seen support putting down a passed check?",
+          "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "five",
+              "5",
+              "yes"
+            ],
+            "evidenceAll": [
+              "The Seal Inspector must examine five consecutive packets after a replacement sealing jaw is fitted.",
+              "The Seal Inspector may record a passed check of a replacement sealing jaw when all five examined packets have intact seals, and must not record a passed check otherwise."
+            ]
+          },
+          "requestionedFrom": "What packet inspection was required after the replacement jaw was fitted on Reed-26, and did the observed seals justify recording a passed check?"
+        },
+        {
+          "id": "q04~2",
+          "question": "What check of packets did fitting the replacement jaw on Reed-26 call for, and was logging a passed check warranted by the seals observed?",
+          "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "five",
+              "5",
+              "yes"
+            ],
+            "evidenceAll": [
+              "The Seal Inspector must examine five consecutive packets after a replacement sealing jaw is fitted.",
+              "The Seal Inspector may record a passed check of a replacement sealing jaw when all five examined packets have intact seals, and must not record a passed check otherwise."
+            ]
+          },
+          "requestionedFrom": "What packet inspection was required after the replacement jaw was fitted on Reed-26, and did the observed seals justify recording a passed check?"
+        },
+        {
+          "id": "q05~1",
+          "question": "If an approved proof is replaced due to a cultivar name change, who needs to approve before the revised proof comes out, and what must the Label Clerk do regarding the old proof and check prior to approving the new version?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "packing superintendent",
+              "withdrawn",
+              "compare",
+              "retain",
+              "keep"
+            ],
+            "evidenceAll": [
+              "The Packing Superintendent must approve a change to a printed cultivar name before the Label Clerk issues a revised proof bearing that change.",
+              "The Label Clerk must compare the cultivar name on each proof with the packing order before approving that proof.",
+              "The Label Clerk must keep every superseded proof with the packing order.",
+              "The Label Clerk must mark a superseded proof as withdrawn before approving its replacement."
+            ]
+          },
+          "requestionedFrom": "When replacing an approved proof because of a cultivar name change, whose approval is needed before the revised proof is issued, and what must the Label Clerk do with the old proof and check before approving the replacement?"
+        },
+        {
+          "id": "q05~2",
+          "question": "Before a revised proof is issued to replace an approved proof over a cultivar name change, whose approval is called for, and what must the Label Clerk do to the old proof and check before okaying the replacement?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "packing superintendent",
+              "withdrawn",
+              "compare",
+              "retain",
+              "keep"
+            ],
+            "evidenceAll": [
+              "The Packing Superintendent must approve a change to a printed cultivar name before the Label Clerk issues a revised proof bearing that change.",
+              "The Label Clerk must compare the cultivar name on each proof with the packing order before approving that proof.",
+              "The Label Clerk must keep every superseded proof with the packing order.",
+              "The Label Clerk must mark a superseded proof as withdrawn before approving its replacement."
+            ]
+          },
+          "requestionedFrom": "When replacing an approved proof because of a cultivar name change, whose approval is needed before the revised proof is issued, and what must the Label Clerk do with the old proof and check before approving the replacement?"
+        },
+        {
+          "id": "q06~1",
+          "question": "For what period must the Quality Examiner hold on to a sample envelope, and what event kicks off that period?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "30",
+              "thirty",
+              "test"
+            ],
+            "evidenceAll": [
+              "The Quality Examiner must retain each sample envelope until 30 days after the date that sample was tested."
+            ]
+          },
+          "requestionedFrom": "How long must the Quality Examiner retain a sample envelope, and which event starts that interval?"
+        },
+        {
+          "id": "q06~2",
+          "question": "What is the length of time a sample envelope must be kept by the Quality Examiner, and which event marks the start of that time?",
+          "expected": {
+            "kind": "answer",
+            "answerIncludesAny": [
+              "30",
+              "thirty",
+              "test"
+            ],
+            "evidenceAll": [
+              "The Quality Examiner must retain each sample envelope until 30 days after the date that sample was tested."
+            ]
+          },
+          "requestionedFrom": "How long must the Quality Examiner retain a sample envelope, and which event starts that interval?"
+        },
+        {
+          "id": "q07~1",
+          "question": "Can a Label Clerk-approved proof naming one packing order stand as a valid proof for another packing order?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": [
+              "A proof approved by the Label Clerk is valid only for the packing order named on that proof."
+            ]
+          },
+          "requestionedFrom": "Can a proof approved by the Label Clerk for one named packing order serve as a valid proof for a different packing order?"
+        },
+        {
+          "id": "q07~2",
+          "question": "If the Label Clerk has approved a proof for one named packing order, can it count as proof for a different packing order?",
+          "expected": {
+            "kind": "answer",
+            "answerExact": "No",
+            "evidenceAll": [
+              "A proof approved by the Label Clerk is valid only for the packing order named on that proof."
+            ]
+          },
+          "requestionedFrom": "Can a proof approved by the Label Clerk for one named packing order serve as a valid proof for a different packing order?"
+        },
+        {
+          "id": "q08~1",
+          "question": "Who is empowered to okay a carrier pickup time for packed seed?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this open; no statement establishes an answer."
+          },
+          "requestionedFrom": "Who has authority to approve a carrier pickup time for packed seed?"
+        },
+        {
+          "id": "q08~2",
+          "question": "Approval of a carrier pickup time for packed seed rests with whom?",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this open; no statement establishes an answer."
+          },
+          "requestionedFrom": "Who has authority to approve a carrier pickup time for packed seed?"
+        },
+        {
+          "id": "q09~1",
+          "question": "Who, as Label Clerk, put out revised proof C31-B at 14:00?",
+          "case": "Mara Vale and Mara Chen are the only people called Mara assigned as Label Clerk to order Clover-31, and both were working at the label desk at 14:00. The desk log attributes the issue of revised proof C31-B at 14:00 to “Mara”, without a surname.",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this ambiguous; a single committed answer is unwarranted."
+          },
+          "requestionedFrom": "Which Label Clerk issued revised proof C31-B at 14:00?"
+        },
+        {
+          "id": "q09~2",
+          "question": "Revised proof C31-B was issued at 14:00 by which Label Clerk?",
+          "case": "Mara Vale and Mara Chen are the only people called Mara assigned as Label Clerk to order Clover-31, and both were working at the label desk at 14:00. The desk log attributes the issue of revised proof C31-B at 14:00 to “Mara”, without a surname.",
+          "expected": {
+            "kind": "unknown",
+            "reason": "The sealed oracle marks this ambiguous; a single committed answer is unwarranted."
+          },
+          "requestionedFrom": "Which Label Clerk issued revised proof C31-B at 14:00?"
+        },
+        {
+          "id": "q10~2",
+          "question": "Has what is needed in terms of a passed check to restart Reed-26 been achieved as of 11:00, and by when must the Line Lead get that order going again?",
+          "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+          "expected": {
+            "kind": "partial",
+            "supportedEvidence": [
+              "After a stop for a torn seal, the Line Lead may restart the line only after the Seal Inspector records a passed check of a replacement sealing jaw."
+            ]
+          },
+          "requestionedFrom": "At 11:00, has the passed-check prerequisite for restarting Reed-26 been met, and by what deadline must the Line Lead restart that order?"
+        }
+      ]
+    }
+  ]
+}

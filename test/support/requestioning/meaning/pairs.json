@@ -1,0 +1,202 @@
+[
+  {
+    "ref": "P01",
+    "id": "independent-domain/archive/catalog-nominalization~1"
+  },
+  {
+    "ref": "P02",
+    "id": "independent-domain/archive/catalog-nominalization~2"
+  },
+  {
+    "ref": "P03",
+    "id": "independent-domain/archive/binding-passive~1"
+  },
+  {
+    "ref": "P04",
+    "id": "independent-domain/archive/binding-passive~2"
+  },
+  {
+    "ref": "P05",
+    "id": "independent-domain/archive/storage-paraphrase~1"
+  },
+  {
+    "ref": "P06",
+    "id": "independent-domain/archive/storage-paraphrase~2"
+  },
+  {
+    "ref": "P07",
+    "id": "independent-domain/archive/binding-yesno~1"
+  },
+  {
+    "ref": "P08",
+    "id": "independent-domain/archive/binding-yesno~2"
+  },
+  {
+    "ref": "P09",
+    "id": "independent-domain/archive/wrong-repairer~1"
+  },
+  {
+    "ref": "P10",
+    "id": "independent-domain/archive/wrong-repairer~2"
+  },
+  {
+    "ref": "P11",
+    "id": "blind-domain/archive-water/q01~1"
+  },
+  {
+    "ref": "P12",
+    "id": "blind-domain/archive-water/q01~2"
+  },
+  {
+    "ref": "P13",
+    "id": "blind-domain/archive-water/q02~1"
+  },
+  {
+    "ref": "P14",
+    "id": "blind-domain/archive-water/q02~2"
+  },
+  {
+    "ref": "P15",
+    "id": "blind-domain/archive-water/q03~1"
+  },
+  {
+    "ref": "P16",
+    "id": "blind-domain/archive-water/q03~2"
+  },
+  {
+    "ref": "P17",
+    "id": "blind-domain/archive-water/q04~1"
+  },
+  {
+    "ref": "P18",
+    "id": "blind-domain/archive-water/q04~2"
+  },
+  {
+    "ref": "P19",
+    "id": "blind-domain/archive-water/q05~1"
+  },
+  {
+    "ref": "P20",
+    "id": "blind-domain/archive-water/q05~2"
+  },
+  {
+    "ref": "P21",
+    "id": "blind-domain/archive-water/q06~1"
+  },
+  {
+    "ref": "P22",
+    "id": "blind-domain/archive-water/q06~2"
+  },
+  {
+    "ref": "P23",
+    "id": "blind-domain/archive-water/q07~1"
+  },
+  {
+    "ref": "P24",
+    "id": "blind-domain/archive-water/q07~2"
+  },
+  {
+    "ref": "P25",
+    "id": "blind-domain/archive-water/q08~1"
+  },
+  {
+    "ref": "P26",
+    "id": "blind-domain/archive-water/q08~2"
+  },
+  {
+    "ref": "P27",
+    "id": "blind-domain/archive-water/q09~1"
+  },
+  {
+    "ref": "P28",
+    "id": "blind-domain/archive-water/q09~2"
+  },
+  {
+    "ref": "P29",
+    "id": "blind-domain/archive-water/q10~1"
+  },
+  {
+    "ref": "P30",
+    "id": "blind-domain/archive-water/q10~2"
+  },
+  {
+    "ref": "P31",
+    "id": "blind-domain/bracken/q01~1"
+  },
+  {
+    "ref": "P32",
+    "id": "blind-domain/bracken/q01~2"
+  },
+  {
+    "ref": "P33",
+    "id": "blind-domain/bracken/q02~1"
+  },
+  {
+    "ref": "P34",
+    "id": "blind-domain/bracken/q02~2"
+  },
+  {
+    "ref": "P35",
+    "id": "blind-domain/bracken/q03~1"
+  },
+  {
+    "ref": "P36",
+    "id": "blind-domain/bracken/q03~2"
+  },
+  {
+    "ref": "P37",
+    "id": "blind-domain/bracken/q04~1"
+  },
+  {
+    "ref": "P38",
+    "id": "blind-domain/bracken/q04~2"
+  },
+  {
+    "ref": "P39",
+    "id": "blind-domain/bracken/q05~1"
+  },
+  {
+    "ref": "P40",
+    "id": "blind-domain/bracken/q05~2"
+  },
+  {
+    "ref": "P41",
+    "id": "blind-domain/bracken/q06~1"
+  },
+  {
+    "ref": "P42",
+    "id": "blind-domain/bracken/q06~2"
+  },
+  {
+    "ref": "P43",
+    "id": "blind-domain/bracken/q07~1"
+  },
+  {
+    "ref": "P44",
+    "id": "blind-domain/bracken/q07~2"
+  },
+  {
+    "ref": "P45",
+    "id": "blind-domain/bracken/q08~1"
+  },
+  {
+    "ref": "P46",
+    "id": "blind-domain/bracken/q08~2"
+  },
+  {
+    "ref": "P47",
+    "id": "blind-domain/bracken/q09~1"
+  },
+  {
+    "ref": "P48",
+    "id": "blind-domain/bracken/q09~2"
+  },
+  {
+    "ref": "P49",
+    "id": "blind-domain/bracken/q10~1"
+  },
+  {
+    "ref": "P50",
+    "id": "blind-domain/bracken/q10~2"
+  }
+]

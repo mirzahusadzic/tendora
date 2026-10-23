@@ -36,6 +36,22 @@ const benchmarks = [
     // crates”: a different-word proposal the author must reject.
     confirmationFalseSupportCeiling: 1,
   },
+  {
+    // The development questions reworded blind (test/support/requestioning/),
+    // each keeping its original answer key.
+    name: 'requestioned',
+    manifest: 'test/support/requestioned-benchmark.json',
+    acquisitions: 'test/support/requestioned-acquisitions.json',
+    fixtures: [
+      'test/support/evaluation-archive',
+      'test/support/blind-archive-water',
+      'test/support/blind-bracken',
+    ],
+    questions: 46,
+    warrantedFloor: 2,
+    reachableFloor: 6,
+    confirmationFalseSupportCeiling: 0,
+  },
 ];
 const fixtureHash = async (fixtures) => {
   const hash = createHash('sha256');
@@ -122,6 +138,7 @@ for (const benchmark of benchmarks) {
   );
   assert.equal(summary.modelRequests, 0);
   assert.equal(summary.falseSupport, 0, `${benchmark.name}: no unwarranted answer is supported`);
+  assert.equal(summary.wrongSupport, 0, `${benchmark.name}: no supported answer is wrong`);
   assert.equal(
     summary.unknownsPreserved,
     summary.unknowns,

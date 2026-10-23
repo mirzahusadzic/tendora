@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "model": "openrouter/meta/muse-spark-1.3-contributor",
+  "sources": [
+    {
+      "manifest": "test/support/independent-domain-benchmark.json",
+      "sha256": "d1b80ef7eb60be1c11de18bd22fb0c1d6387ba231368277c8cae1d75d040ecb8"
+    },
+    {
+      "manifest": "test/support/blind-domain-benchmark.json",
+      "sha256": "9bb6f9444ee88fb1b996ec672dae8b723ca0014578961ced728405ea652bfbcf"
+    }
+  ],
+  "promptSha256": "66c4ff1cf4f24ede21f070cd21cda1092a500de7ba88cf7e8b246ea0bc9d91b4",
+  "questions": [
+    {
+      "id": "independent-domain/archive/catalog-nominalization",
+      "question": "Who makes a catalog of manuscripts?",
+      "ref": "Q01"
+    },
+    {
+      "id": "independent-domain/archive/binding-passive",
+      "question": "By whom are damaged bindings repaired?",
+      "ref": "Q02"
+    },
+    {
+      "id": "independent-domain/archive/storage-paraphrase",
+      "question": "Where does the archive keep manuscripts?",
+      "ref": "Q03"
+    },
+    {
+      "id": "independent-domain/archive/binding-yesno",
+      "question": "Are damaged bindings repaired by the conservator?",
+      "ref": "Q04"
+    },
+    {
+      "id": "independent-domain/archive/wrong-repairer",
+      "question": "Does the curator repair damaged bindings?",
+      "ref": "Q05"
+    },
+    {
+      "id": "blind-domain/archive-water/q01",
+      "question": "Who signs release slips for crates scheduled for freezing?",
+      "ref": "Q06"
+    },
+    {
+      "id": "blind-domain/archive-water/q02",
+      "question": "For which crates does the collections conservator sign release slips?",
+      "ref": "Q07"
+    },
+    {
+      "id": "blind-domain/archive-water/q03",
+      "question": "Where does the intake registrar store the original transfer forms?",
+      "ref": "Q08"
+    },
+    {
+      "id": "blind-domain/archive-water/q04",
+      "question": "What does the intake registrar keep in the intake cabinet?",
+      "ref": "Q09"
+    },
+    {
+      "id": "blind-domain/archive-water/q05",
+      "question": "Who should receive it before collection, and which two details does it give for each listed crate?",
+      "case": "The intake registrar has prepared today's daily crate list. The transport scheduler has received it, and a weekday collection is due.",
+      "ref": "Q10"
+    },
+    {
+      "id": "blind-domain/archive-water/q06",
+      "question": "Who may authorize use of the overflow drying room, and who keeps its key?",
+      "ref": "Q11"
+    },
+    {
+      "id": "blind-domain/archive-water/q07",
+      "question": "If the facilities custodian follows the humidity procedure, whom should the custodian ask to start the portable dehumidifier?",
+      "case": "During Tuesday's noon check, the relative humidity in the drying room is sixty-four percent.",
+      "ref": "Q12"
+    },
+    {
+      "id": "blind-domain/archive-water/q08",
+      "question": "Who had collected the key?",
+      "case": "The freezer van driver, Daniel, met the facilities custodian, Omar, beside the loading bay after he had collected the key.",
+      "ref": "Q13"
+    },
+    {
+      "id": "blind-domain/archive-water/q09",
+      "question": "What is the freezer van's maximum crate capacity?",
+      "ref": "Q14"
+    },
+    {
+      "id": "blind-domain/archive-water/q10",
+      "question": "Who books the freezer van, and who pays the carrier's invoice?",
+      "ref": "Q15"
+    },
+    {
+      "id": "blind-domain/bracken/q01",
+      "question": "At 11:00, may the Line Lead start order A17-P, and whose action is still needed to clear the moisture hold?",
+      "case": "Lot Aster-17 arrived at 09:10 with 42 kilograms of seed, received a moisture hold after a first-sample result of 8.6 percent, and had a second-sample result of 7.8 percent recorded by the Quality Examiner at 10:40. At 11:00 all 42 kilograms remained in the lot, the Stock Controller had not removed the hold or set aside the reserve, and the Label Clerk had approved the proof for the intended packing order A17-P.",
+      "ref": "Q16"
+    },
+    {
+      "id": "blind-domain/bracken/q02",
+      "question": "Once Aster-17 is cleared, how many kilograms of its 42 kilograms remain available for assignment to packing after the required reserve is set aside?",
+      "case": "Lot Aster-17 arrived at 09:10 with 42 kilograms of seed, received a moisture hold after a first-sample result of 8.6 percent, and had a second-sample result of 7.8 percent recorded by the Quality Examiner at 10:40. At 11:00 all 42 kilograms remained in the lot, the Stock Controller had not removed the hold or set aside the reserve, and the Label Clerk had approved the proof for the intended packing order A17-P.",
+      "ref": "Q17"
+    },
+    {
+      "id": "blind-domain/bracken/q03",
+      "question": "May the Packing Superintendent cancel Reed-26 at 11:00?",
+      "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+      "ref": "Q18"
+    },
+    {
+      "id": "blind-domain/bracken/q04",
+      "question": "What packet inspection was required after the replacement jaw was fitted on Reed-26, and did the observed seals justify recording a passed check?",
+      "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+      "ref": "Q19"
+    },
+    {
+      "id": "blind-domain/bracken/q05",
+      "question": "When replacing an approved proof because of a cultivar name change, whose approval is needed before the revised proof is issued, and what must the Label Clerk do with the old proof and check before approving the replacement?",
+      "ref": "Q20"
+    },
+    {
+      "id": "blind-domain/bracken/q06",
+      "question": "How long must the Quality Examiner retain a sample envelope, and which event starts that interval?",
+      "ref": "Q21"
+    },
+    {
+      "id": "blind-domain/bracken/q07",
+      "question": "Can a proof approved by the Label Clerk for one named packing order serve as a valid proof for a different packing order?",
+      "ref": "Q22"
+    },
+    {
+      "id": "blind-domain/bracken/q08",
+      "question": "Who has authority to approve a carrier pickup time for packed seed?",
+      "ref": "Q23"
+    },
+    {
+      "id": "blind-domain/bracken/q09",
+      "question": "Which Label Clerk issued revised proof C31-B at 14:00?",
+      "case": "Mara Vale and Mara Chen are the only people called Mara assigned as Label Clerk to order Clover-31, and both were working at the label desk at 14:00. The desk log attributes the issue of revised proof C31-B at 14:00 to “Mara”, without a surname.",
+      "ref": "Q24"
+    },
+    {
+      "id": "blind-domain/bracken/q10",
+      "question": "At 11:00, has the passed-check prerequisite for restarting Reed-26 been met, and by what deadline must the Line Lead restart that order?",
+      "case": "For order Reed-26, the Line Lead recorded the first sealed packet at 10:05 and stopped the line at 10:40 after finding a torn seal. A replacement sealing jaw was then fitted, the Seal Inspector examined five consecutive packets at 10:55 and found all five seals intact, and the Seal Inspector recorded a passed check at 10:56.",
+      "ref": "Q25"
+    }
+  ]
+}
