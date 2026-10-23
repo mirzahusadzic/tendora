@@ -62,7 +62,8 @@ try {
         lines.push(
           (run.answer?.answers.includes(answer) ? 'Answer: ' : 'Candidate: ') + answer.text,
         );
-        for (const detail of answer.qualifications ?? []) lines.push('  ' + detail);
+        for (const detail of answer.dependsOn ?? answer.qualifications ?? [])
+          lines.push('  ' + detail);
         if (values.explain) {
           lines.push('  Sources: ' + (answer.sourceIds ?? []).join(', '));
           lines.push(

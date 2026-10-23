@@ -168,7 +168,7 @@ export function inquirySections(
       : []),
     ...(run?.answer?.answers ?? []).flatMap((answer) => [
       ['Answer', answer.text, 'input'],
-      ...(answer.qualifications ?? []).map((q) => ['Qualification', q]),
+      ...(answer.dependsOn ?? answer.qualifications ?? []).map((q) => ['Qualification', q]),
     ]),
     ...(run?.case ? [['Case', run.case, 'input']] : []),
     ...(openingChoices.length

@@ -121,6 +121,94 @@ export function answerQuery(recording, knowledge = {}, preparation) {
 }
 
 export const sourceNode = (sourceId, nodeId) => `${sourceId}#${nodeId}`;
+const clausalRoles = new Set([
+  ':time',
+  ':condition',
+  ':location',
+  ':purpose',
+  ':manner',
+  ':duration',
+  ':frequency',
+  ':destination',
+  ':source',
+  ':beneficiary',
+]);
+const clauseLeads = new Set(
+  'the a an to before after during in at on for from with until when while by of into within unless if once since'.split(
+    ' ',
+  ),
+);
+/** The shortest run of source words that covers a relation's participant, led
+ * by its preposition or subordinator. Words only; no text is generated.
+ */
+function sourceClause(material, fact, matched) {
+  const source = material.sources.find((entry) => entry.id === fact.sourceIds?.[0]);
+  if (!source?.text) return null;
+  const local = (id) => id.startsWith(`${source.id}#`);
+  const nodes = new Set([fact.triple[2]]);
+  for (const id of nodes)
+    for (const { triple } of material.facts) {
+      if (!triple[1].startsWith(':') || triple[1] === ':instance') continue;
+      const next = triple[0] === id ? triple[2] : triple[2] === id ? triple[0] : null;
+      if (next && local(next) && !matched.has(next) && !nodes.has(next) && nodes.size < 24)
+        nodes.add(next);
+    }
+  const tokens = [...source.text.matchAll(/[\p{L}\p{N}]+/gu)].map((m) => ({
+    word: m[0].toLowerCase(),
+    start: m.index,
+    end: m.index + m[0].length,
+  }));
+  // A node the reading reaches twice is named twice in the text.
+  const mentions = (id) =>
+    Math.max(
+      1,
+      material.facts.filter(
+        ({ triple }) =>
+          triple[2] === id &&
+          triple[1].startsWith(':') &&
+          (nodes.has(triple[0]) || triple[0] === fact.triple[0]),
+      ).length,
+    );
+  const words = [...nodes].flatMap((id) => {
+    const fact = material.facts.find(
+      (f) => f.triple[0] === id && ['@literal', ':instance'].includes(f.triple[1]),
+    );
+    const value = String(fact?.triple[2] ?? '').replace(/^"|"$/gu, '');
+    if (!value || /-91$/u.test(value) || ['person', 'thing', 'name', 'amr-unknown'].includes(value))
+      return [];
+    const word = value.replace(/-\d+$/u, '').split('-')[0].toLowerCase();
+    return word.length > 1 ? Array(mentions(id)).fill(word) : [];
+  });
+  const found = (token, word) =>
+    token.word === word ||
+    (word.length >= 4 &&
+      token.word.startsWith(word.replace(/e$/u, '')) &&
+      token.word.length - word.length <= 4);
+  // A word the reading uses twice (“the incident commander closes the
+  // incident”) must occur twice in the clause, when the text has it twice.
+  const needed = new Map();
+  for (const word of words) {
+    const available = tokens.filter((t) => found(t, word)).length;
+    if (available) needed.set(word, Math.min(available, (needed.get(word) ?? 0) + 1));
+  }
+
+  if (!needed.size) return null;
+  let best = null;
+  for (let i = 0; i < tokens.length; i++)
+    for (let j = i; j < tokens.length; j++) {
+      if (best && j - i >= best[1] - best[0]) break;
+      const window = tokens.slice(i, j + 1);
+      if (
+        [...needed].every(([word, count]) => window.filter((t) => found(t, word)).length >= count)
+      ) {
+        best = [i, j];
+        break;
+      }
+    }
+  let [first, last] = best;
+  while (first > 0 && clauseLeads.has(tokens[first - 1].word)) first--;
+  return source.text.slice(tokens[first].start, tokens[last].end);
+}
 export function sourceIdentity(source, knowledge = {}) {
   const saved = knowledge.sourceCatalog?.find(
     (item) =>
@@ -937,10 +1025,60 @@ function evaluateReading(recording, knowledge, limits, reading) {
       )
     )
       continue;
+    // What the source adds to the asserted relation, in the source's own words:
+    // “to the incident commander”. Descriptions of participants are not
+    // qualifications; a clause whose words cannot be found keeps the sentence.
+    const matched = new Set(assigned);
+    // Actions the source's main clause reaches forward. A predicate that only
+    // describes a participant (the release manager) is not one.
+    const clauses = new Set(
+      material.facts.filter((fact) => fact.triple[1] === '@root').map((fact) => fact.triple[2]),
+    );
+    for (const id of clauses)
+      for (const { triple } of material.facts)
+        if (triple[0] === id && triple[1].startsWith(':') && triple[1] !== ':instance')
+          clauses.add(triple[2]);
+    const predicate = (id) =>
+      material.facts.some(
+        (fact) =>
+          fact.triple[0] === id &&
+          fact.triple[1] === ':instance' &&
+          /-\d+$/u.test(fact.triple[2]) &&
+          !/-91$/u.test(fact.triple[2]),
+      );
+    const qualifies = ({ triple: [from, role] }) =>
+      clauses.has(from) &&
+      !answerDescription.has(from) &&
+      (clausalRoles.has(role) || (/^:ARG\d$/u.test(role) && predicate(from)));
+    const scope = sourceScope
+      .filter(
+        (fact) =>
+          matched.has(fact.triple[0]) &&
+          qualifies(fact) &&
+          !matched.has(fact.triple[2]) &&
+          ![':name', ':wiki'].includes(fact.triple[1]),
+      )
+      .map((fact) => ({
+        sourceId: fact.sourceIds?.[0],
+        text: sourceClause(material, fact, matched),
+      }))
+      .filter((entry) => entry.text);
+    // Show those clauses in place of their sentences; a condition keeps its sentence.
+    const conditionTexts = new Set(conditions.map((fact) => fact.triple[2]));
+    const scopedTexts = new Set(
+      scope.map((entry) => material.sources.find((source) => source.id === entry.sourceId)?.text),
+    );
+    const dependsOn = [
+      ...new Set([
+        ...qualifications.filter((text) => !scopedTexts.has(text) || conditionTexts.has(text)),
+        ...scope.map((entry) => entry.text),
+      ]),
+    ];
     answers.push({
       text,
       conditional,
       qualifications,
+      ...(scope.length ? { dependsOn } : {}),
       ...(booleanQuestion ? { polarity: match.negative ? 'negative' : 'positive' } : {}),
       bindings: ids.map((id) => ({ id, text: label(id) })),
       ...proof,

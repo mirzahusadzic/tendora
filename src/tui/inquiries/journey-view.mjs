@@ -311,7 +311,11 @@ export function journeySection({ project, run, input, result, recording }, place
   const outcome = answers.length
     ? answers.flatMap((answer) => [
         ['Answer', answer.text, 'located'],
-        ...(answer.qualifications ?? []).map((text) => ['Depends on', text, 'input']),
+        ...(answer.dependsOn ?? answer.qualifications ?? []).map((text) => [
+          'Depends on',
+          text,
+          'input',
+        ]),
       ])
     : [
         [
@@ -413,7 +417,11 @@ export function journeySection({ project, run, input, result, recording }, place
         heading: run.status === 'conflict' ? 'Conflicting answer' : 'Possible answer',
         rows: [
           ['Candidate', candidate.text, 'warning'],
-          ...(candidate.qualifications ?? []).map((text) => ['Depends on', text, 'input']),
+          ...(candidate.dependsOn ?? candidate.qualifications ?? []).map((text) => [
+            'Depends on',
+            text,
+            'input',
+          ]),
         ],
         table: sourceTable(sources.filter((source) => ids.has(source.id))),
       });

@@ -1206,7 +1206,7 @@ export function createInvestigation({
             ['Result', result.status],
             ...result.answers.map((answer) => ['Answer', answer.text, 'input']),
             ...result.answers.flatMap((answer) =>
-              answer.qualifications.map((value) => ['Qualification', value]),
+              (answer.dependsOn ?? answer.qualifications).map((value) => ['Qualification', value]),
             ),
           );
           const graph = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);

@@ -73,6 +73,25 @@ try {
   assert.deepEqual(abstractLabels(agent, agentText, audit(agentText, agent).checks), {
     p: 'conservator',
   });
+  // A person who holds a role reads by that role's word.
+  const holder = {
+    top: 'a',
+    nodes: [
+      { id: 'a', concept: 'ask-02' },
+      { id: 'p', concept: 'person' },
+      { id: 'r', concept: 'have-org-role-91' },
+      { id: 't', concept: 'custodian' },
+    ],
+    edges: [
+      { id: 'e0', from: 'a', role: ':ARG0', to: 'p' },
+      { id: 'e1', from: 'r', role: ':ARG0', to: 'p' },
+      { id: 'e2', from: 'r', role: ':ARG2', to: 't' },
+    ],
+  };
+  const holderText = 'The facilities custodian asks the supervisor.';
+  assert.deepEqual(abstractLabels(holder, holderText, audit(holderText, holder).checks), {
+    p: 'custodian',
+  });
   assert.equal(
     audit(agentText, { ...agent, edges: [agent.edges[0]] }).checks.find(
       (c) => c.predicate === 'conserve-01',

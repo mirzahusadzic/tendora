@@ -126,6 +126,29 @@ assert.equal(
 );
 assert.equal(await status('What does the security engineer report?'), 'conditional');
 assert.equal(await status('Which key must the security engineer rotate?'), 'conditional');
+// A conditional answer names the clause it depends on, in its source's words;
+// without such a clause it keeps the whole sentence.
+for (const [question, dependsOn] of [
+  ['What does the security engineer report?', ['to the incident commander']],
+  [
+    'Which key must the security engineer rotate?',
+    ['before the incident commander closes the incident'],
+  ],
+  [
+    'Who confirms that payments are healthy?',
+    ['before the incident commander closes a major incident'],
+  ],
+]) {
+  const [answer] = (await ask(question)).answer.answers;
+  assert.deepEqual(answer.dependsOn, dependsOn, question);
+  assert.equal(answer.qualifications.length, 1, 'The source sentence stays its qualification');
+}
+assert.equal(
+  (await ask('Which manager freezes deployments during a major incident?')).answer.answers[0]
+    .dependsOn,
+  undefined,
+  'A participant description is not a clause the answer depends on',
+);
 
 for (const [question, expectedStatus, answer] of [
   ['What does the release manager freeze during a major incident?', 'conditional', 'deployments'],

@@ -46,10 +46,18 @@ export function labelReading(graph, text, checks = []) {
 const abstract = (node) => ['person', 'thing'].includes(node.concept) && !node.surfaceLabel;
 export function abstractLabels(graph, text, checks = []) {
   const read = labelReading(graph, text, checks);
+  const labels = new Map(read.nodes.map((n) => [n.id, n.surfaceLabel]));
+  // A person who holds a role reads by that role's word: the custodian.
+  for (const role of graph.nodes.filter((n) =>
+    ['have-org-role-91', 'have-rel-role-91'].includes(n.concept),
+  )) {
+    const holder = graph.edges.find((e) => e.from === role.id && e.role === ':ARG0')?.to,
+      title = graph.edges.find((e) => e.from === role.id && e.role === ':ARG2')?.to;
+    if (holder && title && !labels.get(holder) && labels.get(title))
+      labels.set(holder, labels.get(title));
+  }
   return Object.fromEntries(
-    read.nodes
-      .filter((n, i) => abstract(graph.nodes[i]) && n.surfaceLabel)
-      .map((n) => [n.id, n.surfaceLabel]),
+    graph.nodes.filter((n) => abstract(n) && labels.get(n.id)).map((n) => [n.id, labels.get(n.id)]),
   );
 }
 

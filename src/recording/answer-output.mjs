@@ -1,8 +1,9 @@
 /** Public answer and evidence views over the same evaluated result. */
-const concise = ({ text, conditional, qualifications, polarity }) => ({
+const concise = ({ text, conditional, qualifications, dependsOn, polarity }) => ({
   text,
   conditional,
   qualifications,
+  ...(dependsOn ? { dependsOn } : {}),
   ...(polarity ? { polarity } : {}),
 });
 
