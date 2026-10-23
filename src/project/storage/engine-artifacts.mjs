@@ -74,12 +74,13 @@ export function storeArtifact(db, value) {
         }
         return value;
       }
+      // A value's JSON contains its children's JSON, so nothing below a value
+      // under the threshold can reach it: keep that value whole.
+      const size = path.length ? encode(value) : bytes;
+      if (size.length < 65536) return value;
       if (path.length) {
-        const bytes = encode(value);
-        if (bytes.length >= 65536) {
-          parts.push([path, fragment(value, bytes)]);
-          return null;
-        }
+        parts.push([path, fragment(value, size)]);
+        return null;
       }
       return Array.isArray(value)
         ? value.map((item, i) => split(item, [...path, i]))

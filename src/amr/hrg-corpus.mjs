@@ -12,8 +12,7 @@ export const factKey = (facts) =>
       .map((f) => [f.id, f.triple, f.ruleId ?? f.sourceIds?.[0] ?? 'relations'])
       .sort(([a], [b]) => a.localeCompare(b)),
   );
-export function compileCorpus(facts, retained = null) {
-  const signature = factKey(facts);
+export function compileCorpus(facts, retained = null, signature = factKey(facts)) {
   if (retained?.profile === grammarProfile && retained.signature === signature)
     return { grammar: retained, reused: true };
   const groups = new Map();

@@ -18,6 +18,24 @@ export function compilePattern(patterns) {
   );
 }
 
+// Position indexes depend only on the facts; one interpreted cohort serves
+// every pattern matched against it.
+const indexCache = new WeakMap();
+function factIndexes(facts) {
+  const cached = indexCache.get(facts);
+  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+  const indexes = [new Map(), new Map(), new Map()];
+  const byId = new Map(facts.map((fact) => [fact.id, fact]));
+  for (const fact of facts)
+    fact.triple.forEach((term, i) => {
+      if (!indexes[i].has(term)) indexes[i].set(term, []);
+      indexes[i].get(term).push(fact);
+    });
+  const entry = { indexes, byId, length: facts.length, last: facts.at(-1) };
+  indexCache.set(facts, entry);
+  return entry;
+}
+
 export function matchChart(
   patterns,
   facts,
@@ -33,13 +51,7 @@ export function matchChart(
     ),
   } = {},
 ) {
-  const indexes = [new Map(), new Map(), new Map()];
-  const byId = new Map(facts.map((fact) => [fact.id, fact]));
-  for (const fact of facts)
-    fact.triple.forEach((term, i) => {
-      if (!indexes[i].has(term)) indexes[i].set(term, []);
-      indexes[i].get(term).push(fact);
-    });
+  const { indexes, byId } = factIndexes(facts);
   // An absent fixed terminal makes the whole pattern impossible. Avoid building
   // unrelated charts in that case, without declaring a bounded search complete.
   if (patterns.some((p) => p.some((term, i) => !variable(term) && !indexes[i].has(term))))
@@ -177,13 +189,32 @@ export function createGrammarMatcher(retained = {}) {
   const corpus = (facts) => {
     const signature = factKey(facts);
     const previous = [...corpora, ...available].find((g) => g.signature === signature);
-    const compiled = compileCorpus(facts, previous);
+    const compiled = compileCorpus(facts, previous, signature);
     if (!corpora.includes(compiled.grammar)) corpora.push(compiled.grammar);
     stats[compiled.reused ? 'reused' : 'compilations']++;
     return { ...compiled, id: corpora.indexOf(compiled.grammar) };
   };
+  // Inference passes one immutable cohort to every rule of a round. Compile and
+  // interpret it once; a changed array (length or last fact) is prepared again.
+  const prepared = new WeakMap();
+  const prepare = (facts) => {
+    const entry = prepared.get(facts);
+    if (entry && entry.length === facts.length && entry.last === facts.at(-1)) {
+      stats.reused++;
+      return entry;
+    }
+    const compiled = corpus(facts);
+    const fresh = {
+      compiled,
+      emitted: grammarFacts(compiled.grammar, facts),
+      length: facts.length,
+      last: facts.at(-1),
+    };
+    prepared.set(facts, fresh);
+    return fresh;
+  };
   const match = (patterns, facts, options) => {
-    const compiled = corpus(facts),
+    const { compiled, emitted } = prepare(facts),
       key = JSON.stringify(patterns);
     if (!planKeys.has(key)) {
       planKeys.set(key, plans.length);
@@ -191,7 +222,7 @@ export function createGrammarMatcher(retained = {}) {
     }
     const planId = planKeys.get(key),
       plan = plans[planId];
-    const result = matchChart(patterns, grammarFacts(compiled.grammar, facts), {
+    const result = matchChart(patterns, emitted, {
       ...options,
       plan,
     });
