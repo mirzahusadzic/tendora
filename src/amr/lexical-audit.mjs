@@ -1,5 +1,5 @@
 /** Lexical evidence for acquired predicates, not a semantic correctness test. */
-export const lexicalAuditProfile = 'amr-propbank-lexical-v3';
+export const lexicalAuditProfile = 'amr-propbank-lexical-v4';
 const tokensOf = (text) =>
   [...text.matchAll(/[\p{L}\p{N}]+(?:['’][\p{L}]+)?/gu)].map((match) => ({
     text: match[0],
@@ -28,6 +28,9 @@ const operators = new Set([
   'cause-01',
   'contrast-01',
 ]);
+// A stated negation must reach the reading: “Neither participant becomes the
+// instrument of the other” read without one says the opposite.
+const negations = new Set('not no never neither nor none nobody nothing nowhere cannot'.split(' '));
 const units =
   'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(
     ' ',
@@ -162,6 +165,8 @@ const regularForms = (word) => {
     forms.add(word.slice(0, -1) + 'ing');
   }
   if (word.endsWith('ie')) forms.add(word.slice(0, -2) + 'ying');
+  // Past participles in -n: withdraw → withdrawn, know → known.
+  if (/[aeo]w$/u.test(word)) forms.add(word + 'n');
   if (/[^aeiou][aeiou][^aeiouwxy]$/u.test(word))
     for (const suffix of ['ed', 'ing']) forms.add(word + word.at(-1) + suffix);
   return forms;
@@ -282,6 +287,17 @@ export function createLexicalAuditor(resource) {
         // These remain weak morphological evidence, not sense validation.
         const stems = new Set([lemma, lemma.replace(/e$/u, ''), lemma.replace(/y$/u, 'i')]);
         if (/[^aeiou][aeiou][^aeiouwxy]$/u.test(lemma)) stems.add(lemma + lemma.at(-1));
+        // A frame's own nominal forms give the stems of its other derivations:
+        // participation → particip-ant, succession → success-or,
+        // operation → operation-al.
+        for (const alias of frame[1]) {
+          const word = normalized(alias);
+          if (!/^\p{L}+$/u.test(word)) continue;
+          stems.add(word);
+          for (const suffix of ['ation', 'ition', 'tion', 'sion', 'ion', 'ment', 'ance', 'ence'])
+            if (word.endsWith(suffix) && word.length - suffix.length >= 3)
+              stems.add(word.slice(0, -suffix.length));
+        }
         const suffixes = [
           'al',
           'ance',
@@ -335,6 +351,21 @@ export function createLexicalAuditor(resource) {
         ...(frame ? { description: frame[0], roles: frame[3], files: frame[4] } : {}),
       });
     }
+    const negator = tokens.find((t) => negations.has(t.word) || /n['’]t$/u.test(t.word));
+    if (
+      negator &&
+      !graph.edges.some(
+        (edge) =>
+          edge.role === ':polarity' &&
+          graph.nodes.some((n) => n.id === edge.to && (n.concept === '-' || n.literal === '-')),
+      )
+    )
+      checks.push({
+        nodeId: null,
+        predicate: negator.text,
+        status: 'unattested',
+        description: 'A negation',
+      });
     const findings = checks.filter((check) =>
       ['unverified', 'unlisted', 'unattested'].includes(check.status),
     );
@@ -373,11 +404,13 @@ export function createLexicalAuditor(resource) {
       findings: findings.map((check) => ({
         ...check,
         reason:
-          check.status === 'unattested'
-            ? `The reading has ${check.predicate}, but the text gives no such ${check.description === 'A clock time' ? 'time' : 'number'}.`
-            : check.status === 'unlisted'
-              ? `${check.predicate} is not listed in PropBank ${resource.source.release}; frame inventories may differ.`
-              : `${check.predicate} has no matched source word, PropBank alias or attested predicate form. The reading is unverified; an implicit or abstract expression is also possible.`,
+          check.status === 'unattested' && check.description === 'A negation'
+            ? `The text says “${check.predicate}”, but the reading has no negation.`
+            : check.status === 'unattested'
+              ? `The reading has ${check.predicate}, but the text gives no such ${check.description === 'A clock time' ? 'time' : 'number'}.`
+              : check.status === 'unlisted'
+                ? `${check.predicate} is not listed in PropBank ${resource.source.release}; frame inventories may differ.`
+                : `${check.predicate} has no matched source word, PropBank alias or attested predicate form. The reading is unverified; an implicit or abstract expression is also possible.`,
       })),
     };
   };

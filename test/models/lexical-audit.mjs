@@ -116,6 +116,88 @@ try {
     'unverified',
     'An agent noun needs the participant it names',
   );
+  // A frame's own nominal forms carry its other derivations, and -w verbs form
+  // -n participles.
+  const shape = (nodes, edges) => ({
+    top: nodes[0][0],
+    nodes: nodes.map(([id, concept]) => ({ id, concept })),
+    edges: edges.map(([from, role, to], i) => ({ id: `e${i}`, from, role, to })),
+  });
+  for (const [text, graph, predicate] of [
+    [
+      'Both participants sign.',
+      shape(
+        [
+          ['a', 'sign-01'],
+          ['p', 'person'],
+          ['t', 'participate-01'],
+        ],
+        [
+          ['a', ':ARG0', 'p'],
+          ['t', ':ARG0', 'p'],
+        ],
+      ),
+      'participate-01',
+    ],
+    [
+      'A successor reviews the ledger.',
+      shape(
+        [
+          ['r', 'review-01'],
+          ['p', 'person'],
+          ['s', 'succeed-02'],
+        ],
+        [
+          ['r', ':ARG0', 'p'],
+          ['s', ':ARG0', 'p'],
+        ],
+      ),
+      'succeed-02',
+    ],
+    [
+      'The valve is operational.',
+      shape(
+        [
+          ['o', 'operate-01'],
+          ['v', 'valve'],
+        ],
+        [['o', ':ARG1', 'v']],
+      ),
+      'operate-01',
+    ],
+    [
+      'The withdrawn request stops.',
+      shape(
+        [
+          ['s', 'stop-01'],
+          ['r', 'request-01'],
+          ['w', 'withdraw-01'],
+        ],
+        [
+          ['s', ':ARG1', 'r'],
+          ['w', ':ARG1', 'r'],
+        ],
+      ),
+      'withdraw-01',
+    ],
+  ])
+    assert.equal(
+      audit(text, graph).checks.find((c) => c.predicate === predicate).status,
+      'related',
+      text,
+    );
+  // A negation the text states must appear in the reading.
+  const signs = (polarity) =>
+    shape(
+      [['s', 'sign-01'], ['c', 'clerk'], ...(polarity ? [['n', '-']] : [['e', 'either']])],
+      [['s', ':ARG0', 'c'], polarity ? ['s', ':polarity', 'n'] : ['c', ':mod', 'e']],
+    );
+  const dropped = audit('Neither clerk signs.', signs(false)).findings;
+  assert.deepEqual(
+    dropped.map((f) => f.reason),
+    ['The text says “Neither”, but the reading has no negation.'],
+  );
+  assert.equal(audit('Neither clerk signs.', signs(true)).findings.length, 0);
   // A reading's number or clock time must be one the text gives, in digits or words.
   const valued = (literal, concept = 'percentage-entity', role = ':value') => ({
     top: 'v',
