@@ -587,7 +587,6 @@ export function createContent({ state, text, recordingContent, selectedConcept }
           widths: [16, null],
           minWidth: 45,
           repeatColumns: 0,
-          rowSpacing: 1,
           entries: (state.homeIndex === 0
             ? [
                 ['Project name', 'Required'],

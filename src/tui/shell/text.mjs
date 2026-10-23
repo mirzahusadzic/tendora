@@ -271,7 +271,7 @@ export function createText({ noColor = false } = {}) {
     if (item.table) {
       const { headers, entries } = item.table;
       // Selection presents: a selected row shows its preview without another key.
-      const preview = (entry) =>
+      const preview = (entry, available = width) =>
         entry.selected
           ? (entry.preview ?? []).flatMap((text) =>
               wrap(
@@ -281,7 +281,7 @@ export function createText({ noColor = false } = {}) {
                   surface: item.surface,
                   choiceIndex: entry.choiceIndex,
                 },
-                width,
+                available,
               ),
             )
           : [];
@@ -344,6 +344,16 @@ export function createText({ noColor = false } = {}) {
         ...row(widths.map((size) => '─'.repeat(size)).join('─┼─'), 'border'),
         surface: item.surface,
       });
+      // Spacing and previews sit in the first column, so the column rule stays unbroken.
+      const ruled = (line) => {
+        let value = fit(line.text, widths[0]);
+        const spans = [{ start: 0, end: line.text.length, tone: line.tone }];
+        for (const size of widths.slice(1)) {
+          spans.push({ start: value.length, end: value.length + 3, tone: 'border' });
+          value += ` │ ${' '.repeat(size)}`;
+        }
+        return { ...line, text: value, spans };
+      };
       for (const [index, entry] of [{ cells: headers, tone: 'subheading' }, ...entries].entries()) {
         const groupChanged =
           index > 1 &&
@@ -355,10 +365,9 @@ export function createText({ noColor = false } = {}) {
           previous = null;
         } else if (index > 1 && item.table.rowSpacing)
           result.push(
-            ...Array.from({ length: item.table.rowSpacing }, () => ({
-              ...row(),
-              surface: item.surface,
-            })),
+            ...Array.from({ length: item.table.rowSpacing }, () =>
+              ruled({ ...row(), surface: item.surface }),
+            ),
           );
         const cells = entry.cells.map((value, column) =>
           index &&
@@ -404,7 +413,7 @@ export function createText({ noColor = false } = {}) {
           });
         }
         if (!index) result.push({ ...divider(), keepWithNext: true });
-        else result.push(...preview(entry));
+        else result.push(...preview(entry, widths[0]).map(ruled));
         previous = entry.cells;
       }
       return result;

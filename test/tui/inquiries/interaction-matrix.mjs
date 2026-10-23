@@ -564,6 +564,34 @@ try {
       .replaceAll(' ', ''),
     'Éclairage技術部Technicalproductionwithalongrolename',
   );
+  // Row spacing and a selected row's preview keep the column rule unbroken.
+  const ruledTable = text.wrap(
+    {
+      table: {
+        headers: ['Source statement', 'Reading'],
+        widths: [null, 12],
+        minWidth: 48,
+        repeatColumns: 0,
+        rowSpacing: 1,
+        entries: [
+          {
+            cells: ['Maya declares a major incident when payment failures last.', 'Review'],
+            choiceIndex: -1,
+            selected: true,
+            preview: ['“declares” is read in a sense the vocabulary does not list.'],
+          },
+          { cells: ['Maya may approve a rollback.', 'Read'], choiceIndex: -2 },
+        ],
+      },
+    },
+    56,
+  );
+  const rule = ruledTable[0].text.indexOf('│');
+  assert(ruledTable.some((row) => row.text.includes('↳')));
+  assert(
+    ruledTable.every((row, index) => index === 1 || row.text[rule] === '│'),
+    'Spacer and preview lines continue the column rule',
+  );
   matrix.push({
     pane: 'Reading and lists',
     state: 'wrapping near the viewport edge',
