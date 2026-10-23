@@ -95,6 +95,84 @@ assert.deepEqual(proposeCorrespondences(question, []), []);
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], asserted: false }]), []);
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], withdrawn: true }]), []);
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], graph: question }]), []);
+
+// A participant described by a different action in the same role is a different
+// participant: the registrar's keeping is not answered by the conservator's.
+const keeping = (descriptor, kept) =>
+  graph(`keep-${descriptor}-${kept}`, 'k', { k: 'keep-01', p: 'person', d: descriptor, m: kept }, [
+    ['k', ':ARG0', 'p'],
+    ['d', ':ARG0', 'p'],
+    ['k', ':ARG1', 'm'],
+  ]);
+const kept = (graph) => [{ id: 'kept', graph, text: 'Retained keeping.' }];
+assert.equal(
+  proposeCorrespondences(
+    keeping('register-02', 'amr-unknown'),
+    kept(keeping('conserve-01', 'meter')),
+  ).length,
+  0,
+);
+assert.equal(
+  proposeCorrespondences(
+    keeping('register-02', 'amr-unknown'),
+    kept(keeping('register-02', 'meter')),
+  ).length,
+  1,
+);
+// The same words read with a different structure remain a proposal: “crates
+// scheduled for freezing” as freeze-01 :ARG1-of schedule-01, or as
+// schedule-01 :ARG3 freeze-01.
+const signs = graph(
+  'signs',
+  's',
+  {
+    s: 'sign-01',
+    p: 'person',
+    c: 'conserve-01',
+    l: 'slip',
+    r: 'release-01',
+    k: 'crate',
+    h: 'schedule-01',
+    f: 'freeze-01',
+  },
+  [
+    ['s', ':ARG0', 'p'],
+    ['c', ':ARG0', 'p'],
+    ['s', ':ARG1', 'l'],
+    ['l', ':purpose', 'r'],
+    ['r', ':ARG1', 'k'],
+    ['h', ':ARG1', 'k'],
+    ['h', ':ARG3', 'f'],
+    ['f', ':ARG1', 'k'],
+  ],
+);
+const whoSigns = graph(
+  'who-signs',
+  's',
+  {
+    s: 'sign-01',
+    u: 'amr-unknown',
+    l: 'slip',
+    r: 'release-01',
+    k: 'crate',
+    f: 'freeze-01',
+    h: 'schedule-01',
+  },
+  [
+    ['s', ':ARG0', 'u'],
+    ['s', ':ARG1', 'l'],
+    ['l', ':purpose', 'r'],
+    ['r', ':ARG1', 'k'],
+    ['f', ':ARG1', 'k'],
+    ['h', ':ARG1', 'f'],
+  ],
+);
+assert.deepEqual(
+  proposeCorrespondences(whoSigns, [{ id: 'signs', graph: signs, text: 'Retained signing.' }]).map(
+    (c) => c.answerNodeId,
+  ),
+  ['p'],
+);
 const unrelated = structuredClone(source);
 unrelated.nodes[0].concept = 'sell-01';
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], graph: unrelated }]), []);

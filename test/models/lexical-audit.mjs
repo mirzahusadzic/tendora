@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { propbankAuditor } from '../../src/models/propbank.mjs';
 import { prepareGraphs } from '../../src/models/graph-preparation.mjs';
 import { createLexicalAuditor } from '../../src/amr/lexical-audit.mjs';
+import { abstractLabels } from '../../src/amr/labels.mjs';
 const fetch = globalThis.fetch;
 globalThis.fetch = () => {
   throw new Error('Lexical auditing cannot call a model');
@@ -52,6 +53,33 @@ try {
     'negative-morphology',
   );
   assert.equal(first('The details are unspecified.', 'specify-01').status, 'unverified');
+  // Agent nouns in -ator name the ARG0 of their predicate, and label its abstract participant.
+  const agent = {
+    top: 's',
+    nodes: [
+      { id: 's', concept: 'sign-01' },
+      { id: 'p', concept: 'person' },
+      { id: 'c', concept: 'conserve-01' },
+    ],
+    edges: [
+      { id: 'e0', from: 's', role: ':ARG0', to: 'p' },
+      { id: 'e1', from: 'c', role: ':ARG0', to: 'p' },
+    ],
+  };
+  const agentText = 'The conservator signs release slips.';
+  const conservator = audit(agentText, agent).checks.find((c) => c.predicate === 'conserve-01');
+  assert.equal(conservator.evidence.text, 'conservator');
+  assert.equal(conservator.evidence.method, 'morphology');
+  assert.deepEqual(abstractLabels(agent, agentText, audit(agentText, agent).checks), {
+    p: 'conservator',
+  });
+  assert.equal(
+    audit(agentText, { ...agent, edges: [agent.edges[0]] }).checks.find(
+      (c) => c.predicate === 'conserve-01',
+    ).status,
+    'unverified',
+    'An agent noun needs the participant it names',
+  );
   const literal = {
     top: 'name',
     nodes: [{ id: 'name', concept: 'intercede-01', literal: 'intercede-01' }],

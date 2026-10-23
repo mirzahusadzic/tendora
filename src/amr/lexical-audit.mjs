@@ -154,7 +154,7 @@ export function createLexicalAuditor(resource) {
           'ibility',
         ];
         if (graph.edges.some((e) => e.from === node.id && e.role === ':ARG0'))
-          suffixes.push('er', 'or', 'ant', 'ent');
+          suffixes.push('er', 'or', 'ator', 'ant', 'ent');
         if (
           graph.edges.some(
             (e) =>

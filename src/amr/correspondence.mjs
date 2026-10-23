@@ -119,6 +119,39 @@ function contextAlignment(question, basis, matcher, account) {
   return contexts;
 }
 
+/** Two participants described by different actions in the same role are
+ * different participants: the intake registrar is not the collections
+ * conservator. A descriptor that reappears elsewhere around the source
+ * participant is a different reading of the same words, not a conflict.
+ */
+function descriptorConflict(question, questionNodeId, source, sourceNodeId) {
+  const predicate = (graph, id) => /-\d+$/u.test(graph.nodes.find((n) => n.id === id)?.concept);
+  const concept = (graph, id) => graph.nodes.find((n) => n.id === id)?.concept;
+  const descriptors = (graph, id) =>
+    graph.edges
+      .filter((e) => e.to === id && e.from !== graph.top && predicate(graph, e.from))
+      .map((e) => ({ role: e.role, concept: concept(graph, e.from) }));
+  const around = new Set(),
+    seen = new Set([sourceNodeId]),
+    frontier = [sourceNodeId];
+  for (let depth = 0; depth < 3; depth++)
+    for (const id of frontier.splice(0)) {
+      for (const e of source.edges) {
+        const next = e.from === id ? e.to : e.to === id ? e.from : null;
+        if (next === null || next === source.top || seen.has(next)) continue;
+        seen.add(next);
+        around.add(concept(source, next));
+        frontier.push(next);
+      }
+    }
+  const sourceDescriptors = descriptors(source, sourceNodeId);
+  return descriptors(question, questionNodeId).some(
+    (wanted) =>
+      !around.has(wanted.concept) &&
+      sourceDescriptors.some((d) => d.role === wanted.role && d.concept !== wanted.concept),
+  );
+}
+
 /** Candidate paths may introduce an interpretation-local descriptive wrapper
  * around an existing answer. The wrapper must be an unqualified, unshared chain;
  * predicates, names and scope boundaries cannot be contracted this way.
@@ -212,6 +245,12 @@ function proposeLocal(question, bases, { limit, account }) {
     if (!sameRoot(rootConcept(question), rootConcept(graph))) continue;
     const contexts = contextAlignment(question, { ...basis, graph }, matcher, account);
     if (!contexts.length) continue;
+    if (
+      contexts.some(
+        (c) => c.samePath && descriptorConflict(question, c.questionNodeId, graph, c.sourceNodeId),
+      )
+    )
+      continue;
     const occupied = new Set(contexts.filter((c) => c.samePath).map((c) => c.sourceNodeId)),
       a = inquiryPattern(graph),
       b = inquiryPattern(question);

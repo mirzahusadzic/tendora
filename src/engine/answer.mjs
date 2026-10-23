@@ -2,11 +2,16 @@
 import { evaluateAnswer } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { buildClarifications } from './clarify.mjs';
+import { abstractLabels } from '../amr/labels.mjs';
 
 export function checkAnswer(project, input, result, options) {
   const entries = result.inputs;
   const question = entries.find((item) => item.kind === 'question');
   const graphId = (item) => `${item.id}/graph`;
+  const readingLabels = (item) =>
+    item.graph && item.lexicalAudit
+      ? abstractLabels(item.graph, item.text, item.lexicalAudit.checks)
+      : {};
   const sources = entries
     .filter((item) => item.kind !== 'question')
     .map((item) => ({
@@ -18,6 +23,7 @@ export function checkAnswer(project, input, result, options) {
       text: item.text,
       sourceRefs: item.sourceRefs,
       ...(item.development ? { development: item.development } : {}),
+      ...(Object.keys(readingLabels(item)).length ? { readingLabels: readingLabels(item) } : {}),
       graphId: item.graph ? graphId(item) : null,
     }));
   const concepts = new Map(project.data.concepts.map((concept) => [concept.id, concept]));

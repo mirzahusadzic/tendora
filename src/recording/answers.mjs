@@ -21,7 +21,7 @@ import {
 } from '../amr/partial-coverage.mjs';
 import { mergePartialContribution } from '../amr/partial-contribution.mjs';
 import { sourceSemanticTypes } from '../amr/semantic-types.mjs';
-import { labelReading } from '../amr/labels.mjs';
+import { labelReading, withAbstractLabels } from '../amr/labels.mjs';
 
 export const answerEngine = 'amr-hrg-answer-v1';
 const descriptorRoles = new Set([':mod', ':ARG0', ':ARG1', ':instrument', ':name']);
@@ -282,6 +282,8 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
             : n,
         ),
       };
+    // Labels the vocabulary check attested for abstract participants; display only.
+    if (source.readingLabels) graph = withAbstractLabels(graph, source.readingLabels);
     const literals = graphLiterals(
       graph,
       recording.amrs?.find((amr) => amr.graphId === graph.id)?.response,

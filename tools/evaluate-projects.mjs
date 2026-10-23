@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openProject } from '../src/project/authoring/project.mjs';
+import { openProject, saveProject } from '../src/project/authoring/project.mjs';
 import { sourceCatalog } from '../src/project/authoring/sources.mjs';
 import { acquiredTexts, retainAcquisitions } from '../src/project/storage/acquisitions.mjs';
 import { parseTexts } from '../src/models/acquisition.mjs';
@@ -12,6 +12,7 @@ import { inputFromProject } from '../src/engine/input.mjs';
 import { authorCase } from '../src/project/inquiries/investigation.mjs';
 import { runEngine } from '../src/engine/run.mjs';
 import { checkAnswer } from '../src/engine/answer.mjs';
+import { acceptClarification } from '../src/engine/clarify.mjs';
 import { readEngineArtifact } from '../src/project/storage/engine-runs.mjs';
 import { createRetainedPreparation } from './support/deterministic-reuse.mjs';
 
@@ -331,6 +332,7 @@ report.frozenProjects = prepared.map((item) => ({
   path: dirname(item.project.path),
   digest: item.project.digest,
 }));
+const proposals = new Map();
 const originalFetch = globalThis.fetch;
 globalThis.fetch = () => {
   throw new Error('Frozen project evaluation cannot call any model or network service');
@@ -382,12 +384,57 @@ try {
         'Reasoning run acquired language',
       );
       report.results.push(result);
+      if (run.answer?.clarifications?.length)
+        proposals.set(result, { item, test, candidates: run.answer.clarifications });
       console.log(
         `${result.project}/${test.id}: ${run.status} ${JSON.stringify(result.answers.map((answer) => answer.text))} check=${result.checks.passed}`,
       );
       await writeFile(reportPath, JSON.stringify(report, null, 2) + '\n');
     }
   }
+  // A proposal is the engine's offer; an author confirms it. Each offered
+  // proposal is confirmed alone on its own disposable copy, so the benchmark
+  // projects and the automatic results above stay unrepaired.
+  if (copyRoot)
+    for (const [result, { item, test, candidates }] of proposals) {
+      if (result.expected.kind === 'partial') continue;
+      if (result.expected.kind === 'answer' && result.checks.passed) continue;
+      const trials = [];
+      for (const [index, candidate] of candidates.slice(0, 8).entries()) {
+        const directory = join(
+          copyRoot,
+          'confirmations',
+          `${result.project}-${result.id}-${index}`,
+        );
+        await cp(dirname(item.project.path), directory, { recursive: true, errorOnExist: true });
+        let project = await openProject(directory);
+        project = await saveProject(project, acceptClarification(project, candidate).data);
+        const run = await runEngine(project, {
+          ...options.engineOptions,
+          input: await inputFromProject(project, {
+            scopePlacementId: item.specification.scopePlacementId,
+            question: test.question,
+            caseSelection: test.case ? authorCase(project, test.case) : null,
+          }),
+          acquireMissing: false,
+          trace: false,
+        });
+        trials.push({
+          source: candidate.source.text,
+          proposedAnswer: candidate.answerLabel,
+          status: run.status,
+          answers: (run.answer?.answers ?? []).map((answer) => answer.text),
+          ...assess(test.expected, run),
+        });
+      }
+      result.confirmation = {
+        offered: candidates.length,
+        ...(result.expected.kind === 'answer'
+          ? { reachable: trials.some((trial) => trial.passed) }
+          : { falseSupport: trials.some((trial) => trial.falseSupport) }),
+        trials,
+      };
+    }
   // These controls mutate only in-memory compiled evidence. They are never
   // language fixtures, persisted source edits or premises of the benchmark.
   report.compilerAblation = { status: 'no-complete-answer' };
@@ -503,6 +550,10 @@ report.summary = {
   unknownsPreserved: report.results.filter((r) => r.expected.kind === 'unknown' && r.checks.passed)
     .length,
   falseSupport: report.results.filter((r) => r.checks.falseSupport).length,
+  // Open warranted answers that one confirmed proposal completes, out of those still open.
+  oneConfirmationAway: report.results.filter((r) => r.confirmation?.reachable).length,
+  // Unknowns that a single confirmed proposal would turn into a supported answer.
+  confirmationFalseSupport: report.results.filter((r) => r.confirmation?.falseSupport).length,
   modelRequests: 0,
   partialRequiresReview: report.results.filter((r) => r.expected.kind === 'partial').length,
 };

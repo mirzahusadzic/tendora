@@ -38,3 +38,27 @@ export function labelReading(graph, text, checks = []) {
     ),
   };
 }
+
+/** An abstract participant reads by the word its source used for it, when the
+ * vocabulary check attested that word: person :ARG0-of conserve-01 is the
+ * “conservator”. Concepts and roles stay as acquired.
+ */
+const abstract = (node) => ['person', 'thing'].includes(node.concept) && !node.surfaceLabel;
+export function abstractLabels(graph, text, checks = []) {
+  const read = labelReading(graph, text, checks);
+  return Object.fromEntries(
+    read.nodes
+      .filter((n, i) => abstract(graph.nodes[i]) && n.surfaceLabel)
+      .map((n) => [n.id, n.surfaceLabel]),
+  );
+}
+
+/** Apply abstractLabels to a graph; other nodes keep their labels. */
+export function withAbstractLabels(graph, labels = {}) {
+  return {
+    ...graph,
+    nodes: graph.nodes.map((n) =>
+      abstract(n) && typeof labels[n.id] === 'string' ? { ...n, surfaceLabel: labels[n.id] } : n,
+    ),
+  };
+}

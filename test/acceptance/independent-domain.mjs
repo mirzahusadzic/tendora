@@ -15,6 +15,8 @@ const benchmarks = [
     fixtures: ['test/support/evaluation-archive'],
     questions: 5,
     warrantedFloor: 0,
+    confirmationFloor: 2,
+    confirmationFalseSupportCeiling: 0,
   },
   {
     name: 'blind-domain',
@@ -23,6 +25,10 @@ const benchmarks = [
     fixtures: ['test/support/blind-archive-water', 'test/support/blind-bracken'],
     questions: 20,
     warrantedFloor: 0,
+    confirmationFloor: 2,
+    // “Who had collected the key?” is offered “The freezer van collects booked
+    // crates”: a different-word proposal the author must reject.
+    confirmationFalseSupportCeiling: 1,
   },
 ];
 const fixtureHash = async (fixtures) => {
@@ -74,6 +80,14 @@ for (const benchmark of benchmarks) {
     summary.warrantedPassed >= benchmark.warrantedFloor,
     `${benchmark.name}: warranted answers regressed: ${summary.warrantedPassed} < ${benchmark.warrantedFloor}`,
   );
+  assert(
+    summary.oneConfirmationAway >= benchmark.confirmationFloor,
+    `${benchmark.name}: answers one confirmation away regressed: ${summary.oneConfirmationAway} < ${benchmark.confirmationFloor}`,
+  );
+  assert(
+    summary.confirmationFalseSupport <= benchmark.confirmationFalseSupportCeiling,
+    `${benchmark.name}: more proposals would turn an unknown into an answer: ${summary.confirmationFalseSupport}`,
+  );
   assert.equal(
     await fixtureHash(benchmark.fixtures),
     before,
@@ -81,6 +95,7 @@ for (const benchmark of benchmarks) {
   );
   console.log(
     `ok ${benchmark.name} benchmark: ${summary.warrantedPassed}/${summary.warranted} warranted, ` +
-      `${summary.unknownsPreserved}/${summary.unknowns} unknowns open, no false support (${directory})`,
+      `${summary.unknownsPreserved}/${summary.unknowns} unknowns open, no false support; ` +
+      `${summary.oneConfirmationAway} more one confirmation away (${directory})`,
   );
 }
