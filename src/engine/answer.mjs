@@ -2,7 +2,7 @@
 import { evaluateAnswer } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { buildClarifications } from './clarify.mjs';
-import { abstractLabels } from '../amr/labels.mjs';
+import { answerLabels } from '../amr/labels.mjs';
 
 export function checkAnswer(project, input, result, options) {
   const entries = result.inputs;
@@ -10,7 +10,7 @@ export function checkAnswer(project, input, result, options) {
   const graphId = (item) => `${item.id}/graph`;
   const readingLabels = (item) =>
     item.graph && item.lexicalAudit
-      ? abstractLabels(item.graph, item.text, item.lexicalAudit.checks)
+      ? answerLabels(item.graph, item.text, item.lexicalAudit.checks)
       : {};
   const sources = entries
     .filter((item) => item.kind !== 'question')

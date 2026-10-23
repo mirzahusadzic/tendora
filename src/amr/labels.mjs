@@ -61,12 +61,32 @@ export function abstractLabels(graph, text, checks = []) {
   );
 }
 
-/** Apply abstractLabels to a graph; other nodes keep their labels. */
+/** An answer may bind a predicate used as a noun. It reads by the word the
+ * vocabulary check attested for it: commit-01 is “commitments”, never its
+ * concept name. Concepts and roles stay as acquired.
+ */
+const predicate = (node) =>
+  /-\d+$/u.test(node.concept) && !/-91$/u.test(node.concept) && !node.surfaceLabel;
+export function answerLabels(graph, text, checks = []) {
+  const attested = new Map(checks.filter((c) => c.evidence).map((c) => [c.nodeId, c.evidence]));
+  return {
+    ...Object.fromEntries(
+      graph.nodes
+        .filter((n) => predicate(n) && attested.has(n.id))
+        .map((n) => [n.id, attested.get(n.id).text]),
+    ),
+    ...abstractLabels(graph, text, checks),
+  };
+}
+
+/** Apply reading labels to a graph; other nodes keep their labels. */
 export function withAbstractLabels(graph, labels = {}) {
   return {
     ...graph,
     nodes: graph.nodes.map((n) =>
-      abstract(n) && typeof labels[n.id] === 'string' ? { ...n, surfaceLabel: labels[n.id] } : n,
+      (abstract(n) || predicate(n)) && typeof labels[n.id] === 'string'
+        ? { ...n, surfaceLabel: labels[n.id] }
+        : n,
     ),
   };
 }

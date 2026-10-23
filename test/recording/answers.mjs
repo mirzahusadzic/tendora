@@ -590,6 +590,20 @@ const loop = inferRelations(
   { maxRounds: 2 },
 );
 assert.equal(loop.complete, false, 'Evaluation limits never certify a result');
+// A predicate bound as an answer reads by its attested word and the source's
+// modifiers, never by its concept name.
+const kept = graph('kept', 'k', { k: 'keep-01', r: 'registry', c: 'commit-01', p: 'public-02' }, [
+  ['k', ':ARG0', 'r'],
+  ['k', ':ARG1', 'c'],
+  ['p', ':ARG1', 'c'],
+]);
+const keeps = graph('keeps', 'k', { k: 'keep-01', r: 'registry', w: 'amr-unknown' }, [
+  ['k', ':ARG0', 'r'],
+  ['k', ':ARG1', 'w'],
+]);
+const keptRecord = record(keeps, [{ text: 'The registry keeps public commitments.', graph: kept }]);
+keptRecord.sources[0].readingLabels = { c: 'commitments' };
+assert.equal(evaluateAnswer(keptRecord).answers[0].text, 'public commitments');
 console.log(
   'ok AMR answers join attributed sentences, preserve identity/modality/polarity and reuse business mappings across phrasings',
 );

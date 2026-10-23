@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { propbankAuditor } from '../../src/models/propbank.mjs';
 import { prepareGraphs } from '../../src/models/graph-preparation.mjs';
 import { createLexicalAuditor, repairReading } from '../../src/amr/lexical-audit.mjs';
-import { abstractLabels } from '../../src/amr/labels.mjs';
+import { abstractLabels, answerLabels } from '../../src/amr/labels.mjs';
 const fetch = globalThis.fetch;
 globalThis.fetch = () => {
   throw new Error('Lexical auditing cannot call a model');
@@ -73,6 +73,23 @@ try {
   assert.deepEqual(abstractLabels(agent, agentText, audit(agentText, agent).checks), {
     p: 'conservator',
   });
+  // An answer that binds a predicate reads by the word the check attested.
+  const kept = {
+    top: 'k',
+    nodes: [
+      { id: 'k', concept: 'keep-01' },
+      { id: 'r', concept: 'registry' },
+      { id: 'c', concept: 'commit-01' },
+      { id: 'p', concept: 'public-02' },
+    ],
+    edges: [
+      { id: 'e0', from: 'k', role: ':ARG0', to: 'r' },
+      { id: 'e1', from: 'k', role: ':ARG1', to: 'c' },
+      { id: 'e2', from: 'p', role: ':ARG1', to: 'c' },
+    ],
+  };
+  const keptText = 'The registry keeps public commitments.';
+  assert.equal(answerLabels(kept, keptText, audit(keptText, kept).checks).c, 'commitments');
   // A person who holds a role reads by that role's word.
   const holder = {
     top: 'a',
