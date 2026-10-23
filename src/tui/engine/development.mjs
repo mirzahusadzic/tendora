@@ -437,6 +437,15 @@ export function createDevelopment({ state, forms, projects, investigation, draw,
           ? [
               ['Source', candidate.source.text, 'input'],
               ...(candidate.answerNodeId ? [['Would answer', candidate.answerLabel, 'input']] : []),
+              ...(candidate.sharedWording
+                ? [
+                    [
+                      'Read differently',
+                      `Both say “${candidate.sharedWording}”; each was read differently.`,
+                      'warning',
+                    ],
+                  ]
+                : []),
               [
                 'Confirm only if',
                 'The source really establishes this answer to the whole question.',

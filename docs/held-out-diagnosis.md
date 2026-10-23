@@ -58,6 +58,12 @@ for review:
 - A proposal is no longer offered when the source describes the participant
   by a different action in the same role. The intake registrar is not
   answered by what the collections conservator keeps.
+- When a proposal's source shares the question's words but was read
+  differently, the gap and the confirmation say so: "A source says “crates
+  scheduled for freezing” too, but each was read differently." This holds
+  for all four answers one confirmation away, and for no other proposal.
+  Proposals in scope are shown, and can be confirmed, at the role the
+  question was asked at.
 - One proposal remains that would give a wrong answer if confirmed:
   "Who had collected the key?" is offered "The freezer van collects booked
   crates". It maps one participant onto a different one and is left for the

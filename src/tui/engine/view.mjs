@@ -286,7 +286,9 @@ export function inquirySections(
           'Why',
           historical
             ? 'This source connection was proposed in the saved assessment.'
-            : 'The source may answer this question through a different wording. Confirm its meaning to retain the connection.',
+            : candidate.sharedWording
+              ? `The question and the source both say “${candidate.sharedWording}”, but each was read differently. Confirm they mean the same to retain the connection.`
+              : 'The source may answer this question through a different wording. Confirm its meaning to retain the connection.',
         ],
         [
           'State',

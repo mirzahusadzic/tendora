@@ -992,9 +992,12 @@ export function createQuestionWorkflow({
       );
     if (ready()) {
       const candidates = (current.run.answer?.clarifications ?? []).filter(
-        (candidate) => candidate.source.nodeId === state.placementId,
+        (candidate) =>
+          state.placementId === current.run.scopePlacementId ||
+          candidate.source.nodeId === state.placementId,
       );
-      if (candidates.length)
+      // A selected gap's own d (elaborate connection) keeps its meaning.
+      if (candidates.length && !result.some((item) => item.key === 'd' && item.pane === 'reading'))
         result.push(
           command('d', 'clarify connection', () =>
             development.clarifyConnection({

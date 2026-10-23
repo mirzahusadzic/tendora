@@ -8,6 +8,7 @@ import {
   questionBranches,
 } from '../../src/amr/development.mjs';
 import { evaluateAnswer } from '../../src/recording/answers.mjs';
+import { sharedWording } from '../../src/engine/clarify.mjs';
 
 const graph = (id, top, nodes, edges) => ({
   id,
@@ -172,6 +173,25 @@ assert.deepEqual(
     (c) => c.answerNodeId,
   ),
   ['p'],
+);
+// The person confirming sees which shared words were read differently.
+const asked = {
+  text: 'Who signs release slips for crates scheduled for freezing?',
+  graph: whoSigns,
+};
+const said = {
+  text: 'The collections conservator signs release slips for crates scheduled for freezing.',
+  graph: signs,
+};
+assert.equal(sharedWording(asked, said), 'crates scheduled for freezing');
+assert.equal(sharedWording(said, said), null, 'One reading has no difference');
+assert.equal(
+  sharedWording(
+    { text: 'What does the registrar keep?', graph: keeping('register-02', 'amr-unknown') },
+    { text: 'The conservator keeps the meter.', graph: keeping('conserve-01', 'meter') },
+  ),
+  null,
+  'Different words are not a shared wording',
 );
 const unrelated = structuredClone(source);
 unrelated.nodes[0].concept = 'sell-01';

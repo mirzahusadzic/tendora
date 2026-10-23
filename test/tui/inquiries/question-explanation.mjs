@@ -31,6 +31,33 @@ assert.doesNotMatch(
 assert.equal(needs.filter((need) => need.includes('recommend')).length, 1, 'No duplicate gap');
 assert.deepEqual(run, before, 'Rendering cannot change the saved assessment');
 
+// A relation whose words a source shares, read differently, is not missing.
+const restructured = {
+  kind: 'relation',
+  state: 'unmatched',
+  from: 'schedule-01',
+  role: ':ARG1',
+  to: 'freeze-01',
+};
+const sameWordsReason = (wording) =>
+  questionExplanation(
+    {
+      answer: {
+        openings: [restructured],
+        clarifications: [{ sharedWording: wording }],
+      },
+    },
+    new Map(),
+  ).table.entries[0].cells[1];
+assert.equal(
+  sameWordsReason('crates scheduled for freezing'),
+  'A source says “crates scheduled for freezing” too, but each was read differently. Confirm the connection to use it.',
+);
+assert.equal(
+  sameWordsReason('intake registrar'),
+  'No source connects these participants in this relationship.',
+  'Shared words elsewhere do not explain this relation',
+);
 const describe = (opening) =>
   questionExplanation({ answer: { openings: [opening] } }, new Map()).table.entries[0].cells;
 assert.match(
@@ -122,6 +149,26 @@ assert.equal(related.table.entries[0].source, source, 'The exact related source 
 assert(related.table.entries[0].choiceIndex < 0);
 assert.match(related.rows[0][1], /do not establish a complete answer/u);
 assert.doesNotMatch(JSON.stringify(section), /press r|Next|Used in the answer proof/u);
+// The role the question was asked at shows every proposal in its scope, with
+// where it was found and the words read differently.
+const scopedProposal = {
+  question: { text: fixture.question },
+  source: { nodeId: 'teams', text: 'The billing team handles payout failures.' },
+  answerNodeId: 'p',
+  answerLabel: 'billing team',
+  sharedWording: 'payout failures',
+};
+const proposed = journeySection(
+  { ...context, run: { ...run, answer: { ...run.answer, clarifications: [scopedProposal] } } },
+  'root',
+).groups.find((group) => group.heading === 'A connection needs your interpretation');
+assert.deepEqual(
+  proposed.rows.filter(([label]) => ['At', 'Read differently'].includes(label)),
+  [
+    ['At', 'Company → Teams'],
+    ['Read differently', 'Both say “payout failures”.', 'warning'],
+  ],
+);
 const elsewhere = journeySection(context, 'outside');
 assert.equal(elsewhere.groups[0].heading, 'Why no answer');
 assert(elsewhere.groups.some((group) => group.heading === 'Outside this question'));

@@ -29,6 +29,17 @@ export function questionExplanation(run, relations) {
     // unrelated participant and reference gaps visible instead of repeating it.
     return !(item.kind === 'relation' && missingAssertions.has(item.from));
   });
+  // A proposal whose shared words cover this relation: read differently, not missing.
+  const sameWords = (item) =>
+    (run.answer?.clarifications ?? [])
+      .map((candidate) => candidate.sharedWording)
+      .find(
+        (wording) =>
+          wording &&
+          [item.from, item.to].every((concept) =>
+            wording.toLowerCase().includes(words(concept).toLowerCase().split(' ')[0].slice(0, 4)),
+          ),
+      );
   const entries = missing.map((item) => {
     const relationship = relations.get(item.id)?.cells.slice(0, 3);
     const referent = item.role === ':mod' && reference.has(item.to);
@@ -64,7 +75,9 @@ export function questionExplanation(run, relations) {
     else if (item.kind === 'relation')
       reason = referent
         ? 'No source connection identifies this reference.'
-        : 'No source connects these participants in this relationship.';
+        : sameWords(item)
+          ? `A source says “${sameWords(item)}” too, but each was read differently. Confirm the connection to use it.`
+          : 'No source connects these participants in this relationship.';
     else
       reason =
         {

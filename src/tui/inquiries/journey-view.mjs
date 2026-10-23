@@ -485,8 +485,10 @@ export function journeySection({ project, run, input, result, recording }, place
   }
   const localFindings = matching(placementId);
   const localIds = new Set(local.map((source) => source.id));
+  // The role the question was asked at shows every proposal in its scope.
+  const asked = placementId === run.scopePlacementId;
   const proposals = (run.answer?.clarifications ?? []).filter(
-    (candidate) => candidate.source.nodeId === placementId,
+    (candidate) => asked || candidate.source.nodeId === placementId,
   );
   const arriving = exploration
     ? unique(
@@ -672,6 +674,12 @@ export function journeySection({ project, run, input, result, recording }, place
       section('A connection needs your interpretation', [
         ['Question', candidate.question.text, 'input'],
         ['Source', candidate.source.text, 'input'],
+        ...(asked && candidate.source.nodeId !== placementId
+          ? [['At', placementLabel(project.data, candidate.source.nodeId)]]
+          : []),
+        ...(candidate.sharedWording
+          ? [['Read differently', `Both say “${candidate.sharedWording}”.`, 'warning']]
+          : []),
         ...(candidate.answerNodeId
           ? [['Possible participant', candidate.answerLabel, 'warning']]
           : []),
