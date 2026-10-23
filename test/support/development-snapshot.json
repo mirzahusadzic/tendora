@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "calibrationMs": 216,
+  "calibrationMs": 208,
   "benchmarks": {
     "independent-domain": {
-      "engineMs": 269,
+      "engineMs": 272,
       "results": [
         {
           "id": "archive/catalog-nominalization",
@@ -21,23 +21,14 @@
         },
         {
           "id": "archive/binding-passive",
-          "status": "open",
-          "answers": [],
-          "evidence": [],
-          "openings": [
-            "concept unmatched bind-01",
-            "concept unmatched thing",
-            "relation unmatched bind-01 :ARG3 thing",
-            "relation unmatched damage-01 :ARG1 thing",
-            "relation unmatched repair-01 :ARG1 thing"
+          "status": "supported",
+          "answers": [
+            "conservator"
           ],
-          "proposals": [
-            {
-              "source": "The conservator repairs damaged bindings.",
-              "status": "supported",
-              "answers": ["conservator"]
-            }
-          ]
+          "evidence": [
+            "The conservator repairs damaged bindings."
+          ],
+          "openings": []
         },
         {
           "id": "archive/storage-paraphrase",
@@ -54,23 +45,14 @@
         },
         {
           "id": "archive/binding-yesno",
-          "status": "open",
-          "answers": [],
-          "evidence": [],
-          "openings": [
-            "concept unmatched bind-01",
-            "concept unmatched thing",
-            "relation unmatched bind-01 :ARG3 thing",
-            "relation unmatched damage-01 :ARG1 thing",
-            "relation unmatched repair-01 :ARG1 thing"
+          "status": "supported",
+          "answers": [
+            "Yes"
           ],
-          "proposals": [
-            {
-              "source": "The conservator repairs damaged bindings.",
-              "status": "supported",
-              "answers": ["Yes"]
-            }
-          ]
+          "evidence": [
+            "The conservator repairs damaged bindings."
+          ],
+          "openings": []
         },
         {
           "id": "archive/wrong-repairer",
@@ -91,21 +73,18 @@
       ]
     },
     "blind-domain": {
-      "engineMs": 2674,
+      "engineMs": 2817,
       "results": [
         {
           "id": "archive-water/q01",
-          "status": "open",
-          "answers": [],
-          "evidence": [],
-          "openings": ["relation unmatched schedule-01 :ARG1 freeze-01"],
-          "proposals": [
-            {
-              "source": "The collections conservator signs release slips for crates scheduled for freezing.",
-              "status": "supported",
-              "answers": ["collections conservator"]
-            }
-          ]
+          "status": "supported",
+          "answers": [
+            "collections conservator"
+          ],
+          "evidence": [
+            "The collections conservator signs release slips for crates scheduled for freezing."
+          ],
+          "openings": []
         },
         {
           "id": "archive-water/q02",
@@ -124,22 +103,14 @@
         },
         {
           "id": "archive-water/q03",
-          "status": "open",
-          "answers": [],
-          "evidence": [],
-          "openings": [
-            "concept unmatched admit-02",
-            "relation unjoined register-02 :ARG0 person",
-            "relation unjoined store-01 :ARG0 person",
-            "relation unmatched register-02 :ARG1 admit-02"
+          "status": "supported",
+          "answers": [
+            "intake cabinet"
           ],
-          "proposals": [
-            {
-              "source": "The intake registrar stores the original transfer forms in the intake cabinet.",
-              "status": "supported",
-              "answers": ["intake cabinet"]
-            }
-          ]
+          "evidence": [
+            "The intake registrar stores the original transfer forms in the intake cabinet."
+          ],
+          "openings": []
         },
         {
           "id": "archive-water/q04",
@@ -184,7 +155,9 @@
           "status": "open",
           "answers": [],
           "evidence": [],
-          "openings": ["relation unmatched key :poss room"],
+          "openings": [
+            "relation unmatched key :poss room"
+          ],
           "proposals": [
             {
               "source": "The recovery coordinator may authorize use of the overflow drying room.",
@@ -224,12 +197,16 @@
           "status": "open",
           "answers": [],
           "evidence": [],
-          "openings": ["relation unjoined collect-01 :ARG1 key"],
+          "openings": [
+            "relation unjoined collect-01 :ARG1 key"
+          ],
           "proposals": [
             {
               "source": "The freezer van collects booked crates at four in the afternoon on weekdays.",
               "status": "supported",
-              "answers": ["freezer van"]
+              "answers": [
+                "freezer van"
+              ]
             }
           ]
         },

@@ -1,10 +1,19 @@
 /** Public answer and evidence views over the same evaluated result. */
-const concise = ({ text, conditional, qualifications, dependsOn, readAs, polarity }) => ({
+const concise = ({
+  text,
+  conditional,
+  qualifications,
+  dependsOn,
+  readAs,
+  sharedWording,
+  polarity,
+}) => ({
   text,
   conditional,
   qualifications,
   ...(dependsOn ? { dependsOn } : {}),
   ...(readAs ? { readAs } : {}),
+  ...(sharedWording ? { sharedWording } : {}),
   ...(polarity ? { polarity } : {}),
 });
 

@@ -64,6 +64,10 @@ try {
         );
         if (answer.readAs === 'requirement')
           lines.push('  A source says it must be done; that answers "should".');
+        if (answer.readAs === 'shared-wording')
+          lines.push(
+            `  The question and a source both say "${answer.sharedWording.join('", "')}"; read as in the source.`,
+          );
         for (const detail of answer.dependsOn ?? answer.qualifications ?? [])
           lines.push('  ' + detail);
         if (values.explain) {
@@ -96,6 +100,11 @@ try {
             ': ' +
             opening.reason,
         );
+      for (const item of run.lexicalAudit?.repairs ?? []) {
+        lines.push(`Repaired reading: ${item.text}`);
+        for (const repair of item.repairs)
+          lines.push(`  ${repair.from} -> ${repair.to}: ${repair.reason}`);
+      }
       // Runs saved before item-level audits keep only a summary; show what they retain.
       if (run.lexicalAudit?.items?.length) {
         const items = run.lexicalAudit.items;

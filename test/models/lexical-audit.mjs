@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { propbankAuditor } from '../../src/models/propbank.mjs';
 import { prepareGraphs } from '../../src/models/graph-preparation.mjs';
-import { createLexicalAuditor } from '../../src/amr/lexical-audit.mjs';
+import { createLexicalAuditor, repairReading } from '../../src/amr/lexical-audit.mjs';
 import { abstractLabels } from '../../src/amr/labels.mjs';
 const fetch = globalThis.fetch;
 globalThis.fetch = () => {
@@ -129,6 +129,27 @@ try {
   assert.deepEqual(unattested(pickup, time('16:00')), []);
   assert.deepEqual(unattested('Shifts begin at eight in the morning.', time('20:00')), ['20:00']);
   assert.deepEqual(unattested('The check runs at 11:00.', time('11:00')), []);
+  // When the text leaves exactly one value, the reading is repaired to it.
+  const repair = (text, graph) => {
+    const result = repairReading(text, graph, audit(text, graph).checks);
+    return [
+      result.repairs.map(({ from, to }) => `${from}->${to}`),
+      result.graph.nodes.find((node) => node.id === 'n')?.literal,
+    ];
+  };
+  assert.deepEqual(repair(humidity, valued('60.4')), [['60.4->64'], '64']);
+  assert.deepEqual(repair(pickup, time('14:00')), [['14:00->16:00'], '"16:00"']);
+  assert.deepEqual(repair(humidity, valued('64')), [[], '64'], 'A given value stays');
+  assert.deepEqual(
+    repair('It rose from sixty to seventy percent.', valued('65')),
+    [[], '65'],
+    'Two possible values leave the reading for review',
+  );
+  assert.deepEqual(
+    repair('The van collects crates at four.', time('14:00')),
+    [[], '"14:00"'],
+    'An hour without morning or afternoon is not settled',
+  );
   assert.match(
     audit(pickup, time('14:00')).findings[0].reason,
     /reading has 14:00, but the text gives no such time/u,

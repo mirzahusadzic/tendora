@@ -9,6 +9,7 @@ import {
 } from '../../src/amr/development.mjs';
 import { evaluateAnswer } from '../../src/recording/answers.mjs';
 import { sharedWording } from '../../src/engine/clarify.mjs';
+import { settleSharedWording } from '../../src/engine/answer.mjs';
 
 const graph = (id, top, nodes, edges) => ({
   id,
@@ -185,6 +186,69 @@ const said = {
 };
 assert.equal(sharedWording(asked, said), 'crates scheduled for freezing');
 assert.equal(sharedWording(said, said), null, 'One reading has no difference');
+// The engine settles a shared-wording proposal itself, for this check only.
+const signRecording = {
+  inquiry: { text: asked.text, graphId: whoSigns.id },
+  project: { placementId: 'root' },
+  graphs: [whoSigns, signs],
+  sources: [{ id: 'signs', nodeId: 'root', text: said.text, graphId: signs.id }],
+};
+const openSign = evaluateAnswer(signRecording, { rules: [] });
+assert.equal(openSign.status, 'open');
+const [signProposal] = proposeCorrespondences(whoSigns, [
+  { id: 'signs', graph: signs, text: said.text },
+]);
+const signCandidate = {
+  ...signProposal,
+  id: 'candidate',
+  source: { text: said.text, nodeId: 'root' },
+};
+const settled = settleSharedWording(
+  signRecording,
+  { rules: [] },
+  undefined,
+  { scopePlacementId: 'root' },
+  {
+    ...openSign,
+    clarifications: [{ ...signCandidate, sharedWording: 'crates scheduled for freezing' }],
+  },
+);
+assert.equal(settled.status, 'supported');
+assert.deepEqual(
+  settled.answers.map((answer) => [answer.readAs, answer.sharedWording]),
+  [['shared-wording', ['crates scheduled for freezing']]],
+);
+assert.equal(
+  settleSharedWording(
+    signRecording,
+    { rules: [] },
+    undefined,
+    { scopePlacementId: 'root' },
+    { ...openSign, clarifications: [signCandidate] },
+  ),
+  null,
+  'A proposal with different words still waits for a person',
+);
+assert.equal(
+  settleSharedWording(
+    {
+      ...signRecording,
+      inquiry: {
+        ...signRecording.inquiry,
+        text: 'Who signs release slips for crates scheduled for freezing at noon?',
+      },
+    },
+    { rules: [] },
+    undefined,
+    { scopePlacementId: 'root' },
+    {
+      ...openSign,
+      clarifications: [{ ...signCandidate, sharedWording: 'crates scheduled for freezing' }],
+    },
+  ),
+  null,
+  'A question that says more than its source still waits for a person',
+);
 assert.equal(
   sharedWording(
     { text: 'What does the registrar keep?', graph: keeping('register-02', 'amr-unknown') },

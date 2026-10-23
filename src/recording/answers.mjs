@@ -30,6 +30,7 @@ import { labelReading, withAbstractLabels } from '../amr/labels.mjs';
 
 export const answerEngine = 'amr-hrg-answer-v1';
 const descriptorRoles = new Set([':mod', ':ARG0', ':ARG1', ':instrument', ':name']);
+const dateParts = [':year', ':month', ':day', ':weekday', ':time', ':dayperiod', ':season'];
 const phraseBoundaries = new Set([
   'a',
   'an',
@@ -933,6 +934,27 @@ function evaluateReading(recording, knowledge, limits, reading) {
       const concept = inference.facts.find(
         (fact) => fact.triple[0] === id && fact.triple[1] === ':instance',
       )?.triple[2];
+      // A date or time reads by its own parts: "16:00, afternoon".
+      if (concept === 'date-entity') {
+        const parts = dateParts
+          .flatMap((role) =>
+            inference.facts.filter((fact) => fact.triple[0] === id && fact.triple[1] === role),
+          )
+          .map((fact) => {
+            const literal = inference.facts.find(
+              (other) => other.triple[0] === fact.triple[2] && other.triple[1] === '@literal',
+            );
+            if (literal) labelWitnesses.push(fact.id, literal.id);
+            else labelWitnesses.push(fact.id);
+            const value = literal?.triple[2] ?? fact.triple[2].split('#').pop();
+            const instance = inference.facts.find(
+              (other) => other.triple[0] === fact.triple[2] && other.triple[1] === ':instance',
+            )?.triple[2];
+            return String(literal ? value : (instance ?? value)).replace(/^"|"$/gu, '');
+          })
+          .filter(Boolean);
+        if (parts.length) return parts.join(', ');
+      }
       const named = inference.facts.filter(
         (fact) =>
           fact.triple[0] === id &&

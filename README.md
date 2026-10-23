@@ -17,7 +17,7 @@ Tendora is a domain corpus engine: each project develops the narrow part of lang
 
 It answers only what its sources support. Answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it.
 
-The open problem is answering questions worded independently of a domain's statements. The demo's seventeen questions were written together with its statements. Three more domains were written as held-out benchmarks, two of them blind with a sealed answer key. Across their 25 questions the engine supports 0 of 18 warranted answers, keeps all 5 open or ambiguous questions open and supports nothing false. For 4 of the 18 it proposes a source connection that gives the expected answer once a person confirms it. These questions have since been [diagnosed in detail](docs/held-out-diagnosis.md), so they now serve as development sets; a claim about generalisation needs a new sealed domain:
+The open problem is answering questions worded independently of a domain's statements. The demo's seventeen questions were written together with its statements. Three more domains were written as held-out benchmarks, two of them blind with a sealed answer key. When first run, the engine supported 0 of their 18 warranted answers, kept all 5 open or ambiguous questions open and supported nothing false. These questions have since been [diagnosed in detail](docs/held-out-diagnosis.md) and now serve as development sets: the engine supports 4 of the 18, still with nothing false. A claim about generalisation needs a new sealed domain:
 
 ```sh
 node test/acceptance/independent-domain.mjs

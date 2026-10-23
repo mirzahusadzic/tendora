@@ -157,14 +157,20 @@ const sense = (predicate) => predicate.replace(/-\d+$/u, '').replaceAll('-', ' '
 /** What selecting a statement shows: why its reading is flagged, or how it was read. */
 function readingPreview(source, findings) {
   if (!source.graph) return ['No reading retained for this text yet.'];
-  if (findings.length)
-    return findings.map((finding) =>
-      finding.status === 'unlisted' && finding.evidence?.text
-        ? `“${finding.evidence.text}” is read in a sense the vocabulary does not list.`
-        : finding.status === 'unverified' && finding.description
-          ? `Read as “${finding.description}” (${sense(finding.predicate)}), but no word in the text says so.`
-          : (finding.reason ?? `Check how “${sense(finding.predicate)}” was read.`),
-    );
+  const repaired = (source.repairs ?? []).map(
+    (repair) => `Repaired: read ${repair.from}, used ${repair.to}. ${repair.reason}`,
+  );
+  if (repaired.length || findings.length)
+    return [
+      ...repaired,
+      ...findings.map((finding) =>
+        finding.status === 'unlisted' && finding.evidence?.text
+          ? `“${finding.evidence.text}” is read in a sense the vocabulary does not list.`
+          : finding.status === 'unverified' && finding.description
+            ? `Read as “${finding.description}” (${sense(finding.predicate)}), but no word in the text says so.`
+            : (finding.reason ?? `Check how “${sense(finding.predicate)}” was read.`),
+      ),
+    ];
   // The main clause: the root's own participants, not every nested relation.
   const top = source.graph.top;
   const main = relationMeaning(source.graph, { text: source.text }).relations.filter(({ edgeId }) =>
@@ -217,7 +223,17 @@ export function sourceStatements(
               ]
             : []),
           ...(support ? [support.text] : []),
-          ...(readable ? [source.graph ? (flagged ? 'Review' : 'Read') : 'Not read yet'] : []),
+          ...(readable
+            ? [
+                source.graph
+                  ? flagged
+                    ? 'Review'
+                    : source.repairs?.length
+                      ? 'Repaired'
+                      : 'Read'
+                  : 'Not read yet',
+              ]
+            : []),
         ],
         cellTones: {
           0: 'input',
@@ -313,6 +329,14 @@ export function journeySection({ project, run, input, result, recording }, place
         ['Answer', answer.text, 'located'],
         ...(answer.readAs === 'requirement'
           ? [['Read as', 'A source says it must be done; that answers “should”.']]
+          : []),
+        ...(answer.readAs === 'shared-wording'
+          ? [
+              [
+                'Read as',
+                `The question and a source both say “${answer.sharedWording.join('”, “')}”; read as in the source.`,
+              ],
+            ]
           : []),
         ...(answer.dependsOn ?? answer.qualifications ?? []).map((text) => [
           'Depends on',

@@ -92,6 +92,64 @@ function givenValues(text) {
   if (/\bmidnight\b/iu.test(text)) times.add(clock(0));
   return { numbers, times };
 }
+/** Replace a number or clock time the text does not give with the one it
+ * does, when the text leaves exactly one: “sixty-four percent” read as 60.4
+ * becomes 64. Anything less certain stays as acquired, for review.
+ */
+export function repairReading(text, graph, checks) {
+  const given = givenValues(text),
+    repairs = [];
+  const literalValue = (node) => String(node.literal).replace(/^"|"$/gu, '');
+  for (const [kind, values, key] of [
+    ['A number', given.numbers, (value) => Number(value)],
+    [
+      'A clock time',
+      given.times,
+      (value) => clock(...value.split(':').map((v, i) => (i ? v : Number(v)))),
+    ],
+  ]) {
+    const wrong = checks.filter((c) => c.status === 'unattested' && c.description === kind);
+    if (wrong.length !== 1) continue;
+    const used = new Set(
+      graph.nodes
+        .filter((n) => n.literal !== undefined && n.id !== wrong[0].nodeId)
+        .map((n) => literalValue(n))
+        .filter((value) =>
+          (kind === 'A number' ? /^\d+(?:\.\d+)?$/u : /^\d{1,2}:\d{2}$/u).test(value),
+        )
+        .map(key),
+    );
+    const left = [...values].filter((value) => !used.has(value));
+    if (left.length !== 1) continue;
+    const node = graph.nodes.find((n) => n.id === wrong[0].nodeId);
+    const to = String(left[0]);
+    repairs.push({
+      nodeId: node.id,
+      from: literalValue(node),
+      to,
+      reason: `The text gives ${to}, not ${literalValue(node)}.`,
+    });
+  }
+  if (!repairs.length) return { graph, repairs };
+  const changed = new Map(repairs.map((r) => [r.nodeId, r.to]));
+  return {
+    graph: {
+      ...graph,
+      nodes: graph.nodes.map((n) =>
+        changed.has(n.id)
+          ? {
+              ...n,
+              concept: changed.get(n.id),
+              literal: String(n.literal).startsWith('"')
+                ? JSON.stringify(changed.get(n.id))
+                : changed.get(n.id),
+            }
+          : n,
+      ),
+    },
+    repairs,
+  };
+}
 const regularForms = (word) => {
   const forms = new Set([word, word + 's', word + 'ed', word + 'ing']);
   if (/(?:s|x|z|ch|sh|o)$/u.test(word)) forms.add(word + 'es');

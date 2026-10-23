@@ -171,6 +171,14 @@ export function inquirySections(
       ...(answer.readAs === 'requirement'
         ? [['Read as', 'A source says it must be done; that answers “should”.']]
         : []),
+      ...(answer.readAs === 'shared-wording'
+        ? [
+            [
+              'Read as',
+              `The question and a source both say “${answer.sharedWording.join('”, “')}”; read as in the source.`,
+            ],
+          ]
+        : []),
       ...(answer.dependsOn ?? answer.qualifications ?? []).map((q) => ['Qualification', q]),
     ]),
     ...(run?.case ? [['Case', run.case, 'input']] : []),

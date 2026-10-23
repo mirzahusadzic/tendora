@@ -70,11 +70,80 @@ export function checkAnswer(project, input, result, options) {
         }
       : {}),
   };
-  const answer = evaluateAnswer(
+  const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
+  const answer = evaluateAnswer(recording, knowledge, options);
+  answer.clarifications = buildClarifications(project, input, result, answer);
+  return settleSharedWording(recording, knowledge, options, input, answer) ?? answer;
+}
+
+/** A proposal whose source uses the question's own words, read differently,
+ * needs no person: the engine reads the question's words as in that source.
+ * The connection holds for this check only and is cited with the answer.
+ */
+// Words that frame a question but carry no content of their own. Negation and
+// modal words are not here: they must match.
+const framing = new Set(
+  'a an the of for to in on at by from with as and or but is are was were be been being do does did have has had who whom whose what which where when why how that this these those it its'.split(
+    ' ',
+  ),
+);
+const contentWords = (text) =>
+  (
+    String(text)
+      .toLowerCase()
+      .match(/[\p{L}\p{N}]+/gu) ?? []
+  ).filter((w) => !framing.has(w));
+const sameWord = (a, b) => {
+  let n = 0;
+  while (n < a.length && a[n] === b[n]) n++;
+  return a === b || n >= Math.max(4, Math.min(a.length, b.length) - 3);
+};
+/** The question says nothing the source does not: every content word of the
+ * question occurs in the source, so only the reading of those words differs. */
+const withinSource = (question, source) => {
+  const available = contentWords(source);
+  return contentWords(question).every((word) => available.some((other) => sameWord(word, other)));
+};
+
+export function settleSharedWording(recording, knowledge, options, input, answer) {
+  const same = (answer.clarifications ?? []).filter(
+    (candidate) =>
+      candidate.sharedWording && withinSource(recording.inquiry.text, candidate.source.text),
+  );
+  if (answer.status !== 'open' || !same.length) return null;
+  const rules = same.map((candidate) => ({
+    ...candidate.rule,
+    baseOnly: true,
+    id: `shared-wording:${candidate.id}`,
+    scopePlacementId: input.scopePlacementId,
+    applicationSourceReferences: [candidate.source],
+    attribution: `The question and the source both say “${candidate.sharedWording}”; read as in the source.`,
+    sources: [
+      {
+        text: candidate.source.text,
+        nodeId: candidate.source.nodeId,
+        revision: candidate.source.revision,
+      },
+    ],
+    origin: { kind: 'engine-shared-wording', candidateId: candidate.id },
+  }));
+  const settled = evaluateAnswer(
     recording,
-    options?.knowledge ?? knowledgeSnapshot(project.data),
+    { ...knowledge, rules: [...(knowledge.rules ?? []), ...rules] },
     options,
   );
-  answer.clarifications = buildClarifications(project, input, result, answer);
-  return answer;
+  if (!['supported', 'conditional'].includes(settled.status) || !settled.answers.length)
+    return null;
+  const wording = new Map(rules.map((rule, i) => [rule.id, same[i].sharedWording]));
+  // Several proposals from one source can settle the same answer; report it once.
+  const answers = new Map();
+  for (const item of settled.answers) {
+    const key = JSON.stringify([item.text, item.conditional, [...item.sourceIds].sort()]);
+    const used = item.ruleIds.filter((id) => wording.has(id)).map((id) => wording.get(id));
+    const marked = used.length
+      ? { ...item, readAs: 'shared-wording', sharedWording: [...new Set(used)] }
+      : item;
+    if (!answers.has(key)) answers.set(key, marked);
+  }
+  return { ...settled, answers: [...answers.values()], clarifications: [] };
 }

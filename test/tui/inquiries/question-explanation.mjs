@@ -444,7 +444,7 @@ const repairs = {
   ],
   edges: [{ id: 'e', from: 'r', role: ':ARG0', to: 's' }],
 };
-const [plain, flagged, unread, timed] = sourceStatements(
+const [plain, flagged, unread, timed, repairedTime] = sourceStatements(
   [
     { id: 'a', text: 'The steward repairs.', graph: repairs },
     {
@@ -477,6 +477,12 @@ const [plain, flagged, unread, timed] = sourceStatements(
         ],
       },
     },
+    {
+      id: 'e',
+      text: 'The van collects crates at four in the afternoon.',
+      graph: repairs,
+      repairs: [{ from: '14:00', to: '16:00', reason: 'The text gives 16:00, not 14:00.' }],
+    },
   ],
   {},
 ).entries.map((entry) => entry.preview);
@@ -486,6 +492,9 @@ assert.deepEqual(flagged, [
 ]);
 assert.deepEqual(unread, ['No reading retained for this text yet.']);
 assert.deepEqual(timed, ['The reading has 14:00, but the text gives no such time.']);
+assert.deepEqual(repairedTime, [
+  'Repaired: read 14:00, used 16:00. The text gives 16:00, not 14:00.',
+]);
 console.log(
   'ok open questions explain global evidence gaps, preserve diagnostic states and expose related sources without claiming an answer; selected statements preview their reading',
 );

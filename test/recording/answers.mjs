@@ -111,6 +111,29 @@ for (const [question, modal, role, reason] of [
   assert.equal(result.status, 'open', reason);
   assert.equal(result.answers.length, 0, reason);
 }
+// A date or time answer reads by its parts, not as "date-entity".
+const collection = graph(
+  'collect',
+  'c',
+  { c: 'collect-01', v: 'van', d: 'date-entity', p: 'afternoon' },
+  [
+    ['c', ':ARG0', 'v'],
+    ['c', ':time', 'd'],
+    ['d', ':dayperiod', 'p'],
+  ],
+);
+collection.nodes.push({ id: 't', concept: '16:00', literal: '"16:00"' });
+collection.edges.push({ id: 'time', from: 'd', role: ':time', to: 't' });
+const when = graph('when', 'c', { c: 'collect-01', v: 'van', u: 'amr-unknown' }, [
+  ['c', ':ARG0', 'v'],
+  ['c', ':time', 'u'],
+]);
+assert.deepEqual(
+  evaluateAnswer(
+    record(when, [{ text: 'The van collects at four in the afternoon.', graph: collection }]),
+  ).answers.map((answer) => answer.text),
+  ['16:00, afternoon'],
+);
 const alias = {
   id: 'mapping',
   name: 'Authored design equivalence',

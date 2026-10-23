@@ -120,7 +120,9 @@ try {
 
   const expected = {
     simulation: 'supported',
-    receipt: 'open',
+    // The question repeats the source's words, read differently; the engine
+    // reads them as in the source (shared wording).
+    receipt: 'supported',
     causation: 'open',
     refusal: 'supported',
     probe: 'conditional',
@@ -130,7 +132,7 @@ try {
     'modal-positive': 'open',
     'modal-preserved': 'supported',
     'wrong-role': 'open',
-    recognition: 'open',
+    recognition: 'supported', // Shared wording: “recognizes intention”.
     authority: 'supported',
     pipeline: 'supported',
     effects: 'open',

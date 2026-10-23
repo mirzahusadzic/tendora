@@ -2,7 +2,7 @@
 import { prepareGraphs, normalizedRoleProfile } from '../models/graph-preparation.mjs';
 import { validateGraph } from '../amr/revision.mjs';
 import { propbankAuditor } from '../models/propbank.mjs';
-import { lexicalAuditProfile } from '../amr/lexical-audit.mjs';
+import { lexicalAuditProfile, repairReading } from '../amr/lexical-audit.mjs';
 import { acquiredTexts } from '../project/storage/acquisitions.mjs';
 
 /** Inspect an existing exact-text acquisition without acquisition or reasoning. */
@@ -72,7 +72,14 @@ export async function prepareInquiry(
     let predicates = 0;
     for (const record of auditable) {
       signal?.throwIfAborted();
-      const result = audit(record.text, record.graph);
+      let result = audit(record.text, record.graph);
+      // A value the text settles is repaired here; the acquisition stays as read.
+      const repaired = repairReading(record.text, record.graph, result.checks);
+      if (repaired.repairs.length) {
+        record.graph = validateGraph(repaired.graph);
+        record.repairs = repaired.repairs;
+        result = audit(record.text, record.graph);
+      }
       record.lexicalAudit = result;
       predicates += result.checks.length;
       if (result.findings.length)
@@ -91,6 +98,14 @@ export async function prepareInquiry(
       predicates,
       elapsedMs: performance.now() - started,
       items,
+      repairs: auditable
+        .filter((record) => record.repairs)
+        .map((record) => ({
+          inputId: record.id,
+          kind: record.kind,
+          text: record.text,
+          repairs: record.repairs,
+        })),
     };
   }
   return { records, openings, lexicalAudit };

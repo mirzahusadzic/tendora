@@ -12,6 +12,7 @@ import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 
 // Raise a floor when the engine improves; never lower it to make a change pass.
+// reachableFloor counts answers supported automatically or one confirmation away.
 const benchmarks = [
   {
     name: 'independent-domain',
@@ -19,8 +20,8 @@ const benchmarks = [
     acquisitions: 'test/support/independent-domain-acquisitions.json',
     fixtures: ['test/support/evaluation-archive'],
     questions: 5,
-    warrantedFloor: 0,
-    confirmationFloor: 2,
+    warrantedFloor: 2,
+    reachableFloor: 2,
     confirmationFalseSupportCeiling: 0,
   },
   {
@@ -29,8 +30,8 @@ const benchmarks = [
     acquisitions: 'test/support/blind-domain-acquisitions.json',
     fixtures: ['test/support/blind-archive-water', 'test/support/blind-bracken'],
     questions: 20,
-    warrantedFloor: 0,
-    confirmationFloor: 2,
+    warrantedFloor: 2,
+    reachableFloor: 2,
     // “Who had collected the key?” is offered “The freezer van collects booked
     // crates”: a different-word proposal the author must reject.
     confirmationFalseSupportCeiling: 1,
@@ -130,9 +131,12 @@ for (const benchmark of benchmarks) {
     summary.warrantedPassed >= benchmark.warrantedFloor,
     `${benchmark.name}: warranted answers regressed: ${summary.warrantedPassed} < ${benchmark.warrantedFloor}`,
   );
+  // Answers supported automatically or one confirmation away; an answer moving
+  // from the second to the first keeps this total.
+  const reachable = summary.warrantedPassed + summary.oneConfirmationAway;
   assert(
-    summary.oneConfirmationAway >= benchmark.confirmationFloor,
-    `${benchmark.name}: answers one confirmation away regressed: ${summary.oneConfirmationAway} < ${benchmark.confirmationFloor}`,
+    reachable >= benchmark.reachableFloor,
+    `${benchmark.name}: reachable answers regressed: ${reachable} < ${benchmark.reachableFloor}`,
   );
   assert(
     summary.confirmationFalseSupport <= benchmark.confirmationFalseSupportCeiling,

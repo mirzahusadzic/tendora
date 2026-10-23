@@ -273,13 +273,19 @@ try {
   });
   await ask(location.question.text, 'supported');
   const actor = 'Who recognizes intention in the resulting design?';
-  await ask(actor, 'open');
+  const which = 'Which person recognizes intention in the resulting design?';
+  // The question repeats its source's words, so the engine reads them as in the
+  // source; a question that says more ("person") waits for an authored perspective.
+  const settled = await ask(actor, 'supported');
+  assert.deepEqual(texts(settled), ['programmer']);
+  assert.equal(settled.answer.answers[0].readAs, 'shared-wording');
+  await ask(which, 'open');
   const perspective = await develop(actor, '', {
     contributionId: main.id,
     perspective: true,
     basisResponseId: main.responses[0].id,
   });
-  for (const q of [actor, 'Which person recognizes intention in the resulting design?']) {
+  for (const q of [actor, which]) {
     const answer = await ask(q, 'supported');
     assert.deepEqual(texts(answer), ['programmer']);
     assert(answer.answer.answers[0].ruleIds.length);
@@ -290,7 +296,8 @@ try {
     project,
     withdrawContributionPart(project.data, main.id, perspective.wordings[0].id),
   );
-  await ask(actor, 'open');
+  await ask(which, 'open');
+  assert.equal((await ask(actor, 'supported')).answer.answers[0].readAs, 'shared-wording');
   await ask(main.question.text, 'supported');
   project = await saveProject(project, withPerspective); // restore the prior authored revision
   await ask(actor, 'supported');

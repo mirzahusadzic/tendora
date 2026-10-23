@@ -7,18 +7,19 @@ evidence, offline and with the frozen acquisitions unchanged. After this
 diagnosis the benchmarks serve as development sets; their behaviour is
 recorded in `test/support/development-snapshot.json`.
 
-| Where it is lost                                                      | Questions | One confirmation away |
-| --------------------------------------------------------------------- | --------- | --------------------- |
-| The same words are read differently in the question and the source    | 5         | 4                     |
-| Different words for the same meaning                                  | 3         | 0                     |
-| The question's own form: "should", "if …"                             | 2         | 0                     |
-| A compound question with a part no source reaches                     | 1         | 0                     |
-| Case reasoning: rules applied to circumstances, codes, numbers, times | 7         | 0                     |
+| Where it is lost                                                      | Questions | Now answered |
+| --------------------------------------------------------------------- | --------- | ------------ |
+| The same words are read differently in the question and the source    | 5         | 4            |
+| Different words for the same meaning                                  | 3         | 0            |
+| The question's own form: "should", "if …"                             | 2         | 0            |
+| A compound question with a part no source reaches                     | 1         | 0            |
+| Case reasoning: rules applied to circumstances, codes, numbers, times | 7         | 0            |
 
-"One confirmation away" means the engine already proposes a source connection
-for the question, and confirming that one proposal, on a disposable copy,
-gives the expected answer and evidence. The benchmark answers stay
-unrepaired; the evaluator reports these trials separately.
+The four answers in the first group were first one confirmation away: the
+engine proposed the right source connection and confirming it gave the
+expected answer. They are now answered without a person (see below). The
+evaluator still confirms every remaining proposal on a disposable copy and
+reports those trials separately.
 
 ## The groups
 
@@ -63,7 +64,7 @@ for review:
 - When a proposal's source shares the question's words but was read
   differently, the gap and the confirmation say so: "A source says “crates
   scheduled for freezing” too, but each was read differently." This holds
-  for all four answers one confirmation away, and for no other proposal.
+  for the four answers that were one confirmation away, and for no other proposal.
   Proposals in scope are shown, and can be confirmed, at the role the
   question was asked at.
 - Questions with "should" follow three rules. A requirement ("must") answers
@@ -73,6 +74,23 @@ for review:
   statement instead. Neither development question with "should" changes, as
   both also need other capabilities (a case reference, different words, a
   numeric comparison).
+- The engine now settles two kinds of reading error itself, and records how:
+  - a number or clock time the text settles is repaired ("sixty-four
+    percent" read as 60.4 is used as 64; "four in the afternoon" read as
+    14:00 is used as 16:00). The acquisition stays as read; the statement
+    shows "Repaired" and why.
+  - when a question uses only its source's own words and the two were read
+    differently, the question is read as in the source. The answer says so
+    ("The question and a source both say 'crates scheduled for freezing'").
+    This answers the four questions above. On the earlier frozen
+    two-domain fixtures, which were not part of this diagnosis, it answers
+    two more questions correctly ("receipt", "programmer"). A question that
+    shares some words but says more ("Who shapes digital work through the
+    intelligence?") still waits for a person; answering it would have been
+    false support.
+- Role errors are not repaired. An action in a role PropBank describes as an
+  agent looked like a signal, but both such cases in 294 stored readings
+  were correct readings.
 - One proposal remains that would give a wrong answer if confirmed:
   "Who had collected the key?" is offered "The freezer van collects booked
   crates". It maps one participant onto a different one and is left for the
