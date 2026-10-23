@@ -90,6 +90,26 @@ try {
   };
   const keptText = 'The registry keeps public commitments.';
   assert.equal(answerLabels(kept, keptText, audit(keptText, kept).checks).c, 'commitments');
+  // A predicate's own word names an abstract participant only as a noun.
+  const opens = (text) => {
+    const graph = {
+      top: 'o',
+      nodes: [
+        { id: 'o', concept: 'open-01' },
+        { id: 't', concept: 'thing' },
+        { id: 'q', concept: 'question-01' },
+        { id: 'd', concept: 'door' },
+      ],
+      edges: [
+        { id: 'e0', from: 'o', role: ':ARG0', to: 't' },
+        { id: 'e1', from: 'q', role: ':ARG1', to: 't' },
+        { id: 'e2', from: 'o', role: ':ARG1', to: 'd' },
+      ],
+    };
+    return abstractLabels(graph, text, audit(text, graph).checks).t;
+  };
+  assert.equal(opens('A question opens the door.'), 'question');
+  assert.equal(opens('What they questioned opens the door.'), undefined);
   // A person who holds a role reads by that role's word.
   const holder = {
     top: 'a',

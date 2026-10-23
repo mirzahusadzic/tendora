@@ -1,3 +1,6 @@
+const determiners = new Set(
+  'a an the this these those its their his her our your my every each any some no'.split(' '),
+);
 /** Surface labels for display only; predicate concepts and roles remain unchanged. */
 export function labelReading(graph, text, checks = []) {
   const lexical = new Map(checks.filter((c) => c.evidence).map((c) => [c.nodeId, c.evidence]));
@@ -23,10 +26,20 @@ export function labelReading(graph, text, checks = []) {
       );
       if (word) labels.set(node.id, word);
       else {
+        // A predicate's own surface word names the participant only as a
+        // noun: right after a determiner (“a question”), never as a verb
+        // (“the thing that shaped it”).
+        const determined = (evidence) =>
+          determiners.has(
+            text
+              .slice(0, evidence.start)
+              .match(/([\p{L}]+)\s+$/u)?.[1]
+              ?.toLowerCase(),
+          );
         const descriptors = graph.edges
           .filter((e) => e.to === node.id && /^:ARG[01]$/u.test(e.role))
           .map((e) => lexical.get(e.from))
-          .filter((e) => e && e.method !== 'surface');
+          .filter((e) => e && (e.method !== 'surface' || determined(e)));
         if (descriptors.length === 1) labels.set(node.id, descriptors[0].text);
       }
     }
