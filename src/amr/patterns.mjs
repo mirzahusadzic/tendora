@@ -3,6 +3,40 @@ import { claimRoot } from './claims.mjs';
 import { clauseFragments } from './clause-fragments.mjs';
 export { claimRoot } from './claims.mjs';
 
+// recommend-01 roles in obligate-01 terms: the recommendation is the
+// obligation, the one it is recommended to is the obligated agent.
+const requirementRoles = { ':ARG0': ':ARG0', ':ARG1': ':ARG2', ':ARG2': ':ARG1' };
+/** “Should” asked as “must”: a requirement answers a recommendation, never the
+ * reverse. Null when the question asks no “should”, or one with roles that
+ * have no requirement counterpart.
+ */
+export function requirementReading(query) {
+  const asked = new Set(
+    query.nodes.filter((node) => node.concept === 'recommend-01').map((node) => node.id),
+  );
+  if (!asked.size) return null;
+  // The yes/no marker carries over; a negated “should” (not recommended) is not
+  // a negated requirement, so it has no requirement reading.
+  const marker = (edge) =>
+    edge.role === ':polarity' &&
+    query.nodes.find((node) => node.id === edge.to)?.concept === 'amr-unknown';
+  if (
+    query.edges.some(
+      (edge) => asked.has(edge.from) && !(edge.role in requirementRoles) && !marker(edge),
+    )
+  )
+    return null;
+  return {
+    ...query,
+    nodes: query.nodes.map((node) =>
+      asked.has(node.id) ? { ...node, concept: 'obligate-01' } : node,
+    ),
+    edges: query.edges.map((edge) =>
+      asked.has(edge.from) && !marker(edge) ? { ...edge, role: requirementRoles[edge.role] } : edge,
+    ),
+  };
+}
+
 /** Query-only repair of reused answer slots in explicit coordination. */
 export function normalizeCoordinatedUnknowns(query, questionText = '') {
   const unchanged = { graph: query };

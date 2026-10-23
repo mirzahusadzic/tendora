@@ -4,6 +4,14 @@ const words = (value) =>
     .replace(/-\d+$/u, '')
     .replaceAll('-', ' ');
 const reference = new Set(['this', 'that', 'these', 'those']);
+// Modal operators read in the words a question uses for them.
+const modalWords = { 'recommend-01': 'should', 'obligate-01': 'must' };
+const modalReasons = {
+  'recommend-01':
+    'No source says this should or must be done; a statement of what is done does not establish it.',
+  'obligate-01':
+    'No source says this must be done; what should or may be done does not establish it.',
+};
 
 export function questionExplanation(run, relations) {
   const openings = run.answer?.openings ?? run.openings ?? [];
@@ -45,7 +53,7 @@ export function questionExplanation(run, relations) {
     const referent = item.role === ':mod' && reference.has(item.to);
     const needed =
       item.kind === 'assertion' || item.kind === 'concept'
-        ? `“${words(item.concept)}”`
+        ? `“${modalWords[item.concept] ?? words(item.concept)}”`
         : referent
           ? `“${words(item.to)} ${words(item.from)}”`
           : relationship
@@ -65,6 +73,8 @@ export function questionExplanation(run, relations) {
         'The retained reading has no relationship or participant type to constrain an answer.';
     else if (item.state === 'unresolved')
       reason = 'The check did not resolve this connection. It is not established as missing.';
+    else if (item.kind === 'assertion' && item.state === 'unmatched' && modalReasons[item.concept])
+      reason = modalReasons[item.concept];
     else if (item.kind === 'assertion')
       reason =
         item.state === 'unasserted'

@@ -20,7 +20,11 @@ const before = structuredClone(run);
 const explanation = questionExplanation(run, relations);
 const needs = explanation.table.entries.map((entry) => entry.cells[0]);
 assert.equal(needs.length, 3, 'One missing assertion, one relationship and one reference');
-assert(needs.includes('“recommend”'));
+assert(needs.includes('“should”'), 'A modal is named in the question’s words');
+assert.match(
+  explanation.table.entries.find((entry) => entry.cells[0] === '“should”').cells[1],
+  /No source says this should or must be done/u,
+);
 assert(needs.includes('handle / thing handled: ticket'));
 assert(needs.includes('“this ticket”'));
 assert.doesNotMatch(
@@ -28,7 +32,7 @@ assert.doesNotMatch(
   /team|answer sought/u,
   'Matched parts are not reported absent',
 );
-assert.equal(needs.filter((need) => need.includes('recommend')).length, 1, 'No duplicate gap');
+assert.equal(needs.filter((need) => need.includes('should')).length, 1, 'No duplicate gap');
 assert.deepEqual(run, before, 'Rendering cannot change the saved assessment');
 
 // A relation whose words a source shares, read differently, is not missing.

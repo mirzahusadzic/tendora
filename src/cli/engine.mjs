@@ -62,6 +62,8 @@ try {
         lines.push(
           (run.answer?.answers.includes(answer) ? 'Answer: ' : 'Candidate: ') + answer.text,
         );
+        if (answer.readAs === 'requirement')
+          lines.push('  A source says it must be done; that answers "should".');
         for (const detail of answer.dependsOn ?? answer.qualifications ?? [])
           lines.push('  ' + detail);
         if (values.explain) {

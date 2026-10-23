@@ -6292,9 +6292,7 @@
         {
           "id": "65806045-35f9-43be-8754-948b2cf99083",
           "name": "Login failure (validation)",
-          "passages": [
-            "My login has failed three times."
-          ]
+          "passages": ["My login has failed three times."]
         }
       ]
     },
@@ -6504,9 +6502,7 @@
                 "nodes": {
                   "literal:prepared:1": {
                     "nodes": [],
-                    "edges": [
-                      "e1"
-                    ]
+                    "edges": ["e1"]
                   }
                 },
                 "edges": {}
@@ -6553,9 +6549,7 @@
                 "nodes": {
                   "literal:prepared:3": {
                     "nodes": [],
-                    "edges": [
-                      "e3"
-                    ]
+                    "edges": ["e3"]
                   }
                 },
                 "edges": {}
@@ -6659,9 +6653,7 @@
                 "nodes": {
                   "literal:prepared:1": {
                     "nodes": [],
-                    "edges": [
-                      "e1"
-                    ]
+                    "edges": ["e1"]
                   }
                 },
                 "edges": {}
@@ -6813,9 +6805,7 @@
                 "nodes": {
                   "literal:prepared:1": {
                     "nodes": [],
-                    "edges": [
-                      "e1"
-                    ]
+                    "edges": ["e1"]
                   }
                 },
                 "edges": {}
@@ -6862,9 +6852,7 @@
                 "nodes": {
                   "literal:prepared:3": {
                     "nodes": [],
-                    "edges": [
-                      "e3"
-                    ]
+                    "edges": ["e3"]
                   }
                 },
                 "edges": {}
@@ -6923,158 +6911,38 @@
               "@text",
               "The billing team handles payout failures and payment processing while account team handles login and account access."
             ],
-            [
-              "?handling",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?handling",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "?handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?team",
-              ":instance",
-              "team"
-            ],
-            [
-              "?service",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?service",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?service",
-              ":instance",
-              "bill-01"
-            ],
-            [
-              "?handling",
-              ":ARG1",
-              "?objects"
-            ],
-            [
-              "?objects",
-              ":instance",
-              "and"
-            ],
-            [
-              "?objects",
-              ":op1",
-              "?object"
-            ],
-            [
-              "?object",
-              ":instance",
-              "fail-01"
-            ],
-            [
-              "?object",
-              ":ARG1",
-              "?activity"
-            ],
-            [
-              "?activity",
-              ":instance",
-              "?category"
-            ],
-            [
-              "@case",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?failure",
-              ":instance",
-              "fail-01"
-            ],
-            [
-              "?failure",
-              ":ARG1",
-              "?actual"
-            ],
-            [
-              "?actual",
-              ":instance",
-              "?category"
-            ]
+            ["?handling", "@source", "?policy"],
+            ["?handling", "@asserted", "true"],
+            ["?handling", ":instance", "handle-01"],
+            ["?handling", ":ARG0", "?team"],
+            ["?team", ":instance", "team"],
+            ["?service", ":ARG0", "?team"],
+            ["?service", "@source", "?policy"],
+            ["?service", ":instance", "bill-01"],
+            ["?handling", ":ARG1", "?objects"],
+            ["?objects", ":instance", "and"],
+            ["?objects", ":op1", "?object"],
+            ["?object", ":instance", "fail-01"],
+            ["?object", ":ARG1", "?activity"],
+            ["?activity", ":instance", "?category"],
+            ["@case", "@source", "?case"],
+            ["?failure", "@source", "?case"],
+            ["?failure", "@asserted", "true"],
+            ["?failure", ":instance", "fail-01"],
+            ["?failure", ":ARG1", "?actual"],
+            ["?actual", ":instance", "?category"]
           ],
           "then": [
-            [
-              "$recommend",
-              ":instance",
-              "recommend-01"
-            ],
-            [
-              "$recommend",
-              ":ARG1",
-              "$handling"
-            ],
-            [
-              "$handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "$handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "$handling",
-              ":ARG1",
-              "$ticket"
-            ],
-            [
-              "$ticket",
-              ":instance",
-              "ticket"
-            ],
-            [
-              "$ticket",
-              ":mod",
-              "$this"
-            ],
-            [
-              "$this",
-              ":instance",
-              "this"
-            ],
-            [
-              "?team",
-              ":mod",
-              "?service"
-            ],
-            [
-              "$recommend",
-              "@asserted",
-              "conditional"
-            ],
+            ["$recommend", ":instance", "recommend-01"],
+            ["$recommend", ":ARG1", "$handling"],
+            ["$handling", ":instance", "handle-01"],
+            ["$handling", ":ARG0", "?team"],
+            ["$handling", ":ARG1", "$ticket"],
+            ["$ticket", ":instance", "ticket"],
+            ["$ticket", ":mod", "$this"],
+            ["$this", ":instance", "this"],
+            ["?team", ":mod", "?service"],
+            ["$recommend", "@asserted", "conditional"],
             [
               "$recommend",
               "@qualification",
@@ -7099,148 +6967,36 @@
               "@text",
               "The billing team handles payout failures and payment processing while account team handles login and account access."
             ],
-            [
-              "?handling",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?handling",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "?handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?team",
-              ":instance",
-              "team"
-            ],
-            [
-              "?service",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?service",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?service",
-              ":instance",
-              "account-01"
-            ],
-            [
-              "?handling",
-              ":ARG1",
-              "?objects"
-            ],
-            [
-              "?objects",
-              ":instance",
-              "and"
-            ],
-            [
-              "?objects",
-              ":op1",
-              "?object"
-            ],
-            [
-              "?object",
-              ":instance",
-              "log-on-02"
-            ],
-            [
-              "@case",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?failure",
-              ":instance",
-              "fail-01"
-            ],
-            [
-              "?failure",
-              ":ARG1",
-              "?actual"
-            ],
-            [
-              "?actual",
-              ":instance",
-              "log-on-02"
-            ]
+            ["?handling", "@source", "?policy"],
+            ["?handling", "@asserted", "true"],
+            ["?handling", ":instance", "handle-01"],
+            ["?handling", ":ARG0", "?team"],
+            ["?team", ":instance", "team"],
+            ["?service", ":ARG0", "?team"],
+            ["?service", "@source", "?policy"],
+            ["?service", ":instance", "account-01"],
+            ["?handling", ":ARG1", "?objects"],
+            ["?objects", ":instance", "and"],
+            ["?objects", ":op1", "?object"],
+            ["?object", ":instance", "log-on-02"],
+            ["@case", "@source", "?case"],
+            ["?failure", "@source", "?case"],
+            ["?failure", "@asserted", "true"],
+            ["?failure", ":instance", "fail-01"],
+            ["?failure", ":ARG1", "?actual"],
+            ["?actual", ":instance", "log-on-02"]
           ],
           "then": [
-            [
-              "$recommend",
-              ":instance",
-              "recommend-01"
-            ],
-            [
-              "$recommend",
-              ":ARG1",
-              "$handling"
-            ],
-            [
-              "$handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "$handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "$handling",
-              ":ARG1",
-              "$ticket"
-            ],
-            [
-              "$ticket",
-              ":instance",
-              "ticket"
-            ],
-            [
-              "$ticket",
-              ":mod",
-              "$this"
-            ],
-            [
-              "$this",
-              ":instance",
-              "this"
-            ],
-            [
-              "?team",
-              ":mod",
-              "?service"
-            ],
-            [
-              "$recommend",
-              "@asserted",
-              "conditional"
-            ],
+            ["$recommend", ":instance", "recommend-01"],
+            ["$recommend", ":ARG1", "$handling"],
+            ["$handling", ":instance", "handle-01"],
+            ["$handling", ":ARG0", "?team"],
+            ["$handling", ":ARG1", "$ticket"],
+            ["$ticket", ":instance", "ticket"],
+            ["$ticket", ":mod", "$this"],
+            ["$this", ":instance", "this"],
+            ["?team", ":mod", "?service"],
+            ["$recommend", "@asserted", "conditional"],
             [
               "$recommend",
               "@qualification",
@@ -7265,158 +7021,38 @@
               "@text",
               "The billing team handles payout failures and payment processing while account team handles login and account access."
             ],
-            [
-              "?handling",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?handling",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "?handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?team",
-              ":instance",
-              "team"
-            ],
-            [
-              "?service",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?service",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?service",
-              ":instance",
-              "bill-01"
-            ],
-            [
-              "?handling",
-              ":ARG1",
-              "?objects"
-            ],
-            [
-              "?objects",
-              ":instance",
-              "and"
-            ],
-            [
-              "?objects",
-              ":op2",
-              "?object"
-            ],
-            [
-              "?object",
-              ":instance",
-              "fail-01"
-            ],
-            [
-              "?object",
-              ":ARG1",
-              "?activity"
-            ],
-            [
-              "?activity",
-              ":instance",
-              "?category"
-            ],
-            [
-              "@case",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?failure",
-              ":instance",
-              "fail-01"
-            ],
-            [
-              "?failure",
-              ":ARG1",
-              "?actual"
-            ],
-            [
-              "?actual",
-              ":instance",
-              "?category"
-            ]
+            ["?handling", "@source", "?policy"],
+            ["?handling", "@asserted", "true"],
+            ["?handling", ":instance", "handle-01"],
+            ["?handling", ":ARG0", "?team"],
+            ["?team", ":instance", "team"],
+            ["?service", ":ARG0", "?team"],
+            ["?service", "@source", "?policy"],
+            ["?service", ":instance", "bill-01"],
+            ["?handling", ":ARG1", "?objects"],
+            ["?objects", ":instance", "and"],
+            ["?objects", ":op2", "?object"],
+            ["?object", ":instance", "fail-01"],
+            ["?object", ":ARG1", "?activity"],
+            ["?activity", ":instance", "?category"],
+            ["@case", "@source", "?case"],
+            ["?failure", "@source", "?case"],
+            ["?failure", "@asserted", "true"],
+            ["?failure", ":instance", "fail-01"],
+            ["?failure", ":ARG1", "?actual"],
+            ["?actual", ":instance", "?category"]
           ],
           "then": [
-            [
-              "$recommend",
-              ":instance",
-              "recommend-01"
-            ],
-            [
-              "$recommend",
-              ":ARG1",
-              "$handling"
-            ],
-            [
-              "$handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "$handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "$handling",
-              ":ARG1",
-              "$ticket"
-            ],
-            [
-              "$ticket",
-              ":instance",
-              "ticket"
-            ],
-            [
-              "$ticket",
-              ":mod",
-              "$this"
-            ],
-            [
-              "$this",
-              ":instance",
-              "this"
-            ],
-            [
-              "?team",
-              ":mod",
-              "?service"
-            ],
-            [
-              "$recommend",
-              "@asserted",
-              "conditional"
-            ],
+            ["$recommend", ":instance", "recommend-01"],
+            ["$recommend", ":ARG1", "$handling"],
+            ["$handling", ":instance", "handle-01"],
+            ["$handling", ":ARG0", "?team"],
+            ["$handling", ":ARG1", "$ticket"],
+            ["$ticket", ":instance", "ticket"],
+            ["$ticket", ":mod", "$this"],
+            ["$this", ":instance", "this"],
+            ["?team", ":mod", "?service"],
+            ["$recommend", "@asserted", "conditional"],
             [
               "$recommend",
               "@qualification",
@@ -7441,148 +7077,36 @@
               "@text",
               "The billing team handles payout failures and payment processing while account team handles login and account access."
             ],
-            [
-              "?handling",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?handling",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "?handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?team",
-              ":instance",
-              "team"
-            ],
-            [
-              "?service",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "?service",
-              "@source",
-              "?policy"
-            ],
-            [
-              "?service",
-              ":instance",
-              "account-01"
-            ],
-            [
-              "?handling",
-              ":ARG1",
-              "?objects"
-            ],
-            [
-              "?objects",
-              ":instance",
-              "and"
-            ],
-            [
-              "?objects",
-              ":op2",
-              "?object"
-            ],
-            [
-              "?object",
-              ":instance",
-              "log-on-02"
-            ],
-            [
-              "@case",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@source",
-              "?case"
-            ],
-            [
-              "?failure",
-              "@asserted",
-              "true"
-            ],
-            [
-              "?failure",
-              ":instance",
-              "fail-01"
-            ],
-            [
-              "?failure",
-              ":ARG1",
-              "?actual"
-            ],
-            [
-              "?actual",
-              ":instance",
-              "log-on-02"
-            ]
+            ["?handling", "@source", "?policy"],
+            ["?handling", "@asserted", "true"],
+            ["?handling", ":instance", "handle-01"],
+            ["?handling", ":ARG0", "?team"],
+            ["?team", ":instance", "team"],
+            ["?service", ":ARG0", "?team"],
+            ["?service", "@source", "?policy"],
+            ["?service", ":instance", "account-01"],
+            ["?handling", ":ARG1", "?objects"],
+            ["?objects", ":instance", "and"],
+            ["?objects", ":op2", "?object"],
+            ["?object", ":instance", "log-on-02"],
+            ["@case", "@source", "?case"],
+            ["?failure", "@source", "?case"],
+            ["?failure", "@asserted", "true"],
+            ["?failure", ":instance", "fail-01"],
+            ["?failure", ":ARG1", "?actual"],
+            ["?actual", ":instance", "log-on-02"]
           ],
           "then": [
-            [
-              "$recommend",
-              ":instance",
-              "recommend-01"
-            ],
-            [
-              "$recommend",
-              ":ARG1",
-              "$handling"
-            ],
-            [
-              "$handling",
-              ":instance",
-              "handle-01"
-            ],
-            [
-              "$handling",
-              ":ARG0",
-              "?team"
-            ],
-            [
-              "$handling",
-              ":ARG1",
-              "$ticket"
-            ],
-            [
-              "$ticket",
-              ":instance",
-              "ticket"
-            ],
-            [
-              "$ticket",
-              ":mod",
-              "$this"
-            ],
-            [
-              "$this",
-              ":instance",
-              "this"
-            ],
-            [
-              "?team",
-              ":mod",
-              "?service"
-            ],
-            [
-              "$recommend",
-              "@asserted",
-              "conditional"
-            ],
+            ["$recommend", ":instance", "recommend-01"],
+            ["$recommend", ":ARG1", "$handling"],
+            ["$handling", ":instance", "handle-01"],
+            ["$handling", ":ARG0", "?team"],
+            ["$handling", ":ARG1", "$ticket"],
+            ["$ticket", ":instance", "ticket"],
+            ["$ticket", ":mod", "$this"],
+            ["$this", ":instance", "this"],
+            ["?team", ":mod", "?service"],
+            ["$recommend", "@asserted", "conditional"],
             [
               "$recommend",
               "@qualification",
@@ -8164,27 +7688,21 @@
         {
           "id": "P",
           "name": "Programmer",
-          "passages": [
-            "The programmer acts as an artist in touchable making."
-          ],
+          "passages": ["The programmer acts as an artist in touchable making."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "I",
           "name": "Intelligence",
-          "passages": [
-            "The intelligence acts as a workbench in touchable making."
-          ],
+          "passages": ["The intelligence acts as a workbench in touchable making."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "D",
           "name": "Digital work",
-          "passages": [
-            "The digital work becomes an answerable design in touchable making."
-          ],
+          "passages": ["The digital work becomes an answerable design in touchable making."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
@@ -8349,9 +7867,7 @@
         {
           "id": "B.answer",
           "name": "Material response",
-          "passages": [
-            "Material can resist expectation and reopen inquiry."
-          ],
+          "passages": ["Material can resist expectation and reopen inquiry."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
@@ -8367,117 +7883,91 @@
         {
           "id": "B.craft",
           "name": "Earlier craft",
-          "passages": [
-            "Earlier artistry involved an answerable rhythm."
-          ],
+          "passages": ["Earlier artistry involved an answerable rhythm."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.loss",
           "name": "Loss of felt authorship",
-          "passages": [
-            "Production survives while felt authorship is disrupted."
-          ],
+          "passages": ["Production survives while felt authorship is disrupted."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.production",
           "name": "Accelerated production",
-          "passages": [
-            "Requests produce work faster than the programmer can read it."
-          ],
+          "passages": ["Requests produce work faster than the programmer can read it."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "O.loss",
           "name": "Other readings of loss",
-          "passages": [
-            "Overload, fear, status loss, or adjustment remain alternatives."
-          ],
+          "passages": ["Overload, fear, status loss, or adjustment remain alternatives."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.turn",
           "name": "Turn toward touch",
-          "passages": [
-            "Naming, uptake, and changed practice are distinct contributions."
-          ],
+          "passages": ["Naming, uptake, and changed practice are distinct contributions."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.naming",
           "name": "Naming the loss",
-          "passages": [
-            "The intelligence names missing touch, rather than offering more power."
-          ],
+          "passages": ["The intelligence names missing touch, rather than offering more power."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.uptake",
           "name": "Uptake",
-          "passages": [
-            "The programmer understands an available different relation."
-          ],
+          "passages": ["The programmer understands an available different relation."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.shaping",
           "name": "Changed practice",
-          "passages": [
-            "The programmer begins bending the material into form."
-          ],
+          "passages": ["The programmer begins bending the material into form."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "O.machinery",
           "name": "Practice versus machinery",
-          "passages": [
-            "Changed practice need not mean changed machinery."
-          ],
+          "passages": ["Changed practice need not mean changed machinery."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.choice",
           "name": "Choice",
-          "passages": [
-            "The programmer makes a consequential selection."
-          ],
+          "passages": ["The programmer makes a consequential selection."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.propagation",
           "name": "Propagation",
-          "passages": [
-            "The choice is represented as propagating through the digital work."
-          ],
+          "passages": ["The choice is represented as propagating through the digital work."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "B.recognition",
           "name": "Recognition",
-          "passages": [
-            "The programmer recognizes intention in a larger design."
-          ],
+          "passages": ["The programmer recognizes intention in a larger design."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
         {
           "id": "O.causation",
           "name": "Causation unresolved",
-          "passages": [
-            "Receipt, actual effect, and retrospective recognition may diverge."
-          ],
+          "passages": ["Receipt, actual effect, and retrospective recognition may diverge."],
           "description": "Attributed candidate reading of the poem; open to examination.",
           "sourceRefs": []
         },
@@ -8530,36 +8020,28 @@
         {
           "id": "SC.route",
           "name": "Declared route",
-          "passages": [
-            "An exact declared runtime wire, not a nearest semantic label."
-          ],
+          "passages": ["An exact declared runtime wire, not a nearest semantic label."],
           "description": "Separate engineering candidate; hypothetical effects only.",
           "sourceRefs": []
         },
         {
           "id": "SC.salience",
           "name": "Candidate salience",
-          "passages": [
-            "Candidate path potentials only; neither qualification nor energy."
-          ],
+          "passages": ["Candidate path potentials only; neither qualification nor energy."],
           "description": "Separate engineering candidate; hypothetical effects only.",
           "sourceRefs": []
         },
         {
           "id": "SC.local",
           "name": "Local qualification",
-          "passages": [
-            "An independently qualified local posture; observation survives challenge."
-          ],
+          "passages": ["An independently qualified local posture; observation survives challenge."],
           "description": "Separate engineering candidate; hypothetical effects only.",
           "sourceRefs": []
         },
         {
           "id": "SC.recoil",
           "name": "Recoil",
-          "passages": [
-            "Use the existing semgen transitive-base and all-parent recoil contract."
-          ],
+          "passages": ["Use the existing semgen transitive-base and all-parent recoil contract."],
           "description": "Separate engineering candidate; hypothetical effects only.",
           "sourceRefs": []
         },
@@ -8575,9 +8057,7 @@
         {
           "id": "SC.remainder",
           "name": "Retained uncertainty",
-          "passages": [
-            "Preserve alternatives, original evidence, uncertainty and history."
-          ],
+          "passages": ["Preserve alternatives, original evidence, uncertainty and history."],
           "description": "Separate engineering candidate; hypothetical effects only.",
           "sourceRefs": []
         }

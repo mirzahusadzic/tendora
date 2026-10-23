@@ -66,6 +66,13 @@ for review:
   for all four answers one confirmation away, and for no other proposal.
   Proposals in scope are shown, and can be confirmed, at the role the
   question was asked at.
+- Questions with "should" follow three rules. A requirement ("must") answers
+  "should"; the answer says it was read that way. A statement of what is done,
+  or of what may be done, does not answer "should" or "must", and the gap says
+  so. A confirmed wording still cannot cross modality; the person adds a
+  statement instead. Neither development question with "should" changes, as
+  both also need other capabilities (a case reference, different words, a
+  numeric comparison).
 - One proposal remains that would give a wrong answer if confirmed:
   "Who had collected the key?" is offered "The freezer van collects booked
   crates". It maps one participant onto a different one and is left for the

@@ -311,6 +311,9 @@ export function journeySection({ project, run, input, result, recording }, place
   const outcome = answers.length
     ? answers.flatMap((answer) => [
         ['Answer', answer.text, 'located'],
+        ...(answer.readAs === 'requirement'
+          ? [['Read as', 'A source says it must be done; that answers “should”.']]
+          : []),
         ...(answer.dependsOn ?? answer.qualifications ?? []).map((text) => [
           'Depends on',
           text,

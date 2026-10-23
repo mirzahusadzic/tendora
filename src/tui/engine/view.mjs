@@ -168,6 +168,9 @@ export function inquirySections(
       : []),
     ...(run?.answer?.answers ?? []).flatMap((answer) => [
       ['Answer', answer.text, 'input'],
+      ...(answer.readAs === 'requirement'
+        ? [['Read as', 'A source says it must be done; that answers “should”.']]
+        : []),
       ...(answer.dependsOn ?? answer.qualifications ?? []).map((q) => ['Qualification', q]),
     ]),
     ...(run?.case ? [['Case', run.case, 'input']] : []),

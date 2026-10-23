@@ -2,7 +2,12 @@
 import { inferRelations, traceRelations, guardedEvidence } from '../amr/inference.mjs';
 import { reviseGraph } from '../amr/revision.mjs';
 import { graphRevision } from './revisions.mjs';
-import { claimRoot, inquiryPattern, normalizeCoordinatedUnknowns } from '../amr/patterns.mjs';
+import {
+  claimRoot,
+  inquiryPattern,
+  normalizeCoordinatedUnknowns,
+  requirementReading,
+} from '../amr/patterns.mjs';
 import { bindReferences } from './reference-bindings.mjs';
 import { graphLiterals } from '../amr/literals.mjs';
 import { conditionalReading } from '../amr/conditions.mjs';
@@ -578,6 +583,20 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
 
 export function evaluateAnswer(recording, knowledge = recording.knowledge ?? {}, limits) {
   const reading = answerQuery(recording, knowledge, limits?.preparation);
+  const result = evaluateQuestion(recording, knowledge, limits, reading);
+  if (result.status !== 'open' || result.answers.length) return result;
+  // A source that says it must be done answers whether it should be done.
+  const required = requirementReading(reading.graph);
+  if (!required) return result;
+  const modal = evaluateQuestion(recording, knowledge, limits, { ...reading, graph: required });
+  if (!['supported', 'conditional'].includes(modal.status) || !modal.answers.length) return result;
+  return {
+    ...modal,
+    answers: modal.answers.map((answer) => ({ ...answer, readAs: 'requirement' })),
+  };
+}
+
+function evaluateQuestion(recording, knowledge, limits, reading) {
   const original = evaluateReading(recording, knowledge, limits, reading);
   if (original.status !== 'open' || original.answers.length) return original;
   const normalized = normalizeCoordinatedUnknowns(reading.graph, recording.inquiry.text);

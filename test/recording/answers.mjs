@@ -32,6 +32,85 @@ const source = graph('s', 'act', { act: 'design-01', person: 'person', object: '
 ]);
 const base = record(query, [{ text: 'A person designed a device.', graph: source }]);
 assert.equal(evaluateAnswer(base).status, 'open');
+// Modality: a requirement (“must”) answers “should”; permission (“may”), a
+// plain statement of what is done, and a recommendation do not answer more.
+const rotation = (id, modal, modalRole) =>
+  graph(
+    id,
+    modal ? 'm' : 'r',
+    {
+      ...(modal ? { m: modal } : {}),
+      r: 'rotate-01',
+      p: 'person',
+      n: 'name',
+      k: 'key',
+    },
+    [
+      ...(modal ? [['m', modalRole, 'r']] : []),
+      ['r', ':ARG0', 'p'],
+      ['p', ':name', 'n'],
+      ['r', ':ARG1', 'k'],
+    ],
+  );
+const named = (g) => {
+  g.nodes.push({ id: 'priya', concept: '"Priya"', literal: '"Priya"' });
+  g.edges.push({ id: 'op', from: 'n', role: ':op1', to: 'priya' });
+  return g;
+};
+const asking = (modal, modalRole) =>
+  graph(`ask-${modal}`, 'm', { m: modal, r: 'rotate-01', u: 'amr-unknown', k: 'key' }, [
+    ['m', modalRole, 'r'],
+    ['r', ':ARG0', 'u'],
+    ['r', ':ARG1', 'k'],
+  ]);
+const modalAnswer = (question, modal, modalRole) =>
+  evaluateAnswer(
+    record(question, [
+      { text: 'Priya rotates the key.', graph: named(rotation(`src-${modal}`, modal, modalRole)) },
+    ]),
+  );
+const should = asking('recommend-01', ':ARG1'),
+  must = asking('obligate-01', ':ARG2');
+const required = modalAnswer(should, 'obligate-01', ':ARG2');
+assert.equal(required.status, 'supported', 'must answers should');
+assert.deepEqual(
+  required.answers.map((answer) => [answer.text, answer.readAs]),
+  [['Priya', 'requirement']],
+);
+assert.equal(modalAnswer(must, 'obligate-01', ':ARG2').answers[0].readAs, undefined);
+// A yes/no “should” keeps its marker; a negated “should” has no requirement reading.
+const yesNo = (polarity) =>
+  graph(
+    `should-${polarity}`,
+    'm',
+    { m: 'recommend-01', r: 'rotate-01', p: 'person', k: 'key', y: polarity },
+    [
+      ['m', ':ARG1', 'r'],
+      ['m', ':polarity', 'y'],
+      ['r', ':ARG0', 'p'],
+      ['r', ':ARG1', 'k'],
+    ],
+  );
+const confirmed = modalAnswer(yesNo('amr-unknown'), 'obligate-01', ':ARG2');
+assert.deepEqual(
+  confirmed.answers.map((answer) => [answer.polarity, answer.readAs]),
+  [['positive', 'requirement']],
+);
+assert.equal(
+  modalAnswer(yesNo('-'), 'obligate-01', ':ARG2').answers.length,
+  0,
+  'Not recommended is not the same as not required',
+);
+for (const [question, modal, role, reason] of [
+  [should, 'possible-01', ':ARG1', 'may does not answer should'],
+  [must, 'possible-01', ':ARG1', 'may does not answer must'],
+  [should, null, null, 'what is done does not answer should'],
+  [must, 'recommend-01', ':ARG1', 'should does not answer must'],
+]) {
+  const result = modalAnswer(question, modal, role);
+  assert.equal(result.status, 'open', reason);
+  assert.equal(result.answers.length, 0, reason);
+}
 const alias = {
   id: 'mapping',
   name: 'Authored design equivalence',
