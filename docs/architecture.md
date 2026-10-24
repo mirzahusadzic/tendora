@@ -21,6 +21,13 @@ attributed answers. Conditions, modality, polarity, reference and source
 boundaries constrain what can be supported. A question never supplies its own
 evidence, and grammar recognition alone is not entailment.
 
+Statements never share an entity merely because they share a word; identity
+across statements comes from authored language. A condition ("If a participant
+locks the passage, …") applies to whatever its condition fits. A kind statement
+("Shared work is a project.") extends every node its subject's description fits,
+one way, when its reading agrees with the sentence; negated, modal, named and
+asked statements extend nothing.
+
 SEMCAT supplies bounded local Smatch++ and global RoSE comparisons with
 correspondences and provenance. Similarity and embeddings assist comparison
 and navigation; their scores do not by themselves establish an answer.
@@ -69,7 +76,9 @@ CLI `ask` and the TUI use the same checking engine.
 ## Present limits
 
 Acquired graphs can misread language; lexical audits and source inspection
-help review those readings. Offline replay uses retained wording. Search and
+help review those readings. Answers rest on shared vocabulary: a question worded
+differently from its sources usually stays open or becomes a proposal one
+confirmation away. Offline replay uses retained wording. Search and
 alignment have explicit budgets and report when a limit is reached.
 
 The cooperative frame is a first vertical slice. It does not yet provide a
