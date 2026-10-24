@@ -49,6 +49,24 @@ try {
     fail('{', 'Runtime failed before a response'),
     /PENMAN preparation failed: Runtime failed before a response/u,
   );
+  // One process serves every request on an interpreter. A cancelled request
+  // stops it; another request it held fails with an error of its own, not
+  // with that cancellation.
+  const silent = join(directory, 'silent');
+  await writeFile(silent, '#!/usr/bin/env node\nprocess.stdin.resume();\n', { mode: 0o700 });
+  process.env.PENMAN_PYTHON = silent;
+  try {
+    const first = new AbortController();
+    const cancelled = prepareGraphs([{ penman: '(a / alpha)' }], { signal: first.signal });
+    const other = prepareGraphs([{ penman: '(b / beta)' }]);
+    await new Promise((resolve) => setImmediate(resolve));
+    first.abort();
+    await assert.rejects(cancelled, /abort/iu);
+    await assert.rejects(other, /PENMAN preparation stopped: another request was cancelled/u);
+  } finally {
+    if (configuredPython === undefined) delete process.env.PENMAN_PYTHON;
+    else process.env.PENMAN_PYTHON = configuredPython;
+  }
 } finally {
   await rm(directory, { recursive: true, force: true });
 }
@@ -215,6 +233,28 @@ if (available) {
   const controller = new AbortController();
   controller.abort();
   await assert.rejects(prepareGraphs(inputs, { signal: controller.signal }), /abort/iu);
+  // Cancelled while the interpreter is found, before the request is sent: it
+  // settles with its cancellation (it once waited forever) and the shared
+  // process keeps serving.
+  const servers = preparationUsage().servers;
+  const late = new AbortController();
+  const cancelled = prepareGraphs([{ penman: '(c / cancel-01 :ARG1 (r / request))' }], {
+    signal: late.signal,
+  });
+  late.abort();
+  let waited;
+  await assert.rejects(
+    Promise.race([
+      cancelled,
+      new Promise((_, reject) => {
+        waited = setTimeout(() => reject(new Error('The cancelled request never settled')), 5000);
+      }),
+    ]),
+    /abort/iu,
+  );
+  clearTimeout(waited);
+  assert.equal((await prepareGraphs([{ penman: '(s / serve-01)' }])).results.length, 1);
+  assert.equal(preparationUsage().servers, servers, 'The shared process was not closed');
 
   const typed = await prepareGraphs([
     { penman: '(n / name :op1 3)' },

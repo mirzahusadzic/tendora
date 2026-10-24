@@ -153,9 +153,19 @@ function preparationServer(executable) {
 
 function servePreparation(graphs, { signal, executable, timeoutMs, profile, request }) {
   return new Promise((resolve, reject) => {
+    // Cancelled before it was sent: it settles at once, and the shared process
+    // is left serving.
+    if (signal?.aborted) return reject(signal.reason ?? new Error('Cancelled'));
     const server = preparationServer(executable);
     let timer;
-    const abort = () => server.close(signal.reason ?? new Error('Cancelled'));
+    // A cancelled request stops the process; another request it was serving
+    // fails with an error of its own, not with this one's cancellation.
+    const abort = () => {
+      const at = server.pending.indexOf(entry);
+      if (at >= 0) server.pending.splice(at, 1);
+      settle(signal.reason ?? new Error('Cancelled'));
+      server.close(new Error('PENMAN preparation stopped: another request was cancelled.'));
+    };
     const settle = (error, line) => {
       clearTimeout(timer);
       signal?.removeEventListener('abort', abort);
@@ -170,10 +180,10 @@ function servePreparation(graphs, { signal, executable, timeoutMs, profile, requ
         );
       }
     };
+    const entry = { settle };
     timer = setTimeout(() => server.close(new Error('Graph preparation timed out')), timeoutMs);
     signal?.addEventListener('abort', abort, { once: true });
-    if (signal?.aborted) return abort();
-    server.pending.push({ settle });
+    server.pending.push(entry);
     server.hold(true);
     server.child.stdin.write(request + '\n');
   });
