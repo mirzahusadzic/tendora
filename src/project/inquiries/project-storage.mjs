@@ -2,7 +2,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { compactDataFiles } from '../storage/data-files.mjs';
-import { compactEngineStorage, engineStorageBudget } from './engine-storage.mjs';
+import { compactEngineStorage, engineStorageBudget, retainRecordings } from './engine-storage.mjs';
 import { roleVectorIndexBytes, discardRoleVectorIndex } from '../storage/role-vectors.mjs';
 import { activeEngineRunIds, engineDeletionLockPath } from '../storage/engine-runs.mjs';
 import { withFileLease } from '../storage/locks.mjs';
@@ -47,6 +47,7 @@ export async function compactProjectStorage(
   { target = projectStorageTarget, cacheBudget = engineStorageBudget, ...options } = {},
 ) {
   const before = await projectStorageUsage(project);
+  const recordings = await retainRecordings(project, { dryRun: options.dryRun });
   const material = await compactDataFiles(dirname(project.path));
   const packed = await projectStorageUsage(project);
   const vectorBytes = roleVectorIndexBytes(dirname(project.path));
@@ -99,6 +100,7 @@ export async function compactProjectStorage(
     before,
     after,
     material: { ...material, bytes: after.areas['material.sqlite']?.bytes ?? material.bytes },
+    recordings,
     engine,
     vectorsEvicted,
     target,

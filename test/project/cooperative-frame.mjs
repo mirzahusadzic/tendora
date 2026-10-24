@@ -27,6 +27,8 @@ import { graphRevision } from '../../src/recording/revisions.mjs';
 import { indexRecording } from '../../src/tui/recordings/view.mjs';
 import { readSavedRecording } from '../../src/project/storage/recordings.mjs';
 import { listProjectRecordings } from '../../src/project/inquiries/recordings.mjs';
+import { retainRecordings } from '../../src/project/inquiries/engine-storage.mjs';
+import { listEngineRuns } from '../../src/project/storage/engine-runs.mjs';
 import { frozenParser } from '../support/development-acquisition.mjs';
 
 await mkdir('tmp', { recursive: true });
@@ -98,6 +100,15 @@ try {
       (await listProjectRecordings(project)).map((entry) => entry.path),
       [firstRun.path],
     );
+    // A whole recording written before is kept the same way; nothing is evicted.
+    const whole = await readSavedRecording(firstRun.path);
+    await writeFile(firstRun.path, JSON.stringify(whole, null, 2) + '\n');
+    const runs = (await listEngineRuns(project)).length;
+    assert.deepEqual(await retainRecordings(project), { retained: 1 });
+    assert.match(JSON.parse(await readFile(firstRun.path, 'utf8')).artifactRef, /^[a-f0-9]{64}$/u);
+    assert.deepEqual(await readSavedRecording(firstRun.path), whole);
+    assert.equal((await listEngineRuns(project)).length, runs);
+    assert.deepEqual(await retainRecordings(project), { retained: 0 }, 'A handle stays as it is');
   }
 
   {

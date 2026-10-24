@@ -14,6 +14,7 @@ import {
   activeEngineRunIds,
   engineDeletionLockPath,
   listEngineRuns,
+  putEngineArtifact,
   readEngineArtifact,
 } from '../storage/engine-runs.mjs';
 import { withFileLease } from '../storage/locks.mjs';
@@ -127,6 +128,45 @@ export async function engineStorageUsage(project) {
   }
   await visit(join(root, 'engine'));
   return { bytes: total, files: count };
+}
+
+/** Whole recordings written before checks kept them as engine artifacts become
+ * handles. Nothing is evicted; lists stop parsing whole recordings. */
+export async function retainRecordings(project, { dryRun = false } = {}) {
+  const directory = join(dirname(project.path), 'recordings');
+  const names = (await files(directory)).filter(
+    (file) => file.endsWith('.json') && !file.startsWith('.'),
+  );
+  if (!names.length) return { retained: 0 };
+  return withFileLease(engineDeletionLockPath(project), async () => {
+    let retained = 0;
+    for (const file of names) {
+      const path = join(directory, file);
+      let recording;
+      try {
+        recording = await json(path);
+      } catch (error) {
+        // An interrupted older write is left for compaction to report.
+        if (error instanceof SyntaxError || error.code === 'ENOENT') continue;
+        throw error;
+      }
+      if (
+        recording?.schema !== 'tendora.workbench.recording' ||
+        recording.artifactRef ||
+        recording.cache
+      )
+        continue;
+      retained++;
+      if (dryRun) continue;
+      const ref = await putEngineArtifact(project, recording);
+      const staged = `${path}.${randomUUID()}.tmp`;
+      await writeFile(staged, JSON.stringify(recordingHandle(recording, ref)) + '\n', {
+        flag: 'wx',
+      });
+      await rename(staged, path);
+    }
+    return { retained };
+  });
 }
 
 export async function compactEngineStorage(
