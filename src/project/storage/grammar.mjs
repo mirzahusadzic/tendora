@@ -20,12 +20,23 @@ async function database(project) {
   }
   return openArtifactDatabase(artifactDatabasePath(project));
 }
+// A process asks for the same grammars at every question: the last ones read
+// or written for a database and key are kept by their reference, and loaded
+// again only when the stored reference changed (another process wrote them).
+const remembered = new Map();
+const rememberedKey = (project, key) => `${artifactDatabasePath(project)}\u0000${key}`;
 export async function readGrammarCache(project, context) {
   const key = cacheKey(context),
     db = await database(project);
   try {
     const entry = db?.prepare('SELECT ref FROM grammars WHERE key = ?').get(key);
-    if (entry) return loadArtifact(db, entry.ref) ?? null;
+    if (entry) {
+      const known = remembered.get(rememberedKey(project, key));
+      if (known?.ref === entry.ref) return known.value;
+      const value = loadArtifact(db, entry.ref) ?? null;
+      if (value) remembered.set(rememberedKey(project, key), { ref: entry.ref, value });
+      return value;
+    }
   } finally {
     db?.close();
   }
@@ -55,6 +66,11 @@ export async function writeGrammarCache(project, context, value, { unchanged = f
       ref,
       Date.now(),
     );
+    // A copy of the list: the caller's corpora may grow after they are stored.
+    remembered.set(rememberedKey(project, cacheKey(context)), {
+      ref,
+      value: Array.isArray(value?.grammars) ? { ...value, grammars: [...value.grammars] } : value,
+    });
   } finally {
     db.close();
   }

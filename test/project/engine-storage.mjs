@@ -19,6 +19,7 @@ import {
   artifactDatabasePath,
   openArtifactDatabase,
   loadArtifact,
+  storeArtifact,
 } from '../../src/project/storage/engine-artifacts.mjs';
 import {
   compactEngineStorage,
@@ -362,6 +363,26 @@ try {
   const second = { profile: 'test', grammars: [{ signature: 'b' }] };
   await writeGrammarCache(totalProject, grammarContext, second);
   assert.deepEqual(await readGrammarCache(totalProject, grammarContext), second);
+  // Kept in the process by reference: read again without loading, unchanged by
+  // corpora the caller adds later, and loaded again when another process
+  // points the entry at other grammars.
+  second.grammars.push({ signature: 'c' });
+  const kept = await readGrammarCache(totalProject, grammarContext);
+  assert.deepEqual(kept, { profile: 'test', grammars: [{ signature: 'b' }] });
+  assert.equal(await readGrammarCache(totalProject, grammarContext), kept, 'Not loaded again');
+  const other = openArtifactDatabase(artifactDatabasePath(totalProject));
+  try {
+    const ref = storeArtifact(other, { profile: 'test', grammars: [{ signature: 'd' }] });
+    other
+      .prepare('UPDATE grammars SET ref = ? WHERE key = ?')
+      .run(ref, createHash('sha256').update(JSON.stringify(grammarContext)).digest('hex'));
+  } finally {
+    other.close();
+  }
+  assert.deepEqual(await readGrammarCache(totalProject, grammarContext), {
+    profile: 'test',
+    grammars: [{ signature: 'd' }],
+  });
   console.log(
     `ok shared fragments, unchanged hashes, legacy read, bounded cache (${report.after.bytes} bytes), whole-project budget, durable questions/cases, active-run exclusion, repeat compaction, deletion and corruption`,
   );
