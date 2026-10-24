@@ -2,7 +2,12 @@
  * without those sources does: a conclusion with another proof still holds,
  * one without any does not. */
 import assert from 'node:assert/strict';
-import { answerBase, evaluateAnswer, withheldBase } from '../../src/recording/answers.mjs';
+import {
+  answerBase,
+  evaluateAnswer,
+  factIndex,
+  withheldBase,
+} from '../../src/recording/answers.mjs';
 
 const graph = (id, top, nodes, edges) => ({
   id,
@@ -62,6 +67,39 @@ for (const withheld of [['shared'], ['any'], ['shared', 'any'], ['statement']]) 
   const checked = evaluateAnswer(record(all.filter((g) => !withheld.includes(g.id))), knowledge);
   assert.deepEqual(view(read), view(checked), `Withholding ${withheld} reads as it checks`);
 }
+// A view's index reads its parent's positions, as an index of its own facts
+// would: every lookup by every term, with some facts replaced by fewer proofs.
+const lookups = (facts) => {
+  const index = factIndex(facts);
+  const keys = new Set(
+    facts.flatMap((fact) => [
+      fact.id,
+      ...fact.triple,
+      ...(fact.sourceIds ?? []),
+      ...(fact.fragmentIds ?? []),
+    ]),
+  );
+  return JSON.stringify(
+    [...keys].map((key) => [
+      index.of(key),
+      index.touching(key),
+      index.from(key),
+      index.instancesOf(key),
+      index.inFragments([key]),
+      index.byId(key) ?? null,
+      index.withIds([key]),
+      index.ofAny([key]),
+    ]),
+  );
+};
+let replaced = 0;
+for (const withheld of [['shared'], ['any'], ['statement']]) {
+  const without = withheldBase(base, withheld);
+  for (const facts of [without.inference.facts, without.material.facts])
+    assert.equal(lookups(facts), lookups([...facts]), `The index of a view without ${withheld}`);
+  replaced += without.inference.facts.filter((fact) => !base.inference.facts.includes(fact)).length;
+}
+assert(replaced > 0, 'Some facts keep fewer proofs in a view');
 assert.deepEqual(
   view(evaluateAnswer(recording, knowledge, { base: withheldBase(base, ['shared']) })),
   ['conditional', ['tool']],

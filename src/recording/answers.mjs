@@ -788,9 +788,17 @@ function sentencesOf(sources) {
   }
   return sentences;
 }
-function factIndex(facts) {
-  const cached = labelIndexes.get(facts);
-  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+// A view's facts are its parent's in the same order, some left out and some
+// replaced by objects with fewer proofs (the same id and triple). Its index
+// reads the parent's positions: lookups by subject, node, concept or id map
+// them; lookups by a fact's own sources or fragments check the replaced facts
+// again. A role check's view so costs a map of positions, not an index.
+const indexViews = new WeakMap();
+const factView = (facts, parent, from, replaced = null) => {
+  indexViews.set(facts, { parent, from, replaced, length: facts.length, last: facts.at(-1) });
+  return facts;
+};
+function ownPositions(facts) {
   const subjects = runs(facts, (fact) => [fact.triple[0]]),
     nodes = runs(facts, ({ triple: [from, role, to] }) =>
       !relation(role) ? none : to === from ? [from] : [from, to],
@@ -800,42 +808,118 @@ function factIndex(facts) {
     instances = runs(facts, ({ triple: [, role, concept] }) =>
       role === ':instance' ? [concept] : none,
     );
-  let ids = null;
+  let ids = null,
+    uniqueIds = true;
   const position = (id) => {
     if (!ids) {
       ids = new Map();
       facts.forEach((fact, i) => {
-        if (fact.id !== undefined && !ids.has(fact.id)) ids.set(fact.id, i);
+        if (fact.id === undefined) return;
+        if (ids.has(fact.id)) uniqueIds = false;
+        else ids.set(fact.id, i);
       });
     }
     return ids.get(id);
+  };
+  return {
+    subjects: subjects.positions,
+    nodes: nodes.positions,
+    sources: sources.positions,
+    fragments: fragments.positions,
+    instances: instances.positions,
+    position,
+    uniqueIds: () => (position(undefined), uniqueIds),
+  };
+}
+function viewPositions(facts, view) {
+  const parent = factIndex(view.parent).at;
+  const toView = new Int32Array(view.parent.length).fill(-1);
+  view.from.forEach((p, i) => (toView[p] = i));
+  const replaced = [];
+  if (view.replaced) for (let i = 0; i < facts.length; i++) if (view.replaced[i]) replaced.push(i);
+  const mapped = (lookup) => (key) => {
+    const out = [];
+    for (const p of lookup(key)) if (toView[p] >= 0) out.push(toView[p]);
+    return out;
+  };
+  const ownProof = (lookup, field) => (key) => {
+    const out = [];
+    for (const p of lookup(key)) {
+      const i = toView[p];
+      if (i >= 0 && !view.replaced?.[i]) out.push(i);
+    }
+    if (!replaced.length) return out;
+    for (const i of replaced) if ((facts[i][field] ?? none).includes(key)) out.push(i);
+    return out.sort((a, b) => a - b);
+  };
+  // The first fact with an id is the parent's first only when ids are unique.
+  const own = parent.uniqueIds() ? null : ownPositions(facts);
+  return {
+    subjects: mapped(parent.subjects),
+    nodes: mapped(parent.nodes),
+    sources: ownProof(parent.sources, 'sourceIds'),
+    fragments: ownProof(parent.fragments, 'fragmentIds'),
+    instances: mapped(parent.instances),
+    position:
+      own?.position ??
+      ((id) => {
+        const p = parent.position(id);
+        return p === undefined || toView[p] < 0 ? undefined : toView[p];
+      }),
+    uniqueIds: () => true,
+  };
+}
+export function factIndex(facts) {
+  const cached = labelIndexes.get(facts);
+  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+  const view = indexViews.get(facts);
+  const at =
+    view && view.length === facts.length && view.last === facts.at(-1)
+      ? viewPositions(facts, view)
+      : ownPositions(facts);
+  const read = (positions) => {
+    if (!positions.length) return none;
+    const found = new Array(positions.length);
+    for (let j = 0; j < positions.length; j++) found[j] = facts[positions[j]];
+    return found;
   };
   const inOrder = (positions) => [...new Set(positions)].sort((a, b) => a - b).map((i) => facts[i]);
   const index = {
     length: facts.length,
     last: facts.at(-1),
+    at,
     // Facts whose subject is the node.
-    of: subjects.facts,
+    of: (node) => read(at.subjects(node)),
     // Relations (not concepts) the node takes part in, either end.
-    touching: nodes.facts,
+    touching: (node) => read(at.nodes(node)),
     // Facts attributed to the source.
-    from: sources.facts,
+    from: (source) => read(at.sources(source)),
     // The facts of some fragments, in the facts' order.
-    inFragments: (list) => inOrder(list.flatMap((id) => [...fragments.positions(id)])),
+    inFragments: (list) => inOrder(list.flatMap((id) => [...at.fragments(id)])),
     // The facts with these ids, in the facts' order.
-    withIds: (list) => inOrder(list.map(position).filter((i) => i !== undefined)),
+    withIds: (list) => inOrder(list.map(at.position).filter((i) => i !== undefined)),
     // The first fact with an id.
     byId: (id) => {
-      const i = position(id);
+      const i = at.position(id);
       return i === undefined ? undefined : facts[i];
     },
     // The concept facts (`:instance`) of a concept.
-    instancesOf: instances.facts,
+    instancesOf: (concept) => read(at.instances(concept)),
     // Facts whose subject is one of the nodes, in the facts' order.
-    ofAny: (nodes) => inOrder([...nodes].flatMap((node) => [...subjects.positions(node)])),
+    ofAny: (nodes) => inOrder([...nodes].flatMap((node) => [...at.subjects(node)])),
   };
   labelIndexes.set(facts, index);
   return index;
+}
+
+// The facts a predicate keeps, as a view of the array they come from.
+function keptFacts(facts, keep) {
+  const kept = [],
+    from = [];
+  facts.forEach((fact, p) => {
+    if (keep(fact)) (kept.push(fact), from.push(p));
+  });
+  return factView(kept, facts, Uint32Array.from(from));
 }
 
 /** A base without some sources, read from the proofs it keeps rather than
@@ -854,13 +938,17 @@ export function withheldBase(base, withheld) {
   const holds = new Set(graph.facts.filter((_, f) => holding[f]).map((fact) => fact.id));
   const usable = (proof) =>
     kept(proof.sourceIds) && (proof.premises ?? []).every((id) => holds.has(id));
-  const facts = [];
-  for (const fact of base.inference.facts) {
-    if (!holds.has(fact.id)) continue;
+  const facts = [],
+    from = [],
+    replaced = [];
+  base.inference.facts.forEach((fact, p) => {
+    if (!holds.has(fact.id)) return;
+    from.push(p);
     const proofs = [fact, ...(fact.alternatives ?? [])].filter(usable);
     if (proofs[0] === fact && proofs.length === 1 + (fact.alternatives?.length ?? 0)) {
       facts.push(fact);
-      continue;
+      replaced.push(0);
+      return;
     }
     const { alternatives: _all, ...own } = proofs[0] === fact ? fact : { ...proofs[0] };
     facts.push({
@@ -869,7 +957,9 @@ export function withheldBase(base, withheld) {
       triple: fact.triple,
       ...(proofs.length > 1 ? { alternatives: proofs.slice(1) } : {}),
     });
-  }
+    replaced.push(1);
+  });
+  factView(facts, base.inference.facts, Uint32Array.from(from), Uint8Array.from(replaced));
   const material = base.material;
   const grammar = createGrammarMatcher({ profile: grammarProfile, grammars: base.grammar.corpora });
   grammar.corpus(facts);
@@ -881,7 +971,7 @@ export function withheldBase(base, withheld) {
     material: {
       ...material,
       sources: material.sources.filter((source) => !out.has(source.id)),
-      facts: material.facts.filter((fact) => kept(fact.sourceIds)),
+      facts: keptFacts(material.facts, (fact) => kept(fact.sourceIds)),
       rules: material.rules.filter((rule) => kept(rule.sourceIds)),
       nodes: material.nodes.filter((node) => !out.has(node.sourceId)),
       fragments: material.fragments.filter((fragment) => !out.has(fragment.sourceId)),
