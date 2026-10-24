@@ -322,7 +322,10 @@ await compactDataFiles(budgetDirectory);
 const used = await projectStorageUsage(budgetProject);
 assert(used.allocated > 300 * 1024);
 assert(used.allocated - roleVectorIndexBytes(budgetDirectory) < 300 * 1024);
-const packed = await compactProjectStorage(budgetProject);
+const packed = await compactProjectStorage(budgetProject, {
+  target: 300 * 1024,
+  cacheBudget: 256 * 1024,
+});
 assert.equal(packed.vectorsEvicted, true);
 assert.equal(packed.withinTarget, true);
 assert.equal(packed.material.bytes, packed.after.areas['material.sqlite'].bytes);

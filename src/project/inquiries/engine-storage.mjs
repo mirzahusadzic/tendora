@@ -21,7 +21,9 @@ import { interpretationRevision } from '../../recording/revisions.mjs';
 import { listGrammarCaches } from '../storage/grammar.mjs';
 import { listDataFiles, readDataFile } from '../storage/data-files.mjs';
 
-export const engineStorageBudget = 256 * 1024;
+// A soft cache bound, not a stop: recomputing a check costs far more than
+// keeping it, so completed checks and grammar caches are kept generously.
+export const engineStorageBudget = 256 * 1024 * 1024;
 const questionPurposes = new Set(['inquiry', 'question-refresh', 'contribution-assessment']);
 const artifactRefs = (run) =>
   [
@@ -97,6 +99,9 @@ function questionRecord(run) {
     ),
     ...(run.recording ? { recording: { ...run.recording, artifactRef: undefined } } : {}),
     status: run.status,
+    // What the released check found, so a saved question can be shown without
+    // checking it again.
+    ...(run.answer || run.lastAnswer ? { lastAnswer: lastAnswer(run) } : {}),
     calls: [],
     stages: [],
     openings: [],
@@ -104,6 +109,15 @@ function questionRecord(run) {
     cache: 'recheck',
   };
 }
+const lastAnswer = (run) =>
+  run.lastAnswer ?? {
+    status: run.answer.status,
+    answers: run.answer.answers.map(({ text, conditional, qualifications, readAs }) => ({
+      text,
+      ...(conditional ? { conditional, qualifications } : {}),
+      ...(readAs ? { readAs } : {}),
+    })),
+  };
 
 export async function engineStorageUsage(project) {
   const root = dirname(project.path);

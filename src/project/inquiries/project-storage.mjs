@@ -7,7 +7,8 @@ import { roleVectorIndexBytes, discardRoleVectorIndex } from '../storage/role-ve
 import { activeEngineRunIds, engineDeletionLockPath } from '../storage/engine-runs.mjs';
 import { withFileLease } from '../storage/locks.mjs';
 
-export const projectStorageTarget = 300 * 1024;
+// Soft, like the engine cache: compaction aims for it and never fails on it.
+export const projectStorageTarget = 512 * 1024 * 1024;
 export async function projectStorageUsage(project) {
   const root = dirname(project.path),
     areas = {};
@@ -41,7 +42,10 @@ export async function projectStorageUsage(project) {
     areas,
   };
 }
-export async function compactProjectStorage(project, options = {}) {
+export async function compactProjectStorage(
+  project,
+  { target = projectStorageTarget, cacheBudget = engineStorageBudget, ...options } = {},
+) {
   const before = await projectStorageUsage(project);
   const material = await compactDataFiles(dirname(project.path));
   const packed = await projectStorageUsage(project);
@@ -53,7 +57,7 @@ export async function compactProjectStorage(project, options = {}) {
     vectorBytes;
   // Retaining an answer avoids an expensive recheck when switching questions.
   // Rebuilding the native projection from its retained vectors is much cheaper.
-  const budget = Math.max(64 * 1024, Math.min(engineStorageBudget, projectStorageTarget - durable));
+  const budget = Math.max(64 * 1024, Math.min(cacheBudget, target - durable));
   let engine;
   try {
     const force =
@@ -61,18 +65,27 @@ export async function compactProjectStorage(project, options = {}) {
       (packed.areas.engine?.allocated ?? 0) + (packed.areas.recordings?.allocated ?? 0) > budget;
     engine = await compactEngineStorage(project, { ...options, force, budget });
   } catch (error) {
-    if (error.code !== 'ENGINE_STORAGE_REQUIRED' || budget === engineStorageBudget) throw error;
-    // Growing authored material and pinned evidence are never deleted to reach a size target.
-    engine = await compactEngineStorage(project, { ...options, budget: engineStorageBudget });
+    if (error.code !== 'ENGINE_STORAGE_REQUIRED') throw error;
+    // Growing authored material and pinned evidence are never deleted to reach a
+    // size target; saved questions beyond the soft bound are kept as they are.
+    try {
+      engine =
+        budget === cacheBudget
+          ? { kept: true, reason: error.message }
+          : await compactEngineStorage(project, { ...options, budget: cacheBudget });
+    } catch (again) {
+      if (again.code !== 'ENGINE_STORAGE_REQUIRED') throw again;
+      engine = { kept: true, reason: again.message };
+    }
   }
   let after = await projectStorageUsage(project),
     vectorsEvicted = false;
   // Keep the persistent index for large corpora. For a small project whose retained
   // material fits the target, cache pressure may evict the derived vectors after use.
   if (
-    after.allocated > projectStorageTarget &&
+    after.allocated > target &&
     vectorBytes &&
-    after.allocated - vectorBytes <= projectStorageTarget &&
+    after.allocated - vectorBytes <= target &&
     !options.dryRun
   ) {
     await withFileLease(engineDeletionLockPath(project), async () => {
@@ -88,7 +101,7 @@ export async function compactProjectStorage(project, options = {}) {
     material: { ...material, bytes: after.areas['material.sqlite']?.bytes ?? material.bytes },
     engine,
     vectorsEvicted,
-    target: projectStorageTarget,
-    withinTarget: after.allocated <= projectStorageTarget,
+    target,
+    withinTarget: after.allocated <= target,
   };
 }

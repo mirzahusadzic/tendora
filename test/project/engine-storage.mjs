@@ -6,10 +6,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { createProject, openProject, saveProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions, acquiredTexts } from '../../src/project/storage/acquisitions.mjs';
 import { readObject, writeObject } from '../../src/project/storage/objects.mjs';
-import {
-  compactProjectStorage,
-  projectStorageTarget,
-} from '../../src/project/inquiries/project-storage.mjs';
+import { compactProjectStorage } from '../../src/project/inquiries/project-storage.mjs';
 import {
   putEngineArtifact,
   readEngineArtifact,
@@ -25,7 +22,6 @@ import {
 } from '../../src/project/storage/engine-artifacts.mjs';
 import {
   compactEngineStorage,
-  engineStorageBudget,
   engineStorageUsage,
 } from '../../src/project/inquiries/engine-storage.mjs';
 import { deleteEngineRuns } from '../../src/project/inquiries/delete-engine-runs.mjs';
@@ -38,6 +34,9 @@ import {
 
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/engine-storage-'));
+// The defaults are soft and generous; small bounds here exercise eviction under pressure.
+const budget = 256 * 1024,
+  target = 300 * 1024;
 try {
   let project = await createProject(directory, 'Storage contract');
   const data = structuredClone(project.data);
@@ -148,10 +147,10 @@ try {
     questions.set(question, { run, input, result, recording });
   }
   const lease = await acquireEngineRunLease(project, randomUUID());
-  assert.equal((await compactEngineStorage(project, { force: true })).busy, true);
+  assert.equal((await compactEngineStorage(project, { force: true, budget })).busy, true);
   await lease();
-  const report = await compactEngineStorage(project, { force: true });
-  assert(report.after.bytes <= engineStorageBudget, JSON.stringify(report));
+  const report = await compactEngineStorage(project, { force: true, budget });
+  assert(report.after.bytes <= budget, JSON.stringify(report));
   const saved = await listEngineRuns(project);
   assert.equal(saved.length, questions.size);
   assert.equal(
@@ -189,13 +188,13 @@ try {
     'retained',
   );
   assert(!(await readdir(join(directory, 'engine'))).includes('objects'));
-  const again = await compactEngineStorage(project, { force: true });
-  assert(again.after.bytes <= engineStorageBudget);
+  const again = await compactEngineStorage(project, { force: true, budget });
+  assert(again.after.bytes <= budget);
   assert.equal((await listEngineRuns(project)).length, questions.size);
   // A recording truncated by an older interrupted write does not block compaction.
   const truncated = join(directory, 'recordings', '1999-01-01T00-00-00-000Z-truncated.json');
   await writeFile(truncated, '{"schema":"tendora.workbench.recording","id":');
-  const tolerant = await compactEngineStorage(project, { force: true });
+  const tolerant = await compactEngineStorage(project, { force: true, budget });
   assert.deepEqual(tolerant.unreadable, [truncated]);
   assert.equal(await readFile(truncated, 'utf8'), '{"schema":"tendora.workbench.recording","id":');
   assert.equal((await listEngineRuns(project)).length, questions.size);
@@ -211,7 +210,7 @@ try {
   await writeFile(victim.recording.path, handle);
   const abandoned = join(directory, 'engine', `.${randomUUID()}.sqlite`);
   await writeFile(abandoned, 'unfinished staging database');
-  await compactEngineStorage(project, { force: true });
+  await compactEngineStorage(project, { force: true, budget });
   await assert.rejects(stat(abandoned), { code: 'ENOENT' });
 
   const parent = saved.find((r) => r.cache === 'retained');
@@ -230,7 +229,18 @@ try {
     beforeRefusal,
     'A pinned contribution is never silently discarded to meet a budget',
   );
-  await compactEngineStorage(project, { force: true });
+  // The project's own bound is soft: what cannot be released is kept, and maintenance
+  // reports it instead of failing.
+  const soft = await compactProjectStorage(project, {
+    force: true,
+    target: 16 * 1024,
+    cacheBudget: 16 * 1024,
+  });
+  assert.equal(soft.engine.kept, true, JSON.stringify(soft.engine));
+  assert.match(soft.engine.reason, /nothing was removed/u);
+  assert.equal(soft.withinTarget, false);
+  assert.deepEqual(await readFile(artifactDatabasePath(project)), beforeRefusal);
+  await compactEngineStorage(project, { force: true, budget });
   assert.deepEqual(
     await readSavedRecording(parent.recording.path),
     questions.get(parent.questions[0].text).recording,
@@ -242,7 +252,7 @@ try {
     join(directory, '.continuations', 'alias.json'),
     JSON.stringify({ parent: { path: alias } }),
   );
-  await compactEngineStorage(project, { force: true });
+  await compactEngineStorage(project, { force: true, budget });
   assert.deepEqual(
     await readSavedRecording(alias),
     aliasBody,
@@ -305,8 +315,12 @@ try {
     stages: [],
   };
   await saveEngineRun(totalProject, totalRun);
-  const totalReport = await compactProjectStorage(totalProject, { force: true });
-  assert(totalReport.before.allocated > projectStorageTarget);
+  const totalReport = await compactProjectStorage(totalProject, {
+    force: true,
+    target,
+    cacheBudget: budget,
+  });
+  assert(totalReport.before.allocated > target);
   assert(totalReport.withinTarget, JSON.stringify(totalReport));
   assert.equal((await readEngineRun(totalProject, totalRun.id)).cache, 'recheck');
   assert.deepEqual(await readObject(totalRoot, 'records', materialRef), material);
@@ -317,7 +331,11 @@ try {
     ),
   };
   const largerRef = await writeObject(totalRoot, 'records', larger);
-  const largerReport = await compactProjectStorage(totalProject, { force: true });
+  const largerReport = await compactProjectStorage(totalProject, {
+    force: true,
+    target,
+    cacheBudget: budget,
+  });
   assert.equal(
     largerReport.withinTarget,
     false,
