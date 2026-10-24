@@ -20,11 +20,17 @@ assert(demo.includes('acceptance/payments.mjs'));
 assert(!demo.includes('amr/hrg.mjs'));
 assert(reached('test/engine/cloze.mjs').includes('engine/cloze.mjs'), 'A suite reaches itself');
 assert.deepEqual(reached(docs), [], 'Documentation reaches no suite');
-for (const path of ['test/run.mjs', 'test/suites.mjs', 'package.json', 'tools/changes.mjs'])
+for (const path of ['test/run.mjs', 'package.json', 'tools/changes.mjs'])
   assert.equal(reached(path).length, suites.check.length, `${path} reaches every suite`);
+assert(
+  reached('test/suites.mjs').length < suites.check.length,
+  'The suite list reaches only the suites it adds',
+);
 assert.deepEqual(
   formatTargets(['src/engine/cloze.mjs', 'tmp/x.mjs', 'notes/draft.md', docs]),
   ['src/engine/cloze.mjs', docs],
   'Only the files the format check covers',
 );
-console.log('ok changes reach their suites: imports, URLs, named paths; shared runner reaches all');
+console.log(
+  'ok changes reach their suites: imports, URLs, named paths; added suites; the runner reaches all',
+);

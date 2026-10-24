@@ -61,7 +61,7 @@ else {
   if (changedOnly || since) {
     const { affectedSuites, changedFiles } = await import('../tools/changes.mjs');
     const changed = changedFiles({ since: since ?? 'HEAD' });
-    const affected = affectedSuites(changed, selected);
+    const affected = affectedSuites(changed, selected, { since: since ?? 'HEAD' });
     console.error(
       `${changed.length} changed files reach ${affected.length} of ${selected.length} suites` +
         (affected.length ? ':' : '.'),

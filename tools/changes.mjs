@@ -5,7 +5,8 @@
  * dependencies: what it imports, what it names with `new URL(…,
  * import.meta.url)`, and the repository paths it names in strings (fixtures,
  * spawned tools, bundled projects), followed through every module it reaches.
- * A change to the runner, the suite list or the package reaches every suite.
+ * A change to the runner or the package reaches every suite; a change to the
+ * suite list reaches the suites it adds.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -18,9 +19,9 @@ const everything = new Set([
   'package-lock.json',
   '.prettierrc.json',
   'test/run.mjs',
-  'test/suites.mjs',
   'tools/changes.mjs',
 ]);
+const suiteList = 'test/suites.mjs';
 
 export function changedFiles({ since = 'HEAD' } = {}) {
   const git = (...args) =>
@@ -76,17 +77,41 @@ const reaches = (dependency, changed) =>
   dependency === changed ||
   (changed.startsWith(`${dependency}/`) && statSync(join(root, dependency)).isDirectory());
 
+/** Suites the suite list names now but did not name at the base revision. */
+export function addedSuites({ since = 'HEAD' } = {}) {
+  const named = (source) =>
+    new Set(source.match(/'[\w./-]+\.mjs'/gu)?.map((name) => name.slice(1, -1)));
+  let base = '';
+  try {
+    base = execFileSync('git', ['show', `${since}:${suiteList}`], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    // A new suite list adds every suite it names.
+  }
+  const before = named(base);
+  return [...named(readFileSync(join(root, suiteList), 'utf8'))].filter(
+    (name) => !before.has(name),
+  );
+}
+
 /** The suites a set of changed files reaches, each with the change that reaches it. */
-export function affectedSuites(changed, suites) {
+export function affectedSuites(changed, suites, { since = 'HEAD' } = {}) {
   if (changed.some((path) => everything.has(path)))
     return suites.map((suite) => ({
       suite,
       because: changed.find((path) => everything.has(path)),
     }));
+  const added = new Set(changed.includes(suiteList) ? addedSuites({ since }) : []);
   const cache = new Map();
   return suites.flatMap((suite) => {
+    if (added.has(suite)) return [{ suite, because: `${suiteList} (added)` }];
     const deps = dependencies(`test/${suite}`, cache);
-    const because = changed.find((path) => [...deps].some((dep) => reaches(dep, path)));
+    const because = changed.find(
+      (path) => path !== suiteList && [...deps].some((dep) => reaches(dep, path)),
+    );
     return because ? [{ suite, because }] : [];
   });
 }
