@@ -58,6 +58,7 @@ export const suites = {
     'project/data-files.mjs',
     'project/engine-storage.mjs',
     'project/recoil.mjs',
+    'project/juxtaposition.mjs',
     'project/cooperative-frame.mjs',
     'project/scope.mjs',
     'project/role-matching.mjs',

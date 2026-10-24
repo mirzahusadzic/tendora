@@ -15,6 +15,25 @@ import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { answerRecording } from './answer.mjs';
 
 const argument = /^:ARG\d$/u;
+// The circumstances of a relation are variables too: when, where, how, why,
+// with what, from where, under what, for whom. A condition is asked as a case.
+const circumstance = new Set([
+  ':time',
+  ':location',
+  ':manner',
+  ':purpose',
+  ':cause',
+  ':instrument',
+  ':path',
+  ':source',
+  ':destination',
+  ':beneficiary',
+  ':duration',
+  ':frequency',
+  ':extent',
+  ':accompanier',
+]);
+const variable = (role) => argument.test(role) || circumstance.has(role) || /^:prep-/u.test(role);
 const structural = new Set(['amr-unknown', 'and', 'or', '-', '+']);
 // A modal frame asserts what may, must or should hold; its participants are
 // those of the relation it frames.
@@ -53,7 +72,7 @@ export function clozeProbes(source) {
     const target = nodes.get(edge.to);
     if (
       edge.from !== relation ||
-      !argument.test(edge.role) ||
+      !variable(edge.role) ||
       !target ||
       target.literal !== undefined ||
       structural.has(target.concept)
@@ -65,7 +84,7 @@ export function clozeProbes(source) {
     probes.push({
       id: `${source.id}:${edge.role.slice(1)}`,
       sourceId: source.id,
-      kind: 'participant',
+      kind: argument.test(edge.role) ? 'participant' : 'circumstance',
       role: edge.role,
       blank: edge.to,
       ...(relation !== top ? { framed: nodes.get(top).concept } : {}),
@@ -220,7 +239,7 @@ export function outcome(probe, answer) {
   const readFrom = (binding) =>
     binding.ruleIds?.some((id) => id.startsWith(`${probe.sourceId}/clause/`));
   const found =
-    probe.kind === 'participant'
+    probe.kind !== 'truth'
       ? answers.filter((binding) =>
           binding.bindings?.some(
             (slot) =>

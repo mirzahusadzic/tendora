@@ -70,8 +70,19 @@ try {
       ['s', ':ARG1', 'a'],
     ]),
   };
+  const timed = {
+    id: `${root}/s8`,
+    kind: 'source',
+    placementId: root,
+    text: 'The guard locks the gate at night.',
+    graph: graph('l', { l: 'lock-01', g: 'guard', t: 'gate', n: 'night' }, [
+      ['l', ':ARG0', 'g'],
+      ['l', ':ARG1', 't'],
+      ['l', ':time', 'n'],
+    ]),
+  };
   const result = {
-    inputs: [technician, engineer, again, unbroken, broken, may, conditional],
+    inputs: [technician, engineer, again, unbroken, broken, may, conditional, timed],
   };
   // The statements are the root's own, so the project's catalog holds them.
   const concept = project.data.concepts.find(
@@ -113,6 +124,10 @@ try {
   assert(!truth.graph.nodes.some((node) => node.concept === '-'));
   assert.equal(check(truth, [broken.id]), 'recovered');
   assert.equal(check(truth), 'conflict', 'The seal is broken answers it the other way');
+  // A circumstance is a variable too: “When does the guard lock the gate?”
+  const when = clozeProbes(timed).find((probe) => probe.role === ':time');
+  assert.equal(when.kind, 'circumstance');
+  assert.equal(check(when), 'recovered');
   // A modal frame's participants are those of the relation it frames.
   const framed = clozeProbes(may);
   assert.deepEqual(
