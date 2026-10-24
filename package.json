@@ -17,6 +17,8 @@
     "format:check": "prettier --check \"src/**/*.mjs\" \"test/**/*.mjs\" \"tools/**/*.mjs\" \"docs/**/*.md\" \"*.md\" \".github/workflows/*.yml\" package.json .prettierrc.json",
     "setup:python": "node src/models/setup-python.mjs",
     "check": "node test/run.mjs",
+    "check:changed": "node test/run.mjs check --changed",
+    "format:changed": "node tools/changes.mjs format",
     "test": "node test/run.mjs",
     "capture:workbench": "node tools/capture-workbench.mjs",
     "demo": "node tools/payments-demo.mjs",

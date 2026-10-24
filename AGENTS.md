@@ -13,7 +13,7 @@ main authoring interface.
 
 Use Node.js 24+ and `npm ci`; `npm run setup:python` installs the local Python
 environment with uv. Test without a running model service: `npm run check`.
-Run `npm run format:check` before committing.
+Run `npm run format:changed` (or `format:check` for everything) before committing.
 
 ## Preserve the architecture
 
@@ -46,8 +46,10 @@ failing. Prefer the cheapest discriminating test to new apparatus, and never
 lower a benchmark floor to make a change pass.
 
 Register every new test once in `test/suites.mjs`. Add focused regressions for
-behavior changes and run the affected tests, then `npm run check`. Documentation
-changes need factual and link checks, not a full engine run.
+behavior changes and run the affected tests, then `npm run check:changed` (the
+suites the change reaches); run the full `npm run check` before a snapshot or
+after changing the runner. Documentation changes need factual and link checks,
+not a full engine run.
 
 Keep credentials, personal corpora and generated runtime state out of Git.
 Update SEMCAT behavior in its fork, then update its pin and

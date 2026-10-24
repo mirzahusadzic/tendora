@@ -48,6 +48,7 @@ export const suites = {
     'tui/scale.mjs',
     'tui/paste.mjs',
     'architecture/runner.mjs',
+    'architecture/changes.mjs',
     'architecture/source-boundaries.mjs',
     'architecture/test-layout.mjs',
     'project/storage.mjs',
