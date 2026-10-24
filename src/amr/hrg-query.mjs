@@ -89,41 +89,52 @@ export function matchChart(
       const rows = visit(child.id).map((row) => ({ ...row, children: [row.derivation] }));
       return {
         rows,
+        size: rows.length,
         keys: plan.rules[child.id].vertices.slice(0, child.ports.length),
         child: child.id,
       };
     });
+    // A terminal is not matched against the whole corpus up front. Its fixed
+    // terms bound its candidates; once a vertex of it is joined, it is looked
+    // up through that vertex instead, so a selective relation trims the rest.
     for (const terminal of rule.terminals) {
-      const { pattern } = terminal;
-      const choices = pattern.flatMap((term, i) =>
+      const choices = terminal.pattern.flatMap((term, i) =>
         variable(term) ? [] : [indexes[i].get(term) ?? []],
       );
       const candidates = choices.length
         ? choices.reduce((a, b) => (a.length < b.length ? a : b))
         : facts;
+      relations.push({ terminal, candidates, size: candidates.length, keys: terminal.vertices });
+    }
+    // The terminal's own values for one fact, consistent with a joined row.
+    const read = (pattern, fact, bound) => {
+      const values = {};
+      for (let i = 0; i < 3; i++) {
+        const term = pattern[i],
+          actual = fact.triple[i];
+        if (!variable(term)) {
+          if (term !== actual) return null;
+        } else if (term in values) {
+          if (values[term] !== actual) return null;
+        } else if (term in bound && bound[term] !== actual) return null;
+        else values[term] = actual;
+      }
+      return injective(values) ? values : null;
+    };
+    const scan = ({ terminal, candidates }) => {
       const rows = [];
       for (const fact of candidates) {
         if (!tick()) break;
-        const values = {};
-        let accepts = true;
-        for (let i = 0; i < 3; i++) {
-          const term = pattern[i],
-            actual = fact.triple[i];
-          if (!variable(term)) {
-            if (term !== actual) accepts = false;
-          } else if (term in values && values[term] !== actual) accepts = false;
-          else values[term] = actual;
-        }
-        if (accepts && injective(values))
-          rows.push({ values, evidence: { [terminal.id]: fact.id }, children: [] });
+        const values = read(terminal.pattern, fact, {});
+        if (values) rows.push({ values, evidence: { [terminal.id]: fact.id }, children: [] });
       }
-      relations.push({ rows, keys: terminal.vertices });
-    }
+      return rows;
+    };
     // Smallest first, but connected first: a relation sharing no vertex with
     // what is already joined multiplies the rows, a cross product that only a
     // later relation could prune and that a bound can cut off first. The
     // order changes the work, not the complete set of matches.
-    const pending = relations.sort((a, b) => a.rows.length - b.rows.length);
+    const pending = relations.sort((a, b) => a.size - b.size);
     const ordered = [],
       reached = new Set();
     while (pending.length) {
@@ -137,14 +148,47 @@ export function matchChart(
     const known = new Set();
     for (const relation of ordered) {
       const shared = relation.keys.filter((key) => known.has(key));
+      const next = [];
+      if (relation.terminal && shared.length) {
+        // Every index list keeps the facts' order, so looking a terminal up
+        // through a joined vertex yields the rows a full scan would, in order.
+        const { pattern, id } = relation.terminal;
+        const through = pattern.flatMap((term, i) => (shared.includes(term) ? [i] : []));
+        for (const a of joined) {
+          let list = relation.candidates;
+          for (const i of through) {
+            const found = indexes[i].get(a.values[pattern[i]]) ?? [];
+            if (found.length < list.length) list = found;
+          }
+          for (const fact of list) {
+            if (!tick()) break;
+            const values = read(pattern, fact, a.values);
+            const merged =
+              values && combine(a, { values, evidence: { [id]: fact.id }, children: [] });
+            if (merged) {
+              if (next.length >= limit) {
+                complete = false;
+                break;
+              }
+              next.push(merged);
+            }
+          }
+          if (!complete) break;
+        }
+        joined = next;
+        joinedRelations++;
+        for (const key of relation.keys) known.add(key);
+        if (!complete || !joined.length) break;
+        continue;
+      }
+      const rows = relation.terminal ? scan(relation) : relation.rows;
       const keyOf = (values) => JSON.stringify(shared.map((key) => values[key]));
       const lookup = new Map();
-      for (const row of relation.rows) {
+      for (const row of rows) {
         const key = keyOf(row.values);
         if (!lookup.has(key)) lookup.set(key, []);
         lookup.get(key).push(row);
       }
-      const next = [];
       for (const a of joined) {
         for (const b of lookup.get(keyOf(a.values)) ?? []) {
           if (!tick()) break;
