@@ -179,8 +179,23 @@ export function inferRelations(
       [facts.get(from), ...(facts.get(from)?.alternatives ?? [])].some((proof) =>
         proof?.premises?.some((id) => reaches(id, target, seen)),
       )));
+  // Semi-naive rounds: a rule none of whose patterns fits a fact that is new,
+  // or newly proved, since the last round finds only matches it has already
+  // fired or refused. A new proof counts: it can satisfy a witness's guards.
+  let changed = null;
+  const fits = (pattern, triple) =>
+    pattern.every((term, i) => variable(term) || term === triple[i]);
+  const touches = (rule) =>
+    !changed ||
+    rule.when.some((pattern) =>
+      (variable(pattern[1]) ? changed.all : (changed.byRole.get(pattern[1]) ?? [])).some((fact) =>
+        fits(pattern, fact.triple),
+      ),
+    );
+  let evaluations = 0;
   for (; complete && rounds < maxRounds; rounds++) {
     let added = false;
+    const touched = new Set();
     // A round reads one immutable relation cohort. This lets all rule bodies
     // share the same compiled grammar; new consequences enter the next round.
     const cohort = [...facts.values()];
@@ -204,6 +219,8 @@ export function inferRelations(
     };
     const baseCohort = viewRules.size ? cohort.filter((f) => unextended(f.id)) : cohort;
     for (const rule of rules) {
+      if (!touches(rule)) continue;
+      evaluations++;
       const input = rule.baseOnly ? baseCohort : rule.inputOnly ? inputCohort : cohort;
       const matching = matcher(
         rule.when,
@@ -287,6 +304,7 @@ export function inferRelations(
               break;
             }
             (existing.alternatives ??= []).push(proof);
+            touched.add(id);
             added = true;
             continue;
           }
@@ -299,15 +317,23 @@ export function inferRelations(
             triple,
             ...proof,
           });
+          touched.add(id);
           added = true;
         }
         if (!complete) break;
       }
       if (!complete) break;
     }
-    if (!added) return { facts: [...facts.values()], complete, rounds: rounds + 1 };
+    if (!added) return { facts: [...facts.values()], complete, rounds: rounds + 1, evaluations };
+    const all = [...touched].map((id) => facts.get(id)),
+      byRole = new Map();
+    for (const fact of all) {
+      if (!byRole.has(fact.triple[1])) byRole.set(fact.triple[1], []);
+      byRole.get(fact.triple[1]).push(fact);
+    }
+    changed = { all, byRole };
   }
-  return { facts: [...facts.values()], complete: false, rounds };
+  return { facts: [...facts.values()], complete: false, rounds, evaluations };
 }
 
 // Tracing runs once per match against one fact array: index it once, not per

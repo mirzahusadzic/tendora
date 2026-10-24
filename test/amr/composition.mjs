@@ -142,6 +142,21 @@ for (const inputs of [evidence, evidence.slice(1)]) {
   );
 }
 assert(!inferRelations([], independent).facts.some((fact) => fact.triple[1] === 'answer'));
+// Semi-naive rounds: a chain derives one link a round, and only the rule that
+// reads the new link runs again; the rest found everything they could.
+const chain = Array.from({ length: 8 }, (_, i) => ({
+  id: `step-${i}`,
+  name: `Step ${i}`,
+  when: [['?x', `link-${i}`, '?y']],
+  then: [['?x', `link-${i + 1}`, '?y']],
+}));
+const chained = inferRelations([{ triple: ['a', 'link-0', 'b'], sourceIds: ['seed'] }], chain);
+assert(chained.facts.some((fact) => fact.triple[1] === 'link-8'));
+assert.equal(chained.rounds, 9);
+assert(
+  chained.evaluations < 2 * chain.length,
+  `Rules untouched by the last round are not matched again (${chained.evaluations} of ${chain.length * chained.rounds})`,
+);
 const duplicate = { triple: ['a', 'same', 'b'], sourceIds: ['one'], bindingIds: ['binding-one'] };
 const copies = inferRelations(
   [duplicate, duplicate, { ...duplicate, sourceIds: ['two'], bindingIds: ['binding-two'] }],
