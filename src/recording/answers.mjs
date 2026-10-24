@@ -654,6 +654,14 @@ function evaluateQuestion(recording, knowledge, limits, reading) {
  * upper bound keeps a very large scope's bounded search bounded in time.
  */
 export const matchCap = (sources) => Math.min(10000, Math.max(2000, 40 * sources));
+/** The fact bound grows with the material too: about 80 relation facts per
+ * source occurrence, between the 12000 a small scope has always had and 48000.
+ * Corpus P's statements carry about 42 facts each; a fixed 12000 stopped every
+ * check at the root before inference at about 286 of them, though 17,600 facts
+ * infer in a third of a second. The upper bound keeps a very large scope's
+ * inference bounded, and limited when it is reached.
+ */
+export const factCap = (sources) => Math.min(48000, Math.max(12000, 80 * sources));
 
 function evaluateReading(recording, knowledge, limits, reading) {
   const material = answerMaterial(recording, knowledge, limits?.preparation);
@@ -663,6 +671,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
   const matchLimit = limits?.matchLimit ?? matchCap(material.sources.length);
   const inference = inferRelations(material.facts, material.rules, {
     matchLimit: matchCap(material.sources.length),
+    maxFacts: factCap(material.sources.length),
     ...limits,
     account,
     matcher: matchRelations,

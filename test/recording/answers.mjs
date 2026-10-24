@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { inferRelations, validateRule } from '../../src/amr/inference.mjs';
 import { graphRevision } from '../../src/recording/revisions.mjs';
-import { evaluateAnswer, matchCap } from '../../src/recording/answers.mjs';
+import { evaluateAnswer, factCap, matchCap } from '../../src/recording/answers.mjs';
 import { prepareGraphs } from '../../src/models/graph-preparation.mjs';
 
 const graph = (id, top, nodes, edges) => ({
@@ -655,6 +655,9 @@ assert.equal(
 assert.equal(matchCap(19), 2000);
 assert.equal(matchCap(209), 8360, 'A 209-statement corpus is not cut off at 2000');
 assert.equal(matchCap(10000), 10000);
+assert.equal(factCap(19), 12000);
+assert.equal(factCap(297), 23760, 'A 297-statement corpus is not stopped before inference');
+assert.equal(factCap(10000), 48000);
 // A predicate bound as an answer reads by its attested word and the source's
 // modifiers, never by its concept name.
 const kept = graph('kept', 'k', { k: 'keep-01', r: 'registry', c: 'commit-01', p: 'public-02' }, [
