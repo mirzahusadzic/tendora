@@ -133,6 +133,11 @@ try {
           `Grammar: ${corpus?.rules ?? 0} productions; ${grammar.compilations ? 'compiled changed material' : 'reused retained material'}`,
         );
       }
+      if (run.answer?.related?.length) {
+        lines.push('Closest statements (they share words with the question; none answers it):');
+        for (const item of run.answer.related)
+          lines.push(`  ${item.text}  (shares: ${item.shares.join(', ')})`);
+      }
       if (run.coverage?.sources)
         lines.push(
           `AMRs: ${run.coverage.sources.prepared}/${run.coverage.sources.total} source occurrences; ${run.coverage.cases.prepared}/${run.coverage.cases.total} case occurrences; question ${run.coverage.question ? 'prepared' : 'missing'}`,

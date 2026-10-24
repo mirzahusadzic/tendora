@@ -413,6 +413,7 @@ async function executeEngineRun(
           skipped: answer.skipped,
           clarifications: answer.clarifications,
           partial: answer.partial,
+          ...(answer.related ? { related: answer.related } : {}),
           grammar: {
             profile: answer.grammar.profile,
             ...answer.grammar.stats,

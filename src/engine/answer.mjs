@@ -73,11 +73,71 @@ export function checkAnswer(project, input, result, options) {
   const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
   const answer = evaluateAnswer(recording, knowledge, options);
   answer.clarifications = buildClarifications(project, input, result, answer);
-  return (
+  const checked =
     settleSharedWording(recording, knowledge, options, input, answer) ??
     settleReference(recording, knowledge, options, answer) ??
-    answer
+    answer;
+  return checked.answers.length ? checked : { ...checked, related: closestStatements(recording) };
+}
+
+/** When nothing answers, the statements that share the most of the question's
+ * content concepts, rarer concepts weighing more. They point where to look; they
+ * are not evidence and answer nothing. */
+const generic = new Set(
+  'amr-unknown - + and or multi-sentence person thing it they i you we he she this that name imperative possible-01 obligate-01 recommend-01 cause-01 contrast-01 mean-01 have-degree-91 date-entity'.split(
+    ' ',
+  ),
+);
+const contentConcepts = (graph) =>
+  new Set(
+    graph.nodes
+      .filter((node) => node.literal === undefined && !generic.has(node.concept))
+      .filter((node) => !/-9\d$/u.test(node.concept))
+      .map((node) => node.concept),
   );
+export function closestStatements(recording, limit = 5) {
+  const question = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);
+  if (!question) return [];
+  const wanted = contentConcepts(question);
+  const statements = recording.sources
+    .filter((source) => source.graphId && !source.development)
+    .map((source) => {
+      const graph = recording.graphs.find((item) => item.id === source.graphId);
+      return graph && { source, graph, concepts: contentConcepts(graph) };
+    })
+    .filter(Boolean);
+  const frequency = new Map();
+  for (const { concepts } of statements)
+    for (const concept of concepts) frequency.set(concept, (frequency.get(concept) ?? 0) + 1);
+  const weight = (concept) => Math.log(1 + statements.length / frequency.get(concept));
+  return statements
+    .map(({ source, graph, concepts }) => {
+      const shared = [...concepts].filter((concept) => wanted.has(concept)).sort();
+      return {
+        source,
+        graph,
+        shared,
+        size: concepts.size,
+        score: shared.reduce((sum, concept) => sum + weight(concept), 0),
+      };
+    })
+    .filter((item) => item.shared.length)
+    .sort((a, b) => b.score - a.score || a.size - b.size || a.source.id.localeCompare(b.source.id))
+    .slice(0, limit)
+    .map(({ source, graph, shared, score }) => ({
+      sourceId: source.id,
+      nodeId: source.nodeId,
+      text: source.text,
+      shares: shared.map((concept) => {
+        const node = graph.nodes.find((item) => item.concept === concept);
+        return (
+          source.readingLabels?.[node.id] ??
+          node.surfaceLabel ??
+          concept.replace(/-\d+$/u, '').replaceAll('-', ' ')
+        );
+      }),
+      score: Math.round(score * 1000) / 1000,
+    }));
 }
 
 /** A pronoun the reading left unresolved refers to something the question
