@@ -5,8 +5,10 @@
  *   quiet          it cites no statement
  *   branch         one branch
  *   juxtaposition  two or more; each pair is a tension line, resolved when
- *                  the answer composes statements from both, open when only
- *                  supported parts or possible answers reach them
+ *                  one answer composes statements from both, gathered when
+ *                  each branch gives its own answers and none composes them,
+ *                  open when only supported parts or possible answers reach
+ *                  one of them
  *
  * Openings do not activate a branch: they name every statement where a
  * relation of the question occurs, however generic.
@@ -43,7 +45,8 @@ const placementOf = (sourceId) => /^(.*)\/s\d+$/u.exec(sourceId)?.[1] ?? null;
 export function activation(answer, branchOf) {
   const branches = (ids) =>
     new Set(ids.map((id) => branchOf(placementOf(id))).filter((branch) => branch !== null));
-  const answered = branches((answer.answers ?? []).flatMap((binding) => binding.sourceIds));
+  const bindings = (answer.answers ?? []).map((binding) => branches(binding.sourceIds));
+  const answered = new Set(bindings.flatMap((set) => [...set]));
   const reached = branches([
     ...(answer.candidates ?? []).flatMap((binding) => binding.sourceIds),
     ...(answer.partial?.parts ?? []).flatMap((part) => part.sourceIds ?? []),
@@ -55,7 +58,11 @@ export function activation(answer, branchOf) {
       tensions.push({
         left: active[i],
         right: active[j],
-        status: answered.has(active[i]) && answered.has(active[j]) ? 'resolved' : 'open',
+        status: bindings.some((set) => set.has(active[i]) && set.has(active[j]))
+          ? 'resolved'
+          : answered.has(active[i]) && answered.has(active[j])
+            ? 'gathered'
+            : 'open',
       });
   return {
     effect: !active.length ? 'quiet' : active.length === 1 ? 'branch' : 'juxtaposition',
@@ -101,6 +108,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
           right: tension.right,
           labels: [name(tension.left), name(tension.right)],
           resolved: [],
+          gathered: [],
           open: [],
         });
       lines.get(key)[tension.status].push(item.question);
@@ -113,7 +121,10 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     effects,
     tensions: [...lines.values()].sort(
       (a, b) =>
-        b.resolved.length + b.open.length - (a.resolved.length + a.open.length) ||
+        b.resolved.length +
+          b.gathered.length +
+          b.open.length -
+          (a.resolved.length + a.gathered.length + a.open.length) ||
         a.labels.join().localeCompare(b.labels.join()),
     ),
     questions,

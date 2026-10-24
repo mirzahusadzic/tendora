@@ -1,6 +1,7 @@
 /** A checked question is quiet, a branch, or a juxtaposition of branches at a
- * grain; a tension line is resolved only when the answer composes statements
- * from both branches, and open when only parts or openings reach them. */
+ * grain; a tension line is resolved only when one answer composes statements
+ * from both branches, gathered when separate answers reach each, and open when
+ * only parts reach them; openings activate nothing. */
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -42,6 +43,15 @@ try {
   assert.deepEqual(joined.tensions, [
     { left: [stage, office].sort()[0], right: [stage, office].sort()[1], status: 'resolved' },
   ]);
+  const gathered = activation(
+    { answers: [{ sourceIds: [at(lift)] }, { sourceIds: [at(office)] }] },
+    branchOf,
+  );
+  assert.equal(
+    gathered.tensions[0].status,
+    'gathered',
+    'Two answers, one from each branch, compose nothing',
+  );
   const apart = activation(
     {
       answers: [],
@@ -93,10 +103,15 @@ try {
           3,
         ),
         run('Who inspects the lift?', { answers: [{ sourceIds: [at(lift)] }] }, 4),
+        run(
+          'Who inspects the lift, and who keeps the office?',
+          { answers: [{ sourceIds: [at(lift)] }, { sourceIds: [at(office)] }] },
+          5,
+        ),
       ],
     },
   });
-  assert.deepEqual(tree.effects, { quiet: 0, branch: 1, juxtaposition: 2 });
+  assert.deepEqual(tree.effects, { quiet: 0, branch: 1, juxtaposition: 3 });
   assert.equal(tree.tensions.length, 1, 'One line between Stage and Office');
   assert.deepEqual(tree.tensions[0].labels.sort(), ['Office', 'Stage']);
   assert.deepEqual(
@@ -105,8 +120,9 @@ try {
     'The latest check',
   );
   assert.deepEqual(tree.tensions[0].open, ['Who files the report?']);
+  assert.deepEqual(tree.tensions[0].gathered, ['Who inspects the lift, and who keeps the office?']);
   console.log(
-    'ok juxtaposition: quiet, branch and juxtaposition at a grain; tension lines resolved only by a composed answer; the opportunity tree',
+    'ok juxtaposition: quiet, branch and juxtaposition at a grain; tension lines resolved only by one composed answer, gathered by separate ones; the opportunity tree',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });
