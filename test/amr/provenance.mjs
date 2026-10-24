@@ -9,6 +9,7 @@ import {
   proofGraph,
   withheldSupport,
 } from '../../src/amr/inference.mjs';
+import { FactStore, storePrefix } from '../../src/amr/fact-store.mjs';
 
 // Two ways to a reachable gate, a cycle between two rooms, and a chain.
 const inputs = [
@@ -76,6 +77,33 @@ for (const source of sources) {
     assert.equal(!necessity.of(f).includes(source), truth.has(id), `${id} needs ${source}?`);
   }
 }
+// Read from inference's store or from the objects, the graph is the same.
+const objects = proofGraph([...full.facts]);
+assert.notEqual(objects, graph);
+const withoutNotes = withheldSupport(objects, ['notes']);
+assert.deepEqual([...withoutNotes], [...withheldSupport(graph, ['notes'])]);
+const fromObjects = necessarySources(objects);
+for (let f = 0; f < graph.length; f++)
+  assert.deepEqual(fromObjects.of(f), necessity.of(f), 'Necessity read from the objects');
+// Every prefix of the store: a proof resting on a later fact is unusable.
+const samePrefixes = (facts, store) => {
+  let cut = 0;
+  for (let n = 1; n <= facts.length; n++) {
+    const prefix = facts.slice(0, n);
+    const early = proofGraph(storePrefix(prefix, store)),
+      earlyObjects = proofGraph([...prefix]);
+    for (const field of ['factProofs', 'proofFact', 'broken', 'premiseStart', 'premises'])
+      assert.deepEqual([...early[field]], [...earlyObjects[field]], `${field} at ${n}`);
+    cut += early.broken.reduce((sum, b) => sum + b, 0);
+  }
+  return cut;
+};
+samePrefixes(full.facts, full.store);
+const later = [
+  [['a', ':way', 'c'], { ruleId: 'r', premises: ['["c",":door","a"]'], sourceIds: [] }],
+  [['c', ':door', 'a'], { sourceIds: ['plan'] }],
+].map(([triple, proof]) => ({ id: JSON.stringify(triple), triple, ...proof }));
+assert.equal(samePrefixes(later, FactStore.from(later)), 1, 'Cut off from a later premise');
 const at = (triple) => graph.position.get(JSON.stringify(triple));
 assert.deepEqual(
   necessity.of(at(['hall', ':way', 'gate'])),

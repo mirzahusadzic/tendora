@@ -1,6 +1,6 @@
 /** Bounded forward chaining over authored triples. No domain predicates or aliases. */
 import { hash53 } from './hash.mjs';
-import { FactStore, storePrefix } from './fact-store.mjs';
+import { FactStore, NONE, storeOf, storePrefix } from './fact-store.mjs';
 const variable = (term) => /^\?[A-Za-z][\w-]*$/u.test(term);
 const fresh = (term) => /^\$[A-Za-z][\w-]*$/u.test(term);
 const key = (triple) => JSON.stringify(triple);
@@ -391,13 +391,43 @@ function factsById(facts) {
 }
 
 /** A fact array's proofs as integer arrays, built once: each fact's proofs
- * (the fact's own, then its alternatives), each proof's sources and premises
- * (fact positions), and the proofs each fact is a premise of. A premise not in
- * the array leaves its proof unusable. */
+ * (the fact's own, then its alternatives) as one run, each proof's sources
+ * and premises (fact positions) as runs of two pools, and the proofs each fact
+ * is a premise of. A premise not in the array leaves its proof unusable. A
+ * store's prefix is read from the store's columns; sources are numbered as
+ * the store numbers its terms. */
 const proofGraphs = new WeakMap();
+// Offsets for runs counted per item: run i is [start[i], start[i + 1]).
+const offsetsOf = (counts) => {
+  const start = new Uint32Array(counts.length + 1);
+  for (let i = 0; i < counts.length; i++) start[i + 1] = start[i] + counts[i];
+  return start;
+};
 export function proofGraph(facts) {
   const cached = proofGraphs.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+  const store = storeOf(facts);
+  const graph = store ? storeProofGraph(store, facts) : objectProofGraph(facts);
+  // The proofs each fact is a premise of.
+  const uses = new Uint32Array(facts.length);
+  for (let i = 0; i < graph.premises.length; i++) uses[graph.premises[i]]++;
+  const premiseOfStart = offsetsOf(uses),
+    premiseOf = new Uint32Array(graph.premises.length),
+    fill = premiseOfStart.slice(0, facts.length);
+  for (let p = 0; p < graph.proofFact.length; p++)
+    for (let i = graph.premiseStart[p]; i < graph.premiseStart[p + 1]; i++)
+      premiseOf[fill[graph.premises[i]]++] = p;
+  Object.assign(graph, {
+    facts,
+    premiseOfStart,
+    premiseOf,
+    length: facts.length,
+    last: facts.at(-1),
+  });
+  proofGraphs.set(facts, graph);
+  return graph;
+}
+function objectProofGraph(facts) {
   const position = new Map(facts.map((fact, f) => [fact.id, f]));
   const sources = new Map(),
     sourceIds = [];
@@ -410,42 +440,103 @@ export function proofGraph(facts) {
     }
     return n;
   };
-  const factProofs = new Uint32Array(facts.length + 1),
+  const proofCounts = new Uint32Array(facts.length),
     proofFact = [],
-    proofSources = [],
-    proofPremises = [],
+    sourceCounts = [],
+    sourcePool = [],
+    premiseCounts = [],
+    premisePool = [],
     broken = [];
   for (let f = 0; f < facts.length; f++) {
-    factProofs[f] = proofFact.length;
-    for (const proof of [facts[f], ...(facts[f].alternatives ?? [])]) {
+    const proofs = [facts[f], ...(facts[f].alternatives ?? [])];
+    proofCounts[f] = proofs.length;
+    for (const proof of proofs) {
       const premises = (proof.premises ?? []).map((id) => position.get(id));
+      const used = [...new Set(proof.sourceIds ?? [])].map(source);
       proofFact.push(f);
-      proofSources.push([...new Set(proof.sourceIds ?? [])].map(source));
-      proofPremises.push(premises.filter((q) => q !== undefined));
-      broken.push(premises.some((q) => q === undefined));
+      sourceCounts.push(used.length);
+      sourcePool.push(...used);
+      const found = premises.filter((q) => q !== undefined);
+      premiseCounts.push(found.length);
+      premisePool.push(...found);
+      broken.push(found.length !== premises.length ? 1 : 0);
     }
   }
-  factProofs[facts.length] = proofFact.length;
-  const premiseOf = Array.from({ length: facts.length }, () => []);
-  proofPremises.forEach((premises, p) => {
-    for (const q of premises) premiseOf[q].push(p);
-  });
-  const graph = {
-    facts,
+  return {
     position,
     sourceIds,
     sources,
-    factProofs,
-    proofFact,
-    proofSources,
-    proofPremises,
-    broken,
-    premiseOf,
-    length: facts.length,
-    last: facts.at(-1),
+    factProofs: offsetsOf(proofCounts),
+    proofFact: Uint32Array.from(proofFact),
+    sourceStart: offsetsOf(sourceCounts),
+    sourcePool: Uint32Array.from(sourcePool),
+    premiseStart: offsetsOf(premiseCounts),
+    premises: Uint32Array.from(premisePool),
+    broken: Uint8Array.from(broken),
   };
-  proofGraphs.set(facts, graph);
-  return graph;
+}
+function storeProofGraph(store, facts) {
+  const length = facts.length;
+  // A fact's proofs are a linked run of rows in the store; here they become
+  // one run per fact, in the same order (its own, then its alternatives).
+  const proofCounts = new Uint32Array(length);
+  let total = 0;
+  for (let f = 0; f < length; f++)
+    for (let p = store.firstProof.data[f]; p !== NONE; p = store.proofNext.data[p])
+      (proofCounts[f]++, total++);
+  const rows = new Uint32Array(total),
+    proofFact = new Uint32Array(total);
+  for (let f = 0, g = 0; f < length; f++)
+    for (let p = store.firstProof.data[f]; p !== NONE; p = store.proofNext.data[p])
+      ((rows[g] = p), (proofFact[g++] = f));
+  const sourcesList = store.lists.sourceIds;
+  const sourceCounts = new Uint32Array(total),
+    premiseCounts = new Uint32Array(total),
+    broken = new Uint8Array(total);
+  for (let g = 0; g < total; g++) {
+    const p = rows[g];
+    sourceCounts[g] = sourcesList.count.data[p];
+    const from = store.premiseStart.data[p],
+      to = from + store.premiseCount.data[p];
+    for (let i = from; i < to; i++)
+      if (store.premises.data[i] < length) premiseCounts[g]++;
+      else broken[g] = 1;
+  }
+  const sourceStart = offsetsOf(sourceCounts),
+    premiseStart = offsetsOf(premiseCounts);
+  const sourcePool = new Uint32Array(sourceStart[total]),
+    premises = new Uint32Array(premiseStart[total]);
+  for (let g = 0; g < total; g++) {
+    const p = rows[g];
+    sourcePool.set(
+      sourcesList.pool.data.subarray(
+        sourcesList.start.data[p],
+        sourcesList.start.data[p] + sourceCounts[g],
+      ),
+      sourceStart[g],
+    );
+    const from = store.premiseStart.data[p],
+      to = from + store.premiseCount.data[p];
+    for (let i = from, at = premiseStart[g]; i < to; i++)
+      if (store.premises.data[i] < length) premises[at++] = store.premises.data[i];
+  }
+  return {
+    position: {
+      get: (id) => {
+        const f = store.position(id);
+        return f < length ? f : undefined;
+      },
+    },
+    sourceIds: store.terms,
+    sources: store.numbers,
+    factProofs: offsetsOf(proofCounts),
+    proofFact,
+    sourceStart,
+    sourcePool,
+    premiseStart,
+    premises,
+    broken,
+  };
 }
 
 /** Which facts still hold without some sources: a fact holds when one of its
@@ -461,8 +552,11 @@ export function withheldSupport(graph, withheld) {
     holds = new Uint8Array(graph.length),
     queue = [];
   for (let p = 0; p < proofs; p++) {
-    dead[p] = graph.broken[p] || graph.proofSources[p].some((n) => out.has(n)) ? 1 : 0;
-    missing[p] = graph.proofPremises[p].length;
+    let withheldSource = false;
+    for (let i = graph.sourceStart[p]; i < graph.sourceStart[p + 1] && !withheldSource; i++)
+      withheldSource = out.has(graph.sourcePool[i]);
+    dead[p] = graph.broken[p] || withheldSource ? 1 : 0;
+    missing[p] = graph.premiseStart[p + 1] - graph.premiseStart[p];
   }
   const prove = (p) => {
     const f = graph.proofFact[p];
@@ -471,7 +565,14 @@ export function withheldSupport(graph, withheld) {
     queue.push(f);
   };
   for (let p = 0; p < proofs; p++) prove(p);
-  while (queue.length) for (const p of graph.premiseOf[queue.pop()]) (missing[p]--, prove(p));
+  while (queue.length) {
+    const f = queue.pop();
+    for (let i = graph.premiseOfStart[f]; i < graph.premiseOfStart[f + 1]; i++) {
+      const p = graph.premiseOf[i];
+      missing[p]--;
+      prove(p);
+    }
+  }
   return holds;
 }
 
@@ -483,15 +584,18 @@ export function withheldSupport(graph, withheld) {
 export function necessarySources(graph, { maxRounds = 64 } = {}) {
   const top = null; // every source
   const necessary = new Array(graph.length).fill(top);
-  const union = (sets) => {
+  const meet = (a, b) => (a === top ? b : b === top ? a : new Set([...a].filter((n) => b.has(n))));
+  // The sources one proof rests on: its own, then its premises'.
+  const through = (p) => {
+    const from = graph.premiseStart[p],
+      to = graph.premiseStart[p + 1];
+    for (let i = from; i < to; i++) if (necessary[graph.premises[i]] === top) return top;
     const all = new Set();
-    for (const set of sets) {
-      if (set === top) return top;
-      for (const n of set) all.add(n);
-    }
+    for (let i = graph.sourceStart[p]; i < graph.sourceStart[p + 1]; i++)
+      all.add(graph.sourcePool[i]);
+    for (let i = from; i < to; i++) for (const n of necessary[graph.premises[i]]) all.add(n);
     return all;
   };
-  const meet = (a, b) => (a === top ? b : b === top ? a : new Set([...a].filter((n) => b.has(n))));
   let changed = true,
     rounds = 0;
   for (; changed && rounds < maxRounds; rounds++) {
@@ -501,9 +605,7 @@ export function necessarySources(graph, { maxRounds = 64 } = {}) {
         usable = false;
       for (let p = graph.factProofs[f]; p < graph.factProofs[f + 1]; p++) {
         if (graph.broken[p]) continue;
-        const premises = graph.proofPremises[p].map((q) => necessary[q]);
-        const through = union([new Set(graph.proofSources[p]), ...premises]);
-        value = meet(value, through);
+        value = meet(value, through(p));
         usable = true;
       }
       const same =
