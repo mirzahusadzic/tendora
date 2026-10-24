@@ -65,6 +65,7 @@ export const suites = {
     'project/role-matching.mjs',
     'project/role-vectors.mjs',
     'project/background.mjs',
+    'recording/withheld.mjs',
     'recording/answers.mjs',
     'recording/frame.mjs',
     'recording/case-support.mjs',

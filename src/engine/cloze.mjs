@@ -10,7 +10,7 @@
  * Probes propose where to ask and what to reword; they answer nothing, and a
  * question worth keeping is worded by the author.
  */
-import { evaluateAnswer } from '../recording/answers.mjs';
+import { answerBase, evaluateAnswer, withheldBase } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { answerRecording } from './answer.mjs';
 import { onlyClause } from '../amr/conditions.mjs';
@@ -174,6 +174,25 @@ function connected(graph, start, removed, skip = null) {
 
 /** Check one probe against a saved check's retained readings. `withhold` leaves
  * sources out, for carriage: does anything else recover the blank? */
+// Probes of one check share its material and inference: a probe's question
+// is not part of its material (no interpretation was made for a probe), so one
+// base serves every probe without a case, and a withheld view of it serves
+// every probe that withholds the same statements.
+const bases = new WeakMap();
+function probeBase(result, knowledge, key, make) {
+  if (!bases.has(result)) bases.set(result, new WeakMap());
+  const byKnowledge = bases.get(result);
+  if (!byKnowledge.has(knowledge)) byKnowledge.set(knowledge, new Map());
+  const kept = byKnowledge.get(knowledge);
+  if (!kept.has(key)) {
+    // The full base stays; of the withheld views, only the latest: the probes
+    // that withhold one statement come together.
+    for (const other of kept.keys()) if (other !== '') kept.delete(other);
+    kept.set(key, make());
+  }
+  return kept.get(key);
+}
+
 export function checkProbe(project, input, result, probe, { withhold = [], ...options } = {}) {
   const question = {
     id: `cloze:${probe.id}`,
@@ -190,34 +209,50 @@ export function checkProbe(project, input, result, probe, { withhold = [], ...op
     text: `The condition of ${probe.sourceId}`,
     graph: probe.case,
   };
-  const inputs = result.inputs.filter(
-    (item) =>
-      item.kind !== 'question' &&
-      !(probe.case && item.kind === 'case') &&
-      !withhold.includes(item.id),
-  );
-  const recording = answerRecording(
-    project,
-    {
-      ...input,
-      question: { text: '', revision: probe.id },
-      ...(caseStatement
-        ? {
-            caseSelection: {
-              projectId: project.data.id,
-              placementId: caseStatement.placementId,
-              sources: [{ text: caseStatement.text }],
-            },
-          }
-        : {}),
-    },
-    { ...result, inputs: [...inputs, ...(caseStatement ? [caseStatement] : []), question] },
-  );
-  const answer = evaluateAnswer(
-    recording,
-    options.knowledge ?? knowledgeSnapshot(project.data),
-    options,
-  );
+  const knowledge = options.knowledge ?? knowledgeSnapshot(project.data);
+  // Without a case, the probe is checked against the shared base, and what is
+  // withheld is read from its proofs; with a case, or when the base was
+  // bounded, against its own material without the withheld statements.
+  const shared = !probe.case && options.knowledge;
+  const full = (withheld) =>
+    result.inputs.filter(
+      (item) =>
+        item.kind !== 'question' &&
+        !(probe.case && item.kind === 'case') &&
+        !withheld.includes(item.id),
+    );
+  const record = (inputs) =>
+    answerRecording(
+      project,
+      {
+        ...input,
+        question: { text: '', revision: probe.id },
+        ...(caseStatement
+          ? {
+              caseSelection: {
+                projectId: project.data.id,
+                placementId: caseStatement.placementId,
+                sources: [{ text: caseStatement.text }],
+              },
+            }
+          : {}),
+      },
+      { ...result, inputs: [...inputs, ...(caseStatement ? [caseStatement] : []), question] },
+    );
+  let recording, base;
+  if (shared) {
+    recording = record(full([]));
+    base = probeBase(result, knowledge, '', () => answerBase(recording, knowledge, options));
+    if (withhold.length) {
+      const key = JSON.stringify([...withhold].sort());
+      base = probeBase(result, knowledge, key, () => withheldBase(base, withhold));
+    }
+  }
+  if (!base) recording = record(full(withhold));
+  const answer = evaluateAnswer(recording, knowledge, {
+    ...options,
+    ...(base ? { base: { ...base, recording, knowledge, preparation: options.preparation } } : {}),
+  });
   return {
     ...outcome(probe, answer),
     status: answer.status,
