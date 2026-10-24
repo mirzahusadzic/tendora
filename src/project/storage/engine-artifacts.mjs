@@ -58,48 +58,89 @@ export function storedRuns(db, id) {
   });
 }
 
-/** Split on JSON values, so unchanged sources/rules survive ordering and query changes. */
+// A fragment is named by the digest of its own bytes: its value, with each
+// large child left as a reference to that child's fragment. A value is
+// stringified and hashed once, an unchanged part costs one lookup, and loading
+// checks each fragment by its bytes alone. The prefix keeps these names apart
+// from the earlier fragments, named by the digest of their whole decoded JSON
+// (still read). A child becomes its own fragment from about 4 KB of JSON, by a
+// deterministic estimate, so the same part of two artifacts is stored once.
+const fragmentText = 'F2\n',
+  fragmentPrefix = Buffer.from(fragmentText);
+const splitSize = 4096;
+const plainValue = (value) =>
+  value !== null &&
+  typeof value === 'object' &&
+  (Array.isArray(value) ||
+    Object.getPrototypeOf(value) === Object.prototype ||
+    Object.getPrototypeOf(value) === null) &&
+  typeof value.toJSON !== 'function';
+function estimate(value, sizes) {
+  if (typeof value === 'string') return value.length + 2;
+  if (typeof value === 'number') return 8;
+  if (value === null || typeof value === 'boolean') return 5;
+  if (value === undefined || typeof value === 'function' || typeof value === 'symbol') return 0;
+  if (!plainValue(value)) return JSON.stringify(value)?.length ?? 0;
+  let size = 2;
+  if (Array.isArray(value)) for (const item of value) size += estimate(item, sizes) + 1;
+  else for (const key of Object.keys(value)) size += key.length + 4 + estimate(value[key], sizes);
+  sizes.set(value, size);
+  return size;
+}
+
 export function storeArtifact(db, value) {
-  const exists = db.prepare('SELECT 1 FROM fragments WHERE hash = ?');
-  const pending = new Map();
-  function fragment(value, bytes = encode(value)) {
-    const hash = digest(bytes);
-    if (pending.has(hash) || exists.get(hash)) return hash;
+  const sizes = new Map();
+  estimate(value, sizes);
+  // Bottom up: every fragment's bytes and name.
+  const fragments = new Map(),
+    named = new Map();
+  const large = (child) => plainValue(child) && sizes.get(child) >= splitSize;
+  function fragment(node) {
+    if (named.has(node)) return named.get(node);
     const parts = [];
-    function split(value, path) {
-      if (value === null || typeof value !== 'object') {
-        if (typeof value === 'string' && value.length >= 65536 && path.length) {
-          parts.push([path, fragment(value)]);
-          return null;
-        }
-        return value;
+    let data = node;
+    if (Array.isArray(node))
+      data = node.map((item, i) =>
+        large(item) ? (parts.push([[i], fragment(item)]), null) : item,
+      );
+    else if (plainValue(node)) {
+      data = {};
+      for (const key of Object.keys(node)) {
+        const child = node[key];
+        Object.defineProperty(data, key, {
+          value: large(child) ? (parts.push([[key], fragment(child)]), null) : child,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
       }
-      // A value's JSON contains its children's JSON, so nothing below a value
-      // under the threshold can reach it: keep that value whole.
-      const size = path.length ? encode(value) : bytes;
-      if (size.length < 65536) return value;
-      if (path.length) {
-        parts.push([path, fragment(value, size)]);
-        return null;
-      }
-      return Array.isArray(value)
-        ? value.map((item, i) => split(item, [...path, i]))
-        : Object.fromEntries(
-            Object.entries(value).map(([key, item]) => [key, split(item, [...path, key])]),
-          );
     }
-    const data = split(value, []);
-    const payload = brotliCompressSync(encode({ data, parts }), {
-      params: { [constants.BROTLI_PARAM_QUALITY]: 4 },
-    });
-    pending.set(hash, { payload, refs: JSON.stringify(parts.map(([, ref]) => ref)) });
+    // Hashed as text; bytes are made only for a fragment not yet stored.
+    const text = JSON.stringify({ data, parts }) + '\n';
+    const hash = createHash('sha256').update(fragmentText).update(text).digest('hex');
+    if (!fragments.has(hash)) fragments.set(hash, { text, children: parts.map(([, ref]) => ref) });
+    if (plainValue(node)) named.set(node, hash);
     return hash;
   }
   const hash = fragment(value);
+  // Top down: a stored fragment's children are stored with it.
+  const exists = db.prepare('SELECT 1 FROM fragments WHERE hash = ?');
+  const fresh = new Map();
+  (function keep(ref) {
+    if (fresh.has(ref) || exists.get(ref)) return;
+    const { text, children } = fragments.get(ref);
+    fresh.set(ref, {
+      payload: brotliCompressSync(Buffer.from(fragmentText + text), {
+        params: { [constants.BROTLI_PARAM_QUALITY]: 4 },
+      }),
+      refs: JSON.stringify(children),
+    });
+    for (const child of children) keep(child);
+  })(hash);
   const insert = db.prepare('INSERT OR IGNORE INTO fragments VALUES (?, ?, ?)');
   db.exec('BEGIN IMMEDIATE');
   try {
-    for (const [ref, { payload, refs }] of pending) insert.run(ref, payload, refs);
+    for (const [ref, { payload, refs }] of fresh) insert.run(ref, payload, refs);
     db.prepare('INSERT OR IGNORE INTO artifacts VALUES (?)').run(hash);
     db.exec('COMMIT');
   } catch (error) {
@@ -114,14 +155,44 @@ export function loadArtifact(db, hash) {
   if (!db.prepare('SELECT 1 FROM artifacts WHERE hash = ?').get(hash)) return undefined;
   const select = db.prepare('SELECT payload FROM fragments WHERE hash = ?');
   const loaded = new Map(),
+    texts = new Map(),
     active = new Set();
+  // A fragment named by its bytes is checked by them once, and each of its uses
+  // is parsed on its own, so callers receive ordinary values without copying.
+  function parsed(ref) {
+    active.add(ref);
+    const { data, parts } = JSON.parse(texts.get(ref));
+    if (!Array.isArray(parts)) throw new Error('Invalid engine fragment');
+    for (const [path, child] of parts) {
+      if (!Array.isArray(path) || path.length !== 1)
+        throw new Error('Invalid engine fragment path');
+      if (!Object.hasOwn(data, path[0]) || data[path[0]] !== null)
+        throw new Error('Invalid engine fragment path');
+      Object.defineProperty(data, path[0], {
+        value: read(child),
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+    }
+    active.delete(ref);
+    return data;
+  }
   function read(ref) {
     if (!validRef(ref) || active.has(ref)) throw new Error('Invalid engine fragment reference');
+    if (texts.has(ref)) return parsed(ref);
     if (loaded.has(ref)) return loaded.get(ref);
     const row = select.get(ref);
     if (!row) throw new Error('Missing engine fragment: ' + ref);
+    const bytes = brotliDecompressSync(row.payload);
+    if (bytes.subarray(0, fragmentPrefix.length).equals(fragmentPrefix)) {
+      if (digest(bytes) !== ref) throw new Error('Stored object changed');
+      texts.set(ref, bytes.subarray(fragmentPrefix.length).toString());
+      return parsed(ref);
+    }
+    // An earlier fragment: named by the digest of its whole decoded JSON.
     active.add(ref);
-    const { data, parts } = JSON.parse(brotliDecompressSync(row.payload));
+    const { data, parts } = JSON.parse(bytes);
     if (!Array.isArray(parts)) throw new Error('Invalid engine fragment');
     for (const [path, child] of parts) {
       if (!Array.isArray(path) || !path.length) throw new Error('Invalid engine fragment path');

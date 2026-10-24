@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, writeFile, stat, rm, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { brotliCompressSync, brotliDecompressSync } from 'node:zlib';
 import { createProject, openProject, saveProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions, acquiredTexts } from '../../src/project/storage/acquisitions.mjs';
 import { readObject, writeObject } from '../../src/project/storage/objects.mjs';
@@ -275,6 +276,74 @@ try {
     'A shared independent case remains acquired for the other saved questions',
   );
 
+  // Fragments named by their own bytes: values read back as their JSON, a
+  // large part shared by two values stored once, a changed fragment refused,
+  // and fragments named by their decoded JSON (the earlier format) still read.
+  {
+    const formatDb = openArtifactDatabase(join(directory, 'format.sqlite'));
+    const shared = {
+      rows: Array.from({ length: 300 }, (_, i) => ({ i, text: `shared row ${i}` })),
+    };
+    const tricky = JSON.parse('{"__proto__": {"polluted": true}, "plain": 1}');
+    const first = {
+      shared,
+      again: shared,
+      nested: { deeper: { rows: shared.rows.map((row) => ({ ...row, more: 'x'.repeat(40) })) } },
+      holes: [1, undefined, () => 2, 3],
+      skipped: undefined,
+      tricky,
+      when: new Date(0),
+    };
+    const second = { other: true, shared };
+    const expected = (value) => JSON.parse(JSON.stringify(value));
+    const ref = storeArtifact(formatDb, first);
+    assert.deepEqual(loadArtifact(formatDb, ref), expected(first));
+    assert.equal(
+      Object.getOwnPropertyDescriptor(loadArtifact(formatDb, ref).tricky, '__proto__').value
+        .polluted,
+      true,
+      'A __proto__ key stays a key',
+    );
+    assert.equal({}.polluted, undefined);
+    const count = () => formatDb.prepare('SELECT count(*) AS n FROM fragments').get().n;
+    const before = count();
+    assert.deepEqual(loadArtifact(formatDb, storeArtifact(formatDb, second)), expected(second));
+    assert.equal(count(), before + 1, 'Only the new value is stored; the shared part is reused');
+    assert.equal(storeArtifact(formatDb, first), ref, 'The same value has the same name');
+    const rows = Array.from({ length: 2000 }, (_, i) => ({ i }));
+    assert.deepEqual(loadArtifact(formatDb, storeArtifact(formatDb, rows)), rows);
+    assert.equal(loadArtifact(formatDb, storeArtifact(formatDb, 'text')), 'text');
+    // An earlier fragment, with a part of its own.
+    const legacyEncode = (value) => Buffer.from(JSON.stringify(value) + '\n');
+    const legacyHash = (value) => createHash('sha256').update(legacyEncode(value)).digest('hex');
+    const legacyChild = { child: 'x'.repeat(100) },
+      legacyValue = { kept: 1, child: legacyChild };
+    const compress = (value) => brotliCompressSync(legacyEncode(value));
+    const childRef = legacyHash(legacyChild),
+      parentRef = legacyHash(legacyValue);
+    formatDb
+      .prepare('INSERT INTO fragments VALUES (?, ?, ?)')
+      .run(childRef, compress({ data: legacyChild, parts: [] }), '[]');
+    formatDb
+      .prepare('INSERT INTO fragments VALUES (?, ?, ?)')
+      .run(
+        parentRef,
+        compress({ data: { kept: 1, child: null }, parts: [[['child'], childRef]] }),
+        JSON.stringify([childRef]),
+      );
+    formatDb.prepare('INSERT INTO artifacts VALUES (?)').run(parentRef);
+    assert.deepEqual(loadArtifact(formatDb, parentRef), legacyValue);
+    const changed = storeArtifact(formatDb, { changed: 'x'.repeat(100) });
+    const [{ payload }] = formatDb
+      .prepare('SELECT payload FROM fragments WHERE hash = ?')
+      .all(changed);
+    const altered = Buffer.from(brotliDecompressSync(payload).toString().replace('xx', 'xy'));
+    formatDb
+      .prepare('UPDATE fragments SET payload = ? WHERE hash = ?')
+      .run(brotliCompressSync(altered), changed);
+    assert.throws(() => loadArtifact(formatDb, changed), /Stored object changed/u);
+    formatDb.close();
+  }
   const integrity = await putEngineArtifact(project, { check: 'Integrity', body: source });
   const db = openArtifactDatabase(artifactDatabasePath(project));
   db.prepare('UPDATE fragments SET payload = ? WHERE hash = ?').run(
