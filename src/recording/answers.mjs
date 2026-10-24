@@ -159,10 +159,10 @@ function sourceClause(material, fact, matched) {
   const source = material.sources.find((entry) => entry.id === fact.sourceIds?.[0]);
   if (!source?.text) return null;
   const local = (id) => id.startsWith(`${source.id}#`);
+  const materialAt = factIndex(material.facts);
   const nodes = new Set([fact.triple[2]]);
   for (const id of nodes)
-    for (const { triple } of material.facts) {
-      if (!triple[1].startsWith(':') || triple[1] === ':instance') continue;
+    for (const { triple } of materialAt.touching(id)) {
       const next = triple[0] === id ? triple[2] : triple[2] === id ? triple[0] : null;
       if (next && local(next) && !matched.has(next) && !nodes.has(next) && nodes.size < 24)
         nodes.add(next);
@@ -176,17 +176,15 @@ function sourceClause(material, fact, matched) {
   const mentions = (id) =>
     Math.max(
       1,
-      material.facts.filter(
-        ({ triple }) =>
-          triple[2] === id &&
-          triple[1].startsWith(':') &&
-          (nodes.has(triple[0]) || triple[0] === fact.triple[0]),
-      ).length,
+      materialAt
+        .touching(id)
+        .filter(
+          ({ triple }) =>
+            triple[2] === id && (nodes.has(triple[0]) || triple[0] === fact.triple[0]),
+        ).length,
     );
   const words = [...nodes].flatMap((id) => {
-    const fact = material.facts.find(
-      (f) => f.triple[0] === id && ['@literal', ':instance'].includes(f.triple[1]),
-    );
+    const fact = materialAt.of(id).find((f) => ['@literal', ':instance'].includes(f.triple[1]));
     const value = String(fact?.triple[2] ?? '').replace(/^"|"$/gu, '');
     if (!value || /-91$/u.test(value) || ['person', 'thing', 'name', 'amr-unknown'].includes(value))
       return [];
@@ -720,39 +718,80 @@ export function answerBase(recording, knowledge = recording.knowledge ?? {}, lim
     inferenceWork: account?.work ?? 0,
   };
 }
-// Labels read the same facts for every answer: index them once per fact
-// array, each list in the facts' order, or labelling costs matches × facts.
+// Labels and scopes read the same facts for every answer: index them once per
+// fact array, or each answer costs a scan of every fact. Each index numbers
+// its keys once and keeps, per key, a run of fact positions in one integer
+// array, in the facts' order: a few bytes a membership, not a list of objects.
 const labelIndexes = new WeakMap();
+const none = [];
+function runs(facts, keysOf) {
+  const numbers = new Map(),
+    counts = [];
+  for (const fact of facts)
+    for (const key of keysOf(fact)) {
+      let n = numbers.get(key);
+      if (n === undefined) {
+        n = counts.length;
+        numbers.set(key, n);
+        counts.push(0);
+      }
+      counts[n]++;
+    }
+  const offsets = new Uint32Array(counts.length + 1);
+  for (let n = 0; n < counts.length; n++) offsets[n + 1] = offsets[n] + counts[n];
+  const order = new Uint32Array(offsets[counts.length]),
+    fill = offsets.slice(0, counts.length);
+  facts.forEach((fact, i) => {
+    for (const key of keysOf(fact)) order[fill[numbers.get(key)]++] = i;
+  });
+  return {
+    positions: (key) => {
+      const n = numbers.get(key);
+      return n === undefined ? none : order.subarray(offsets[n], offsets[n + 1]);
+    },
+    facts: (key) => {
+      const n = numbers.get(key);
+      if (n === undefined) return none;
+      const found = new Array(offsets[n + 1] - offsets[n]);
+      for (let j = offsets[n]; j < offsets[n + 1]; j++) found[j - offsets[n]] = facts[order[j]];
+      return found;
+    },
+  };
+}
+const relation = (role) => role.startsWith(':') && role !== ':instance';
 function factIndex(facts) {
   const cached = labelIndexes.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
-  const subjects = new Map(),
-    nodes = new Map(),
-    sources = new Map();
-  const push = (map, key, fact) => {
-    let list = map.get(key);
-    if (!list) map.set(key, (list = []));
-    list.push(fact);
-  };
-  for (const fact of facts) {
-    const [from, role, to] = fact.triple;
-    push(subjects, from, fact);
-    if (role.startsWith(':') && role !== ':instance') {
-      push(nodes, from, fact);
-      if (to !== from) push(nodes, to, fact);
+  const subjects = runs(facts, (fact) => [fact.triple[0]]),
+    nodes = runs(facts, ({ triple: [from, role, to] }) =>
+      !relation(role) ? none : to === from ? [from] : [from, to],
+    ),
+    sources = runs(facts, (fact) => new Set(fact.sourceIds ?? none)),
+    fragments = runs(facts, (fact) => new Set(fact.fragmentIds ?? none));
+  let ids = null;
+  const position = (id) => {
+    if (!ids) {
+      ids = new Map();
+      facts.forEach((fact, i) => {
+        if (fact.id !== undefined && !ids.has(fact.id)) ids.set(fact.id, i);
+      });
     }
-    for (const id of new Set(fact.sourceIds ?? [])) push(sources, id, fact);
-  }
-  const none = [];
+    return ids.get(id);
+  };
+  const inOrder = (positions) => [...new Set(positions)].sort((a, b) => a - b).map((i) => facts[i]);
   const index = {
     length: facts.length,
     last: facts.at(-1),
     // Facts whose subject is the node.
-    of: (id) => subjects.get(id) ?? none,
+    of: subjects.facts,
     // Relations (not concepts) the node takes part in, either end.
-    touching: (id) => nodes.get(id) ?? none,
+    touching: nodes.facts,
     // Facts attributed to the source.
-    from: (id) => sources.get(id) ?? none,
+    from: sources.facts,
+    // The facts of some fragments, in the facts' order.
+    inFragments: (list) => inOrder(list.flatMap((id) => [...fragments.positions(id)])),
+    // The facts with these ids, in the facts' order.
+    withIds: (list) => inOrder(list.map(position).filter((i) => i !== undefined)),
   };
   labelIndexes.set(facts, index);
   return index;
@@ -840,7 +879,8 @@ function evaluateReading(recording, knowledge, limits, reading) {
   // Each reading reports its own skipped parses; the shared material is not changed.
   const material = { ...base.material, skipped: [...base.material.skipped] };
   const { inference, grammar } = base;
-  const factsAt = factIndex(inference.facts);
+  const factsAt = factIndex(inference.facts),
+    materialAt = factIndex(material.facts);
   // As before, a reading's work budget counts the inference it rests on.
   const account =
     limits?.workBudget !== undefined
@@ -882,14 +922,10 @@ function evaluateReading(recording, knowledge, limits, reading) {
       return (
         unknown &&
         parent &&
-        inference.facts.some(
-          (fact) =>
-            fact.triple[0] === parent && fact.triple[1] === ':mod' && fact.triple[2] === unknown,
-        ) &&
-        inference.facts.some(
-          (fact) =>
-            fact.triple[0] === unknown && fact.triple[1] === ':ARG0' && fact.triple[2] === parent,
-        )
+        factsAt
+          .of(parent)
+          .some((fact) => fact.triple[1] === ':mod' && fact.triple[2] === unknown) &&
+        factsAt.of(unknown).some((fact) => fact.triple[1] === ':ARG0' && fact.triple[2] === parent)
       );
     }),
   );
@@ -961,11 +997,9 @@ function evaluateReading(recording, knowledge, limits, reading) {
     );
     let conditional = conditionalClaims.length > 0;
     const perClaim = conditionalClaims.map(({ root }) =>
-      inference.facts.filter(
-        (fact) =>
-          fact.triple[0] === match.values[variables.get(root)] &&
-          fact.triple[1] === '@qualification',
-      ),
+      factsAt
+        .of(match.values[variables.get(root)])
+        .filter((fact) => fact.triple[1] === '@qualification'),
     );
     if (perClaim.some((items) => !items.length)) continue;
     const conditions = perClaim.flat();
@@ -974,20 +1008,19 @@ function evaluateReading(recording, knowledge, limits, reading) {
       .filter((value) => value !== undefined);
     if (new Set(assigned).size !== assigned.length) continue;
     const witnesses = new Set(match.witnesses);
-    const blocked = inference.facts.filter(
-      (fact) => witnesses.has(fact.id) && !guardedEvidence(fact, witnesses).length,
-    );
+    const blocked = factsAt
+      .withIds([...witnesses])
+      .filter((fact) => !guardedEvidence(fact, witnesses).length);
     if (blocked.length) {
       guardedMatches.push(...blocked);
       continue;
     }
     const assertionFacts = assertions.map(({ root, variable }) =>
-      inference.facts.find(
-        (fact) =>
-          fact.triple[0] === match.values[variables.get(root)] &&
-          fact.triple[1] === '@asserted' &&
-          fact.triple[2] === match.values[variable],
-      ),
+      factsAt
+        .of(match.values[variables.get(root)])
+        .find(
+          (fact) => fact.triple[1] === '@asserted' && fact.triple[2] === match.values[variable],
+        ),
     );
     const assertedFragments = new Set(
       assertionFacts
@@ -1010,23 +1043,23 @@ function evaluateReading(recording, knowledge, limits, reading) {
     );
     const boundary = new Set(assigned.filter((id) => !answerDescription.has(id)));
     for (const id of answerDescription)
-      for (const fact of material.facts) {
-        const [from, role, to] = fact.triple;
-        if (!role.startsWith(':') || role === ':instance') continue;
+      for (const fact of materialAt.touching(id)) {
+        const [from, , to] = fact.triple;
         const next = from === id ? to : to === id ? from : null;
         if (next && !boundary.has(next)) answerDescription.add(next);
       }
     const supportedWitnesses = new Set(
       traceRelations(inference.facts, match.witnesses).facts.map((f) => f.id),
     );
-    const sourceScope = material.facts.filter(
-      (fact) =>
-        fact.fragmentIds?.some((id) => assertedFragments.has(id)) &&
-        fact.triple[1].startsWith(':') &&
-        fact.triple[1] !== ':instance' &&
-        !(answerDescription.has(fact.triple[0]) && answerDescription.has(fact.triple[2])) &&
-        !supportedWitnesses.has(JSON.stringify(fact.triple)),
-    );
+    const sourceScope = materialAt
+      .inFragments([...assertedFragments])
+      .filter(
+        (fact) =>
+          fact.triple[1].startsWith(':') &&
+          fact.triple[1] !== ':instance' &&
+          !(answerDescription.has(fact.triple[0]) && answerDescription.has(fact.triple[2])) &&
+          !supportedWitnesses.has(JSON.stringify(fact.triple)),
+      );
     if (sourceScope.length) conditional = true;
     const ids = answerSlotIds.map((id) => match.values[variables.get(id)]).filter(Boolean);
     const labelWitnesses = [];
