@@ -9,7 +9,7 @@ import { readingDevelopment } from '../shell/state.mjs';
 import { deleteEngineRuns } from '../../project/inquiries/delete-engine-runs.mjs';
 import { listProjectRecordings } from '../../project/inquiries/recordings.mjs';
 
-export function createEngine({ state, forms, projects, draw, setNotice }) {
+export function createEngine({ state, config = {}, forms, projects, draw, setNotice }) {
   const saved = new Map(),
     pending = new Set();
   const key = (run) => `${state.project.path}:${run.id}`;
@@ -286,6 +286,7 @@ export function createEngine({ state, forms, projects, draw, setNotice }) {
             input,
             signal,
             trace: previous.policy?.search !== 'HRG query derivations',
+            actor: config.actor ?? 'participant',
             via: 'workbench',
             purpose: 'question-refresh',
             onUpdate(run) {

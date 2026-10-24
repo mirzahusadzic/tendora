@@ -171,6 +171,22 @@ const missing = machine(
 assert.equal(missing.status, 'needs-amr');
 assert.equal(missing.calls.length, 0);
 assert.equal(missing.via, 'cli', 'A run records the interface it came through');
+assert.equal(missing.actor, 'unrecorded', 'A CLI run names no actor unless given one');
+const named = machine(
+  await command([
+    'ask',
+    '--project',
+    location,
+    '--question',
+    question,
+    '--offline',
+    '--json',
+    '--actor',
+    'Script A',
+  ]),
+  1,
+);
+assert.equal(named.actor, 'Script A', 'A declared actor is recorded as given');
 project = await saveProject(
   project,
   editConcept(project.data, project.data.concepts[0].id, 'Workshop', ['Sam repairs bicycles.']),

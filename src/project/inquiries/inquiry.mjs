@@ -163,6 +163,7 @@ async function captureInquiry(project, placementId, query, progress, signal, opt
   let stored = null;
   const engine = await runEngine(project, {
     input,
+    actor: options.actor ?? 'unrecorded',
     via: options.via ?? 'library',
     onResult: (value) => (stored = value),
     acquireMissing: options.acquireMissing ?? true,

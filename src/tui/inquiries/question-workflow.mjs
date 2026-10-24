@@ -728,6 +728,8 @@ export function createQuestionWorkflow({
       },
       work.controller.signal,
       {
+        actor: config.actor ?? 'participant',
+        via: 'workbench',
         acquireMissing,
         caseSelection: prior.input.caseSelection,
         onEngineUpdate(run) {

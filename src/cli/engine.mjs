@@ -216,6 +216,7 @@ try {
       let last;
       const run = await runEngine(project, {
         input,
+        actor: values.actor ?? 'unrecorded',
         via: 'cli',
         acquireMissing: !values.offline,
         trace: Boolean(values.trace),

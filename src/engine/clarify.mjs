@@ -174,10 +174,14 @@ export function buildClarifications(project, input, result, answer) {
 
 /** A person, or a program, confirms a proposed meaning; the engine owns rule
  * generation and dependencies. The confirmation records who declared it
- * (`actor`: a label, not a verified identity; none when the caller names
- * none) and through what (`via`: a library call unless the caller says). A
- * confirmation saved before these were recorded names no one. */
-export function acceptClarification(project, candidate, { actor = null, via = 'library' } = {}) {
+ * (`actor`: a label, not a verified identity; "unrecorded" when the caller
+ * names none) and through what (`via`: a library call unless the caller says).
+ * A confirmation saved before these were recorded names no one. */
+export function acceptClarification(
+  project,
+  candidate,
+  { actor = 'unrecorded', via = 'library' } = {},
+) {
   if (
     candidate.projectId !== project.data.id ||
     candidate.projectRevision !== project.digest ||

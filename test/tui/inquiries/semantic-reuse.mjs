@@ -84,6 +84,8 @@ try {
     await ui.choose((choice) => choice.candidate?.answerLabel === answer);
     const confirmed = ui.state.workflow.current();
     assert.equal(confirmed.run.status, 'supported');
+    assert.equal(confirmed.run.via, 'workbench', 'A workbench check says where it came from');
+    assert.equal(confirmed.run.actor, 'participant', "and carries the workbench's actor");
     assert.equal(confirmed.run.answer.answers[0].text, answer);
     const c = ui.state.project.data.contributions.find((c) =>
       c.wordings.some((w) => w.kind === 'clarification'),

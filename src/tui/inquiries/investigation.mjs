@@ -609,6 +609,8 @@ export function createInvestigation({
           },
           controller.signal,
           {
+            actor: config.actor ?? 'participant',
+            via: 'workbench',
             caseSelection: revision.caseSelection,
             ask: link,
             ...(continuation ? { continuation } : {}),

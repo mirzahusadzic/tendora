@@ -63,7 +63,10 @@ async function executeEngineRun(
   {
     input,
     signal,
-    actor = 'participant',
+    // Who the run was made for, as declared: the workbench passes its actor,
+    // the CLI its --actor; otherwise no one is named. A label, not a verified
+    // identity.
+    actor = 'unrecorded',
     // The interface the run came through: the workbench, the CLI, or a library
     // call (a script, a test, a tool). A receipt, not a credential.
     via = 'library',

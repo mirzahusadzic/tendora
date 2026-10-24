@@ -55,6 +55,7 @@ try {
   );
   assert.equal(run.lexicalAudit.items.length, 2);
   assert.equal(run.via, 'library', 'A run from a library call says so');
+  assert.equal(run.actor, 'unrecorded', 'and names no actor it was not given');
   assert(
     run.lexicalAudit.items.every((item) =>
       item.findings.some((f) => f.predicate === 'intercede-01'),

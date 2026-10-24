@@ -48,8 +48,9 @@ recording and opening. The carry records its actor, rationale, changed frame
 dimensions and support consequence. A confirmed connection records who declared
 it (`actor`) and through what (`via`: the editor, or a library call); an actor is
 a label, not a verified identity. An engine run records the interface it came
-through (`via`: the workbench, the CLI, or a library call such as a script), so
-checks run unattended are visible as such. An identical acquired question can
+through (`via`: the workbench, the CLI, or a library call such as a script) and
+its actor: the workbench's, the CLI's `--actor`, or `unrecorded`, so checks run
+unattended are visible as such. An identical acquired question can
 reuse its checked reading. A changed graph can produce a candidate correspondence, but graph
 mapping or compiled wording does not by itself establish preservation. Scope,
 case, source or project changes invalidate earlier support and require a fresh

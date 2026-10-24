@@ -103,7 +103,7 @@ async function accept(candidate) {
   // A library call names no one: the confirmation says through what, never
   // that the author confirmed.
   assert.equal(result.part.confirmation.via, 'library');
-  assert.equal(result.part.confirmation.actor, null);
+  assert.equal(result.part.confirmation.actor, 'unrecorded');
   assert.doesNotMatch(result.part.confirmation.statement, /author/u);
   assert(result.part.rule && result.part.basisSources.length);
   assert.equal(

@@ -15,10 +15,11 @@ const options = {
   explain: ['boolean', '', 'Include proof details; check progress goes to stderr.'],
   offline: ['boolean', '', 'Use retained AMRs only; never acquire missing readings.'],
   trace: ['boolean', '', 'Retain detailed local comparison diagnostics.'],
+  actor: ['string', '<name>', 'Record the check as made by NAME; otherwise unrecorded.'],
   file: ['string', '<path>', 'Existing authored engine-knowledge JSON to import.'],
   help: ['boolean', '', 'Show help for this command.'],
 };
-const checking = ['scope', 'case', 'case-text', 'question', 'offline', 'trace', 'explain'];
+const checking = ['scope', 'case', 'case-text', 'question', 'offline', 'trace', 'explain', 'actor'];
 export const engineCommands = {
   init: { description: 'Create an empty project.', options: ['name', 'root'] },
   ask: { description: 'Check a question against scoped sources.', options: checking },

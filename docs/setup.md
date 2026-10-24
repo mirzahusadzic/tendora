@@ -66,6 +66,7 @@ case material; a question or case does not become corpus evidence.
 | `--explain` | Include evidence and proof details; progress goes to stderr.             |
 | `--json`    | Write a structured result to stdout. Use npm's `--silent` for pipelines. |
 | `--trace`   | Retain detailed local comparison diagnostics.                            |
+| `--actor`   | Record the check as made by this name; without it, `unrecorded`.         |
 
 Exit codes are `0` for a completed check, `1` for a failure or missing reading,
 `2` for invalid arguments, and `130` for interruption. A completed check may
