@@ -6,7 +6,12 @@ import {
   extractHrg,
   graphTerminals,
 } from '../../src/amr/hrg-decomposition.mjs';
-import { compileCorpus, grammarFacts } from '../../src/amr/hrg-corpus.mjs';
+import {
+  clearCompiledGroups,
+  compileCorpus,
+  corpusSignature,
+  grammarFacts,
+} from '../../src/amr/hrg-corpus.mjs';
 import { matchChart, createGrammarMatcher } from '../../src/amr/hrg-query.mjs';
 
 const fixture = JSON.parse(
@@ -211,6 +216,20 @@ assert.equal(warm.match(patterns, facts).matches.length, 2);
 assert.equal(warm.stats.compilations, 0);
 warm.match(patterns, changed);
 assert.equal(warm.stats.compilations, 1, 'Changed roles/attachments invalidate the cache');
+// A group is named again unless it holds the same facts in the same order: a
+// view with one fact replaced, the group's size unchanged, is not the corpus
+// it came from.
+const swapped = facts.map((fact) =>
+  fact.id === 'first/4' ? { ...fact, triple: [fact.triple[0], fact.triple[1], 'first/x'] } : fact,
+);
+const fresh = (list) => {
+  clearCompiledGroups();
+  return corpusSignature(list);
+};
+assert.equal(corpusSignature(facts), fresh(facts));
+assert.notEqual(corpusSignature(swapped), corpusSignature(facts));
+assert.equal(corpusSignature(swapped), fresh([...swapped]));
+assert.equal(corpusSignature(facts.slice(1)), fresh(facts.slice(1)));
 assert(!matchChart(patterns, facts, { budget: 1 }).complete);
 for (let budget = 0; budget <= answer.work; budget++) {
   const bounded = matchChart(patterns, facts, { budget });

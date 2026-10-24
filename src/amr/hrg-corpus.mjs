@@ -24,7 +24,10 @@ const groupOf = (fact) => fact.ruleId ?? fact.sourceIds?.[0] ?? 'relations';
 // nonterminals in order, is redone. The key names the statement's facts (their
 // ids and triples, in order) by a 106-bit content name, so the cache holds no
 // second copy of them.
-export const clearCompiledGroups = () => compiledGroups.clear();
+export const clearCompiledGroups = () => {
+  compiledGroups.clear();
+  memberships.clear();
+};
 const compiledGroups = new Map(),
   groupLimit = 100000;
 const factParts = function* (entries) {
@@ -47,6 +50,18 @@ const named = (group, entries) => {
   entries.sort((a, b) => collate(a.id, b.id));
   return { group, entries, key: `${group}\u0000${contentName(factParts(entries))}` };
 };
+// A group of the same facts, in the same order, is named as before: a view
+// without some statements names again only the groups it changed.
+const memberships = new Map(),
+  membershipLimit = 100000;
+function namedOnce(group, members) {
+  const known = memberships.get(group);
+  if (known && sameList(known.members, members)) return known.value;
+  const value = named(group, [...members]);
+  if (memberships.size >= membershipLimit) memberships.delete(memberships.keys().next().value);
+  memberships.set(group, { members, value });
+  return value;
+}
 function grouped(facts) {
   const cached = groupings.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1))
@@ -61,7 +76,7 @@ function grouped(facts) {
       if (!byGroup.has(group)) byGroup.set(group, []);
       byGroup.get(group).push(fact);
     }
-    groups = [...byGroup].map(([group, entries]) => named(group, entries));
+    groups = [...byGroup].map(([group, members]) => namedOnce(group, members));
   }
   groups.sort((a, b) => collate(a.group, b.group));
   groupings.set(facts, { groups, length: facts.length, last: facts.at(-1) });
