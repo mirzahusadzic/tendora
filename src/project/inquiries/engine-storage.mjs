@@ -6,6 +6,9 @@ import {
   artifactDatabasePath,
   openArtifactDatabase,
   storeArtifact,
+  copyArtifact,
+  restoreArtifact,
+  openStoredArtifacts,
   loadArtifact,
   storeRun,
   pruneArtifacts,
@@ -294,6 +297,7 @@ export async function compactEngineStorage(
     const cacheBudget = budget - handleBytes;
     const temporary = join(engine, `.${randomUUID()}.sqlite`);
     const db = openArtifactDatabase(temporary);
+    let stored = await openStoredArtifacts(project);
     const retained = new Set(),
       cached = new Set(),
       headers = [],
@@ -327,18 +331,23 @@ export async function compactEngineStorage(
         run.caseSelection = caseSelection ?? null;
         storeRun(db, summary(run));
       }
-      const readRecording = async ({ header }) =>
+      // Stored artifacts are copied as they are: names, bytes and shared parts
+      // stay, whichever format named them, so the records that refer to them by
+      // name still resolve. One of the older layout is stored under its name.
+      const keep = async (ref) =>
+        copyArtifact(stored, db, ref)
+          ? ref
+          : restoreArtifact(db, ref, await readEngineArtifact(project, ref));
+      const keepRecording = ({ header }) =>
         header.artifactRef
-          ? readEngineArtifact(project, header.artifactRef)
+          ? keep(header.artifactRef)
           : header.cache === 'recheck'
             ? null
-            : header;
+            : storeArtifact(db, header);
       for (const record of recordings) {
         if (!requiredRecordings.has(record.path)) continue;
-        const full = await readRecording(record);
-        if (!full)
-          throw new Error('A continuation parent is unavailable; storage was not changed.');
-        const ref = storeArtifact(db, full);
+        const ref = await keepRecording(record);
+        if (!ref) throw new Error('A continuation parent is unavailable; storage was not changed.');
         retained.add(ref);
         record.requiredRef = ref;
         const run = kept.get(record.header.reasoning?.runId);
@@ -353,10 +362,7 @@ export async function compactEngineStorage(
         );
       // Keep reusable corpus compilation ahead of old question diagnostics.
       for (const entry of await listGrammarCaches(project)) {
-        const ref = storeArtifact(
-          db,
-          entry.ref ? await readEngineArtifact(project, entry.ref) : await json(entry.path),
-        );
+        const ref = entry.ref ? await keep(entry.ref) : storeArtifact(db, await json(entry.path));
         if (databaseBytes(db) <= cacheBudget / 2) {
           retained.add(ref);
           db.prepare('INSERT INTO grammars VALUES (?, ?, ?)').run(entry.key, ref, entry.updated);
@@ -366,18 +372,10 @@ export async function compactEngineStorage(
         if (!run.inputRef || !run.resultRef) continue;
         const group = new Set();
         try {
-          for (const ref of artifactRefs(run)) {
-            const value = await readEngineArtifact(project, ref);
-            if (storeArtifact(db, value) !== ref)
-              throw new Error('Engine artifact identity changed');
-            group.add(ref);
-          }
+          for (const ref of artifactRefs(run)) group.add(await keep(ref));
           for (const record of recordings.filter((r) => r.header.reasoning?.runId === run.id)) {
-            const full = await readRecording(record);
-            if (full) {
-              record.proposedRef = storeArtifact(db, full);
-              group.add(record.proposedRef);
-            }
+            const ref = await keepRecording(record);
+            if (ref) group.add((record.proposedRef = ref));
           }
           const recording =
             recordings.find((r) => r.path === run.recording?.path) ??
@@ -439,6 +437,8 @@ export async function compactEngineStorage(
           protectedRecordings: requiredRecordings.size,
           unreadable,
         };
+      stored?.close();
+      stored = null;
       db.close();
       closed = true;
       await rename(temporary, artifactDatabasePath(project));
@@ -463,6 +463,7 @@ export async function compactEngineStorage(
         unreadable,
       };
     } finally {
+      stored?.close();
       if (!closed) db.close();
       if (!published) await rm(temporary, { force: true });
     }

@@ -150,6 +150,67 @@ export function storeArtifact(db, value) {
   return hash;
 }
 
+/** Copy an artifact's fragments from one database to another as they are
+ * stored: names, bytes and shared parts unchanged, whichever format named
+ * them. False when the source does not hold the artifact. The copy is checked
+ * when it is loaded. */
+export function copyArtifact(source, target, ref) {
+  if (!source || !validRef(ref)) return false;
+  if (!source.prepare('SELECT 1 FROM artifacts WHERE hash = ?').get(ref)) return false;
+  const select = source.prepare('SELECT payload, refs FROM fragments WHERE hash = ?'),
+    exists = target.prepare('SELECT 1 FROM fragments WHERE hash = ?');
+  const rows = [],
+    seen = new Set(),
+    pending = [ref];
+  for (const hash of pending) {
+    if (seen.has(hash) || exists.get(hash)) continue;
+    seen.add(hash);
+    const row = select.get(hash);
+    if (!row) throw new Error('Missing engine fragment: ' + hash);
+    rows.push(row);
+    row.hash = hash;
+    pending.push(...JSON.parse(row.refs));
+  }
+  const insert = target.prepare('INSERT OR IGNORE INTO fragments VALUES (?, ?, ?)');
+  target.exec('BEGIN IMMEDIATE');
+  try {
+    for (const { hash, payload, refs } of rows) insert.run(hash, payload, refs);
+    target.prepare('INSERT OR IGNORE INTO artifacts VALUES (?)').run(ref);
+    target.exec('COMMIT');
+  } catch (error) {
+    target.exec('ROLLBACK');
+    throw error;
+  }
+  return true;
+}
+
+/** Store a value again under the name it already has. A name of the earlier
+ * format (the digest of the whole decoded JSON, as files of the older layout
+ * are named) is kept as one fragment of that format. */
+export function restoreArtifact(db, ref, value) {
+  const bytes = encode(value);
+  if (digest(bytes) !== ref) {
+    if (storeArtifact(db, value) !== ref) throw new Error('Engine artifact identity changed');
+    return ref;
+  }
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    db.prepare('INSERT OR IGNORE INTO fragments VALUES (?, ?, ?)').run(
+      ref,
+      brotliCompressSync(encode({ data: value, parts: [] }), {
+        params: { [constants.BROTLI_PARAM_QUALITY]: 4 },
+      }),
+      '[]',
+    );
+    db.prepare('INSERT OR IGNORE INTO artifacts VALUES (?)').run(ref);
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+  return ref;
+}
+
 export function loadArtifact(db, hash) {
   if (!validRef(hash)) throw new Error('Invalid stored object reference');
   if (!db.prepare('SELECT 1 FROM artifacts WHERE hash = ?').get(hash)) return undefined;
@@ -218,6 +279,18 @@ export function loadArtifact(db, hash) {
   }
   // Retained fragments may be shared on disk, but callers receive ordinary JSON values.
   return read(hash);
+}
+
+/** The project's artifact database, read-only, or null when it has none. */
+export async function openStoredArtifacts(project) {
+  const path = artifactDatabasePath(project);
+  try {
+    await access(path);
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+  return new DatabaseSync(path, { readOnly: true });
 }
 
 export async function readStoredArtifact(project, hash) {

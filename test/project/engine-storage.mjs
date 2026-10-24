@@ -452,8 +452,67 @@ try {
     profile: 'test',
     grammars: [{ signature: 'd' }],
   });
+  // A run saved before fragments were named by their bytes compacts, and its
+  // artifacts keep their names: one an earlier fragment with a part, one a file
+  // of the older layout. Compaction once refused both.
+  {
+    let earlier = await createProject(join(directory, 'earlier'), 'Earlier runs');
+    const encode = (value) => Buffer.from(JSON.stringify(value) + '\n');
+    const name = (value) => createHash('sha256').update(encode(value)).digest('hex');
+    const part = { rows: Array.from({ length: 50 }, (_, i) => `earlier row ${i}`) },
+      input = { question: { text: 'Is it kept?' }, part };
+    await mkdir(join(directory, 'earlier', 'engine'));
+    const db = openArtifactDatabase(artifactDatabasePath(earlier));
+    try {
+      const insert = db.prepare('INSERT INTO fragments VALUES (?, ?, ?)');
+      insert.run(name(part), brotliCompressSync(encode({ data: part, parts: [] })), '[]');
+      insert.run(
+        name(input),
+        brotliCompressSync(
+          encode({ data: { ...input, part: null }, parts: [[['part'], name(part)]] }),
+        ),
+        JSON.stringify([name(part)]),
+      );
+      db.prepare('INSERT INTO artifacts VALUES (?)').run(name(input));
+    } finally {
+      db.close();
+    }
+    const result = { inputs: [input.question], answer: 'kept' };
+    const resultRef = await writeObject(join(directory, 'earlier'), 'engine/objects', result);
+    assert.equal(resultRef, name(result));
+    const run = {
+      version: 1,
+      id: randomUUID(),
+      projectId: earlier.data.id,
+      projectDigest: earlier.digest,
+      scopePlacementId: earlier.data.placements[0].id,
+      purpose: 'inquiry',
+      profile: 'storage-contract',
+      status: 'open',
+      startedAt: new Date(1_700_000_000_000).toISOString(),
+      questions: [{ text: 'Is it kept?' }],
+      case: '',
+      caseSelection: null,
+      inputRef: name(input),
+      resultRef,
+      calls: [],
+      stages: [],
+    };
+    await saveEngineRun(earlier, run);
+    for (let pass = 0; pass < 2; pass++) {
+      const compacted = await compactEngineStorage(earlier, { force: true });
+      assert.equal(compacted.changed, true, JSON.stringify(compacted));
+      const [kept] = await listEngineRuns(earlier);
+      assert.equal(kept.cache, 'retained');
+      assert.equal(kept.inputRef, run.inputRef, 'An earlier name is kept');
+      assert.equal(kept.resultRef, run.resultRef, 'A name of the older layout is kept');
+      assert.deepEqual(await readEngineArtifact(earlier, kept.inputRef), input);
+      assert.deepEqual(await readEngineArtifact(earlier, kept.resultRef), result);
+    }
+    assert(!(await readdir(join(directory, 'earlier', 'engine'))).includes('objects'));
+  }
   console.log(
-    `ok shared fragments, unchanged hashes, legacy read, bounded cache (${report.after.bytes} bytes), whole-project budget, durable questions/cases, active-run exclusion, repeat compaction, deletion and corruption`,
+    `ok shared fragments, unchanged hashes, legacy read, bounded cache (${report.after.bytes} bytes), whole-project budget, durable questions/cases, active-run exclusion, repeat compaction, runs saved before F2, deletion and corruption`,
   );
 } finally {
   await rm(directory, { recursive: true, force: true });
