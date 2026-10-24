@@ -808,13 +808,29 @@ export function withheldBase(base, withheld) {
   };
 }
 // A base serves only the recording, knowledge and preparation it was made for;
-// a nested check of another question or knowledge prepares its own.
-const baseFor = (recording, knowledge, limits) =>
-  limits?.base?.recording === recording &&
-  limits.base.knowledge === knowledge &&
-  limits.base.preparation === limits.preparation
-    ? limits.base
-    : answerBase(recording, knowledge, limits);
+// a nested check of another question or knowledge prepares its own. A caller
+// that holds the material of a larger set of sources for this knowledge (the
+// role exploration) may supply the view of a recording's sources instead:
+// the question is not part of the material unless an interpretation was made
+// for its reading.
+const baseFor = (recording, knowledge, limits) => {
+  if (
+    limits?.base?.recording === recording &&
+    limits.base.knowledge === knowledge &&
+    limits.base.preparation === limits.preparation
+  )
+    return limits.base;
+  const supplied = limits?.supplied;
+  if (
+    supplied?.knowledge === knowledge &&
+    !limits.preparation &&
+    !(knowledge.rules ?? []).some((rule) => rule.queryRevision)
+  ) {
+    const base = supplied.of(recording);
+    if (base) return { ...base, recording, knowledge, preparation: undefined };
+  }
+  return answerBase(recording, knowledge, limits);
+};
 
 function evaluateReading(recording, knowledge, limits, reading) {
   const base = baseFor(recording, knowledge, limits);

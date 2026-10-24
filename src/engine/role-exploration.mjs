@@ -1,6 +1,7 @@
 /** Introduce premises in ranked role order, carrying the unchanged question and open obligations. */
 import { setImmediate as yieldTurn } from 'node:timers/promises';
-import { checkAnswer } from './answer.mjs';
+import { answerRecording, checkAnswer } from './answer.mjs';
+import { answerBase, withheldBase } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 
 export const roleExplorationProfile = 'ranked-role-exploration-v1';
@@ -35,6 +36,36 @@ export async function exploreRoles(
   const context = result.inputs.filter((item) => item.kind !== 'source');
   const allSources = result.inputs.filter((item) => item.kind === 'source');
   const knowledge = knowledgeSnapshot(project.data);
+  // Every role check reads a subset of the sources: the material and inference
+  // of all of them, with the others withheld (read from the proofs), so the
+  // checks share one inference. A bounded inference supplies nothing.
+  let full = null,
+    fullIds = null,
+    view = null;
+  const supplied = {
+    knowledge,
+    of: (recording) => {
+      full ??= answerBase(
+        answerRecording(
+          project,
+          { ...input, sources: allSources },
+          { ...result, inputs: [...allSources, ...context] },
+        ),
+        knowledge,
+        { grammarCache },
+      );
+      fullIds ??= new Set(full.recording.sources.map((source) => source.id));
+      const present = new Set(recording.sources.map((source) => source.id));
+      const withheld = full.material.sources
+        .map((source) => source.id)
+        .filter((id) => !present.has(id));
+      if (recording.sources.some((source) => !fullIds.has(source.id))) return null;
+      if (!withheld.length) return full;
+      const key = withheld.join('\u0000');
+      if (view?.key !== key) view = { key, base: withheldBase(full, withheld) };
+      return view.base;
+    },
+  };
   const batch = Math.max(1, Math.ceil(sources.size / 32));
   const available = [],
     visits = [],
@@ -67,7 +98,7 @@ export async function exploreRoles(
           project,
           { ...input, sources: checked },
           { ...result, inputs: [...checked, ...context] },
-          { grammarCache, knowledge },
+          { grammarCache, knowledge, supplied },
         );
         checks.push({
           id: checks.length,
