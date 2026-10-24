@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { inferRelations, validateRule } from '../../src/amr/inference.mjs';
 import { graphRevision } from '../../src/recording/revisions.mjs';
-import { evaluateAnswer } from '../../src/recording/answers.mjs';
+import { evaluateAnswer, matchCap } from '../../src/recording/answers.mjs';
 import { prepareGraphs } from '../../src/models/graph-preparation.mjs';
 
 const graph = (id, top, nodes, edges) => ({
@@ -651,6 +651,10 @@ assert.equal(
   0,
   'A negated predicate supplies no participant',
 );
+// The match cap grows with the material, within bounds.
+assert.equal(matchCap(19), 2000);
+assert.equal(matchCap(209), 8360, 'A 209-statement corpus is not cut off at 2000');
+assert.equal(matchCap(10000), 10000);
 // A predicate bound as an answer reads by its attested word and the source's
 // modifiers, never by its concept name.
 const kept = graph('kept', 'k', { k: 'keep-01', r: 'registry', c: 'commit-01', p: 'public-02' }, [

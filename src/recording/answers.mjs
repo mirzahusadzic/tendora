@@ -647,12 +647,21 @@ function evaluateQuestion(recording, knowledge, limits, reading) {
   return { ...split, queryNormalization: normalized.reason };
 }
 
+/** The match cap grows with the material: about 40 matches per source
+ * occurrence, between the 2000 a small scope has always had and 10000. A fixed
+ * 2000 cut off a 209-statement corpus whose searches took under a second; the
+ * upper bound keeps a very large scope's bounded search bounded in time.
+ */
+export const matchCap = (sources) => Math.min(10000, Math.max(2000, 40 * sources));
+
 function evaluateReading(recording, knowledge, limits, reading) {
   const material = answerMaterial(recording, knowledge, limits?.preparation);
   const account = limits?.workBudget !== undefined ? { work: 0, limit: limits.workBudget } : null;
   const grammar = createGrammarMatcher(limits?.grammarCache);
   const matchRelations = grammar.match;
+  const matchLimit = limits?.matchLimit ?? matchCap(material.sources.length);
   const inference = inferRelations(material.facts, material.rules, {
+    matchLimit: matchCap(material.sources.length),
     ...limits,
     account,
     matcher: matchRelations,
@@ -680,7 +689,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
     descriptorFallback: Boolean(limits?.descriptorFallback),
   });
   const claim = claimRoot(query);
-  const matchOptions = limits && { budget: limits.matchBudget, limit: limits.matchLimit, account };
+  const matchOptions = { budget: limits?.matchBudget, limit: matchLimit, account };
   const unconstrained = query.nodes.every((node) => unknownIds.has(node.id));
   const matching = unconstrained
     ? { matches: [], complete: true }
