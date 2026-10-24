@@ -3,7 +3,7 @@
  * Terminals retain actual occurrence IDs; label equality cannot join entities.
  */
 import { extractHrg } from './hrg-decomposition.mjs';
-import { compileCorpus, grammarFacts, grammarProfile, factKey } from './hrg-corpus.mjs';
+import { compileCorpus, corpusSignature, grammarFacts, grammarProfile } from './hrg-corpus.mjs';
 const variable = (term) => /^\?[A-Za-z][\w-]*$/u.test(term);
 export function compilePattern(patterns) {
   const vertices = [...new Set(patterns.flat().filter(variable))];
@@ -243,7 +243,7 @@ export function createGrammarMatcher(retained = {}) {
     planKeys = new Map();
   const stats = { compilations: 0, reused: 0, searches: 0, work: 0 };
   const corpus = (facts) => {
-    const signature = factKey(facts);
+    const signature = corpusSignature(facts);
     const previous = [...corpora, ...available].find((g) => g.signature === signature);
     const compiled = compileCorpus(facts, previous, signature);
     if (!corpora.includes(compiled.grammar)) corpora.push(compiled.grammar);
