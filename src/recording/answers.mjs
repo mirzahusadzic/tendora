@@ -298,12 +298,29 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
   };
   const available = new Set(),
     unavailable = new Map();
-  const add = (triple, sourceId, fragment, guards = fragment?.guards) =>
-    facts.push({
-      triple,
-      sourceIds: [sourceId],
-      ...(fragment ? { fragmentIds: [fragment.id], guards: guards.map(JSON.stringify) } : {}),
-    });
+  // The facts of a source or a fragment share their id lists, and the same
+  // guards are one list: frozen, one array each rather than one per fact.
+  const sourceLists = new Map(),
+    fragmentLists = new Map(),
+    guardLists = new Map(),
+    unguarded = Object.freeze([]);
+  const shared = (lists, key, make) => {
+    let list = lists.get(key);
+    if (!list) lists.set(key, (list = Object.freeze(make())));
+    return list;
+  };
+  const add = (triple, sourceId, fragment, guards = fragment?.guards) => {
+    const fact = { triple, sourceIds: shared(sourceLists, sourceId, () => [sourceId]) };
+    if (fragment) {
+      fact.fragmentIds = shared(fragmentLists, fragment, () => [fragment.id]);
+      if (!guards.length) fact.guards = unguarded;
+      else {
+        const named = guards.map(JSON.stringify);
+        fact.guards = shared(guardLists, named.join('\u0000'), () => named);
+      }
+    }
+    facts.push(fact);
+  };
   // A negation guards what it scopes over: relations headed by the negated
   // predicate or beneath it, and that predicate's own concept. A sibling clause
   // (“tries a possible world without changing the actual world”) stays
