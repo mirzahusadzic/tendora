@@ -13,6 +13,7 @@
 import { evaluateAnswer } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { answerRecording } from './answer.mjs';
+import { onlyClause } from '../amr/conditions.mjs';
 
 const argument = /^:ARG\d$/u;
 // The circumstances of a relation are variables too: when, where, how, why,
@@ -45,8 +46,11 @@ const modal = new Set(['possible-01', 'obligate-01', 'recommend-01', 'permit-01'
 export function clozeProbes(source) {
   if (!source.graph) return [];
   const top = source.graph.assertionTop ?? source.graph.top;
+  // A necessary condition read as a time (“only when”) is a condition too.
   const condition = source.graph.edges.find(
-    (edge) => edge.from === top && edge.role === ':condition',
+    (edge) =>
+      edge.from === top &&
+      (edge.role === ':condition' || (edge.role === ':time' && onlyClause(source.graph, edge.to))),
   );
   const graph = condition ? consequent(source.graph, top, condition) : source.graph;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
@@ -56,14 +60,7 @@ export function clozeProbes(source) {
     if (!/-\d+$/u.test(nodes.get(frame)?.concept ?? '')) break;
   }
   // “Only when X, Y” is necessary, not sufficient: nothing follows from X alone.
-  const necessary =
-    condition &&
-    source.graph.edges.some(
-      (edge) =>
-        edge.from === condition.to &&
-        edge.role === ':mod' &&
-        source.graph.nodes.find((node) => node.id === edge.to)?.concept === 'only',
-    );
+  const necessary = condition && onlyClause(source.graph, condition.to);
   const conditional = condition
     ? { case: conditionGraph(source.graph, top, condition), ...(necessary ? { necessary } : {}) }
     : null;

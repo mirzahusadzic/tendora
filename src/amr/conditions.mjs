@@ -24,6 +24,16 @@ function dereifiedCondition(graph) {
   };
 }
 
+/** A clause marked only: “only when”, “only if”. */
+export function onlyClause(graph, id) {
+  return graph.edges.some(
+    (edge) =>
+      edge.from === id &&
+      edge.role === ':mod' &&
+      graph.nodes.find((node) => node.id === edge.to)?.concept === 'only',
+  );
+}
+
 export function conditionalReading(
   reading,
   literals = new Map(),
@@ -33,8 +43,20 @@ export function conditionalReading(
   if (graph.reason) return graph;
   const root = claimRoot(graph),
     conditions = graph.edges.filter((edge) => edge.from === root && edge.role === ':condition');
-  if (!conditions.length) return null;
   const fail = (reason) => ({ reason });
+  // “Only when X, Y” says Y requires X, not that X brings Y about: read as a
+  // sufficient condition it would answer Yes wherever X holds. The reader may
+  // take “when” as a time; marked only, it is the same necessary condition.
+  if (
+    graph.edges.some(
+      (edge) =>
+        edge.from === root &&
+        [':condition', ':time'].includes(edge.role) &&
+        onlyClause(graph, edge.to),
+    )
+  )
+    return fail('A necessary condition (only when, only if) requires an explicit interpretation.');
+  if (!conditions.length) return null;
   if (
     conditions.length !== 1 ||
     graph.edges.some((edge) => edge.role === ':condition' && edge.from !== root)
@@ -43,17 +65,6 @@ export function conditionalReading(
   if (graph.edges.some((edge) => edge.role === ':concession'))
     return fail('Concessive conditions require an explicit interpretation.');
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
-  // “Only when X, Y” says Y requires X, not that X brings Y about: read as a
-  // sufficient condition it would answer Yes wherever X holds.
-  if (
-    graph.edges.some(
-      (edge) =>
-        edge.from === conditions[0].to &&
-        edge.role === ':mod' &&
-        nodes.get(edge.to)?.concept === 'only',
-    )
-  )
-    return fail('A necessary condition (only when, only if) requires an explicit interpretation.');
   if (graph.nodes.some((node) => node.concept === 'amr-unknown'))
     return fail('A question cannot supply a conditional assertion.');
   const condition = conditions[0],

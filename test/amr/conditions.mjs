@@ -94,6 +94,22 @@ assert.equal(
   'open',
   'A necessary condition never answers as a sufficient one',
 );
+// “Only when X, Y” may be read as a time; marked only, it is the same necessary
+// condition, and the conclusion is not asserted with X as its circumstance.
+const onlyAt = modify(onlyWhen, (g) => {
+  g.edges.find((e) => e.role === ':condition').role = ':time';
+});
+assert.match(conditionalReading(onlyAt).reason, /necessary condition/u);
+assert.equal(evaluateAnswer(record([onlyAt, evidence])).status, 'open');
+assert.equal(
+  conditionalReading(
+    modify(onlyAt, (g) => {
+      g.edges = g.edges.filter((e) => e.id !== 'only');
+    }),
+  ),
+  null,
+  'A plain time is no condition',
+);
 const incomplete = modify(evidence, (g) => {
   g.nodes = g.nodes.filter((n) => n.id !== 'n');
   g.edges = g.edges.filter((e) => e.from !== 'n');
