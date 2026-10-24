@@ -172,8 +172,12 @@ export function buildClarifications(project, input, result, answer) {
   });
 }
 
-/** The author confirms a proposed meaning; the engine owns rule generation and dependencies. */
-export function acceptClarification(project, candidate) {
+/** A person, or a program, confirms a proposed meaning; the engine owns rule
+ * generation and dependencies. The confirmation records who declared it
+ * (`actor`: a label, not a verified identity; none when the caller names
+ * none) and through what (`via`: a library call unless the caller says). A
+ * confirmation saved before these were recorded names no one. */
+export function acceptClarification(project, candidate, { actor = null, via = 'library' } = {}) {
   if (
     candidate.projectId !== project.data.id ||
     candidate.projectRevision !== project.digest ||
@@ -240,7 +244,9 @@ export function acceptClarification(project, candidate) {
     confirmation: {
       candidateId: candidate.id,
       at: new Date().toISOString(),
-      statement: 'The author confirms this source expresses the relationship asked about.',
+      actor,
+      via,
+      statement: 'This source expresses the relationship asked about.',
     },
   };
   contribution.wordings.push(part);

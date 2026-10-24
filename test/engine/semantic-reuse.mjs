@@ -100,6 +100,11 @@ async function accept(candidate) {
     result.part.confirmation,
     'The accepted language commitment is distinguished from a candidate',
   );
+  // A library call names no one: the confirmation says through what, never
+  // that the author confirmed.
+  assert.equal(result.part.confirmation.via, 'library');
+  assert.equal(result.part.confirmation.actor, null);
+  assert.doesNotMatch(result.part.confirmation.statement, /author/u);
   assert(result.part.rule && result.part.basisSources.length);
   assert.equal(
     result.contribution.responses.length,

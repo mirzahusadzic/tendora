@@ -18,7 +18,15 @@ import { acceptClarification } from '../../engine/clarify.mjs';
 import { retainPartialContribution } from '../../engine/partial.mjs';
 import { createStatementsEditor } from './statements.mjs';
 
-export function createDevelopment({ state, forms, projects, investigation, draw, setNotice }) {
+export function createDevelopment({
+  state,
+  config = {},
+  forms,
+  projects,
+  investigation,
+  draw,
+  setNotice,
+}) {
   const statementsEditor = createStatementsEditor({ state, forms, projects, draw, setNotice });
   const command = (key, description, run, pane = 'reading') => ({ key, description, run, pane });
   const contribution = (id) => state.project.data.contributions.find((c) => c.id === id);
@@ -376,7 +384,10 @@ export function createDevelopment({ state, forms, projects, investigation, draw,
         form.error = '';
         form.progress = 'Save the confirmed connection';
         form.execution = (async () => {
-          const { data } = await acceptClarification(project, choice.candidate);
+          const { data } = await acceptClarification(project, choice.candidate, {
+            actor: config.actor ?? 'local-workbench-user',
+            via: 'editor',
+          });
           state.project = await projects.persistProject(project, data);
           form.corpusSaved = true;
           await projects.refreshOutline();

@@ -425,7 +425,10 @@ try {
         );
         await cp(dirname(item.project.path), directory, { recursive: true, errorOnExist: true });
         let project = await openProject(directory);
-        project = await saveProject(project, acceptClarification(project, candidate).data);
+        project = await saveProject(
+          project,
+          acceptClarification(project, candidate, { actor: 'tools/evaluate-projects.mjs' }).data,
+        );
         const run = await runEngine(project, {
           ...options.engineOptions,
           input: await inputFromProject(project, {

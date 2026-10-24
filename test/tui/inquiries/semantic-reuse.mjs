@@ -92,6 +92,9 @@ try {
       c && !c.responses.length,
       'Confirmation supplies a correspondence, not an answer statement',
     );
+    const { confirmation } = c.wordings.find((w) => w.kind === 'clarification');
+    assert.equal(confirmation.via, 'editor', 'Confirmed in the workbench');
+    assert.equal(confirmation.actor, 'local-workbench-user', 'By the declared actor');
     assert.deepEqual(ui.state.project.data.contributions[0], source);
     assert(
       confirmed.recording.sources.every((source) => source.development?.asserted !== false),

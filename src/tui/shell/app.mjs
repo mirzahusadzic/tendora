@@ -123,7 +123,15 @@ export function createWorkbench({ state, config, term, onExit = (code) => proces
   state.engineActivity = () => state.workflow?.activity() ?? engine.activity();
   state.cancelEngine = engine.cancel;
   state.refreshProjectOutline = projects.refreshOutline;
-  const development = createDevelopment({ state, forms, projects, investigation, draw, setNotice });
+  const development = createDevelopment({
+    state,
+    config,
+    forms,
+    projects,
+    investigation,
+    draw,
+    setNotice,
+  });
   const projectReading = createProjectReading({ state });
   const workflow = createQuestionWorkflow({
     state,
