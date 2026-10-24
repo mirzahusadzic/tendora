@@ -628,6 +628,8 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
 }
 
 export function evaluateAnswer(recording, knowledge = recording.knowledge ?? {}, limits) {
+  // Every reading tried below is checked against one material and inference.
+  limits = { ...limits, base: baseFor(recording, knowledge, limits) };
   const reading = answerQuery(recording, knowledge, limits?.preparation);
   const result = evaluateQuestion(recording, knowledge, limits, reading);
   if (result.status !== 'open' || result.answers.length) return result;
@@ -681,20 +683,113 @@ export const matchCap = (sources) => Math.min(10000, Math.max(2000, 40 * sources
  */
 export const factCap = (sources) => Math.min(48000, Math.max(12000, 80 * sources));
 
-function evaluateReading(recording, knowledge, limits, reading) {
+/** What a question is checked against: a recording's material and its
+ * inference, for its knowledge. The readings of one question (as asked,
+ * split, with descriptors, as a requirement) share it; the material does not
+ * depend on the question except through interpretations made for its exact
+ * reading, which belong to the recording. */
+export function answerBase(recording, knowledge = recording.knowledge ?? {}, limits) {
   const material = answerMaterial(recording, knowledge, limits?.preparation);
   const account = limits?.workBudget !== undefined ? { work: 0, limit: limits.workBudget } : null;
   const grammar = createGrammarMatcher(limits?.grammarCache);
-  const matchRelations = grammar.match;
-  const matchLimit = limits?.matchLimit ?? matchCap(material.sources.length);
+  const { base: _base, ...options } = limits ?? {};
   const inference = inferRelations(material.facts, material.rules, {
     matchLimit: matchCap(material.sources.length),
     maxFacts: factCap(material.sources.length),
-    ...limits,
+    ...options,
     account,
-    matcher: matchRelations,
+    matcher: grammar.match,
   });
   grammar.corpus(inference.facts);
+  return {
+    recording,
+    knowledge,
+    preparation: limits?.preparation,
+    material,
+    inference,
+    grammar,
+    inferenceWork: account?.work ?? 0,
+  };
+}
+/** A base without some sources, read from the proofs it keeps rather than
+ * checked again: a fact holds when one of its proofs uses none of them (nor a
+ * rule read from them) and rests on facts that hold. Derived nodes are named
+ * by their application, so these are the facts and names a check without
+ * the sources would derive. Null when the base's inference was bounded: a
+ * capped proof list may lack the proof that would still hold. */
+export function withheldBase(base, withheld) {
+  if (!base.inference.complete) return null;
+  const out = new Set(withheld);
+  const kept = (ids) => !(ids ?? []).some((id) => out.has(id));
+  const holds = new Set();
+  const usable = (proof) =>
+    kept(proof.sourceIds) && (proof.premises ?? []).every((id) => holds.has(id));
+  // The least fixpoint: proofs rest only on facts already shown to hold.
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const fact of base.inference.facts)
+      if (!holds.has(fact.id) && [fact, ...(fact.alternatives ?? [])].some(usable)) {
+        holds.add(fact.id);
+        grew = true;
+      }
+  }
+  const facts = [];
+  for (const fact of base.inference.facts) {
+    if (!holds.has(fact.id)) continue;
+    const proofs = [fact, ...(fact.alternatives ?? [])].filter(usable);
+    if (proofs[0] === fact && proofs.length === 1 + (fact.alternatives?.length ?? 0)) {
+      facts.push(fact);
+      continue;
+    }
+    const { alternatives: _all, ...own } = proofs[0] === fact ? fact : { ...proofs[0] };
+    facts.push({
+      ...own,
+      id: fact.id,
+      triple: fact.triple,
+      ...(proofs.length > 1 ? { alternatives: proofs.slice(1) } : {}),
+    });
+  }
+  const material = base.material;
+  const grammar = createGrammarMatcher({ profile: grammarProfile, grammars: base.grammar.corpora });
+  grammar.corpus(facts);
+  return {
+    ...base,
+    material: {
+      ...material,
+      sources: material.sources.filter((source) => !out.has(source.id)),
+      facts: material.facts.filter((fact) => kept(fact.sourceIds)),
+      rules: material.rules.filter((rule) => kept(rule.sourceIds)),
+      nodes: material.nodes.filter((node) => !out.has(node.sourceId)),
+      fragments: material.fragments.filter((fragment) => !out.has(fragment.sourceId)),
+      usedParses: material.usedParses.filter((entry) => !out.has(entry.sourceId)),
+      sourceGraphs: material.sourceGraphs.filter((entry) => !out.has(entry.sourceId)),
+      skipped: material.skipped.filter((entry) => !out.has(entry.sourceId)),
+    },
+    inference: { ...base.inference, facts },
+    grammar,
+  };
+}
+// A base serves only the recording, knowledge and preparation it was made for;
+// a nested check of another question or knowledge prepares its own.
+const baseFor = (recording, knowledge, limits) =>
+  limits?.base?.recording === recording &&
+  limits.base.knowledge === knowledge &&
+  limits.base.preparation === limits.preparation
+    ? limits.base
+    : answerBase(recording, knowledge, limits);
+
+function evaluateReading(recording, knowledge, limits, reading) {
+  const base = baseFor(recording, knowledge, limits);
+  // Each reading reports its own skipped parses; the shared material is not changed.
+  const material = { ...base.material, skipped: [...base.material.skipped] };
+  const { inference, grammar } = base;
+  // As before, a reading's work budget counts the inference it rests on.
+  const account =
+    limits?.workBudget !== undefined
+      ? { work: base.inferenceWork, limit: limits.workBudget }
+      : null;
+  const matchRelations = grammar.match;
+  const matchLimit = limits?.matchLimit ?? matchCap(material.sources.length);
   const { graph: query, conflict: conflictingQuery, corrections } = reading;
   if (conflictingQuery)
     material.skipped.push({
