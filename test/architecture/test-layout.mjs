@@ -4,6 +4,9 @@ import { access, readdir, readFile } from 'node:fs/promises';
 import { suites } from '../suites.mjs';
 
 const root = new URL('..', import.meta.url);
+// The ignored tmp/ directory holds state the runner writes (suite times), not
+// fixtures; a clean checkout has none of it.
+const generated = new URL('tmp/', new URL('../..', import.meta.url)).href;
 const registered = Object.values(suites).flat();
 assert.equal(
   new Set(registered).size,
@@ -28,7 +31,10 @@ for (const path of files) {
     ),
   ]
     .map(([, reference]) => reference)
-    .filter((reference) => reference.startsWith('.'));
+    .filter(
+      (reference) =>
+        reference.startsWith('.') && !new URL(reference, url).href.startsWith(generated),
+    );
   for (const reference of references)
     await assert.doesNotReject(access(new URL(reference, url)), `${path} → ${reference}`);
 }

@@ -39,11 +39,17 @@ try {
   const failed = run('failing');
   assert.notEqual(failed.status, 0);
   assert.match(failed.stderr, /Suite failed/);
+  // A worker count that is not a whole number once ran nothing and passed.
+  for (const jobs of ['auto', '0', '1.5']) {
+    const invalid = run('check', '--jobs', jobs);
+    assert.notEqual(invalid.status, 0);
+    assert.match(invalid.stderr, /--jobs takes a whole number of at least 1/u);
+  }
   const network = run('network');
   assert.notEqual(network.status, 0);
   assert.match(network.stderr, /network.mjs attempted live requests/u);
   console.log(
-    'ok test runner forwards suite arguments and propagates unknown profiles and failures',
+    'ok test runner forwards suite arguments and propagates unknown profiles, invalid --jobs and failures',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });

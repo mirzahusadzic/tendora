@@ -23,7 +23,10 @@ const worker = take('--suite')?.[0];
 const workerProfile = take('--profile')?.[0] ?? null;
 const since = take('--since')?.[0] ?? null;
 const changedOnly = Boolean(take('--changed', 0));
-const jobs = Number(take('--jobs')?.[0] ?? Math.max(1, Math.min(8, availableParallelism() - 2)));
+const jobsText = take('--jobs')?.[0];
+const jobs = jobsText ? Number(jobsText) : Math.max(1, Math.min(8, availableParallelism() - 2));
+if (!Number.isInteger(jobs) || jobs < 1)
+  throw new Error(`--jobs takes a whole number of at least 1, not ${jobsText}`);
 const profile = worker ? null : (process.argv[2] ?? 'check');
 if (profile && !Object.hasOwn(suites, profile)) throw new Error(`Unknown test profile: ${profile}`);
 // A profile selects suites; remaining arguments belong to those suites.
@@ -81,7 +84,8 @@ else {
 async function runParallel(selected) {
   const started = performance.now();
   const failures = [];
-  let times = {};
+  let passed = 0,
+    times = {};
   try {
     times = JSON.parse(readFileSync(timesPath, 'utf8'));
   } catch {
@@ -108,7 +112,7 @@ async function runParallel(selected) {
       child.stderr.on('data', (bytes) => (err += bytes));
       child.on('close', (code) => {
         const seconds = ((performance.now() - began) / 1000).toFixed(1);
-        if (code === 0) times[path] = Number(seconds);
+        if (code === 0) (times[path] = Number(seconds)), passed++;
         console.error(`${code === 0 ? 'Passed' : 'FAILED'} ${path} (${seconds} s)`);
         process.stdout.write(out);
         if (code !== 0) {
@@ -133,9 +137,10 @@ async function runParallel(selected) {
     // The record only orders the next run.
   }
   const seconds = ((performance.now() - started) / 1000).toFixed(1);
+  // Passes are counted, not inferred: a suite that never ran is not a pass.
   console.error(
-    `${selected.length - failures.length} of ${selected.length} suites passed in ${seconds} s` +
+    `${passed} of ${selected.length} suites passed in ${seconds} s` +
       (failures.length ? `; failed: ${failures.join(', ')}` : ''),
   );
-  if (failures.length) process.exitCode = 1;
+  if (passed !== selected.length) process.exitCode = 1;
 }
