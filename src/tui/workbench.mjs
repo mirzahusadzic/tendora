@@ -40,6 +40,7 @@ async function main() {
   let recordingsVisible = true;
   let recordingsFraction = 1 / 3;
   let developmentFraction = 0.52;
+  const projectLayouts = {};
   try {
     const saved = JSON.parse(await readFile(preferencesPath, 'utf8'));
     if (Number.isInteger(saved.sidebarWidth) && saved.sidebarWidth >= 24)
@@ -57,6 +58,13 @@ async function main() {
       saved.developmentFraction < 1
     )
       developmentFraction = saved.developmentFraction;
+    for (const [id, layout] of Object.entries(saved.projects ?? {}))
+      if (
+        Number.isFinite(layout?.developmentFraction) &&
+        layout.developmentFraction > 0 &&
+        layout.developmentFraction < 1
+      )
+        projectLayouts[id] = { developmentFraction: layout.developmentFraction };
   } catch {
     /* A missing or invalid preference leaves the default layout usable. */
   }
@@ -149,6 +157,7 @@ async function main() {
         recordingsVisible,
         recordingsFraction,
         developmentFraction,
+        projectLayouts,
         activeRecordingPath:
           mode === 'recording' ? (recordingArg ? localPath(recordingArg) : defaultRecording) : null,
       },

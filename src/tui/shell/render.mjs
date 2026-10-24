@@ -531,14 +531,20 @@ export function createRenderer({
     const recordingControls = controlRows('recordings', leftWidth);
     const recordingsAvailable =
       !workflow && state.project && (state.mode === 'project' || hasRecordingProject(state));
-    // Roles get room for their tree and hints before Development, up to 60%.
-    const minimumNodeHeight = workflow
-      ? Math.max(
-          10,
-          Math.floor(bodyHeight * 0.48),
-          Math.min(nodeContent.length + nodeControls.length + 4, Math.floor(bodyHeight * 0.6)),
-        )
-      : Math.max(8, nodeControls.length + 8);
+    // Roles get room for their tree and hints before Development, up to 60%,
+    // until Development's height is chosen for the project: then Roles keep
+    // only room for their title, a few rows and their hints.
+    const chosenDevelopment = state.projectLayouts?.[state.project?.data.id]?.developmentFraction;
+    const developmentFraction = chosenDevelopment ?? state.developmentFraction;
+    const minimumNodeHeight = !workflow
+      ? Math.max(8, nodeControls.length + 8)
+      : chosenDevelopment !== undefined || state.resizing?.fraction === 'developmentFraction'
+        ? Math.max(8, nodeControls.length + 6)
+        : Math.max(
+            10,
+            Math.floor(bodyHeight * 0.48),
+            Math.min(nodeContent.length + nodeControls.length + 4, Math.floor(bodyHeight * 0.6)),
+          );
     const developmentItems =
       (projectNavigation || hasRecordingProject(state)) &&
       (workflow || !state.form?.workspace) &&
@@ -560,7 +566,7 @@ export function createRenderer({
               8,
               Math.min(
                 bodyHeight - minimumNodeHeight,
-                Math.round(bodyHeight * state.developmentFraction),
+                Math.round(bodyHeight * developmentFraction),
               ),
             )
           : Math.min(10, Math.max(8, Math.floor(bodyHeight * 0.32)))

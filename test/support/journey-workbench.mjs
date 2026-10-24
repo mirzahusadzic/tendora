@@ -26,7 +26,7 @@ export class JourneyTerminal extends EventEmitter {
   }
 }
 
-export function journeyWorkbench(project, directory, overrides = {}) {
+export function journeyWorkbench(project, directory, overrides = {}, initial = {}) {
   const config = {
     projectsHome: directory,
     preferencesPath: join(directory, '.layout'),
@@ -34,7 +34,7 @@ export function journeyWorkbench(project, directory, overrides = {}) {
     ...overrides,
   };
   const state = createState(
-    { mode: 'project', project, placementId: project.data.placements[0].id },
+    { mode: 'project', project, placementId: project.data.placements[0].id, ...initial },
     config,
   );
   const term = new JourneyTerminal();

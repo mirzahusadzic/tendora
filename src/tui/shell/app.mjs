@@ -66,6 +66,7 @@ export function createWorkbench({ state, config, term, onExit = (code) => proces
         recordingsVisible: state.recordingsVisible,
         recordingsFraction: state.recordingsFraction,
         developmentFraction: state.developmentFraction,
+        projects: state.projectLayouts,
       }) + '\n',
     );
     await rename(temporary, config.preferencesPath);

@@ -86,6 +86,8 @@ export function createState(
     recordingsVisible: initial.recordingsVisible ?? true,
     recordingsFraction: initial.recordingsFraction ?? 1 / 3,
     developmentFraction: initial.developmentFraction ?? 0.52,
+    // Development's height as chosen for each project, by project id.
+    projectLayouts: initial.projectLayouts ?? {},
     resizing: null,
     mousePosition: null,
     pointerShape: null,

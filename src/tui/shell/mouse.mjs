@@ -84,6 +84,7 @@ export function createMouse({
     if (!save) {
       if (state.resizing.axis === 'rows') state[state.resizing.fraction] = state.resizing.previous;
       else state.preferredSidebar = state.resizing.previous;
+      if (state.resizing.layouts) state.projectLayouts = state.resizing.layouts;
     }
     state.resizing = null;
   }
@@ -97,6 +98,13 @@ export function createMouse({
         ),
       );
       state[state.resizing.fraction] = height / state.viewport.bodyHeight;
+      // Development's height belongs to the project it was chosen in.
+      const id = state.project?.data.id;
+      if (state.resizing.fraction === 'developmentFraction' && id)
+        state.projectLayouts = {
+          ...state.projectLayouts,
+          [id]: { developmentFraction: state.developmentFraction },
+        };
     } else state.preferredSidebar = sidebarSize((term.width ?? 80) - 1, data.x - 1);
   }
   function handleMouse(name, data) {
@@ -365,6 +373,7 @@ export function createMouse({
           axis: 'rows',
           fraction,
           previous: state[fraction],
+          layouts: state.projectLayouts,
           minimum: development ? 8 : 6,
           height: development ? state.viewport.developmentHeight : state.viewport.recordingsHeight,
           y: data.y,
