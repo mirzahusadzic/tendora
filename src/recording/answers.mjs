@@ -396,10 +396,17 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
       graph,
       recording.amrs?.find((amr) => amr.graphId === graph.id)?.response,
     );
+    // A node's name is made once per source: every fact about it shares it.
+    const nodeNames = new Map();
+    const nodeName = (nodeId) => {
+      let name = nodeNames.get(nodeId);
+      if (name === undefined) nodeNames.set(nodeId, (name = sourceNode(source.id, nodeId)));
+      return name;
+    };
     add([source.id, '@text', source.text], source.id);
     add([source.id, '@placement', source.nodeId], source.id);
     if (source.sentenceId) add([source.id, '@sentence', source.sentenceId], source.id);
-    add([source.id, '@root', sourceNode(source.id, claimRoot(graph))], source.id);
+    add([source.id, '@root', nodeName(claimRoot(graph))], source.id);
     available.add(source.id);
     sourceGraphs.push({ sourceId: source.id, graph, revision });
     const extracted = clauseFragments(graph);
@@ -411,7 +418,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
       revision,
       guards: fragment.guards.map((id) => {
         const edge = graph.edges.find((edge) => edge.id === id);
-        return [sourceNode(source.id, edge.from), edge.role, sourceNode(source.id, edge.to)];
+        return [nodeName(edge.from), edge.role, nodeName(edge.to)];
       }),
       negations: fragment.guards.map((id) => {
         const edge = graph.edges.find((edge) => edge.id === id),
@@ -422,7 +429,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
         return {
           predicate: edge.from,
           scope,
-          guard: [sourceNode(source.id, edge.from), edge.role, sourceNode(source.id, edge.to)],
+          guard: [nodeName(edge.from), edge.role, nodeName(edge.to)],
         };
       }),
       ports: fragment.ports.map((port) => ({ ...port, fragments: port.fragments.map(fragmentId) })),
@@ -481,7 +488,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
       ) {
         if (!fragment.projection)
           add(
-            [sourceNode(source.id, fragment.root), '@asserted', 'true'],
+            [nodeName(fragment.root), '@asserted', 'true'],
             source.id,
             fragment,
             scoped(fragment, fragment.root, true),
@@ -497,22 +504,18 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
             sourceIds: [source.id],
             fragmentIds: [fragment.id],
             when: [
-              [sourceNode(source.id, projection.parent), '@asserted', 'true'],
-              [sourceNode(source.id, projection.parent), ':instance', projection.operator],
-              [
-                sourceNode(source.id, projection.parent),
-                projection.role,
-                sourceNode(source.id, fragment.root),
-              ],
+              [nodeName(projection.parent), '@asserted', 'true'],
+              [nodeName(projection.parent), ':instance', projection.operator],
+              [nodeName(projection.parent), projection.role, nodeName(fragment.root)],
               ...fragment.guards,
             ],
-            then: [[sourceNode(source.id, fragment.root), '@asserted', 'true']],
+            then: [[nodeName(fragment.root), '@asserted', 'true']],
             guards: fragment.guards,
           });
         }
       }
       for (const node of fragment.graph.nodes) {
-        const id = sourceNode(source.id, node.id);
+        const id = nodeName(node.id);
         const guards = scoped(fragment, node.id, false);
         add([id, ':instance', node.concept], source.id, fragment, guards);
         for (const type of sourceSemanticTypes(node))
@@ -525,7 +528,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
       }
       for (const edge of fragment.graph.edges)
         add(
-          [sourceNode(source.id, edge.from), edge.role, sourceNode(source.id, edge.to)],
+          [nodeName(edge.from), edge.role, nodeName(edge.to)],
           source.id,
           fragment,
           scoped(fragment, edge.from, true),
@@ -533,7 +536,7 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
     }
     if (caseIds.has(source.id)) add(['@case', '@source', source.id], source.id);
     for (const node of graph.nodes) {
-      const id = sourceNode(source.id, node.id);
+      const id = nodeName(node.id);
       add([id, '@source', source.id], source.id);
       add([id, '@node', node.id], source.id);
       nodes.push({ id, sourceId: source.id, nodeId: node.id, concept: node.concept });
