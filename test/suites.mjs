@@ -14,6 +14,7 @@ export const suites = {
     'amr/conditions.mjs',
     'amr/kinds.mjs',
     'amr/provenance.mjs',
+    'amr/fact-store.mjs',
     'amr/clause-fragments.mjs',
     'amr/hrg.mjs',
     'amr/composition.mjs',
