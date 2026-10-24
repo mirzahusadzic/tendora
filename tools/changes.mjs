@@ -57,14 +57,20 @@ export function dependencies(start, cache = new Map()) {
     }
     if (!cache.has(path)) {
       const here = dirname(join(root, path));
+      // An import is kept even when its module is gone, so deleting or renaming
+      // a module reaches the suites that still import it; a path named in a
+      // string counts only when it exists.
       const next = [];
       for (const pattern of imports)
         for (const [, target] of source.matchAll(pattern))
           next.push(relative(root, resolve(here, target)));
-      for (const [, target] of source.matchAll(named)) next.push(target.replace(/\/$/u, ''));
+      for (const [, target] of source.matchAll(named)) {
+        const path = target.replace(/\/$/u, '');
+        if (existsSync(join(root, path))) next.push(path);
+      }
       cache.set(
         path,
-        next.filter((target) => !target.startsWith('..') && existsSync(join(root, target))),
+        next.filter((target) => !target.startsWith('..')),
       );
     }
     for (const target of cache.get(path)) visit(target);
@@ -75,7 +81,9 @@ export function dependencies(start, cache = new Map()) {
 
 const reaches = (dependency, changed) =>
   dependency === changed ||
-  (changed.startsWith(`${dependency}/`) && statSync(join(root, dependency)).isDirectory());
+  (changed.startsWith(`${dependency}/`) &&
+    existsSync(join(root, dependency)) &&
+    statSync(join(root, dependency)).isDirectory());
 
 /** Suites the suite list names now but did not name at the base revision. */
 export function addedSuites({ since = 'HEAD' } = {}) {

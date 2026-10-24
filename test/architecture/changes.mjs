@@ -1,7 +1,9 @@
 /** A change reaches the suites that depend on it, through imports, URLs and
  * named repository paths; the runner, the suite list and the package reach all. */
 import assert from 'node:assert/strict';
-import { affectedSuites, formatTargets } from '../../tools/changes.mjs';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { affectedSuites, dependencies, formatTargets, root } from '../../tools/changes.mjs';
 import { suites } from '../suites.mjs';
 
 // Paths built from parts: a path named whole would make this suite depend on it.
@@ -31,6 +33,21 @@ assert.deepEqual(
   ['src/engine/cloze.mjs', docs],
   'Only the files the format check covers',
 );
+// A module deleted or renamed still reaches the suites that import it, so
+// check:changed runs them (they fail) instead of passing without them.
+const fixture = join('tmp', `changes-deleted-${process.pid}`);
+await mkdir(join(root, fixture), { recursive: true });
+try {
+  // Built from parts, so the layout check does not take it for this file's import.
+  const statement = ['import { gone } from', "'./gone.mjs';\n"].join(' ');
+  await writeFile(join(root, fixture, 'suite.mjs'), statement);
+  assert(
+    dependencies(join(fixture, 'suite.mjs')).has(join(fixture, 'gone.mjs')),
+    'A missing import is still a dependency',
+  );
+} finally {
+  await rm(join(root, fixture), { recursive: true, force: true });
+}
 console.log(
-  'ok changes reach their suites: imports, URLs, named paths; added suites; the runner reaches all',
+  'ok changes reach their suites: imports, URLs, named paths, deleted modules; added suites; the runner reaches all',
 );
