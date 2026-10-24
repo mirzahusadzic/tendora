@@ -11,6 +11,7 @@ import {
   compactDataFiles,
   readDataFile,
   writeDataFile,
+  writeDataFiles,
   listDataFiles,
   removeDataFile,
   removeDataArea,
@@ -113,6 +114,33 @@ try {
   await writeDataFile(directory, mutable, '{"revision":2}\n');
   await compactDataFiles(directory);
   assert.equal(await readDataFile(directory, mutable), '{"revision":2}\n');
+
+  // A batch is one transaction: an immutable object that would change refuses
+  // the whole batch, and nothing in it is written.
+  const record = (name) => join(directory, 'records', `${name}.json`);
+  await writeDataFiles(directory, [[record('batch-a'), 'a\n']], { immutable: true });
+  await assert.rejects(
+    writeDataFiles(
+      directory,
+      [
+        [record('batch-b'), 'b\n'],
+        [record('batch-a'), 'changed\n'],
+      ],
+      { immutable: true },
+    ),
+    /Stored object changed/u,
+  );
+  assert.equal(await readDataFile(directory, record('batch-a')), 'a\n');
+  await assert.rejects(readDataFile(directory, record('batch-b')), { code: 'ENOENT' });
+  await writeDataFiles(
+    directory,
+    [
+      [record('batch-b'), 'b\n'],
+      [record('batch-a'), 'a\n'],
+    ],
+    { immutable: true },
+  );
+  assert.equal(await readDataFile(directory, record('batch-b')), 'b\n');
 
   // A fresh connection must wait even for its first schema read while packing owns the lock.
   const blocker = new DatabaseSync(dataStorePath(directory));

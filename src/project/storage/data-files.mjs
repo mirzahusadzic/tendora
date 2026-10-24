@@ -212,6 +212,45 @@ export async function writeDataFile(directory, path, bytes, { immutable = false 
     throw error;
   }
 }
+/** Several files in one transaction, so a large project saves in one commit
+ * rather than one per object. All are written, or none. */
+export async function writeDataFiles(directory, files, { immutable = false } = {}) {
+  if (!files.length) return;
+  const keyed = files.map(([path, bytes]) => {
+    if (typeof bytes !== 'string') throw new Error('Project data must be UTF-8 text');
+    return [keyFor(directory, path), bytes, path];
+  });
+  const entry = database(directory, true),
+    { db } = entry;
+  // An immutable object may also exist as a loose file from before packing.
+  if (immutable)
+    for (const [key, bytes, path] of keyed)
+      if (stored(entry, key) === undefined) {
+        const loose = await readFile(path, 'utf8').catch((error) => {
+          if (error.code !== 'ENOENT') throw error;
+          return undefined;
+        });
+        if (loose !== undefined && loose !== bytes) throw new Error('Stored object changed');
+      }
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    for (const [key, bytes] of keyed) {
+      const previous = stored(entry, key);
+      if (immutable && previous !== undefined && previous !== null && previous !== bytes)
+        throw new Error('Stored object changed');
+      if (previous !== bytes)
+        db.prepare('INSERT OR REPLACE INTO files VALUES (?, ?, ?)').run(
+          key,
+          storeBlock(db, [[key, bytes]]),
+          indexedChecksum(key, bytes),
+        );
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
 export async function listDataFiles(directory, area) {
   if (!dataAreas.includes(area.split('/')[0]) || area.includes('..'))
     throw new Error('Invalid project data area');

@@ -2,7 +2,7 @@
 import { readFile, writeFile, mkdir, link, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { dataAreas, readDataFile, writeDataFile } from './data-files.mjs';
+import { dataAreas, readDataFile, writeDataFile, writeDataFiles } from './data-files.mjs';
 
 const encode = (value) => JSON.stringify(value) + '\n';
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -57,6 +57,21 @@ export async function writeObject(directory, area, value) {
   }
   return hash;
 }
+/** Many immutable objects; in a packed area, in one transaction. */
+export async function writeObjects(directory, area, values) {
+  if (!dataAreas.includes(area.split('/')[0]))
+    return mapBounded(values, (value) => writeObject(directory, area, value));
+  const encoded = values.map((value) => {
+    const bytes = encode(value);
+    return [digest(bytes), bytes];
+  });
+  await writeDataFiles(
+    directory,
+    encoded.map(([hash, bytes]) => [join(directory, area, `${hash}.json`), bytes]),
+    { immutable: true },
+  );
+  return encoded.map(([hash]) => hash);
+}
 export async function readObject(directory, area, hash) {
   if (typeof hash !== 'string' || !/^[a-f0-9]{64}$/u.test(hash))
     throw new Error('Invalid stored object reference');
@@ -79,12 +94,15 @@ export async function storeProject(directory, data, previous) {
       },
     ]),
   );
-  const corpora = await mapBounded(concepts, (concept) => {
+  // Unchanged concepts keep their objects; changed ones are written together.
+  const changed = concepts.filter((concept) => {
     const old = unchanged.get(concept.id);
-    return old?.ref && old.bytes === encode(concept)
-      ? old.ref
-      : writeObject(directory, 'corpora', concept);
+    return !(old?.ref && old.bytes === encode(concept));
   });
+  const written = new Map(
+    (await writeObjects(directory, 'corpora', changed)).map((hash, i) => [changed[i], hash]),
+  );
+  const corpora = concepts.map((concept) => written.get(concept) ?? unchanged.get(concept.id).ref);
   const records = {};
   for (const key of collections) {
     delete index[key];
