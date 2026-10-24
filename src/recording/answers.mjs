@@ -759,6 +759,18 @@ function runs(facts, keysOf) {
   };
 }
 const relation = (role) => role.startsWith(':') && role !== ':instance';
+// A source's sentence, by the source's id (the first source with it).
+const sentenceIndexes = new WeakMap();
+function sentencesOf(sources) {
+  let sentences = sentenceIndexes.get(sources);
+  if (!sentences) {
+    sentences = new Map();
+    for (const source of sources)
+      if (!sentences.has(source.id)) sentences.set(source.id, source.sentenceId);
+    sentenceIndexes.set(sources, sentences);
+  }
+  return sentences;
+}
 function factIndex(facts) {
   const cached = labelIndexes.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
@@ -767,7 +779,10 @@ function factIndex(facts) {
       !relation(role) ? none : to === from ? [from] : [from, to],
     ),
     sources = runs(facts, (fact) => new Set(fact.sourceIds ?? none)),
-    fragments = runs(facts, (fact) => new Set(fact.fragmentIds ?? none));
+    fragments = runs(facts, (fact) => new Set(fact.fragmentIds ?? none)),
+    instances = runs(facts, ({ triple: [, role, concept] }) =>
+      role === ':instance' ? [concept] : none,
+    );
   let ids = null;
   const position = (id) => {
     if (!ids) {
@@ -792,6 +807,15 @@ function factIndex(facts) {
     inFragments: (list) => inOrder(list.flatMap((id) => [...fragments.positions(id)])),
     // The facts with these ids, in the facts' order.
     withIds: (list) => inOrder(list.map(position).filter((i) => i !== undefined)),
+    // The first fact with an id.
+    byId: (id) => {
+      const i = position(id);
+      return i === undefined ? undefined : facts[i];
+    },
+    // The concept facts (`:instance`) of a concept.
+    instancesOf: instances.facts,
+    // Facts whose subject is one of the nodes, in the facts' order.
+    ofAny: (nodes) => inOrder([...nodes].flatMap((node) => [...subjects.positions(node)])),
   };
   labelIndexes.set(facts, index);
   return index;
@@ -959,16 +983,9 @@ function evaluateReading(recording, knowledge, limits, reading) {
   let complete = inference.complete && matching.complete;
   const answers = [];
   const guardedMatches = [];
+  const sentences = sentencesOf(material.sources);
   const evidenceIdentity = (sourceIds) =>
-    JSON.stringify(
-      [
-        ...new Set(
-          sourceIds.map(
-            (id) => material.sources.find((source) => source.id === id)?.sentenceId ?? id,
-          ),
-        ),
-      ].sort(),
-    );
+    JSON.stringify([...new Set(sourceIds.map((id) => sentences.get(id) ?? id))].sort());
   // The clauses the sources' main clauses reach, and which nodes are
   // predicates, depend on the material alone: found once, when first needed.
   let clausal = null;
@@ -1534,13 +1551,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
         complete &&= partial.complete;
         return partial.matches.filter((match) => {
           const witnesses = new Set(match.witnesses);
-          return match.witnesses.every(
-            (id) =>
-              guardedEvidence(
-                inference.facts.find((fact) => fact.id === id),
-                witnesses,
-              ).length,
-          );
+          return match.witnesses.every((id) => guardedEvidence(factsAt.byId(id), witnesses).length);
         });
       });
       if (partials.every((matches) => matches.length))
@@ -1569,14 +1580,8 @@ function evaluateReading(recording, knowledge, limits, reading) {
     }
     for (const { root: claim } of assertions) {
       const concept = query.nodes.find((node) => node.id === claim).concept;
-      const roots = new Set(
-        inference.facts
-          .filter((fact) => fact.triple[1] === ':instance' && fact.triple[2] === concept)
-          .map((fact) => fact.triple[0]),
-      );
-      const assertions = inference.facts.filter(
-        (fact) => roots.has(fact.triple[0]) && fact.triple[1] === '@asserted',
-      );
+      const roots = new Set(factsAt.instancesOf(concept).map((fact) => fact.triple[0]));
+      const assertions = factsAt.ofAny(roots).filter((fact) => fact.triple[1] === '@asserted');
       if (!assertions.length)
         openings.unshift({
           kind: 'assertion',
@@ -1590,11 +1595,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
     for (const node of query.nodes.filter(
       (node) => !unknownIds.has(node.id) && !connectors.has(node.id),
     ))
-      if (
-        !inference.facts.some(
-          (fact) => fact.triple[1] === ':instance' && fact.triple[2] === node.concept,
-        )
-      )
+      if (!factsAt.instancesOf(node.concept).length)
         openings.push({
           kind: 'concept',
           id: node.id,
