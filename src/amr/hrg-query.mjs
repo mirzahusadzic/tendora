@@ -171,29 +171,69 @@ export function matchChart(
     return true;
   };
   const charts = new Map();
-  // Values are term numbers until the matches are read out.
+  // A row is integer slots: a term number per variable and a fact per
+  // pattern (-1 while unbound), and the child rows it was joined from. Values
+  // are term numbers until the matches are read out, and a derivation is
+  // built only for a row that is part of a match.
+  const slots = new Map();
+  for (const pattern of patterns)
+    for (const term of pattern) if (variable(term) && !slots.has(term)) slots.set(term, slots.size);
+  for (const rule of plan.rules)
+    for (const vertex of rule.vertices) if (!slots.has(vertex)) slots.set(vertex, slots.size);
+  const width = slots.size;
+  let evidenceWidth = patterns.length;
+  for (const rule of plan.rules)
+    for (const terminal of rule.terminals) evidenceWidth = Math.max(evidenceWidth, terminal.id + 1);
+  const unbound = (n) => new Array(n).fill(-1);
+  const injectiveSlots = [...injectiveVariables].flatMap((v) =>
+    slots.has(v) ? [slots.get(v)] : [],
+  );
   const injective = (values) => {
-    const assigned = [...injectiveVariables].filter((v) => v in values).map((v) => values[v]);
-    return new Set(assigned).size === assigned.length;
+    for (let i = 0; i < injectiveSlots.length; i++) {
+      const value = values[injectiveSlots[i]];
+      if (value < 0) continue;
+      for (let j = i + 1; j < injectiveSlots.length; j++)
+        if (values[injectiveSlots[j]] === value) return false;
+    }
+    return true;
   };
   const combine = (a, b) => {
-    for (const [key, value] of Object.entries(b.values))
-      if (key in a.values && a.values[key] !== value) return null;
-    const values = { ...a.values, ...b.values };
+    const values = a.values.slice();
+    for (let s = 0; s < width; s++) {
+      const value = b.values[s];
+      if (value < 0) continue;
+      if (values[s] >= 0 && values[s] !== value) return null;
+      values[s] = value;
+    }
     if (!injective(values)) return null;
+    const evidence = a.evidence.slice();
+    for (let t = 0; t < evidenceWidth; t++) if (b.evidence[t] >= 0) evidence[t] = b.evidence[t];
     return {
+      rule: -1,
       values,
-      evidence: { ...a.evidence, ...b.evidence },
-      children: [...a.children, ...b.children],
+      evidence,
+      kids: b.kids.length ? (a.kids.length ? [...a.kids, ...b.kids] : b.kids) : a.kids,
+      derivation: null,
     };
   };
   const seededPositions = seed
     ? new Set([...seed.ids].map(position).filter((f) => f !== undefined))
     : null;
+  // The variables of a production's rows in the order they were first bound:
+  // the same for every row, since every row joins the same relations in the
+  // same order. Matches read their values out in this order.
+  const bindingOrder = new Map();
+  const noKids = [];
   const visit = (id) => {
     const rule = plan.rules[id];
     const relations = rule.children.map((child) => {
-      const rows = visit(child.id).map((row) => ({ ...row, children: [row.derivation] }));
+      const rows = visit(child.id).map((row) => ({
+        rule: -1,
+        values: row.values,
+        evidence: row.evidence,
+        kids: [row],
+        derivation: null,
+      }));
       return {
         rows,
         size: rows.length,
@@ -215,35 +255,56 @@ export function matchChart(
       relations.push({
         terminal,
         codes,
+        at: terminal.pattern.map((term) => (variable(term) ? slots.get(term) : -1)),
         candidates,
         seeded,
         size: candidates.length,
         keys: terminal.vertices,
       });
     }
-    // The terminal's own values for one fact, consistent with a joined row.
-    const read = (pattern, codes, f, bound) => {
-      const values = {};
+    // The terminal's own values for one fact, written over a joined row's
+    // (or blank) values; null when inconsistent with them or not injective.
+    const read = (codes, at, f, base) => {
+      const values = base.slice();
+      const own = [];
       for (let i = 0; i < 3; i++) {
         const actual = columns[i][f];
         if (codes[i] !== -1) {
           if (codes[i] !== actual) return null;
           continue;
         }
-        const term = pattern[i];
-        if (term in values) {
-          if (values[term] !== actual) return null;
-        } else if (term in bound && bound[term] !== actual) return null;
-        else values[term] = actual;
+        const slot = at[i];
+        if (own.includes(slot)) {
+          if (values[slot] !== actual) return null;
+        } else if (values[slot] >= 0 && values[slot] !== actual) return null;
+        else {
+          values[slot] = actual;
+          own.push(slot);
+        }
       }
-      return injective(values) ? values : null;
+      // The terminal's own bindings are injective before the joined ones.
+      for (let i = 0; i < own.length; i++)
+        for (let j = i + 1; j < own.length; j++)
+          if (
+            values[own[i]] === values[own[j]] &&
+            injectiveSlots.includes(own[i]) &&
+            injectiveSlots.includes(own[j])
+          )
+            return null;
+      return values;
     };
-    const scan = ({ terminal, codes, candidates }) => {
+    const blank = unbound(width),
+      noEvidence = unbound(evidenceWidth);
+    const scan = ({ terminal, codes, at, candidates }) => {
       const rows = [];
       for (const f of candidates) {
         if (!tick()) break;
-        const values = read(terminal.pattern, codes, f, {});
-        if (values) rows.push({ values, evidence: { [terminal.id]: f }, children: [] });
+        const values = read(codes, at, f, blank);
+        if (values) {
+          const evidence = noEvidence.slice();
+          evidence[terminal.id] = f;
+          rows.push({ rule: -1, values, evidence, kids: noKids, derivation: null });
+        }
       }
       return rows;
     };
@@ -260,7 +321,16 @@ export function matchChart(
       ordered.push(relation);
       for (const key of relation.keys) reached.add(key);
     }
-    let joined = [{ values: {}, evidence: {}, children: [] }];
+    const order = [];
+    for (const relation of ordered)
+      for (const name of relation.terminal
+        ? relation.terminal.pattern.filter(variable)
+        : bindingOrder.get(relation.child))
+        if (!order.includes(name)) order.push(name);
+    bindingOrder.set(id, order);
+    let joined = [
+      { rule: -1, values: blank, evidence: noEvidence, kids: noKids, derivation: null },
+    ];
     let joinedRelations = 0;
     const known = new Set();
     for (const relation of ordered) {
@@ -269,25 +339,26 @@ export function matchChart(
       if (relation.terminal && shared.length) {
         // Every run keeps the facts' order, so looking a terminal up through a
         // joined vertex yields the rows a full scan would, in order.
-        const { pattern, id } = relation.terminal;
+        const { pattern, id: terminalId } = relation.terminal;
         const through = pattern.flatMap((term, i) => (shared.includes(term) ? [i] : []));
         for (const a of joined) {
           let list = relation.candidates;
           for (const i of through) {
-            const found = run(i, a.values[pattern[i]]);
+            const found = run(i, a.values[relation.at[i]]);
             if (found.length < list.length) list = found;
           }
           for (const f of list) {
             if (relation.seeded && !relation.seeded.has(f)) continue;
             if (!tick()) break;
-            const values = read(pattern, relation.codes, f, a.values);
-            const merged = values && combine(a, { values, evidence: { [id]: f }, children: [] });
-            if (merged) {
+            const values = read(relation.codes, relation.at, f, a.values);
+            if (values && injective(values)) {
               if (next.length >= limit) {
                 complete = false;
                 break;
               }
-              next.push(merged);
+              const evidence = a.evidence.slice();
+              evidence[terminalId] = f;
+              next.push({ rule: -1, values, evidence, kids: a.kids, derivation: null });
             }
           }
           if (!complete) break;
@@ -299,12 +370,17 @@ export function matchChart(
         continue;
       }
       const rows = relation.terminal ? scan(relation) : relation.rows;
-      const keyOf = (values) => shared.map((key) => values[key]).join(',');
+      const sharedSlots = shared.map((key) => slots.get(key));
+      const keyOf =
+        sharedSlots.length === 1
+          ? (values) => values[sharedSlots[0]]
+          : (values) => sharedSlots.map((slot) => values[slot]).join(',');
       const lookup = new Map();
       for (const row of rows) {
         const key = keyOf(row.values);
-        if (!lookup.has(key)) lookup.set(key, []);
-        lookup.get(key).push(row);
+        let list = lookup.get(key);
+        if (!list) lookup.set(key, (list = []));
+        list.push(row);
       }
       for (const a of joined) {
         for (const b of lookup.get(keyOf(a.values)) ?? []) {
@@ -328,24 +404,34 @@ export function matchChart(
     // A bounded join may have complete rows for its last relation, but rows
     // from an unfinished production do not witness the rest of the query.
     if (joinedRelations !== ordered.length) joined = [];
-    for (const row of joined)
-      row.derivation = {
-        rule: id,
-        ports: rule.vertices.slice(0, rule.rank).map((key) => [key, terms[row.values[key]]]),
-        terminals: rule.terminals.map((t) => ({
-          pattern: t.id,
-          fact: table.id(row.evidence[t.id]),
-          production: table.production(row.evidence[t.id]),
-        })),
-        children: row.children,
-      };
+    for (const row of joined) row.rule = id;
     charts.set(id, joined.length);
     return joined;
   };
-  const matches = visit(plan.start).map((row) => ({
-    values: Object.fromEntries(Object.entries(row.values).map(([key, n]) => [key, terms[n]])),
-    witnesses: patterns.map((_, i) => table.id(row.evidence[i])),
-    derivation: row.derivation,
+  const fact = (e) => (e < 0 ? undefined : e);
+  const derivation = (row) => {
+    if (row.derivation) return row.derivation;
+    const rule = plan.rules[row.rule];
+    row.derivation = {
+      rule: row.rule,
+      ports: rule.vertices
+        .slice(0, rule.rank)
+        .map((key) => [key, terms[row.values[slots.get(key)]]]),
+      terminals: rule.terminals.map((t) => ({
+        pattern: t.id,
+        fact: table.id(fact(row.evidence[t.id])),
+        production: table.production(fact(row.evidence[t.id])),
+      })),
+      children: row.kids.map(derivation),
+    };
+    return row.derivation;
+  };
+  const rows = visit(plan.start),
+    names = bindingOrder.get(plan.start);
+  const matches = rows.map((row) => ({
+    values: Object.fromEntries(names.map((name) => [name, terms[row.values[slots.get(name)]]])),
+    witnesses: patterns.map((_, i) => table.id(fact(row.evidence[i]))),
+    derivation: derivation(row),
   }));
   return { matches, complete, work, plan, chart: Object.fromEntries(charts) };
 }
