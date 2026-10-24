@@ -383,10 +383,32 @@ const withinSource = (question, source) => {
   return contentWords(question).every((word) => available.some((other) => sameWord(word, other)));
 };
 
+/** Shared words do not settle a converse: “Is joint work shared work?” asks
+ * the other way round from “Shared work is joint work.”, the same words on
+ * the other side of the copula. The first word after “is” that only one side
+ * of the source has tells which side the question puts first. */
+const copula = /\b(?:is|are)\b/iu,
+  asksCopula = /^\s*(?:is|are)\b/iu;
+export const conversed = (question, source) => {
+  const at = String(source).search(copula);
+  if (at < 0 || !asksCopula.test(question)) return false;
+  const before = contentWords(String(source).slice(0, at)),
+    after = contentWords(String(source).slice(at));
+  const only = (words, others) => words.filter((w) => !others.some((o) => sameWord(w, o)));
+  const subject = only(before, after),
+    predicate = only(after, before);
+  const first = contentWords(String(question).replace(asksCopula, '')).find((word) =>
+    [...subject, ...predicate].some((other) => sameWord(word, other)),
+  );
+  return first !== undefined && predicate.some((other) => sameWord(first, other));
+};
+
 export function settleSharedWording(recording, knowledge, options, input, answer) {
   const same = (answer.clarifications ?? []).filter(
     (candidate) =>
-      candidate.sharedWording && withinSource(recording.inquiry.text, candidate.source.text),
+      candidate.sharedWording &&
+      withinSource(recording.inquiry.text, candidate.source.text) &&
+      !conversed(recording.inquiry.text, candidate.source.text),
   );
   if (answer.status !== 'open' || !same.length) return null;
   const rules = same.map((candidate) => ({

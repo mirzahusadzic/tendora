@@ -1,7 +1,7 @@
 /** One modal word read two ways, and one word in two concept forms, are read as
  * in the source and cited; other modals and other words settle nothing. */
 import assert from 'node:assert/strict';
-import { settleModalWord, settleWordForm } from '../../src/engine/answer.mjs';
+import { conversed, settleModalWord, settleWordForm } from '../../src/engine/answer.mjs';
 import { evaluateAnswer } from '../../src/recording/answers.mjs';
 import { readingNote } from '../../src/recording/answer-output.mjs';
 import { unopened } from '../../src/amr/labels.mjs';
@@ -107,6 +107,12 @@ assert.equal(
 );
 assert.equal(unopened('AI', 0, 'AI may propose a change.'), 'AI');
 assert.equal(unopened('Tendora', 4, 'Ask Tendora.'), 'Tendora', 'Only the opening word');
+// Shared words do not settle a converse: the same words on the other side of “is”.
+assert.equal(conversed('Is joint work shared work?', 'Shared work is joint work.'), true);
+assert.equal(conversed('Is shared work joint work?', 'Shared work is joint work.'), false);
+assert.equal(conversed('Is a rollback a new act?', 'A rollback is a new act.'), false);
+assert.equal(conversed('Who brings the work?', 'Shared work is joint work.'), false);
+assert.equal(conversed('Is joint work shared?', 'The crew brings shared work.'), false);
 console.log(
-  'ok readings: one modal word read as in the source, one word in two forms; other modals and words settle nothing',
+  'ok readings: one modal word read as in the source, one word in two forms; other modals and words settle nothing; shared words settle no converse',
 );
