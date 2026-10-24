@@ -1,5 +1,5 @@
 /** One working question over the authored role hierarchy. No history browser. */
-import { readInvestigation } from '../../project/inquiries/investigation.mjs';
+import { questionLineages, readInvestigation } from '../../project/inquiries/investigation.mjs';
 import { readFile } from 'node:fs/promises';
 import { projectTree } from '../../project/authoring/project.mjs';
 import { sourceCatalog } from '../../project/authoring/sources.mjs';
@@ -15,6 +15,7 @@ import { authoredContinuation, evidenceOpenings } from '../../recording/continua
 import { interpretationRevision } from '../../recording/revisions.mjs';
 import { relationMeaning } from '../concepts/meaning.mjs';
 import { placementLabel } from '../concepts/placement-label.mjs';
+import { assessedState } from '../concepts/project-outline.mjs';
 import { retainedReadingAuditor, prepareRetainedReading } from '../../engine/preparation.mjs';
 import { journeySection, readingWarnings, sourceStatements } from './journey-view.mjs';
 import { readSavedRecording } from '../../project/storage/recordings.mjs';
@@ -84,6 +85,7 @@ export function createQuestionWorkflow({
             caseSelection: ask.caseSelection,
             investigationId: entry.data.id,
             askId: ask.id,
+            lineage: ask.lineage ?? null,
           });
       }
     for (const run of state.projectEngineRuns ?? []) {
@@ -110,7 +112,7 @@ export function createQuestionWorkflow({
     }
     if (state.project?.data.id !== project.data.id) return;
     questionProject = project.data.id;
-    questions = [...items.values()].map((item) => ({
+    questions = grouped([...items.values()]).map((item) => ({
       ...item,
       label:
         item.question +
@@ -131,6 +133,37 @@ export function createQuestionWorkflow({
       : currentKey();
     if (questions.some((item) => item.id === selected)) state.projectEntryId = selected;
   }
+  // Development groups questions by where they came from, author's own first.
+  const lineageHeadings = {
+    author: 'Asked here',
+    drafted: 'Drafted',
+    outside: 'From outside',
+    derived: 'Derived',
+  };
+  function grouped(items) {
+    const key = (item) =>
+      JSON.stringify([
+        questionLineages.indexOf(item.lineage?.kind ?? 'author'),
+        item.lineage?.by ?? '',
+      ]);
+    const groups = new Map();
+    for (const item of items) {
+      if (!groups.has(key(item))) groups.set(key(item), []);
+      groups.get(key(item)).push(item);
+    }
+    const ordered = [...groups.entries()].sort(([a], [b]) => {
+      const [x, p] = JSON.parse(a),
+        [y, q] = JSON.parse(b);
+      return x - y || p.localeCompare(q);
+    });
+    // One kind needs no heading.
+    if (ordered.length < 2) return items;
+    return ordered.flatMap(([, members]) => {
+      const { kind = 'author', by } = members[0].lineage ?? {};
+      const section = `${lineageHeadings[kind]}${by ? ` · ${by}` : ''} (${members.length})`;
+      return members.map((item) => ({ ...item, section }));
+    });
+  }
   const developmentItems = () => {
     if (questionProject !== state.project?.data.id) return [];
     if (questionData !== state.project.data) {
@@ -148,7 +181,8 @@ export function createQuestionWorkflow({
   };
   const selectedQuestion = () =>
     developmentItems().find((item) => item.id === state.projectEntryId);
-  async function openDevelopment(id, focus = 'development') {
+  async function openDevelopment(id, focus = 'development', { recheck = false } = {}) {
+    settleNow(false);
     const item = developmentItems().find((item) => item.id === id);
     if (!item) return;
     state.projectEntryId = id;
@@ -157,8 +191,13 @@ export function createQuestionWorkflow({
       let inside = false;
       for (let at = role(); at; at = byId.get(at.parentId))
         if (at.id === item.scopePlacementId) inside = true;
-      if (current?.run.id !== item.run.id || !ready())
-        await show(item.run.id, { placementId: inside ? role().id : item.scopePlacementId });
+      if (current?.run.id === item.run.id && current.held && recheck) refresh(false);
+      else if (current?.run.id !== item.run.id || !ready())
+        await show(item.run.id, {
+          placementId: inside ? role().id : item.scopePlacementId,
+          recheck,
+          focus,
+        });
       state.focus = focus;
       state.projectReadingOrigin = 'development';
     } else {
@@ -169,11 +208,35 @@ export function createQuestionWorkflow({
     }
     draw();
   }
+  // Moving through Development shows each question's saved summary at once; its
+  // saved check loads once the selection settles. Nothing is checked again.
+  let settle = null;
+  function glance(id) {
+    clearTimeout(settle?.timer);
+    state.projectEntryId = id;
+    state.projectReadingOrigin = 'development';
+    settle = { id, timer: setTimeout(() => settleNow(), config.settleMs ?? 350) };
+    draw();
+  }
+  function settleNow(open = true) {
+    if (!settle) return Promise.resolve();
+    const { id, timer } = settle;
+    clearTimeout(timer);
+    settle = null;
+    if (!open) return Promise.resolve();
+    return openDevelopment(id).catch((error) => {
+      if (!disposed) {
+        state.failure = error.message;
+        draw();
+      }
+    });
+  }
   async function resumeQuestion() {
+    await settleNow();
     const item = selectedQuestion();
     if (!item) return ask();
     if (item.scopeMissing) return ask();
-    if (item.run) return openDevelopment(item.id, 'reading');
+    if (item.run) return openDevelopment(item.id, 'reading', { recheck: true });
     state.investigation = await readInvestigation(state.project, item.investigationId);
     state.investigation.data.activeAskId = item.askId;
     return investigation.startAsk();
@@ -334,6 +397,43 @@ export function createQuestionWorkflow({
     };
     return result;
   }
+  const heldNotes = {
+    changed: 'The statements changed since this check.',
+    released: 'The full check was released from storage.',
+    unfinished: 'The last check did not finish.',
+  };
+  /** A saved question as last checked, shown without checking it again. */
+  function savedQuestion(item, held = null) {
+    const run = held?.run ?? item.run;
+    const answer = run?.answer ?? run?.lastAnswer;
+    return view(
+      {
+        rows: [
+          ['Question', item.question, 'input'],
+          ['Asked at', item.scope],
+          ...(item.caseSelection
+            ? [['Case', item.caseSelection.label ?? String(item.caseSelection)]]
+            : []),
+          run
+            ? ['Last check', assessedState[run.status] ?? run.status]
+            : ['Draft', 'Saved; not checked yet.'],
+          ...(answer?.answers ?? []).map((binding, index) => [
+            index ? '' : 'Answer',
+            binding.text + (binding.conditional ? ' (when its conditions hold)' : ''),
+          ]),
+          ...(held
+            ? [
+                ['Not shown', heldNotes[held.held], 'warning'],
+                ['', 'Enter checks it again.', 'muted'],
+              ]
+            : run
+              ? [['', 'Loading the saved check.', 'muted']]
+              : []),
+        ],
+      },
+      'Develop question',
+    );
+  }
   function readingView() {
     if (!active()) return null;
     const selected = selectedQuestion();
@@ -399,6 +499,17 @@ export function createQuestionWorkflow({
           ],
         },
         'Language reading',
+      );
+    const glanced =
+      (settle || showing) && state.projectReadingOrigin === 'development' && selectedQuestion();
+    if (glanced) return savedQuestion(glanced);
+    if (atCurrentProject() && current.held && !pending && !current.error)
+      return savedQuestion(
+        developmentItems().find((item) => item.run?.id === current.run.id) ?? {
+          question: question(),
+          scope: placementLabel(state.project.data, current.run.scopePlacementId),
+        },
+        current,
       );
     if (atCurrentProject() && (pending || current.error || !ready()))
       return view(
@@ -469,83 +580,116 @@ export function createQuestionWorkflow({
       ],
     });
   }
-  async function show(runId, { placementId } = {}) {
-    const project = state.project;
+  // A saved check that cannot be shown in full is held, not re-run: checking
+  // again is the author's choice.
+  const heldReason = (run, project) =>
+    run.projectDigest !== project.digest
+      ? 'changed'
+      : !run.resultRef
+        ? 'released'
+        : run.semantic || unfinished.includes(run.status)
+          ? 'unfinished'
+          : null;
+  const unfinished = [
+    'cancelled',
+    'interrupted',
+    'failed',
+    'stale',
+    'needs-amr',
+    'invalid-amr',
+    'needs-reading',
+  ];
+  // The latest show wins; an earlier one still loading is dropped.
+  let showing = null;
+  async function show(runId, { placementId, recheck = false, focus = 'reading' } = {}) {
+    const project = state.project,
+      token = {};
+    showing = token;
     cancel();
     inspection = null;
-    const run = await readEngineRun(project, runId).catch((error) => {
-      const prior = state.projectEngineRuns?.find((r) => r.id === runId);
-      if (error.code !== 'ENOENT' || !prior) throw error;
-      return { ...prior, inputRef: null, resultRef: null };
-    });
-    const rebuildInput = () =>
-      inputFromProject(project, {
-        scopePlacementId: run.scopePlacementId,
-        question: run.questions[0].text,
-        caseSelection:
-          run.caseSelection !== undefined
-            ? run.caseSelection
-            : run.case
-              ? selectedQuestion()?.caseSelection
-              : null,
-      });
-    let input, result;
     try {
-      [input, result] = await Promise.all([
-        run.inputRef ? readEngineArtifact(project, run.inputRef) : rebuildInput(),
-        run.resultRef ? readEngineArtifact(project, run.resultRef) : null,
-      ]);
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-      // A bounded cache can be replaced while a selected question is loading.
-      input = await rebuildInput();
-      result = null;
-    }
-    if (state.project?.data.id !== project.data.id) return;
-    current = { project, run, input, result, recording: null };
-    state.mode = 'project';
-    state.form = null;
-    select(placementId ?? run.scopePlacementId, 'reading');
-    if (
-      !result ||
-      run.projectDigest !== project.digest ||
-      run.semantic ||
-      [
-        'cancelled',
-        'interrupted',
-        'failed',
-        'stale',
-        'needs-amr',
-        'invalid-amr',
-        'needs-reading',
-      ].includes(run.status)
-    ) {
-      refresh(false);
-      return;
-    }
-    if (run.recording) {
-      try {
-        current.recording = await readSavedRecording(run.recording.path);
-      } catch (error) {
-        if (!['ENOENT', 'RECORDING_CACHE_MISS'].includes(error.code)) throw error;
-        refresh(false);
-        return;
-      }
-    } else if (result?.inputs?.at(-1)?.graph) {
-      const { asset } = prepareProjectInquiry(project, run.scopePlacementId, input.question.text, {
-        caseSelection: input.caseSelection,
+      const run = await readEngineRun(project, runId).catch((error) => {
+        const prior = state.projectEngineRuns?.find((r) => r.id === runId);
+        if (error.code !== 'ENOENT' || !prior) throw error;
+        return { ...prior, inputRef: null, resultRef: null };
       });
-      const retained = await retainInquiryTraversal(project, run, result, asset);
-      current.recording = retained.recording;
+      const held = heldReason(run, project);
+      const rebuildInput = () =>
+        inputFromProject(project, {
+          scopePlacementId: run.scopePlacementId,
+          question: run.questions[0].text,
+          caseSelection:
+            run.caseSelection !== undefined
+              ? run.caseSelection
+              : run.case
+                ? selectedQuestion()?.caseSelection
+                : null,
+        });
+      let input, result;
+      try {
+        [input, result] = await Promise.all([
+          run.inputRef ? readEngineArtifact(project, run.inputRef) : rebuildInput(),
+          // A held check is not shown in full; its large result is not read.
+          run.resultRef && !held ? readEngineArtifact(project, run.resultRef) : null,
+        ]);
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        // A bounded cache can be replaced while a selected question is loading.
+        input = await rebuildInput();
+        result = null;
+      }
+      if (showing !== token || state.project?.data.id !== project.data.id) return;
+      // The question becomes current only once it can be shown, so the reading
+      // pane never presents a saved check that is still loading as running.
+      const next = { project, run, input, result, recording: null, held: null };
+      const present = () => {
+        current = next;
+        state.mode = 'project';
+        state.form = null;
+        select(placementId ?? run.scopePlacementId, focus);
+      };
+      const hold = (reason) => {
+        present();
+        if (recheck) return refresh(false);
+        current.held = reason;
+        draw();
+      };
+      if (held || !result) return hold(held ?? 'released');
+      let retained = false;
+      if (run.recording) {
+        try {
+          next.recording = await readSavedRecording(run.recording.path);
+        } catch (error) {
+          if (!['ENOENT', 'RECORDING_CACHE_MISS'].includes(error.code)) throw error;
+          if (showing === token) hold('released');
+          return;
+        }
+      } else if (result?.inputs?.at(-1)?.graph) {
+        const { asset } = prepareProjectInquiry(
+          project,
+          run.scopePlacementId,
+          input.question.text,
+          {
+            caseSelection: input.caseSelection,
+          },
+        );
+        next.recording = (await retainInquiryTraversal(project, run, result, asset)).recording;
+        retained = true;
+      }
+      if (showing !== token) return;
+      present();
+      if (current.recording) {
+        current.recordingPath = run.recording?.path ?? null;
+        state.ix = indexRecording(current.recording);
+        state.selection = initialSelection(state.ix);
+      }
+      await projects.refreshOutline();
+      draw();
+      // Showing a saved check writes nothing unless its recording was retained now.
+      if (retained) maintain(project);
+    } finally {
+      if (showing === token) showing = null;
     }
-    if (current.recording) {
-      current.recordingPath = run.recording?.path ?? current.recordingPath ?? null;
-      state.ix = indexRecording(current.recording);
-      state.selection = initialSelection(state.ix);
-    }
-    await projects.refreshOutline();
-    draw();
-    maintain(project);
   }
   function maintain(project) {
     // Cleanup must not occupy the keyboard queue or hide a completed answer.
@@ -573,6 +717,7 @@ export function createQuestionWorkflow({
     };
     pending = work;
     current.error = null;
+    current.held = null;
     const capture = config.captureInquiry ?? captureProjectInquiry;
     work.execution = capture(
       project,
@@ -637,7 +782,7 @@ export function createQuestionWorkflow({
       current = null;
       inspection = null;
     }
-    if (current && !state.form) {
+    if (current && !state.form && !settle) {
       state.projectEntryId = currentKey();
       if (!state.project.data.placements.some((p) => p.id === current.run.scopePlacementId)) {
         cancel();
@@ -649,6 +794,7 @@ export function createQuestionWorkflow({
       atCurrentProject() &&
       !state.form &&
       !pending &&
+      !current.held &&
       current.run.projectDigest !== state.project.digest &&
       current.attemptedRevision !== state.project.digest
     )
@@ -943,18 +1089,19 @@ export function createQuestionWorkflow({
       ),
     );
     if (developmentItems().length) {
-      // Selecting a checked question already shows its answer; Enter only
-      // matters for drafts.
+      // Selecting a checked question shows its answer; Enter checks a held one
+      // again and finishes a draft.
       const item = selectedQuestion();
       const checked = Boolean(item?.run && !item.scopeMissing);
+      const held = checked && current?.held && current.run.id === item.run.id;
       result.push({
         ...command(
           'ENTER',
-          checked ? 'work on question' : 'finish question',
+          held ? 'check again' : checked ? 'work on question' : 'finish question',
           resumeQuestion,
           'development',
         ),
-        ...(checked ? { helpOnly: true } : {}),
+        ...(checked && !held ? { helpOnly: true } : {}),
       });
     }
     const selectedPurpose = selectedQuestion();
@@ -1028,7 +1175,17 @@ export function createQuestionWorkflow({
           state.offset = 0;
         }),
       );
-    else if (current?.error) {
+    else if (current?.held) {
+      result.push(command('ENTER', 'check again', () => refresh(false)));
+      result.push(
+        command('ESCAPE', 'close question', () => {
+          current = null;
+          trail = [];
+          state.projectReadingOrigin = 'nodes';
+          state.offset = 0;
+        }),
+      );
+    } else if (current?.error) {
       result.push(command('r', 'retry check', () => refresh(true)));
       result.push(
         command('ESCAPE', 'close question', () => {
@@ -1071,6 +1228,9 @@ export function createQuestionWorkflow({
   async function handleKey(key) {
     if (!active() || state.form) return false;
     if (key === 'R') return true;
+    const moves = ['UP', 'DOWN', 'k', 'j', 'HOME', 'END', 'PAGE_UP', 'PAGE_DOWN'];
+    // Any key other than moving through Development acts on the settled selection.
+    if (state.focus !== 'development' || !moves.includes(key)) await settleNow();
     if (
       state.focus === 'reading' &&
       !inspection &&
@@ -1132,7 +1292,7 @@ export function createQuestionWorkflow({
           : key === 'END'
             ? entries.length - 1
             : Math.max(0, Math.min(entries.length - 1, index + delta));
-      await openDevelopment(entries[next].id);
+      glance(entries[next].id);
       return true;
     }
     const action = actions().find((item) => item.pane === state.focus && item.key === key);
@@ -1229,12 +1389,14 @@ export function createQuestionWorkflow({
     cancel,
     dispose: () => {
       disposed = true;
+      settleNow(false);
       cancel();
       inspectionWork?.controller.abort();
     },
     sourceSaved,
     activity: () => pending ?? inspectionWork,
     idle: async () => {
+      await settleNow();
       await loading;
       await pending?.execution;
       await inspectionWork?.execution;

@@ -6,7 +6,7 @@ import { developedConcepts } from '../../engine/concepts.mjs';
 import { contributionTitle } from '../../project/authoring/development.mjs';
 const empty = Object.freeze([]);
 const cache = new WeakMap();
-const assessedState = {
+export const assessedState = {
   running: 'Assessment running',
   supported: 'Supported by the corpus',
   conditional: 'Supported when its conditions hold',

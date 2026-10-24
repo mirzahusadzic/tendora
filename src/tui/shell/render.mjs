@@ -592,7 +592,16 @@ export function createRenderer({
           groupStart: i === 0,
           keepWithNext: i < lines.length - 1,
         }));
-        return [...(index ? [{ ...row(), surface: sidebar }] : []), ...lines];
+        // Questions grouped by where they came from carry one heading per group.
+        const heading =
+          item.section && item.section !== developmentItems[index - 1]?.section
+            ? wrap(row(` ${item.section}`, 'title'), leftContentWidth).map((line) => ({
+                ...line,
+                surface: sidebar,
+                developmentHeadingFor: item.id,
+              }))
+            : [];
+        return [...(index ? [{ ...row(), surface: sidebar }] : []), ...heading, ...lines];
       }
       const marker = item.children?.length ? (state.projectExpanded.has(item.id) ? '▾' : '▸') : ' ';
       const selected = item.id === developmentSelected;

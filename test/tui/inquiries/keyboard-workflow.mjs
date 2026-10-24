@@ -543,6 +543,18 @@ try {
         `${key}: the question stays visible at ${width} columns`,
       );
     }
+    if (width === 180) {
+      // The statements changed after these questions were checked.
+      assert.equal(ui.state.workflow.activity(), null, 'Selecting a question starts no check');
+      assert.match(ui.term.frame, /Enter checks it again\./u);
+      assert.equal(ui.state.workflow.current(), null);
+      await ui.key('ENTER');
+      assert(ui.state.workflow.current(), 'Enter checks the selected question again');
+      record(
+        'development.held',
+        'Selecting a question checked against earlier statements shows it as last checked; only Enter checks it again.',
+      );
+    }
   }
   record(
     'navigation.page',

@@ -11,7 +11,15 @@ import { interpretationRevision } from '../../recording/revisions.mjs';
 
 export async function requestProjectInquiry(
   project,
-  { scopePlacementId, question, caseSelection = null, progress, signal, ...options },
+  {
+    scopePlacementId,
+    question,
+    caseSelection = null,
+    lineage = null,
+    progress,
+    signal,
+    ...options
+  },
 ) {
   const caseKey = (selection) =>
     JSON.stringify([selection?.placementId, selection?.sources.map((source) => source.textDigest)]);
@@ -30,8 +38,18 @@ export async function requestProjectInquiry(
       ask.scopePlacementId === scopePlacementId &&
       caseKey(ask.caseSelection) === caseKey(caseSelection),
   );
-  if (existing) data.activeAskId = existing.id;
-  else data = addAsk(data, { question, scopePlacementId, caseSelection, origin: { kind: 'cli' } });
+  if (existing) {
+    data.activeAskId = existing.id;
+    // A question keeps the lineage it was first saved with.
+    if (lineage && !existing.lineage) existing.lineage = lineage;
+  } else
+    data = addAsk(data, {
+      question,
+      scopePlacementId,
+      caseSelection,
+      origin: { kind: 'cli' },
+      lineage,
+    });
   const ask = currentAsk(data);
   ask.caseSelection = structuredClone(caseSelection);
   ask.revision++;

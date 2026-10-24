@@ -19,6 +19,15 @@ export const keyboardContracts = [
     'Move through long lists without leaving the activated row off screen.',
   ],
   [
+    'development.held',
+    'Development',
+    'Question checked against earlier statements',
+    'Up / Down, then Enter',
+    'Saved summary, then a new check',
+    'Select another question',
+    'Browse many saved questions without starting a check for each.',
+  ],
+  [
     'question.limited',
     'Develop question',
     'Bounded check',

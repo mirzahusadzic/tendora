@@ -147,6 +147,10 @@ export function newInvestigation(project, question = '') {
     assessments: [],
   };
 }
+/** Where a saved question came from: asked here by the author, drafted on the
+ * author's behalf, asked from outside the project, or derived by the engine.
+ * Lineage groups questions; it never counts as evidence. */
+export const questionLineages = ['author', 'drafted', 'outside', 'derived'];
 export function addAsk(
   data,
   {
@@ -154,6 +158,7 @@ export function addAsk(
     scopePlacementId,
     caseSelection = null,
     origin = null,
+    lineage = null,
     continuation = null,
     frame = null,
     carry = null,
@@ -166,6 +171,7 @@ export function addAsk(
     scopePlacementId,
     caseSelection,
     origin,
+    ...(lineage ? { lineage } : {}),
     continuation,
     ...(frame ? { frame } : {}),
     ...(carry ? { carry } : {}),
@@ -276,6 +282,12 @@ export function validateInvestigation(data) {
     )
       throw new Error('Invalid ask');
     if (ask.caseSelection) validateCase(ask.caseSelection, data.projectId);
+    if (
+      ask.lineage !== undefined &&
+      (!questionLineages.includes(ask.lineage?.kind) ||
+        (ask.lineage.by !== undefined && !nonempty(ask.lineage.by)))
+    )
+      throw new Error('Invalid ask lineage');
     if (ask.frame) validateInquiryFrame(ask.frame);
     if (ask.carry) validateFrameCarry(ask.carry);
     if (ask.checkedFrame) validateInquiryFrame(ask.checkedFrame);
