@@ -14,9 +14,11 @@ import { inputFromProject, retainedAcquisition } from '../../engine/input.mjs';
 import { runEngine } from '../../engine/run.mjs';
 import {
   readEngineArtifact,
+  putEngineArtifact,
   saveEngineRun,
   acquireEngineRunLease,
 } from '../storage/engine-runs.mjs';
+import { recordingHandle } from './recordings.mjs';
 import { matchQuestionRoles } from './role-matching.mjs';
 import { roleExplorationProfile } from '../../engine/role-exploration.mjs';
 import { finalizedContinuationFrame } from './frame.mjs';
@@ -320,10 +322,17 @@ async function retainTraversal(
     directory,
     `${new Date().toISOString().replace(/[:.]/gu, '-')}-${randomUUID().slice(0, 8)}.json`,
   );
-  // Publish whole recordings only; an interrupted write leaves an ignored dot file.
+  // The recording is kept with the engine's artifacts, which share what checks
+  // at one revision have in common; its file is only the small handle.
+  const artifactRef = await putEngineArtifact(project, recording);
+  signal?.throwIfAborted();
+  // Publish whole handles only; an interrupted write leaves an ignored dot file.
   const staged = join(directory, `.${basename(path)}.${randomUUID()}.tmp`);
   try {
-    await writeFile(staged, JSON.stringify(recording, null, 2) + '\n', { flag: 'wx', signal });
+    await writeFile(staged, JSON.stringify(recordingHandle(recording, artifactRef)) + '\n', {
+      flag: 'wx',
+      signal,
+    });
     signal?.throwIfAborted();
     await rename(staged, path);
   } finally {
@@ -331,7 +340,7 @@ async function retainTraversal(
       if (cleanup.code !== 'ENOENT') throw cleanup;
     });
   }
-  engine.recording = { path, id: recording.id, ask: ask ?? null };
+  engine.recording = { path, id: recording.id, ask: ask ?? null, artifactRef };
   await saveEngineRun(project, engine);
   return { recording, path };
 }

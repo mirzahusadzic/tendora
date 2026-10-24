@@ -1,5 +1,21 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { interpretationRevision } from '../../recording/revisions.mjs';
+
+/** A recording's small handle file: what lists and continuations name it by.
+ * The recording itself is an engine artifact; without one, it is checked again. */
+export const recordingHandle = (h, ref) => ({
+  schema: h.schema,
+  version: h.version,
+  id: h.id,
+  project: h.project,
+  asset: { revision: h.asset?.revision },
+  inquiry: { text: h.inquiry.text },
+  continuation: h.continuation,
+  reasoning: { runId: h.reasoning?.runId },
+  retainedRevision: h.retainedRevision ?? interpretationRevision(h),
+  ...(ref ? { artifactRef: ref } : { cache: 'recheck' }),
+});
 /** List only captures belonging to this project; loading validates the full snapshot. */
 export async function listProjectRecordings(project) {
   const directory = join(dirname(project.path), 'recordings');

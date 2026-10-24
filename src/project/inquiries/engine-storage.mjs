@@ -20,6 +20,7 @@ import { withFileLease } from '../storage/locks.mjs';
 import { interpretationRevision } from '../../recording/revisions.mjs';
 import { listGrammarCaches } from '../storage/grammar.mjs';
 import { listDataFiles, readDataFile } from '../storage/data-files.mjs';
+import { recordingHandle } from './recordings.mjs';
 
 // A soft cache bound, not a stop: recomputing a check costs far more than
 // keeping it, so completed checks and grammar caches are kept generously.
@@ -60,18 +61,6 @@ async function json(path) {
 }
 const databaseBytes = (db) =>
   db.prepare('PRAGMA page_count').get().page_count * db.prepare('PRAGMA page_size').get().page_size;
-const recordingHandle = (h, ref) => ({
-  schema: h.schema,
-  version: h.version,
-  id: h.id,
-  project: h.project,
-  asset: { revision: h.asset?.revision },
-  inquiry: { text: h.inquiry.text },
-  continuation: h.continuation,
-  reasoning: { runId: h.reasoning?.runId },
-  retainedRevision: h.retainedRevision ?? interpretationRevision(h),
-  ...(ref ? { artifactRef: ref } : { cache: 'recheck' }),
-});
 
 function questionRecord(run) {
   const keep = [

@@ -1,4 +1,5 @@
-/** Legacy continuation capture and purpose-only persistence without live models. */
+/** Legacy continuation capture and purpose-only persistence without live models;
+ * a captured recording is kept as an engine artifact behind a small handle. */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -24,6 +25,8 @@ import { authoredContinuation, evidenceOpenings } from '../../src/recording/cont
 import { authorInterpretation } from '../../src/recording/interpretation.mjs';
 import { graphRevision } from '../../src/recording/revisions.mjs';
 import { indexRecording } from '../../src/tui/recordings/view.mjs';
+import { readSavedRecording } from '../../src/project/storage/recordings.mjs';
+import { listProjectRecordings } from '../../src/project/inquiries/recordings.mjs';
 import { frozenParser } from '../support/development-acquisition.mjs';
 
 await mkdir('tmp', { recursive: true });
@@ -80,6 +83,22 @@ try {
     { acquireMissing: false, trace: false },
   );
   assert.equal(firstRun.recording.inquiry.text, 'Who repairs bicycles?');
+  {
+    // The recording is an engine artifact; its file is only the handle lists name it by.
+    const handle = JSON.parse(await readFile(firstRun.path, 'utf8'));
+    assert.match(handle.artifactRef, /^[a-f0-9]{64}$/u);
+    assert.equal(handle.knowledge, undefined, 'The file holds no recorded knowledge');
+    assert.equal(handle.inquiry.text, 'Who repairs bicycles?');
+    assert.deepEqual(
+      await readSavedRecording(firstRun.path),
+      JSON.parse(JSON.stringify(firstRun.recording)),
+      'The whole recording reads back from the engine artifacts',
+    );
+    assert.deepEqual(
+      (await listProjectRecordings(project)).map((entry) => entry.path),
+      [firstRun.path],
+    );
+  }
 
   {
     const ix = indexRecording(firstRun.recording),
