@@ -81,8 +81,10 @@ export function validateRule(rule) {
 export function matchRelations(
   patterns,
   facts,
-  { limit = 2000, budget = 200000, account = null } = {},
+  { limit = 2000, budget = 200000, account = null, seed = null } = {},
 ) {
+  // A seeded pattern is matched only by the seed's facts.
+  const seeded = seed && patterns[seed.pattern];
   const indexes = [new Map(), new Map(), new Map()];
   for (const fact of facts) {
     fact.triple.forEach((term, index) => {
@@ -98,9 +100,10 @@ export function matchRelations(
     const buckets = bound.flatMap((term, index) =>
       term === undefined ? [] : [indexes[index].get(term) ?? []],
     );
-    return buckets.length
+    const choices = buckets.length
       ? buckets.reduce((smallest, items) => (items.length < smallest.length ? items : smallest))
       : facts;
+    return pattern === seeded ? choices.filter((fact) => seed.ids.has(fact.id)) : choices;
   };
   function walk(remaining, values, witnesses) {
     if (!complete) return;
@@ -193,19 +196,26 @@ export function inferRelations(
       [facts.get(from), ...(facts.get(from)?.alternatives ?? [])].some((proof) =>
         proof?.premises?.some((id) => reaches(id, target, seen)),
       )));
-  // Semi-naive rounds: a rule none of whose patterns fits a fact that is new,
-  // or newly proved, since the last round finds only matches it has already
-  // fired or refused. A new proof counts: it can satisfy a witness's guards.
+  // Semi-naive rounds: after the first, a rule is matched only with a fact
+  // that is new, or newly proved, since the last round at one of its patterns;
+  // a match made only of older facts was found, and fired or refused, before.
+  // A new proof counts: it can satisfy a witness's guards that refused one.
   let changed = null;
   const fits = (pattern, triple) =>
     pattern.every((term, i) => variable(term) || term === triple[i]);
-  const touches = (rule) =>
-    !changed ||
-    rule.when.some((pattern) =>
-      (variable(pattern[1]) ? changed.all : (changed.byRole.get(pattern[1]) ?? [])).some((fact) =>
-        fits(pattern, fact.triple),
-      ),
-    );
+  // The patterns of a rule that a changed fact fits: each seeds a match that
+  // must use one of those facts there. Every new match has such a witness:
+  // one made only of older facts was found, and fired or refused, before.
+  const seeds = (rule) =>
+    !changed
+      ? [null]
+      : rule.when.flatMap((pattern, i) =>
+          (variable(pattern[1]) ? changed.all : (changed.byRole.get(pattern[1]) ?? [])).some(
+            (fact) => fits(pattern, fact.triple),
+          )
+            ? [{ pattern: i, ids: changed.ids }]
+            : [],
+        );
   let evaluations = 0;
   // Names are interned per run: a hash shared by two applications never
   // merges them; the later one is told apart.
@@ -242,28 +252,32 @@ export function inferRelations(
     };
     const baseCohort = viewRules.size ? cohort.filter((f) => unextended(f.id)) : cohort;
     for (const rule of rules) {
-      if (!touches(rule)) continue;
-      evaluations++;
+      const ruleSeeds = seeds(rule);
+      if (!ruleSeeds.length) continue;
       const input = rule.baseOnly ? baseCohort : rule.inputOnly ? inputCohort : cohort;
-      const matching = matcher(
-        rule.when,
-        rule.inputSourceIds
-          ? input.filter(
-              (f) =>
-                f.sourceIds?.length && f.sourceIds.every((id) => rule.inputSourceIds.includes(id)),
-            )
-          : input,
-        {
+      const scoped = rule.inputSourceIds
+        ? input.filter(
+            (f) =>
+              f.sourceIds?.length && f.sourceIds.every((id) => rule.inputSourceIds.includes(id)),
+          )
+        : input;
+      const matches = [];
+      for (const seed of ruleSeeds) {
+        evaluations++;
+        const matching = matcher(rule.when, scoped, {
           limit: matchLimit,
           budget: matchBudget,
           account,
-        },
-      );
-      if (!matching.complete) {
-        complete = false;
-        break;
+          ...(seed ? { seed } : {}),
+        });
+        if (!matching.complete) {
+          complete = false;
+          break;
+        }
+        matches.push(...matching.matches);
       }
-      for (const { values, witnesses, derivation } of matching.matches) {
+      if (!complete) break;
+      for (const { values, witnesses, derivation } of matches) {
         const witnessed = new Set(witnesses);
         if (witnesses.some((id) => !guardedEvidence(facts.get(id), witnessed).length)) continue;
         // A confirmed interpretation belongs to the selected source assertion.
@@ -356,7 +370,7 @@ export function inferRelations(
       if (!byRole.has(fact.triple[1])) byRole.set(fact.triple[1], []);
       byRole.get(fact.triple[1]).push(fact);
     }
-    changed = { all, byRole };
+    changed = { all, byRole, ids: touched };
   }
   return { facts: [...facts.values()], complete: false, rounds, evaluations };
 }

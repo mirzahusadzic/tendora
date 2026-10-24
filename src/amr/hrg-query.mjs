@@ -43,6 +43,8 @@ export function matchChart(
     limit = 2000,
     budget = 200000,
     account = null,
+    // A seeded pattern is matched only by the seed's facts.
+    seed = null,
     plan = compilePattern(patterns),
     injectiveVariables = new Set(
       patterns.flatMap(([from, role, to]) =>
@@ -101,10 +103,18 @@ export function matchChart(
       const choices = terminal.pattern.flatMap((term, i) =>
         variable(term) ? [] : [indexes[i].get(term) ?? []],
       );
-      const candidates = choices.length
+      const narrowest = choices.length
         ? choices.reduce((a, b) => (a.length < b.length ? a : b))
         : facts;
-      relations.push({ terminal, candidates, size: candidates.length, keys: terminal.vertices });
+      const seeded = seed?.pattern === terminal.id ? seed.ids : null;
+      const candidates = seeded ? narrowest.filter((fact) => seeded.has(fact.id)) : narrowest;
+      relations.push({
+        terminal,
+        candidates,
+        seeded,
+        size: candidates.length,
+        keys: terminal.vertices,
+      });
     }
     // The terminal's own values for one fact, consistent with a joined row.
     const read = (pattern, fact, bound) => {
@@ -161,6 +171,7 @@ export function matchChart(
             if (found.length < list.length) list = found;
           }
           for (const fact of list) {
+            if (relation.seeded && !relation.seeded.has(fact.id)) continue;
             if (!tick()) break;
             const values = read(pattern, fact, a.values);
             const merged =
