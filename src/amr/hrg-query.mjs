@@ -119,11 +119,23 @@ export function matchChart(
       }
       relations.push({ rows, keys: terminal.vertices });
     }
-    relations.sort((a, b) => a.rows.length - b.rows.length);
+    // Smallest first, but connected first: a relation sharing no vertex with
+    // what is already joined multiplies the rows, a cross product that only a
+    // later relation could prune and that a bound can cut off first. The
+    // order changes the work, not the complete set of matches.
+    const pending = relations.sort((a, b) => a.rows.length - b.rows.length);
+    const ordered = [],
+      reached = new Set();
+    while (pending.length) {
+      const at = pending.findIndex((relation) => relation.keys.some((key) => reached.has(key)));
+      const [relation] = pending.splice(Math.max(0, at), 1);
+      ordered.push(relation);
+      for (const key of relation.keys) reached.add(key);
+    }
     let joined = [{ values: {}, evidence: {}, children: [] }];
     let joinedRelations = 0;
     const known = new Set();
-    for (const relation of relations) {
+    for (const relation of ordered) {
       const shared = relation.keys.filter((key) => known.has(key));
       const keyOf = (values) => JSON.stringify(shared.map((key) => values[key]));
       const lookup = new Map();
@@ -154,7 +166,7 @@ export function matchChart(
     }
     // A bounded join may have complete rows for its last relation, but rows
     // from an unfinished production do not witness the rest of the query.
-    if (joinedRelations !== relations.length) joined = [];
+    if (joinedRelations !== ordered.length) joined = [];
     for (const row of joined)
       row.derivation = {
         rule: id,

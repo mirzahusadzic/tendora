@@ -236,6 +236,55 @@ assert.equal(
   0,
   'Removing a reused production retracts the answer; no flat-matcher fallback',
 );
+// Joining connected relations first keeps a bounded search complete. In one
+// production, three instances joined before the edges between them make a
+// cross product of 9 × 38 × 94 rows, past a bound of 2000; joined along the
+// edges, they make one. (A cloze probe at the root of a 209-statement corpus
+// had this shape.)
+{
+  const facts = [];
+  const add = (triple) => facts.push({ id: `f${facts.length}`, triple });
+  for (const [count, concept] of [
+    [9, 'inherit-01'],
+    [38, 'thing'],
+    [94, 'person'],
+  ])
+    for (let i = 0; i < count; i++) add([`${concept}${i}`, ':instance', concept]);
+  for (let i = 0; i < 300; i++) add([`a${i}`, ':ARG0', `b${i}`]);
+  for (let i = 0; i < 450; i++) add([`c${i}`, ':ARG1', `d${i}`]);
+  add(['inherit-012', ':ARG0', 'person5']);
+  add(['inherit-012', ':ARG1', 'thing4']);
+  const patterns = [
+    ['?i', ':instance', 'inherit-01'],
+    ['?t', ':instance', 'thing'],
+    ['?p', ':instance', 'person'],
+    ['?i', ':ARG0', '?p'],
+    ['?i', ':ARG1', '?t'],
+  ];
+  const production = {
+    start: 0,
+    rules: [
+      {
+        id: 0,
+        rank: 0,
+        vertices: ['?i', '?t', '?p'],
+        children: [],
+        terminals: patterns.map((pattern, id) => ({
+          id,
+          pattern,
+          vertices: [...new Set(pattern.filter((term) => term.startsWith('?')))],
+          ports: [],
+        })),
+      },
+    ],
+  };
+  const owning = matchChart(patterns, facts, { limit: 2000, plan: production });
+  assert.equal(owning.complete, true, 'A bounded join stays complete when joined connected first');
+  assert.deepEqual(
+    owning.matches.map((match) => [match.values['?i'], match.values['?p'], match.values['?t']]),
+    [['inherit-012', 'person5', 'thing4']],
+  );
+}
 console.log(
   `ok HRG: 148 graph reconstructions; ${widthCases} exhaustive width cases; 250 independent query oracles; source identities, reentrancy, derivations, production ablation and cache invalidation`,
 );
