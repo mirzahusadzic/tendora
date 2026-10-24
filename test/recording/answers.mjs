@@ -590,6 +590,67 @@ const loop = inferRelations(
   { maxRounds: 2 },
 );
 assert.equal(loop.complete, false, 'Evaluation limits never certify a result');
+// A negation scopes over its own predicate and what lies beneath it, not over
+// a sibling clause: “The crew tests a boat without moving the dock.”
+const tests = graph(
+  'tests',
+  't',
+  { t: 'test-01', c: 'crew', b: 'boat', m: 'move-01', d: 'dock', n: '-' },
+  [
+    ['t', ':ARG0', 'c'],
+    ['t', ':ARG1', 'b'],
+    ['t', ':manner', 'm'],
+    ['m', ':ARG0', 'c'],
+    ['m', ':ARG1', 'd'],
+    ['m', ':polarity', 'n'],
+  ],
+);
+const sourceText = 'The crew tests a boat without moving the dock.';
+const tested = graph('tested', 't', { t: 'test-01', c: 'crew', w: 'amr-unknown' }, [
+  ['t', ':ARG0', 'c'],
+  ['t', ':ARG1', 'w'],
+]);
+assert.equal(
+  evaluateAnswer(record(tested, [{ text: sourceText, graph: tests }])).answers[0]?.text,
+  'boat',
+  'A negated manner clause does not negate the main relation',
+);
+const moves = graph('moves', 'm', { m: 'move-01', c: 'crew', d: 'dock', u: 'amr-unknown' }, [
+  ['m', ':ARG0', 'c'],
+  ['m', ':ARG1', 'd'],
+  ['m', ':polarity', 'u'],
+]);
+assert.notEqual(
+  evaluateAnswer(record(moves, [{ text: sourceText, graph: tests }])).answers[0]?.polarity,
+  'positive',
+  'The negated predicate itself never answers yes',
+);
+// A negated main clause still guards what lies beneath it, relative clauses included.
+const refuses = graph(
+  'refuses',
+  'h',
+  { h: 'handle-01', t: 'team', k: 'ticket', o: 'open-01', u: 'customer', n: '-' },
+  [
+    ['h', ':ARG0', 't'],
+    ['h', ':ARG1', 'k'],
+    ['h', ':polarity', 'n'],
+    ['o', ':ARG1', 'k'],
+    ['o', ':ARG0', 'u'],
+  ],
+);
+const handles = graph('handles', 'h', { h: 'handle-01', w: 'amr-unknown', k: 'ticket' }, [
+  ['h', ':ARG0', 'w'],
+  ['h', ':ARG1', 'k'],
+]);
+assert.equal(
+  evaluateAnswer(
+    record(handles, [
+      { text: 'The team does not handle tickets that customers open.', graph: refuses },
+    ]),
+  ).answers.length,
+  0,
+  'A negated predicate supplies no participant',
+);
 // A predicate bound as an answer reads by its attested word and the source's
 // modifiers, never by its concept name.
 const kept = graph('kept', 'k', { k: 'keep-01', r: 'registry', c: 'commit-01', p: 'public-02' }, [

@@ -292,14 +292,20 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
   };
   const available = new Set(),
     unavailable = new Map();
-  const add = (triple, sourceId, fragment) =>
+  const add = (triple, sourceId, fragment, guards = fragment?.guards) =>
     facts.push({
       triple,
       sourceIds: [sourceId],
-      ...(fragment
-        ? { fragmentIds: [fragment.id], guards: fragment.guards.map(JSON.stringify) }
-        : {}),
+      ...(fragment ? { fragmentIds: [fragment.id], guards: guards.map(JSON.stringify) } : {}),
     });
+  // A negation guards what it scopes over: relations headed by the negated
+  // predicate or beneath it, and that predicate's own concept. A sibling clause
+  // (“tries a possible world without changing the actual world”) stays
+  // unnegated; projections and conditions keep the clause's guards.
+  const scoped = (fragment, nodeId, relation) =>
+    fragment.negations
+      .filter((negation) => (relation ? negation.scope.has(nodeId) : negation.predicate === nodeId))
+      .map((negation) => negation.guard);
   const sources = recording.sources.map(identity);
   for (const source of sources) {
     const current = catalogSource(source);
@@ -399,6 +405,18 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
         const edge = graph.edges.find((edge) => edge.id === id);
         return [sourceNode(source.id, edge.from), edge.role, sourceNode(source.id, edge.to)];
       }),
+      negations: fragment.guards.map((id) => {
+        const edge = graph.edges.find((edge) => edge.id === id),
+          scope = new Set([edge.from]);
+        for (const current of scope)
+          for (const next of fragment.graph.edges)
+            if (next.from === current && next.role !== ':polarity') scope.add(next.to);
+        return {
+          predicate: edge.from,
+          scope,
+          guard: [sourceNode(source.id, edge.from), edge.role, sourceNode(source.id, edge.to)],
+        };
+      }),
       ports: fragment.ports.map((port) => ({ ...port, fragments: port.fragments.map(fragmentId) })),
     }));
     fragments.push(...semanticFragments);
@@ -437,7 +455,12 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
         !reading
       ) {
         if (!fragment.projection)
-          add([sourceNode(source.id, fragment.root), '@asserted', 'true'], source.id, fragment);
+          add(
+            [sourceNode(source.id, fragment.root), '@asserted', 'true'],
+            source.id,
+            fragment,
+            scoped(fragment, fragment.root, true),
+          );
         else {
           const projection = fragment.projection;
           projections.push({
@@ -465,20 +488,22 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
       }
       for (const node of fragment.graph.nodes) {
         const id = sourceNode(source.id, node.id);
-        add([id, ':instance', node.concept], source.id, fragment);
+        const guards = scoped(fragment, node.id, false);
+        add([id, ':instance', node.concept], source.id, fragment, guards);
         for (const type of sourceSemanticTypes(node))
-          add([id, '@semanticType', type], source.id, fragment);
+          add([id, '@semanticType', type], source.id, fragment, guards);
         const authoredLabel =
           node.authoredLabel ?? node.surfaceLabel ?? source.development?.labels?.[node.id];
-        if (authoredLabel) add([id, '@label', authoredLabel], source.id, fragment);
+        if (authoredLabel) add([id, '@label', authoredLabel], source.id, fragment, guards);
         if (literals.has(node.id))
-          add([id, '@literal', literals.get(node.id)], source.id, fragment);
+          add([id, '@literal', literals.get(node.id)], source.id, fragment, guards);
       }
       for (const edge of fragment.graph.edges)
         add(
           [sourceNode(source.id, edge.from), edge.role, sourceNode(source.id, edge.to)],
           source.id,
           fragment,
+          scoped(fragment, edge.from, true),
         );
     }
     if (caseIds.has(source.id)) add(['@case', '@source', source.id], source.id);
