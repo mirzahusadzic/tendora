@@ -711,6 +711,44 @@ export function answerBase(recording, knowledge = recording.knowledge ?? {}, lim
     inferenceWork: account?.work ?? 0,
   };
 }
+// Labels read the same facts for every answer: index them once per fact
+// array, each list in the facts' order, or labelling costs matches × facts.
+const labelIndexes = new WeakMap();
+function factIndex(facts) {
+  const cached = labelIndexes.get(facts);
+  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+  const subjects = new Map(),
+    nodes = new Map(),
+    sources = new Map();
+  const push = (map, key, fact) => {
+    let list = map.get(key);
+    if (!list) map.set(key, (list = []));
+    list.push(fact);
+  };
+  for (const fact of facts) {
+    const [from, role, to] = fact.triple;
+    push(subjects, from, fact);
+    if (role.startsWith(':') && role !== ':instance') {
+      push(nodes, from, fact);
+      if (to !== from) push(nodes, to, fact);
+    }
+    for (const id of new Set(fact.sourceIds ?? [])) push(sources, id, fact);
+  }
+  const none = [];
+  const index = {
+    length: facts.length,
+    last: facts.at(-1),
+    // Facts whose subject is the node.
+    of: (id) => subjects.get(id) ?? none,
+    // Relations (not concepts) the node takes part in, either end.
+    touching: (id) => nodes.get(id) ?? none,
+    // Facts attributed to the source.
+    from: (id) => sources.get(id) ?? none,
+  };
+  labelIndexes.set(facts, index);
+  return index;
+}
+
 /** A base without some sources, read from the proofs it keeps rather than
  * checked again: a fact holds when one of its proofs uses none of them (nor a
  * rule read from them) and rests on facts that hold. Derived nodes are named
@@ -783,6 +821,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
   // Each reading reports its own skipped parses; the shared material is not changed.
   const material = { ...base.material, skipped: [...base.material.skipped] };
   const { inference, grammar } = base;
+  const factsAt = factIndex(inference.facts);
   // As before, a reading's work budget counts the inference it rests on.
   const account =
     limits?.workBudget !== undefined
@@ -987,32 +1026,28 @@ function evaluateReading(recording, knowledge, limits, reading) {
     // surface modifier perfectly. Asserted roles stop the span from absorbing
     // the surrounding clause.
     const surfacePhrase = (id, base) => {
-      const head = inference.facts.find(
-        (fact) => fact.triple[0] === id && fact.triple[1] === ':instance',
-      );
+      const head = factsAt.of(id).find((fact) => fact.triple[1] === ':instance');
       if (!head) return undefined;
-      const relations = inference.facts.filter(
-        (fact) => fact.triple[1].startsWith(':') && fact.triple[1] !== ':instance',
-      );
       const choices = [];
       for (const source of material.sources) {
         if (!head.sourceIds?.includes(source.id)) continue;
-        const attributed = (fact) => fact.sourceIds?.includes(source.id);
+        const attributed = factsAt.from(source.id);
+        const relations = attributed.filter(
+          (fact) => fact.triple[1].startsWith(':') && fact.triple[1] !== ':instance',
+        );
         const instances = new Map(
-          inference.facts
-            .filter((fact) => attributed(fact) && fact.triple[1] === ':instance')
+          attributed
+            .filter((fact) => fact.triple[1] === ':instance')
             .map((fact) => [fact.triple[0], fact.triple[2]]),
         );
         const asserted = new Set(
-          inference.facts
-            .filter((fact) => attributed(fact) && fact.triple[1] === '@asserted')
-            .map((fact) => fact.triple[0]),
+          attributed.filter((fact) => fact.triple[1] === '@asserted').map((fact) => fact.triple[0]),
         );
         const descriptors = new Set([id]);
         const witnesses = [head.id];
         for (const current of descriptors) {
           for (const edge of relations) {
-            if (!attributed(edge) || !descriptorRoles.has(edge.triple[1])) continue;
+            if (!descriptorRoles.has(edge.triple[1])) continue;
             const other =
               edge.triple[0] === current
                 ? edge.triple[2]
@@ -1047,9 +1082,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
             start = tokens[index].start;
           }
           // A name keeps its capital; a sentence's opening capital is not the phrase's.
-          const named = inference.facts.some(
-            (fact) => fact.triple[0] === id && fact.triple[1] === ':name',
-          );
+          const named = factsAt.of(id).some((fact) => fact.triple[1] === ':name');
           const spanned = source.text.slice(start, tokens[at].end);
           const text = named ? spanned : unopened(spanned, start, source.text);
           if (text.toLowerCase() !== stem(base).toLowerCase())
@@ -1062,31 +1095,21 @@ function evaluateReading(recording, knowledge, limits, reading) {
     };
     const qualifiedLabel = (id, base) => {
       if (!/^[\p{L}\p{N}'-]+$/u.test(base) || ['and', 'or', 'contrast'].includes(base)) return base;
-      const relations = inference.facts.filter(
-        (fact) => fact.triple[1].startsWith(':') && fact.triple[1] !== ':instance',
-      );
       const phrase = surfacePhrase(id, base);
       if (phrase) return phrase;
       const choices = [];
-      for (const edge of relations.filter((fact) =>
-        [fact.triple[0], fact.triple[2]].includes(id),
-      )) {
+      const touching = factsAt.touching(id);
+      for (const edge of touching) {
         if (!descriptorRoles.has(edge.triple[1])) continue;
         const other = edge.triple[0] === id ? edge.triple[2] : edge.triple[0];
         if (
-          !relations.some(
-            (fact) =>
-              [fact.triple[0], fact.triple[2]].includes(id) &&
-              [fact.triple[0], fact.triple[2]].includes(other),
-          ) ||
-          inference.facts.some((fact) => fact.triple[0] === other && fact.triple[1] === '@asserted')
+          !touching.some((fact) => [fact.triple[0], fact.triple[2]].includes(other)) ||
+          factsAt.of(other).some((fact) => fact.triple[1] === '@asserted')
         )
           continue;
         const description =
-          inference.facts.find((fact) => fact.triple[0] === other && fact.triple[1] === '@label') ??
-          inference.facts.find(
-            (fact) => fact.triple[0] === other && fact.triple[1] === ':instance',
-          );
+          factsAt.of(other).find((fact) => fact.triple[1] === '@label') ??
+          factsAt.of(other).find((fact) => fact.triple[1] === ':instance');
         if (!description || !/^[\p{L}\p{N}'-]+$/u.test(description.triple[2])) continue;
         const words = [stem(description.triple[2]), stem(base)];
         const sources = new Set(
@@ -1115,36 +1138,33 @@ function evaluateReading(recording, knowledge, limits, reading) {
       return choices[0].text;
     };
     const label = (id, seen = new Set()) => {
-      const concept = inference.facts.find(
-        (fact) => fact.triple[0] === id && fact.triple[1] === ':instance',
-      )?.triple[2];
+      const concept = factsAt.of(id).find((fact) => fact.triple[1] === ':instance')?.triple[2];
       // A date or time reads by its own parts: "16:00, afternoon".
       if (concept === 'date-entity') {
         const parts = dateParts
-          .flatMap((role) =>
-            inference.facts.filter((fact) => fact.triple[0] === id && fact.triple[1] === role),
-          )
+          .flatMap((role) => factsAt.of(id).filter((fact) => fact.triple[1] === role))
           .map((fact) => {
-            const literal = inference.facts.find(
-              (other) => other.triple[0] === fact.triple[2] && other.triple[1] === '@literal',
-            );
+            const literal = factsAt
+              .of(fact.triple[2])
+              .find((other) => other.triple[1] === '@literal');
             if (literal) labelWitnesses.push(fact.id, literal.id);
             else labelWitnesses.push(fact.id);
             const value = literal?.triple[2] ?? fact.triple[2].split('#').pop();
-            const instance = inference.facts.find(
-              (other) => other.triple[0] === fact.triple[2] && other.triple[1] === ':instance',
-            )?.triple[2];
+            const instance = factsAt
+              .of(fact.triple[2])
+              .find((other) => other.triple[1] === ':instance')?.triple[2];
             return String(literal ? value : (instance ?? value)).replace(/^"|"$/gu, '');
           })
           .filter(Boolean);
         if (parts.length) return parts.join(', ');
       }
-      const named = inference.facts.filter(
-        (fact) =>
-          fact.triple[0] === id &&
-          fact.triple[1] === '@label' &&
-          (!['and', 'or'].includes(concept) || fact.triple[2].toLowerCase() !== concept),
-      );
+      const named = factsAt
+        .of(id)
+        .filter(
+          (fact) =>
+            fact.triple[1] === '@label' &&
+            (!['and', 'or'].includes(concept) || fact.triple[2].toLowerCase() !== concept),
+        );
       if (named.length) {
         labelWitnesses.push(...named.map((fact) => fact.id));
         return qualifiedLabel(id, [...new Set(named.map((fact) => fact.triple[2]))].join(' / '));
@@ -1152,16 +1172,10 @@ function evaluateReading(recording, knowledge, limits, reading) {
       // Legacy acquisitions retain names structurally without an @label fact.
       // Read only the bound participant's witnessed name chain for display.
       const names = [];
-      for (const name of inference.facts.filter(
-        (fact) => fact.triple[0] === id && fact.triple[1] === ':name',
-      )) {
-        const parts = inference.facts.filter(
-          (fact) => fact.triple[0] === name.triple[2] && /^:op\d+$/u.test(fact.triple[1]),
-        );
+      for (const name of factsAt.of(id).filter((fact) => fact.triple[1] === ':name')) {
+        const parts = factsAt.of(name.triple[2]).filter((fact) => /^:op\d+$/u.test(fact.triple[1]));
         const literals = parts.map((part) =>
-          inference.facts.filter(
-            (fact) => fact.triple[0] === part.triple[2] && fact.triple[1] === '@literal',
-          ),
+          factsAt.of(part.triple[2]).filter((fact) => fact.triple[1] === '@literal'),
         );
         if (!parts.length || literals.some((values) => values.length !== 1)) continue;
         const facts = [name, ...parts, ...literals.flat()];
@@ -1187,8 +1201,9 @@ function evaluateReading(recording, knowledge, limits, reading) {
         return [...new Set(names.map((name) => name.text))].join(' / ');
       }
       if (['and', 'or'].includes(concept) && !seen.has(id)) {
-        const parts = inference.facts
-          .filter((fact) => fact.triple[0] === id && /^:op\d+$/u.test(fact.triple[1]))
+        const parts = factsAt
+          .of(id)
+          .filter((fact) => /^:op\d+$/u.test(fact.triple[1]))
           .sort((a, b) => a.triple[1].localeCompare(b.triple[1], undefined, { numeric: true }));
         if (parts.length) {
           labelWitnesses.push(...parts.map((fact) => fact.id));
@@ -1197,9 +1212,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
             .join(` ${concept} `);
         }
       }
-      const description = inference.facts.find(
-        (fact) => fact.triple[0] === id && fact.triple[1] === ':instance',
-      );
+      const description = factsAt.of(id).find((fact) => fact.triple[1] === ':instance');
       const base = description?.triple[2] ?? id;
       if (/^[\p{L}\p{N}]+(?:_[\p{L}\p{N}]+)+$/u.test(base)) {
         const words = base.toLowerCase().split('_');
