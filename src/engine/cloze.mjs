@@ -13,7 +13,7 @@
 import { answerBase, evaluateAnswer, withheldBase } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { answerRecording } from './answer.mjs';
-import { onlyClause } from '../amr/conditions.mjs';
+import { onlyClause, onlyTimeCondition } from '../amr/conditions.mjs';
 
 const argument = /^:ARG\d$/u;
 // The circumstances of a relation are variables too: when, where, how, why,
@@ -50,7 +50,7 @@ export function clozeProbes(source) {
   const condition = source.graph.edges.find(
     (edge) =>
       edge.from === top &&
-      (edge.role === ':condition' || (edge.role === ':time' && onlyClause(source.graph, edge.to))),
+      (edge.role === ':condition' || onlyTimeCondition(source.graph, top, edge)),
   );
   const graph = condition ? consequent(source.graph, top, condition) : source.graph;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));

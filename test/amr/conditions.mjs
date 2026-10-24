@@ -110,6 +110,52 @@ assert.equal(
   null,
   'A plain time is no condition',
 );
+// A plain time value marked only says when the statement holds and is
+// asserted with it: “Backups run only at night.” answers “When do backups
+// run?”. A time that holds an event stays a necessary condition: “Backups run
+// only after approval.” does not answer “Do backups run?” with Yes.
+const backups = (time, timeEdges) =>
+  graph('backups', 'r', { r: 'run-01', b: 'backup', o: 'only', ...time }, [
+    ['r', ':ARG1', 'b'],
+    ['r', ':time', 't'],
+    ['t', ':mod', 'o'],
+    ...timeEdges,
+  ]);
+const atNight = backups({ t: 'date-entity', n: 'night' }, [['t', ':dayperiod', 'n']]);
+assert.equal(conditionalReading(atNight), null, 'A time value marked only is no condition');
+const when = graph('when', 'r', { r: 'run-01', b: 'backup', u: 'amr-unknown' }, [
+  ['r', ':ARG1', 'b'],
+  ['r', ':time', 'u'],
+]);
+const nightly = evaluateAnswer(record([atNight], when));
+assert.equal(nightly.status, 'supported', 'Only at night keeps its answer');
+assert(nightly.answers.some((answer) => /night/u.test(answer.text)));
+const afterApproval = backups({ t: 'after', p: 'approve-01' }, [
+  ['t', ':op1', 'p'],
+  ['p', ':ARG1', 'b'],
+]);
+assert.match(conditionalReading(afterApproval).reason, /necessary condition/u);
+const run = graph('run', 'r', { r: 'run-01', b: 'backup', u: 'amr-unknown' }, [
+  ['r', ':ARG1', 'b'],
+  ['r', ':polarity', 'u'],
+]);
+assert(
+  !evaluateAnswer(record([afterApproval], run)).answers.some((a) => a.polarity === 'positive'),
+  'A time that holds an event, marked only, is not asserted',
+);
+assert(
+  evaluateAnswer(
+    record(
+      [
+        modify(afterApproval, (g) => {
+          g.edges = g.edges.filter((e) => e.to !== 'o');
+        }),
+      ],
+      run,
+    ),
+  ).answers.some((a) => a.polarity === 'positive'),
+  'The same statement without only answers Yes, so the guard is what refuses it',
+);
 const incomplete = modify(evidence, (g) => {
   g.nodes = g.nodes.filter((n) => n.id !== 'n');
   g.edges = g.edges.filter((e) => e.from !== 'n');

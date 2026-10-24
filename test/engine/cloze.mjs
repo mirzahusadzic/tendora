@@ -128,6 +128,15 @@ try {
   const when = clozeProbes(timed).find((probe) => probe.role === ':time');
   assert.equal(when.kind, 'circumstance');
   assert.equal(check(when), 'recovered');
+  // Only at night: a time value marked only is the statement's time, asked
+  // back like any other; only when the alarm sounds (below) is a condition.
+  const onlyAtNight = structuredClone(timed);
+  onlyAtNight.graph.nodes.push({ id: 'o', concept: 'only' });
+  onlyAtNight.graph.edges.push({ id: 'eo', from: 'n', role: ':mod', to: 'o' });
+  assert(
+    clozeProbes(onlyAtNight).some((probe) => probe.role === ':time' && !probe.conditional),
+    'A time value marked only is no condition',
+  );
   // A modal frame's participants are those of the relation it frames.
   const framed = clozeProbes(may);
   assert.deepEqual(

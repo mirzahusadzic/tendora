@@ -34,6 +34,22 @@ export function onlyClause(graph, id) {
   );
 }
 
+/** A time marked only that holds an event (“only when X”, “only after X”):
+ * the reader may take “when” as a time, and it is the same necessary
+ * condition. A plain time value marked only (“only at night”) says when the
+ * statement holds, and is asserted with it as its time. */
+export function onlyTimeCondition(graph, top, edge) {
+  if (edge.role !== ':time' || !onlyClause(graph, edge.to)) return false;
+  const concepts = new Map(graph.nodes.map((node) => [node.id, node.concept]));
+  const reached = new Set([edge.to]);
+  for (const id of reached)
+    for (const other of graph.edges) {
+      const next = other.from === id ? other.to : other.to === id ? other.from : null;
+      if (next !== null && next !== top) reached.add(next);
+    }
+  return [...reached].some((id) => /-\d+$/u.test(concepts.get(id) ?? ''));
+}
+
 export function conditionalReading(
   reading,
   literals = new Map(),
@@ -45,14 +61,13 @@ export function conditionalReading(
     conditions = graph.edges.filter((edge) => edge.from === root && edge.role === ':condition');
   const fail = (reason) => ({ reason });
   // “Only when X, Y” says Y requires X, not that X brings Y about: read as a
-  // sufficient condition it would answer Yes wherever X holds. The reader may
-  // take “when” as a time; marked only, it is the same necessary condition.
+  // sufficient condition it would answer Yes wherever X holds.
   if (
     graph.edges.some(
       (edge) =>
         edge.from === root &&
-        [':condition', ':time'].includes(edge.role) &&
-        onlyClause(graph, edge.to),
+        ((edge.role === ':condition' && onlyClause(graph, edge.to)) ||
+          onlyTimeCondition(graph, root, edge)),
     )
   )
     return fail('A necessary condition (only when, only if) requires an explicit interpretation.');
