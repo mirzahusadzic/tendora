@@ -27,6 +27,7 @@ const groupOf = (fact) => fact.ruleId ?? fact.sourceIds?.[0] ?? 'relations';
 export const clearCompiledGroups = () => {
   compiledGroups.clear();
   memberships.clear();
+  interned.clear();
 };
 const compiledGroups = new Map(),
   groupLimit = 100000;
@@ -36,11 +37,15 @@ const factParts = function* (entries) {
     for (const term of fact.triple) yield String(term);
   }
 };
-// The same label or valence recurs across statements: kept once.
-const interned = new Map();
+// The same label or valence recurs across statements: kept once. Interning
+// only shares strings, so past its bound it starts again rather than grow for
+// the life of the process.
+const interned = new Map(),
+  internLimit = 200000;
 const intern = (text) => {
   const known = interned.get(text);
   if (known !== undefined) return known;
+  if (interned.size >= internLimit) interned.clear();
   interned.set(text, text);
   return text;
 };

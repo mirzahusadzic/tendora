@@ -99,6 +99,17 @@ const fromStore = createGrammarMatcher().match(ways, inferred, { limit: 1000 });
 const fromArray = createGrammarMatcher().match(ways, [...inferred], { limit: 1000 });
 assert(fromStore.matches.length > 1);
 assert.equal(JSON.stringify(fromStore), JSON.stringify(fromArray), 'Matches read from the store');
+// A matcher keeps the few store prefixes it used last, not one for every
+// round of a long inference: a recent one is reused, the oldest let go.
+assert(inferred.length >= 6);
+const prefixes = [1, 2, 3, 4, 5, 6].map((k) => storePrefix(inferred.slice(0, k), inferredStore));
+const recent = createGrammarMatcher();
+for (const facts of prefixes) recent.match(ways, facts);
+assert.equal(recent.preparations(), 6);
+recent.match(ways, storePrefix(inferred.slice(0, 6), inferredStore));
+assert.equal(recent.preparations(), 6, 'A recent prefix is reused');
+recent.match(ways, prefixes[0]);
+assert.equal(recent.preparations(), 7, 'The oldest was let go');
 const seed = { pattern: 1, ids: new Set([inferred.at(-1).id]) };
 assert.equal(
   JSON.stringify(createGrammarMatcher().match(ways, inferred, { seed })),

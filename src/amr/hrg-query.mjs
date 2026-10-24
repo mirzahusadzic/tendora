@@ -445,6 +445,7 @@ export function createGrammarMatcher(retained = {}) {
     plans = [],
     planKeys = new Map();
   const stats = { compilations: 0, reused: 0, searches: 0, work: 0 };
+  let preparations = 0;
   const corpus = (facts) => {
     const signature = corpusSignature(facts);
     const previous = [...corpora, ...available].find((g) => g.signature === signature);
@@ -456,14 +457,21 @@ export function createGrammarMatcher(retained = {}) {
   // Inference passes one immutable cohort to every rule of a round. Compile and
   // interpret it once; a changed array (length or last fact) is prepared again.
   // A store's prefix is kept by its length: inference's last cohort and its
-  // result are two arrays of the same facts.
+  // result are two arrays of the same facts. Cohorts only grow, so a store
+  // keeps the few prefixes used last, not one for every round.
   const prepared = new WeakMap(),
-    preparedPrefixes = new WeakMap();
+    preparedPrefixes = new WeakMap(),
+    keptPrefixes = 4;
   const prepare = (facts) => {
-    const store = storeOf(facts);
-    const entry = store ? preparedPrefixes.get(store)?.get(facts.length) : prepared.get(facts);
+    const store = storeOf(facts),
+      byLength = store && preparedPrefixes.get(store);
+    const entry = store ? byLength?.get(facts.length) : prepared.get(facts);
     if (entry && entry.length === facts.length && entry.last === facts.at(-1)) {
       stats.reused++;
+      if (byLength) {
+        byLength.delete(facts.length);
+        byLength.set(facts.length, entry);
+      }
       return entry;
     }
     const compiled = corpus(facts);
@@ -474,6 +482,7 @@ export function createGrammarMatcher(retained = {}) {
         }
       : null;
     const emission = grammarEmission(compiled.grammar, facts, positionOf);
+    preparations++;
     const fresh = {
       compiled,
       emitted: emissionColumns(facts, emission, store),
@@ -482,7 +491,9 @@ export function createGrammarMatcher(retained = {}) {
     };
     if (store) {
       if (!preparedPrefixes.has(store)) preparedPrefixes.set(store, new Map());
-      preparedPrefixes.get(store).set(facts.length, fresh);
+      const kept = preparedPrefixes.get(store);
+      kept.set(facts.length, fresh);
+      if (kept.size > keptPrefixes) kept.delete(kept.keys().next().value);
     } else prepared.set(facts, fresh);
     return fresh;
   };
@@ -511,6 +522,8 @@ export function createGrammarMatcher(retained = {}) {
     corpora,
     plans,
     stats,
+    // Cohorts compiled and emitted, for tests; not part of an answer's stats.
+    preparations: () => preparations,
     cache: () => ({ profile: grammarProfile, grammars: corpora }),
   };
 }
