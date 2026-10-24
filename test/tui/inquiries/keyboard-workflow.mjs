@@ -107,6 +107,7 @@ const selectRow = async (predicate) => {
   return rows[at];
 };
 const questionIs = (text) => assert.equal(currentQuestion(), text);
+const readingPane = () => ui.readingText();
 const readText = (text) =>
   assert.match(
     stripVTControlCharacters(ui.term.frame),
@@ -328,7 +329,7 @@ try {
   const openGap = await selectRow((row) => row.openings?.length);
   // Selection presents the gap: statements it records show under the row.
   assert.equal(ui.state.workflow.readingView().title, 'Develop question');
-  assert.equal(ui.term.frame.includes('↳ '), Boolean(openGap.preview.length));
+  assert.equal(readingPane().includes('↳ '), Boolean(openGap.preview.length));
   await ui.key('i');
   assert.equal(ui.state.workflow.readingView().title, 'Language reading');
   await ui.key('ESCAPE');
@@ -603,15 +604,16 @@ try {
     await ui.app.idle();
     readText(message);
     assert.doesNotMatch(stripVTControlCharacters(ui.term.frame), /Answer: Yes/u);
+    // The message wraps at 80 columns; its label marks the state at every width.
     await stateFrame(
       status,
       ['show retained status fixture'],
-      [message],
+      ['Check stopped'],
       'Injected result status over a real question; renderer/controller only, not a new inference outcome.',
     );
     const statusGap = await selectRow((row) => row.openings);
     assert.equal(
-      ui.term.frame.includes('↳ '),
+      readingPane().includes('↳ '),
       Boolean(statusGap.preview.length),
       'The selected gap previews only the statements it records',
     );

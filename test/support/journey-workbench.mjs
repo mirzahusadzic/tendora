@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import { createWorkbench } from '../../src/tui/shell/app.mjs';
 import { createState } from '../../src/tui/shell/state.mjs';
 
@@ -108,7 +109,25 @@ export function journeyWorkbench(project, directory, overrides = {}) {
     assert.equal(state.workflow.readingView().activeChoice, entries[at].choiceIndex);
     return entries[at];
   };
-  return { app, state, term, key, text, submit, selectRole, selectReading, ask, choose };
+  // The reading pane alone: Development marks its own detail lines with ↳ too.
+  const readingText = () =>
+    term.frame
+      .split(/\x1b\[\d+;1H/u)
+      .map((line) => stripVTControlCharacters(line).slice((state.viewport.sidebarWidth ?? 0) + 1))
+      .join('\n');
+  return {
+    app,
+    state,
+    term,
+    key,
+    text,
+    submit,
+    selectRole,
+    selectReading,
+    ask,
+    choose,
+    readingText,
+  };
 }
 
 export async function authorHierarchy(ui, node, parent = null) {

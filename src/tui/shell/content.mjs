@@ -32,19 +32,23 @@ export function createContent({ state, text, recordingContent, selectedConcept }
     row(`${choice.yes ? ' ' : '●'} No`, choice.yes ? 'plain' : 'selected', 1),
   ];
   const sectionHeading = (label) => ({ ...row(label, 'section'), surface: text.background });
+  const inset = (item, marker = ' ') => ({
+    ...item,
+    text: `${marker} ${item.text}`,
+    spans: item.spans?.map((span) => ({ ...span, start: span.start + 2, end: span.end + 2 })),
+    hangingIndent: (item.hangingIndent ?? 0) + 2,
+  });
   const sectionValue = (section, entry, index) => {
     const item = entry[0] ? labeledRow([entry]) : row(entry[1], entry[2] ?? 'plain', 1);
     const choice = section.rowChoices?.find((choice) => choice.rowIndex === index);
-    if (!choice) return item;
+    // Where a section has choices, the arrow's column is theirs: other rows
+    // start past it, so a row that does nothing does not look like one that does.
+    if (!choice) return section.rowChoices?.length && item.text ? inset(item) : item;
     return {
-      ...item,
-      text: `${choice.selected ? '›' : ' '} ${item.text}`,
+      ...inset(item, choice.selected ? '›' : ' '),
       choiceIndex: choice.choiceIndex,
       tone: choice.selected ? 'selected' : item.tone,
-      spans: choice.selected
-        ? []
-        : item.spans?.map((span) => ({ ...span, start: span.start + 2, end: span.end + 2 })),
-      hangingIndent: (item.hangingIndent ?? 0) + 2,
+      ...(choice.selected ? { spans: [] } : {}),
     };
   };
   const sectionContent = (section) => [

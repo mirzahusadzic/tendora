@@ -577,12 +577,16 @@ export function createRenderer({
             },
             leftContentWidth,
           ),
+          // Where it was asked sits under the question, not beside it: it
+          // describes the question and is not a second entry.
           ...wrap(
-            row(
-              `${item.scope}${item.caseSelection ? ` / ${item.caseSelection.label ?? item.caseSelection}` : ''}`,
-              'muted',
-              3,
-            ),
+            {
+              ...row(
+                `   ↳ ${item.scope}${item.caseSelection ? ` / ${item.caseSelection.label ?? item.caseSelection}` : ''}`,
+                'muted',
+              ),
+              hangingIndent: 5,
+            },
             leftContentWidth,
           ),
         ].map((line, i, lines) => ({

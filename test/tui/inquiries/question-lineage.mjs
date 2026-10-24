@@ -50,6 +50,25 @@ try {
       .sort(),
     ['Who repairs the lift?', 'Who signs the repair?'],
   );
+  // Where a question was asked sits under it, marked ↳, and a click there
+  // selects that question too.
+  const rows = new Map(
+    [...ui.term.frame.matchAll(/\x1b\[(\d+);1H([^\x1b]*)/gu)].map(([, y, line]) => [
+      Number(y),
+      line,
+    ]),
+  );
+  const scopeRows = ui.state.viewport.developmentHits.filter((hit) =>
+    rows.get(hit.y)?.slice(0, ui.state.viewport.sidebarWidth).includes('↳ Work'),
+  );
+  assert(scopeRows.length >= 2, 'Each visible question shows where it was asked');
+  for (const hit of scopeRows)
+    assert(
+      ui.state.viewport.developmentHits.some(
+        (other) => other.id === hit.id && other.y < hit.y && !rows.get(other.y).includes('↳'),
+      ),
+      'The ↳ line selects the question above it',
+    );
   const shown = (heading) => ui.term.frame.split(heading).length - 1;
   for (const heading of ['Asked here (1)', 'Drafted · an assistant (2)'])
     assert.equal(shown(heading), 1, `${heading} is shown once`);

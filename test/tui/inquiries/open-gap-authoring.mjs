@@ -63,7 +63,7 @@ try {
   for (let i = 0; i < index; i++) await ui.key('DOWN');
   // Selecting the gap presents it and its actions; Enter acts on it.
   assert.equal(ui.state.workflow.readingView().title, 'Develop question');
-  assert.doesNotMatch(ui.term.frame, /↳ /u, 'A gap without recorded statements claims nothing');
+  assert.doesNotMatch(ui.readingText(), /↳ /u, 'A gap without recorded statements claims nothing');
   assert(
     ui.state.workflow
       .actions()
