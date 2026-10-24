@@ -5,6 +5,20 @@ import { buildClarifications } from './clarify.mjs';
 import { answerLabels } from '../amr/labels.mjs';
 
 export function checkAnswer(project, input, result, options) {
+  const recording = answerRecording(project, input, result);
+  const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
+  const answer = evaluateAnswer(recording, knowledge, options);
+  answer.clarifications = buildClarifications(project, input, result, answer);
+  const checked =
+    settleSharedWording(recording, knowledge, options, input, answer) ??
+    settleReference(recording, knowledge, options, answer) ??
+    answer;
+  return checked.answers.length ? checked : { ...checked, related: closestStatements(recording) };
+}
+
+/** The recording an answer is checked in: the question, the scoped sources
+ * with their retained readings, the roles and the case. */
+export function answerRecording(project, input, result) {
   const entries = result.inputs;
   const question = entries.find((item) => item.kind === 'question');
   const graphId = (item) => `${item.id}/graph`;
@@ -70,14 +84,7 @@ export function checkAnswer(project, input, result, options) {
         }
       : {}),
   };
-  const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
-  const answer = evaluateAnswer(recording, knowledge, options);
-  answer.clarifications = buildClarifications(project, input, result, answer);
-  const checked =
-    settleSharedWording(recording, knowledge, options, input, answer) ??
-    settleReference(recording, knowledge, options, answer) ??
-    answer;
-  return checked.answers.length ? checked : { ...checked, related: closestStatements(recording) };
+  return recording;
 }
 
 /** When nothing answers, the statements that share the most of the question's
@@ -208,6 +215,29 @@ export function settleReference(recording, knowledge, options, answer) {
   };
 }
 
+const generalParticipants = new Set(['amr-unknown', 'person', 'thing', 'it', 'they']);
+/** The participants a question names, by concept; predicates are not participants. */
+function questionParticipants(recording) {
+  const graph = recording.graphs.find((item) => item.id === recording.inquiry.graphId);
+  return new Set(
+    (graph?.nodes ?? [])
+      .filter(
+        (node) =>
+          node.literal === undefined &&
+          !generalParticipants.has(node.concept) &&
+          !/-\d+$/u.test(node.concept),
+      )
+      .map((node) => node.concept),
+  );
+}
+/** The concept of a bound source node, `<source>#<node>`. */
+function participantConcept(recording, id) {
+  const at = id.lastIndexOf('#');
+  const source = recording.sources.find((item) => item.id === id.slice(0, at));
+  const graph = recording.graphs.find((item) => item.id === source?.graphId);
+  return graph?.nodes.find((node) => node.id === id.slice(at + 1))?.concept;
+}
+
 /** A proposal whose source uses the question's own words, read differently,
  * needs no person: the engine reads the question's words as in that source.
  * The connection holds for this check only and is cited with the answer.
@@ -267,9 +297,20 @@ export function settleSharedWording(recording, knowledge, options, input, answer
   if (!['supported', 'conditional'].includes(settled.status) || !settled.answers.length)
     return null;
   const wording = new Map(rules.map((rule, i) => [rule.id, same[i].sharedWording]));
+  // Shared words do not settle roles: an answer that is a participant the
+  // question itself names (“Who may refuse a proposal of the intelligence?”
+  // answered “intelligence” from “The intelligence may refuse a proposed
+  // change”) swaps roles, and stays open for a person.
+  const named = questionParticipants(recording);
+  const kept = settled.answers.filter(
+    (item) =>
+      !item.ruleIds.some((id) => wording.has(id)) ||
+      !item.bindings.some((binding) => named.has(participantConcept(recording, binding.id))),
+  );
+  if (!kept.length) return null;
   // Several proposals from one source can settle the same answer; report it once.
   const answers = new Map();
-  for (const item of settled.answers) {
+  for (const item of kept) {
     const key = JSON.stringify([item.text, item.conditional, [...item.sourceIds].sort()]);
     const used = item.ruleIds.filter((id) => wording.has(id)).map((id) => wording.get(id));
     const marked = used.length

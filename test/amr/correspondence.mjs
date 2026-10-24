@@ -257,6 +257,90 @@ assert.equal(
   null,
   'Different words are not a shared wording',
 );
+// Shared words do not settle roles. The question names the inspector as the
+// proposer; the source makes the inspector the one who may reject. Asked
+// without naming a proposer, the same wording settles.
+const mayReject = {
+  text: 'The inspector may reject a proposed repair with a reason.',
+  graph: graph(
+    'may-reject',
+    'm',
+    {
+      m: 'possible-01',
+      r: 'reject-01',
+      i: 'inspector',
+      c: 'repair-01',
+      p: 'propose-01',
+      k: 'cause-01',
+      w: 'reason',
+    },
+    [
+      ['m', ':ARG1', 'r'],
+      ['r', ':ARG0', 'i'],
+      ['r', ':ARG1', 'c'],
+      ['p', ':ARG1', 'c'],
+      ['k', ':ARG1', 'r'],
+      ['k', ':ARG0', 'w'],
+    ],
+  ),
+};
+const whoRejects = (text, proposer) => ({
+  text,
+  graph: graph(
+    'who-rejects',
+    'm',
+    {
+      m: 'possible-01',
+      r: 'reject-01',
+      u: 'amr-unknown',
+      t: 'thing',
+      p: 'propose-01',
+      ...(proposer ? { i: 'inspector' } : {}),
+    },
+    [
+      ['m', ':ARG1', 'r'],
+      ['r', ':ARG0', 'u'],
+      ['r', ':ARG1', 't'],
+      ['p', ':ARG1', 't'],
+      ...(proposer ? [['p', ':ARG0', 'i']] : []),
+    ],
+  ),
+});
+const settleRejecting = (asked) => {
+  const recording = {
+    inquiry: { text: asked.text, graphId: asked.graph.id },
+    project: { placementId: 'root' },
+    graphs: [asked.graph, mayReject.graph],
+    sources: [{ id: 'reject', nodeId: 'root', text: mayReject.text, graphId: mayReject.graph.id }],
+  };
+  const open = evaluateAnswer(recording, { rules: [] });
+  assert.equal(open.status, 'open');
+  const clarifications = proposeCorrespondences(asked.graph, [
+    { id: 'reject', graph: mayReject.graph, text: mayReject.text },
+  ]).map((proposal, i) => ({
+    ...proposal,
+    id: `reject-${i}`,
+    source: { text: mayReject.text, nodeId: 'root' },
+    sharedWording: sharedWording(asked, mayReject),
+  }));
+  assert(clarifications.length && clarifications[0].sharedWording);
+  return settleSharedWording(
+    recording,
+    { rules: [] },
+    undefined,
+    { scopePlacementId: 'root' },
+    { ...open, clarifications },
+  );
+};
+assert.deepEqual(
+  settleRejecting(whoRejects('Who may reject a proposal?', false)).answers.map((a) => a.text),
+  ['inspector'],
+);
+assert.equal(
+  settleRejecting(whoRejects('Who may reject a proposal of the inspector?', true)),
+  null,
+  'An answer that is a participant the question names elsewhere waits for a person',
+);
 const unrelated = structuredClone(source);
 unrelated.nodes[0].concept = 'sell-01';
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], graph: unrelated }]), []);
