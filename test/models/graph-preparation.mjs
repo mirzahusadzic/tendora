@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { prepareGraphs, penmanPython } from '../../src/models/graph-preparation.mjs';
+import {
+  prepareGraphs,
+  penmanPython,
+  preparationUsage,
+} from '../../src/models/graph-preparation.mjs';
 import { evaluateAnswer } from '../../src/recording/answers.mjs';
 import { graphLiterals } from '../../src/amr/literals.mjs';
 import { canonicalRelation } from '../../src/amr/roles.mjs';
@@ -101,6 +105,19 @@ if (available) {
     renamed.graph.nodes.some((node) => node.concept === '"3"'),
     'Attribute reification preserves a quoted numeric string',
   );
+  // A reading prepared once in this process is not sent again, a new one goes
+  // to the same open process, and both read as a fresh process reads them.
+  const before = preparationUsage();
+  const again = await prepareGraphs([inputs[1], { penman: '(d / dance-01 :ARG0 (b / boy))' }]);
+  const used = preparationUsage();
+  assert.equal(used.reused - before.reused, 1, 'The prepared reading is reused');
+  assert.equal(used.sent - before.sent, 1, 'Only the new reading is sent');
+  assert.equal(used.servers, before.servers, 'The open preparation process serves it');
+  assert.deepEqual(again.results[0], query);
+  const fresh = await prepareGraphs([{ penman: '(d / dance-01 :ARG0 (b / boy))' }], {
+    python: await penmanPython(),
+  });
+  assert.deepEqual(again.results[1], fresh.results[0]);
   const roles = await prepareGraphs([], { roles: [':ARG0-of', ':consist-of', ':mod-of'] });
   assert.deepEqual(roles.roles[':ARG0-of'], { role: ':ARG0', inverse: true });
   assert.deepEqual(roles.roles[':consist-of'], { role: ':consist-of', inverse: false });

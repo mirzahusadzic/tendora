@@ -203,8 +203,7 @@ def prepare(item, canonical_triple=None):
             for kind, alignments in (("node", surface.alignments(graph)), ("role", surface.role_alignments(graph))) for t, a in alignments.items()]}
 
 
-def main():
-    request = json.load(sys.stdin)
+def handle(request):
     profile = request.get("profile", PROFILE)
     canonical = lambda t: model.deinvert(model.canonicalize(t))
     if profile != PROFILE:
@@ -228,14 +227,28 @@ def main():
             results.append(prepare(item, canonical))
         except (ValueError, KeyError, TypeError, PenmanError) as error:
             results.append({"ok": False, "diagnostics": [{"message": str(error)}]})
-    json.dump({"version": 1, "profile": profile, "penmanVersion": penman.__version__, "results": results, "roles": role_map}, sys.stdout, ensure_ascii=False)
-    sys.stdout.write("\n")
+    return {"version": 1, "profile": profile, "penmanVersion": penman.__version__, "results": results, "roles": role_map}
+
+
+def serve():
+    """One request per line, one response per line, until stdin closes."""
+    for line in sys.stdin:
+        try:
+            response = handle(json.loads(line))
+        except Exception as error:
+            response = {"error": str(error)}
+        sys.stdout.write(json.dumps(response, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as error:
-        json.dump({"error": str(error)}, sys.stdout)
-        sys.stdout.write("\n")
-        sys.exit(1)
+    if "--serve" in sys.argv:
+        serve()
+    else:
+        try:
+            json.dump(handle(json.load(sys.stdin)), sys.stdout, ensure_ascii=False)
+            sys.stdout.write("\n")
+        except Exception as error:
+            json.dump({"error": str(error)}, sys.stdout)
+            sys.stdout.write("\n")
+            sys.exit(1)
