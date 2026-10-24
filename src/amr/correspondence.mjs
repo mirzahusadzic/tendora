@@ -226,8 +226,11 @@ function proposeLocal(question, bases, { limit, account }) {
     matcher = createGrammarMatcher(),
     maximum = Math.min(limit, 64);
   let attempts = 0;
+  // The bound keeps the most relevant bases, when the caller ranks them.
   for (const basis of [...bases]
-    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+    .sort(
+      (a, b) => (b.relevance ?? 0) - (a.relevance ?? 0) || String(a.id).localeCompare(String(b.id)),
+    )
     .slice(0, 64)) {
     if (
       !basis.id ||
@@ -339,8 +342,11 @@ export function proposeCorrespondences(question, bases, { limit = 12 } = {}) {
     account = { work: 0, limit: 100000 },
     maximum = Math.min(limit, 64);
   let attempts = 0;
+  // The bound keeps the most relevant bases, when the caller ranks them.
   for (const basis of [...bases]
-    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+    .sort(
+      (a, b) => (b.relevance ?? 0) - (a.relevance ?? 0) || String(a.id).localeCompare(String(b.id)),
+    )
     .slice(0, 64)) {
     if (
       !bounded(basis.graph) ||

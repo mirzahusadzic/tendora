@@ -126,8 +126,27 @@ export function buildClarifications(project, input, result, answer) {
       entry.lexicalAudit ? abstractLabels(entry.graph, entry.text, entry.lexicalAudit.checks) : {},
     ]),
   );
+  // Proposals are bounded to 64 sources: rank them by the question's concepts
+  // they share, rarer concepts weighing more, so the bound keeps the relevant
+  // ones rather than the first by identifier. Sense numbers aside.
+  const conceptsOf = (graph) =>
+    new Set(
+      graph.nodes
+        .filter((node) => node.concept && node.literal === undefined && !unmarked.has(node.concept))
+        .map((node) => node.concept.replace(/-\d+$/u, '')),
+    );
+  const asked = conceptsOf(question.graph);
+  const held = new Map(bases.map((entry) => [entry.id, conceptsOf(entry.graph)]));
+  const frequency = new Map();
+  for (const concepts of held.values())
+    for (const concept of concepts) frequency.set(concept, (frequency.get(concept) ?? 0) + 1);
+  const relevance = (entry) =>
+    [...held.get(entry.id)]
+      .filter((concept) => asked.has(concept))
+      .reduce((sum, concept) => sum + Math.log(1 + bases.length / frequency.get(concept)), 0);
   const labelled = bases.map((entry) => ({
     ...entry,
+    relevance: relevance(entry),
     graph: withAbstractLabels(entry.graph, labels.get(entry.id)),
   }));
   return proposeCorrespondences(question.graph, labelled).map((candidate) => {

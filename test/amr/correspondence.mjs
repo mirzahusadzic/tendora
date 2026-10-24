@@ -351,6 +351,24 @@ const shuffled = [
   { ...bases[0], id: 'a' },
 ];
 assert.equal(proposeCorrespondences(question, shuffled, { limit: 1 })[0].basisId, 'a');
+// Only 64 bases are tried. Ranked by relevance, the one that answers is among
+// them even when 70 others come first by identifier.
+const unrelatedBases = Array.from({ length: 70 }, (_, i) => ({
+  ...bases[0],
+  id: `a${String(i).padStart(2, '0')}`,
+  graph: unrelated,
+  relevance: 0,
+}));
+assert.deepEqual(
+  proposeCorrespondences(question, [...unrelatedBases, { ...bases[0], id: 'z' }]),
+  [],
+);
+assert.equal(
+  proposeCorrespondences(question, [...unrelatedBases, { ...bases[0], id: 'z', relevance: 1 }], {
+    limit: 1,
+  })[0].basisId,
+  'z',
+);
 assert.deepEqual(
   proposeCorrespondences(question, shuffled),
   proposeCorrespondences(question, [...shuffled].reverse()),

@@ -137,7 +137,9 @@ try {
     pipeline: 'supported',
     effects: 'open',
     safety: 'open',
-    shaping: 'open',
+    // Shared wording: “shapes digital work through the intelligence”, now that
+    // proposals rank their sources by relevance instead of taking the first 64.
+    shaping: 'supported',
     compound: 'open',
   };
   for (const [name, status] of Object.entries(expected)) {
