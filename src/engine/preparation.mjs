@@ -63,6 +63,16 @@ export async function prepareInquiry(
     }
   }
   const auditable = records.filter((entry) => entry.graph && entry.text?.trim());
+  // Records with the same text and reading share its audit, repairs and
+  // repaired graph. Frozen, an edit of one record's copy fails instead of
+  // changing every record that shares it.
+  const frozen = (value) => {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+      Object.freeze(value);
+      for (const key of Object.keys(value)) frozen(value[key]);
+    }
+    return value;
+  };
   let lexicalAudit = null;
   if (auditable.length) {
     await phase('vocabulary', 'Check acquired predicates against source words and PropBank');
@@ -81,7 +91,11 @@ export async function prepareInquiry(
         const repaired = repairReading(record.text, record.graph, result.checks);
         const graph = repaired.repairs.length ? validateGraph(repaired.graph) : null;
         if (graph) result = audit(record.text, graph);
-        audited.set(key, { result, graph, repairs: graph ? repaired.repairs : null });
+        audited.set(key, {
+          result: frozen(result),
+          graph: frozen(graph),
+          repairs: frozen(graph ? repaired.repairs : null),
+        });
       }
       const { result, graph, repairs } = audited.get(key);
       if (graph) {

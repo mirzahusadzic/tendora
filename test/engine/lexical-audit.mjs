@@ -6,6 +6,7 @@ import { resolve, join } from 'node:path';
 import { createProject, editConcept, saveProject } from '../../src/project/authoring/project.mjs';
 import { inputFromProject } from '../../src/engine/input.mjs';
 import { runEngine } from '../../src/engine/run.mjs';
+import { prepareInquiry } from '../../src/engine/preparation.mjs';
 import { readEngineArtifact, readEngineRun } from '../../src/project/storage/engine-runs.mjs';
 import { acquiredTexts } from '../../src/project/storage/acquisitions.mjs';
 import { engineSections } from '../../src/tui/engine/view.mjs';
@@ -103,8 +104,21 @@ try {
   assert(cli.includes('intercede-01'));
   assert(cli.includes('interact-01'));
   assert(cli.includes('supported:'));
+  // Records with the same text and reading share one audit, read once; it is
+  // frozen, so an edit of one record's copy cannot change the other's.
+  const twice = await prepareInquiry({
+    sources: ['a', 'b'].map((id) => ({ id, kind: 'source', text, penman })),
+    cases: [],
+    question: { id: 'q', kind: 'question', text: question, penman: questionPenman },
+  });
+  const [first, second] = twice.records;
+  assert.equal(first.lexicalAudit, second.lexicalAudit, 'Audited once');
+  assert(Object.isFrozen(first.lexicalAudit) && Object.isFrozen(first.lexicalAudit.checks));
+  assert.throws(() => {
+    first.lexicalAudit.checks.push({});
+  }, TypeError);
   console.log(
-    'ok lexical findings retained for fresh and offline Ask, visible in CLI/TUI, with unchanged source graphs and separate semantic results',
+    'ok lexical findings retained for fresh and offline Ask, audited once per reading and frozen, visible in CLI/TUI, with unchanged source graphs and separate semantic results',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });
