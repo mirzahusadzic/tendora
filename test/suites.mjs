@@ -37,6 +37,7 @@ export const suites = {
     'engine/deterministic-reuse.mjs',
     'engine/concepts.mjs',
     'engine/contribution-revisions.mjs',
+    'engine/reference.mjs',
     'tui/shell.mjs',
     'tui/launcher.mjs',
     'tui/capture-renderer.mjs',

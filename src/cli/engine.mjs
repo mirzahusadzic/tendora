@@ -64,6 +64,10 @@ try {
         );
         if (answer.readAs === 'requirement')
           lines.push('  A source says it must be done; that answers "should".');
+        if (answer.readAs === 'reference')
+          lines.push(
+            `  Read "${answer.reference.pronoun}" as the ${answer.reference.antecedent} the question names.`,
+          );
         if (answer.readAs === 'shared-wording')
           lines.push(
             `  The question and a source both say "${answer.sharedWording.join('", "')}"; read as in the source.`,

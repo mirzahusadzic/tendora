@@ -73,7 +73,79 @@ export function checkAnswer(project, input, result, options) {
   const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
   const answer = evaluateAnswer(recording, knowledge, options);
   answer.clarifications = buildClarifications(project, input, result, answer);
-  return settleSharedWording(recording, knowledge, options, input, answer) ?? answer;
+  return (
+    settleSharedWording(recording, knowledge, options, input, answer) ??
+    settleReference(recording, knowledge, options, answer) ??
+    answer
+  );
+}
+
+/** A pronoun the reading left unresolved refers to something the question
+ * names: “Does questioning a boundary weaken it?” reads “it” as the boundary.
+ * Only when the question names exactly one entity that is not a co-argument of
+ * the pronoun's predicate (“Does the team handle it?” never reads “it” as the
+ * team). Null when no such reading exists.
+ */
+const pronouns = new Set(['it', 'they']);
+const structural = new Set(['amr-unknown', '-', 'and', 'or']);
+export function referenceReading(graph) {
+  const found = graph.nodes.filter((node) => pronouns.has(node.concept));
+  if (found.length !== 1) return null;
+  const [pronoun] = found;
+  const heads = graph.edges.filter((edge) => edge.to === pronoun.id).map((edge) => edge.from);
+  if (!heads.length || graph.edges.some((edge) => edge.from === pronoun.id)) return null;
+  const coArguments = new Set(
+    graph.edges.filter((edge) => heads.includes(edge.from)).map((edge) => edge.to),
+  );
+  const candidates = graph.nodes.filter(
+    (node) =>
+      node.id !== pronoun.id &&
+      node.literal === undefined &&
+      !structural.has(node.concept) &&
+      !pronouns.has(node.concept) &&
+      !/-\d+$/u.test(node.concept) &&
+      !coArguments.has(node.id),
+  );
+  if (candidates.length !== 1) return null;
+  const [antecedent] = candidates;
+  return {
+    pronoun: pronoun.concept,
+    antecedent: antecedent.surfaceLabel ?? antecedent.concept,
+    graph: {
+      ...graph,
+      nodes: graph.nodes.filter((node) => node.id !== pronoun.id),
+      edges: graph.edges.map((edge) =>
+        edge.to === pronoun.id ? { ...edge, to: antecedent.id } : edge,
+      ),
+    },
+  };
+}
+
+/** An open answer may hold under the question's own reference: tried once,
+ * and cited with every answer it settles. */
+export function settleReference(recording, knowledge, options, answer) {
+  if (answer.status !== 'open') return null;
+  const query = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);
+  const reading = query && referenceReading(query);
+  if (!reading) return null;
+  const settled = evaluateAnswer(
+    {
+      ...recording,
+      graphs: recording.graphs.map((graph) =>
+        graph.id === query.id ? { ...reading.graph, id: query.id } : graph,
+      ),
+    },
+    knowledge,
+    options,
+  );
+  if (!['supported', 'conditional'].includes(settled.status) || !settled.answers.length)
+    return null;
+  const reference = { pronoun: reading.pronoun, antecedent: reading.antecedent };
+  return {
+    ...settled,
+    answers: settled.answers.map((item) => ({ ...item, readAs: 'reference', reference })),
+    clarifications: [],
+  };
 }
 
 /** A proposal whose source uses the question's own words, read differently,

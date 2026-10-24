@@ -6,6 +6,7 @@ const concise = ({
   dependsOn,
   readAs,
   sharedWording,
+  reference,
   polarity,
 }) => ({
   text,
@@ -14,6 +15,7 @@ const concise = ({
   ...(dependsOn ? { dependsOn } : {}),
   ...(readAs ? { readAs } : {}),
   ...(sharedWording ? { sharedWording } : {}),
+  ...(reference ? { reference } : {}),
   ...(polarity ? { polarity } : {}),
 });
 

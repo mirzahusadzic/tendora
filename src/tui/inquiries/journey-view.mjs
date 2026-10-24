@@ -330,6 +330,14 @@ export function journeySection({ project, run, input, result, recording }, place
         ...(answer.readAs === 'requirement'
           ? [['Read as', 'A source says it must be done; that answers “should”.']]
           : []),
+        ...(answer.readAs === 'reference'
+          ? [
+              [
+                'Read as',
+                `“${answer.reference.pronoun}” is the ${answer.reference.antecedent} the question names.`,
+              ],
+            ]
+          : []),
         ...(answer.readAs === 'shared-wording'
           ? [
               [
