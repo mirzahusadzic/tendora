@@ -119,9 +119,16 @@ async function executeEngineRun(
         : 'HRG query derivations',
     },
   };
-  const update = async () => {
+  let savedAt = -Infinity;
+  const update = async ({ progressOnly = false } = {}) => {
     run.elapsedMs = Math.round(performance.now() - started);
-    await saveEngineRun(project, run);
+    // Progress within a stage (a role check after another) reaches the
+    // viewer at once; the stored run follows at most every 200 ms, and fully
+    // at the stage's end.
+    if (!progressOnly || performance.now() - savedAt >= 200) {
+      await saveEngineRun(project, run);
+      savedAt = performance.now();
+    }
     onUpdate(structuredClone(run));
   };
   const phase = async (id, label) => {
@@ -137,7 +144,7 @@ async function executeEngineRun(
       status: 'running',
       startedMs: Math.round(performance.now() - started),
     });
-    await update();
+    await update({ progressOnly: previous?.id === id && id === 'role-answer' });
   };
   const invoke = async (client, items, options) => {
     signal?.throwIfAborted();
