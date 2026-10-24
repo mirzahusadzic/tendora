@@ -146,8 +146,11 @@ export async function startCheckpoints(project, input, result, levels, onCheck, 
     wake?.();
     wake = null;
   };
-  for (const entry of pool) {
+  // A copy: a worker that fails leaves the pool while records are sent.
+  for (const entry of [...pool]) {
     await send(entry, records, signal);
+    // One that ended meanwhile is given no task, so nothing waits on it.
+    if (entry.failed) continue;
     entry.task = id;
     running++;
     entry.listener = (message) => {
