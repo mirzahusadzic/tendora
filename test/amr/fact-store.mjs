@@ -2,8 +2,10 @@
  * field for field and in key order: proofs and alternatives, premises on later
  * facts, derivations, ids that are not their triple's key, unknown fields. */
 import assert from 'node:assert/strict';
-import { FactStore } from '../../src/amr/fact-store.mjs';
+import { FactStore, storeOf, storePrefix } from '../../src/amr/fact-store.mjs';
 import { inferRelations } from '../../src/amr/inference.mjs';
+import { createGrammarMatcher } from '../../src/amr/hrg-query.mjs';
+import { corpusSignature } from '../../src/amr/hrg-corpus.mjs';
 
 const key = (triple) => JSON.stringify(triple);
 const facts = [
@@ -66,14 +68,49 @@ const rules = [
     then: [['?a', ':way', '?c']],
   },
 ];
-const inferred = inferRelations(inputs, rules).facts;
+const inference = inferRelations(inputs, rules);
+const inferred = inference.facts;
+// Inference writes its store as it derives: facts in their order, each later
+// proof appended to the fact it proves.
+assert.equal(
+  JSON.stringify(inference.store.facts()),
+  JSON.stringify(inferred),
+  'Inference writes the store it returns',
+);
 assert(
   inferred.some((fact) => fact.alternatives?.length),
   'The cycle gives alternative proofs',
 );
 assert.equal(JSON.stringify(FactStore.from(inferred).facts()), JSON.stringify(inferred));
+// The matcher reads a store's prefix from its columns, and its grammar groups
+// a later prefix from the earlier one: the same signatures, matches and
+// derivations as the same facts in a plain array.
+const inferredStore = inference.store;
+assert.equal(storeOf(inferred), inferredStore, 'Inference returns a prefix of its store');
+assert.equal(storeOf([...inferred]), null, 'A copy is a plain array');
+const prefix = storePrefix(inferred.slice(0, inputs.length), inferredStore);
+assert.equal(corpusSignature(prefix), corpusSignature([...prefix]));
+assert.equal(corpusSignature(inferred), corpusSignature([...inferred]), 'A later prefix');
+const ways = [
+  ['?a', ':door', '?b'],
+  ['?a', ':way', '?b'],
+];
+const fromStore = createGrammarMatcher().match(ways, inferred, { limit: 1000 });
+const fromArray = createGrammarMatcher().match(ways, [...inferred], { limit: 1000 });
+assert(fromStore.matches.length > 1);
+assert.equal(JSON.stringify(fromStore), JSON.stringify(fromArray), 'Matches read from the store');
+const seed = { pattern: 1, ids: new Set([inferred.at(-1).id]) };
+assert.equal(
+  JSON.stringify(createGrammarMatcher().match(ways, inferred, { seed })),
+  JSON.stringify(createGrammarMatcher().match(ways, [...inferred], { seed })),
+  'A seed found through the store',
+);
+assert.throws(() => storePrefix([inferred[1]], inferredStore), /Not a prefix/);
+const grown = storePrefix(inferred.slice(0, 2), inferredStore);
+grown.push(inferred[2]);
+assert.equal(storeOf(grown), null, 'A changed array is no longer a prefix');
 const { columns } = FactStore.from(inferred).bytes;
 assert(columns / inferred.length < 200, 'Tens of bytes a fact, not kilobytes');
 console.log(
-  'ok fact store: facts as integer columns read back exactly, with proofs, alternatives, premises on later facts and derivations',
+  'ok fact store: facts as integer columns read back exactly, with proofs, alternatives, premises on later facts and derivations; inference writes it, and the matcher reads its prefixes',
 );

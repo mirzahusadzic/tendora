@@ -3,7 +3,8 @@
  * Terminals retain actual occurrence IDs; label equality cannot join entities.
  */
 import { extractHrg } from './hrg-decomposition.mjs';
-import { compileCorpus, corpusSignature, grammarFacts, grammarProfile } from './hrg-corpus.mjs';
+import { compileCorpus, corpusSignature, grammarEmission, grammarProfile } from './hrg-corpus.mjs';
+import { storeOf } from './fact-store.mjs';
 const variable = (term) => /^\?[A-Za-z][\w-]*$/u.test(term);
 export function compilePattern(patterns) {
   const vertices = [...new Set(patterns.flat().filter(variable))];
@@ -22,10 +23,43 @@ export function compilePattern(patterns) {
 // term numbers, and for each position the facts with one term are one run of
 // an index array, in the facts' order. One interpreted cohort serves every
 // pattern matched against it.
+function factTable({ count, numbers, terms, columns, id, production, positions }) {
+  // Terms numbered after the table was made (a store keeps growing while a
+  // round reads its cohort) occur in none of its facts.
+  const termCount = terms.length;
+  const runs = columns.map((column) => {
+    const offsets = new Uint32Array(termCount + 1);
+    for (let f = 0; f < count; f++) offsets[column[f] + 1]++;
+    for (let t = 0; t < termCount; t++) offsets[t + 1] += offsets[t];
+    const order = new Uint32Array(count),
+      fill = offsets.slice(0, termCount);
+    for (let f = 0; f < count; f++) order[fill[column[f]]++] = f;
+    return { offsets, order };
+  });
+  const run = (i, n) =>
+    n === undefined || n >= termCount
+      ? none
+      : runs[i].order.subarray(runs[i].offsets[n], runs[i].offsets[n + 1]);
+  let all = null,
+    known = null;
+  return {
+    numbers,
+    terms,
+    columns,
+    run,
+    // Every fact, for a terminal without fixed terms.
+    all: () => (all ??= Uint32Array.from({ length: count }, (_, f) => f)),
+    // A seed names facts by id.
+    position: (factId) => (known ??= positions()).get(factId),
+    id,
+    production,
+    length: count,
+  };
+}
 const columnCache = new WeakMap();
 function factColumns(facts) {
   const cached = columnCache.get(facts);
-  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached.table;
   const numbers = new Map(),
     terms = [];
   const number = (term) => {
@@ -41,34 +75,62 @@ function factColumns(facts) {
   const columns = [new Uint32Array(count), new Uint32Array(count), new Uint32Array(count)];
   for (let f = 0; f < count; f++)
     for (let i = 0; i < 3; i++) columns[i][f] = number(facts[f].triple[i]);
-  const runs = columns.map((column) => {
-    const offsets = new Uint32Array(terms.length + 1);
-    for (let f = 0; f < count; f++) offsets[column[f] + 1]++;
-    for (let t = 0; t < terms.length; t++) offsets[t + 1] += offsets[t];
-    const order = new Uint32Array(count),
-      fill = offsets.slice(0, terms.length);
-    for (let f = 0; f < count; f++) order[fill[column[f]]++] = f;
-    return { offsets, order };
-  });
-  const run = (i, n) =>
-    n === undefined ? none : runs[i].order.subarray(runs[i].offsets[n], runs[i].offsets[n + 1]);
-  let all = null,
-    positions = null;
-  const entry = {
-    facts,
+  const table = factTable({
+    count,
     numbers,
     terms,
     columns,
-    run,
-    // Every fact, for a terminal without fixed terms.
-    all: () => (all ??= Uint32Array.from({ length: count }, (_, f) => f)),
-    // A seed names facts by id.
-    position: (id) => (positions ??= new Map(facts.map((fact, f) => [fact.id, f]))).get(id),
-    length: count,
-    last: facts.at(-1),
-  };
-  columnCache.set(facts, entry);
-  return entry;
+    id: (f) => facts[f]?.id,
+    production: (f) => facts[f]?.grammar,
+    positions: () => new Map(facts.map((fact, f) => [fact.id, f])),
+  });
+  columnCache.set(facts, { table, length: count, last: facts.at(-1) });
+  return table;
+}
+/** A cohort in its emission order. A store's prefix is read from the store's
+ * columns, its terms numbered once for the whole inference; other cohorts are
+ * numbered here. Either way no fact is copied. */
+function emissionColumns(facts, emission, store) {
+  const count = emission.length,
+    order = emission.order;
+  const columns = [new Uint32Array(count), new Uint32Array(count), new Uint32Array(count)];
+  let numbers, terms;
+  if (store) {
+    ({ numbers, terms } = store);
+    const [s, r, o] = [store.s.data, store.r.data, store.o.data];
+    for (let e = 0; e < count; e++) {
+      columns[0][e] = s[order[e]];
+      columns[1][e] = r[order[e]];
+      columns[2][e] = o[order[e]];
+    }
+  } else {
+    numbers = new Map();
+    terms = [];
+    const number = (term) => {
+      let n = numbers.get(term);
+      if (n === undefined) {
+        n = terms.length;
+        numbers.set(term, n);
+        terms.push(term);
+      }
+      return n;
+    };
+    for (let e = 0; e < count; e++)
+      for (let i = 0; i < 3; i++) columns[i][e] = number(facts[order[e]].triple[i]);
+  }
+  return factTable({
+    count,
+    numbers,
+    terms,
+    columns,
+    id: (e) => (e === undefined ? undefined : facts[order[e]]?.id),
+    production: (e) => (e === undefined || e >= count ? undefined : emission.production(e)),
+    positions: () => {
+      const at = new Map();
+      for (let e = 0; e < count; e++) at.set(facts[order[e]].id, e);
+      return at;
+    },
+  });
 }
 const none = new Uint32Array(0);
 
@@ -89,7 +151,8 @@ export function matchChart(
     ),
   } = {},
 ) {
-  const { numbers, terms, columns, run, all, position } = factColumns(facts);
+  const table = Array.isArray(facts) ? factColumns(facts) : facts;
+  const { numbers, terms, columns, run, all, position } = table;
   // An absent fixed terminal makes the whole pattern impossible. Avoid building
   // unrelated charts in that case, without declaring a bounded search complete.
   if (
@@ -271,8 +334,8 @@ export function matchChart(
         ports: rule.vertices.slice(0, rule.rank).map((key) => [key, terms[row.values[key]]]),
         terminals: rule.terminals.map((t) => ({
           pattern: t.id,
-          fact: facts[row.evidence[t.id]]?.id,
-          production: facts[row.evidence[t.id]]?.grammar,
+          fact: table.id(row.evidence[t.id]),
+          production: table.production(row.evidence[t.id]),
         })),
         children: row.children,
       };
@@ -281,7 +344,7 @@ export function matchChart(
   };
   const matches = visit(plan.start).map((row) => ({
     values: Object.fromEntries(Object.entries(row.values).map(([key, n]) => [key, terms[n]])),
-    witnesses: patterns.map((_, i) => facts[row.evidence[i]]?.id),
+    witnesses: patterns.map((_, i) => table.id(row.evidence[i])),
     derivation: row.derivation,
   }));
   return { matches, complete, work, plan, chart: Object.fromEntries(charts) };
@@ -313,10 +376,18 @@ export function createGrammarMatcher(retained = {}) {
       stats.reused++;
       return entry;
     }
-    const compiled = corpus(facts);
+    const compiled = corpus(facts),
+      store = storeOf(facts);
+    const positionOf = store
+      ? (id) => {
+          const f = store.position(id);
+          return f < facts.length ? f : undefined;
+        }
+      : null;
+    const emission = grammarEmission(compiled.grammar, facts, positionOf);
     const fresh = {
       compiled,
-      emitted: grammarFacts(compiled.grammar, facts),
+      emitted: emissionColumns(facts, emission, store),
       length: facts.length,
       last: facts.at(-1),
     };

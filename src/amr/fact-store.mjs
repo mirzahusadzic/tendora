@@ -11,8 +11,10 @@
  * holds instead of objects: tens of bytes a fact rather than kilobytes.
  */
 
-const NONE = 0xffffffff;
+export const NONE = 0xffffffff;
 const listFields = ['sourceIds', 'fragmentIds', 'guards', 'bindingIds'];
+const columnFields = new Set([...listFields, 'ruleId', 'premises', 'derivation']);
+const factFields = new Set(['id', 'triple', 'alternatives']);
 
 class Column {
   constructor(capacity = 1024) {
@@ -93,9 +95,8 @@ export class FactStore {
   addProof(f, proof, own = false) {
     const p = this.proofFact.push(f);
     this.proofNext.push(NONE);
-    const keys = Object.keys(proof).filter(
-      (key) => !own || !['id', 'triple', 'alternatives'].includes(key),
-    );
+    let keys = Object.keys(proof);
+    if (own) keys = keys.filter((key) => !factFields.has(key));
     this.proofShape.push(this.shape(keys));
     this.proofRule.push(proof.ruleId === undefined ? NONE : this.term(proof.ruleId));
     for (const field of listFields) {
@@ -114,8 +115,7 @@ export class FactStore {
       this.premises.push(q);
     }
     if (proof.derivation !== undefined) this.derivations.set(p, proof.derivation);
-    const known = new Set([...listFields, 'ruleId', 'premises', 'derivation']);
-    const extra = keys.filter((key) => !known.has(key));
+    const extra = keys.filter((key) => !columnFields.has(key));
     if (extra.length) this.extras.set(p, Object.fromEntries(extra.map((key) => [key, proof[key]])));
     if (this.firstProof.data[f] === NONE) this.firstProof.data[f] = p;
     else this.proofNext.data[this.lastProof.data[f]] = p;
@@ -137,14 +137,23 @@ export class FactStore {
     this.lastProof.push(NONE);
     const keys = Object.keys(fact);
     this.factShape.push(this.shape(keys));
-    const id = fact.id ?? JSON.stringify(fact.triple);
-    if (id !== JSON.stringify(fact.triple)) this.ids.set(f, id);
+    const own = JSON.stringify(fact.triple),
+      id = fact.id ?? own;
+    if (id !== own) this.ids.set(f, id);
     this.positions.set(id, f);
     return f;
   }
   addProofs(f, fact) {
     this.addProof(f, fact, true);
     for (const alternative of fact.alternatives ?? []) this.addProof(f, alternative);
+  }
+  /** A proof found later for a fact already held, as `(fact.alternatives ??=
+   * []).push(proof)` adds it: the fact gains the key last if it had none. */
+  addAlternative(f, proof) {
+    const keys = this.shapes[this.factShape.data[f]];
+    if (!keys.includes('alternatives'))
+      this.factShape.data[f] = this.shape([...keys, 'alternatives']);
+    return this.addProof(f, proof);
   }
   /** Facts in their order; a proof may rest on a fact that comes after it. */
   static from(facts) {
@@ -229,4 +238,24 @@ export class FactStore {
     const strings = this.terms.reduce((sum, term) => sum + String(term).length + 16, 0);
     return { columns, strings };
   }
+}
+
+// Arrays that are a store's first facts, in order: inference's cohorts and
+// its result. The matcher reads their terms from the store's columns instead
+// of numbering them again. A changed array (length or last fact) is not one.
+const prefixes = new WeakMap();
+export function storePrefix(facts, store) {
+  if (
+    facts.length > store.length ||
+    (facts.length && store.id(facts.length - 1) !== facts.at(-1).id)
+  )
+    throw new Error('Not a prefix of the store');
+  prefixes.set(facts, { store, length: facts.length, last: facts.at(-1) });
+  return facts;
+}
+export function storeOf(facts) {
+  const prefix = prefixes.get(facts);
+  return prefix && prefix.length === facts.length && prefix.last === facts.at(-1)
+    ? prefix.store
+    : null;
 }

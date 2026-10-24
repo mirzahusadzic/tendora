@@ -1,5 +1,6 @@
 /** Bounded forward chaining over authored triples. No domain predicates or aliases. */
 import { hash53 } from './hash.mjs';
+import { FactStore, storePrefix } from './fact-store.mjs';
 const variable = (term) => /^\?[A-Za-z][\w-]*$/u.test(term);
 const fresh = (term) => /^\$[A-Za-z][\w-]*$/u.test(term);
 const key = (triple) => JSON.stringify(triple);
@@ -172,6 +173,10 @@ export function inferRelations(
   const { facts, complete: inputComplete } = collectRelationFacts(inputs, maxDerivations);
   // Keep the original facts for callers that explicitly restrict their premises.
   const inputCohort = [...facts.values()];
+  // The same facts as integer columns, written as they are derived; the
+  // objects stay as a view for the shell (lean base, M1).
+  const store = FactStore.from(inputCohort);
+  storePrefix(inputCohort, store);
   const viewRules = new Set(rules.filter((r) => r.baseOnly).map((r) => r.id));
   let complete = inputComplete && facts.size <= maxFacts,
     rounds = 0;
@@ -218,7 +223,7 @@ export function inferRelations(
     const touched = new Set();
     // A round reads one immutable relation cohort. This lets all rule bodies
     // share the same compiled grammar; new consequences enter the next round.
-    const cohort = [...facts.values()];
+    const cohort = storePrefix([...facts.values()], store);
     // A correspondence may read ordinary conditional consequences, but cannot
     // use another correspondence as its semantic premise. This permits views
     // of composed answers without cyclic fresh-node expansion between views.
@@ -330,6 +335,7 @@ export function inferRelations(
               break;
             }
             (existing.alternatives ??= []).push(proof);
+            store.addAlternative(store.position(id), proof);
             touched.add(id);
             added = true;
             continue;
@@ -338,11 +344,9 @@ export function inferRelations(
             complete = false;
             break;
           }
-          facts.set(id, {
-            id,
-            triple,
-            ...proof,
-          });
+          const fact = { id, triple, ...proof };
+          facts.set(id, fact);
+          store.add(fact);
           touched.add(id);
           added = true;
         }
@@ -350,7 +354,14 @@ export function inferRelations(
       }
       if (!complete) break;
     }
-    if (!added) return { facts: [...facts.values()], complete, rounds: rounds + 1, evaluations };
+    if (!added)
+      return {
+        facts: storePrefix([...facts.values()], store),
+        store,
+        complete,
+        rounds: rounds + 1,
+        evaluations,
+      };
     const all = [...touched].map((id) => facts.get(id)),
       byRole = new Map();
     for (const fact of all) {
@@ -359,7 +370,13 @@ export function inferRelations(
     }
     changed = { all, byRole, ids: touched };
   }
-  return { facts: [...facts.values()], complete: false, rounds, evaluations };
+  return {
+    facts: storePrefix([...facts.values()], store),
+    store,
+    complete: false,
+    rounds,
+    evaluations,
+  };
 }
 
 // Tracing runs once per match against one fact array: index it once, not per

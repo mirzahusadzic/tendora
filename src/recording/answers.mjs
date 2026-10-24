@@ -832,6 +832,9 @@ export function withheldBase(base, withheld) {
   const material = base.material;
   const grammar = createGrammarMatcher({ profile: grammarProfile, grammars: base.grammar.corpora });
   grammar.corpus(facts);
+  // The full base's store holds facts this view lacks; a view of it comes
+  // with the proofs read from the store (lean base, M3).
+  const { store: _store, ...inference } = base.inference;
   return {
     ...base,
     material: {
@@ -845,7 +848,7 @@ export function withheldBase(base, withheld) {
       sourceGraphs: material.sourceGraphs.filter((entry) => !out.has(entry.sourceId)),
       skipped: material.skipped.filter((entry) => !out.has(entry.sourceId)),
     },
-    inference: { ...base.inference, facts },
+    inference: { ...inference, facts },
     grammar,
   };
 }

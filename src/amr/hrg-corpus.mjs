@@ -5,6 +5,7 @@
  */
 import { extractHrg, boundaryValences } from './hrg-decomposition.mjs';
 import { contentName } from './hash.mjs';
+import { storeOf } from './fact-store.mjs';
 export const grammarProfile = 'amr-ordered-hrg-v1';
 const attribute = (role) => !role.startsWith(':') || role === ':instance';
 // localeCompare's order, without building a collator for every comparison.
@@ -42,27 +43,58 @@ const intern = (text) => {
 };
 // One cohort is grouped once, for its signature and its compilation alike.
 const groupings = new WeakMap();
+const named = (group, entries) => {
+  entries.sort((a, b) => collate(a.id, b.id));
+  return { group, entries, key: `${group}\u0000${contentName(factParts(entries))}` };
+};
 function grouped(facts) {
   const cached = groupings.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1))
     return cached.groups;
-  const byGroup = new Map();
-  for (const fact of facts) {
-    const group = groupOf(fact);
-    if (!byGroup.has(group)) byGroup.set(group, []);
-    byGroup.get(group).push(fact);
+  const store = storeOf(facts);
+  let groups;
+  if (store) groups = storeGroups(store, facts);
+  else {
+    const byGroup = new Map();
+    for (const fact of facts) {
+      const group = groupOf(fact);
+      if (!byGroup.has(group)) byGroup.set(group, []);
+      byGroup.get(group).push(fact);
+    }
+    groups = [...byGroup].map(([group, entries]) => named(group, entries));
   }
-  const groups = [...byGroup]
-    .sort(([a], [b]) => collate(a, b))
-    .map(([group, entries]) => {
-      entries.sort((a, b) => collate(a.id, b.id));
-      return {
-        group,
-        entries,
-        key: `${group}\u0000${contentName(factParts(entries))}`,
-      };
-    });
+  groups.sort((a, b) => collate(a.group, b.group));
   groupings.set(facts, { groups, length: facts.length, last: facts.at(-1) });
+  return groups;
+}
+// A store's facts are grouped as they come: a later cohort of the same
+// inference names again only the groups that gained facts.
+const storeGroupings = new WeakMap();
+function storeGroups(store, facts) {
+  let registry = storeGroupings.get(store);
+  if (!registry) storeGroupings.set(store, (registry = { scanned: 0, byGroup: new Map() }));
+  for (; registry.scanned < facts.length; registry.scanned++) {
+    const f = registry.scanned,
+      group = groupOf(facts[f]);
+    let entry = registry.byGroup.get(group);
+    if (!entry) registry.byGroup.set(group, (entry = { positions: [], count: 0, value: null }));
+    entry.positions.push(f);
+  }
+  const groups = [];
+  for (const [group, entry] of registry.byGroup) {
+    // Positions grow in order: the cohort holds a prefix of each group's.
+    let count = entry.positions.length;
+    while (count && entry.positions[count - 1] >= facts.length) count--;
+    if (!count) continue;
+    if (entry.count !== count) {
+      entry.count = count;
+      entry.value = named(
+        group,
+        entry.positions.slice(0, count).map((f) => facts[f]),
+      );
+    }
+    groups.push(entry.value);
+  }
   return groups;
 }
 /** The same facts in the same statements give the same signature. */
@@ -194,11 +226,38 @@ export function compileCorpus(facts, retained = null, signature = corpusSignatur
   };
 }
 
-/** Interpret grounded rule occurrences, preserving ordered ports and edge IDs. */
-export function grammarFacts(grammar, facts) {
-  const records = new Map(facts.map((f) => [f.id, f])),
-    emitted = [],
-    visited = new Set();
+/** Interpret grounded rule occurrences, preserving ordered ports and edge IDs:
+ * the order in which the grammar emits a cohort's facts, as integer columns
+ * (each emitted terminal's position in the cohort and its production: rule,
+ * instance, terminal), with every terminal checked against its occurrence. */
+export function grammarEmission(grammar, facts, positionOf = null) {
+  let at = positionOf;
+  if (!at) {
+    const positions = new Map(facts.map((fact, f) => [fact.id, f]));
+    at = (id) => positions.get(id);
+  }
+  let capacity = Math.max(16, facts.length),
+    length = 0;
+  let order = new Uint32Array(capacity),
+    rules = new Uint32Array(capacity),
+    instances = new Uint32Array(capacity),
+    terminals = new Uint32Array(capacity);
+  const emit = (f, rule, instance, terminal) => {
+    if (length === capacity) {
+      capacity *= 2;
+      const grow = (column) => {
+        const grown = new Uint32Array(capacity);
+        grown.set(column);
+        return grown;
+      };
+      [order, rules, instances, terminals] = [order, rules, instances, terminals].map(grow);
+    }
+    order[length] = f;
+    rules[length] = rule;
+    instances[length] = instance;
+    terminals[length++] = terminal;
+  };
+  const visited = new Set();
   const visit = (id, expectedPorts = null, expectedSymbol = null) => {
     const instance = grammar.instances[id],
       rule = instance && grammar.rules[instance.rule];
@@ -209,19 +268,17 @@ export function grammarFacts(grammar, facts) {
       throw new Error('HRG nonterminal mismatch');
     if (expectedPorts && !sameList(instance.vertices.slice(0, rule.rank), expectedPorts))
       throw new Error('HRG attachment mismatch');
-    const begin = emitted.length;
+    const begin = length;
     for (let i = 0; i < rule.terminals.length; i++) {
       const t = rule.terminals[i],
         [role, value] = terminalLabel(t);
-      const triple = [
-        instance.vertices[t.ports[0]],
-        role,
-        attribute(role) ? value.value : instance.vertices[t.ports[1]],
-      ];
-      const record = records.get(instance.terminals[i]);
-      if (!record || !sameList(record.triple, triple))
+      const from = instance.vertices[t.ports[0]],
+        to = attribute(role) ? value.value : instance.vertices[t.ports[1]];
+      const f = at(instance.terminals[i]),
+        triple = f === undefined ? null : facts[f].triple;
+      if (!triple || triple[0] !== from || triple[1] !== role || triple[2] !== to)
         throw new Error('HRG terminal does not match its source occurrence');
-      emitted.push({ ...record, triple, grammar: { rule: rule.id, instance: id, terminal: i } });
+      emit(f, rule.id, id, i);
     }
     for (let i = 0; i < rule.children.length; i++) {
       const child = rule.children[i];
@@ -232,12 +289,28 @@ export function grammarFacts(grammar, facts) {
           child.symbol,
         )
       ) {
-        emitted.length = begin;
+        length = begin;
         return false;
       }
     }
     return true;
   };
   for (const root of grammar.starts) visit(root);
-  return emitted;
+  return {
+    length,
+    order: order.subarray(0, length),
+    rules: rules.subarray(0, length),
+    instances: instances.subarray(0, length),
+    terminals: terminals.subarray(0, length),
+    production: (e) => ({ rule: rules[e], instance: instances[e], terminal: terminals[e] }),
+  };
+}
+
+/** The emitted facts as objects, each with its production. */
+export function grammarFacts(grammar, facts) {
+  const emission = grammarEmission(grammar, facts);
+  return Array.from({ length: emission.length }, (_, e) => {
+    const fact = facts[emission.order[e]];
+    return { ...fact, triple: [...fact.triple], grammar: emission.production(e) };
+  });
 }
