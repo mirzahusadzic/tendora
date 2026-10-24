@@ -161,6 +161,50 @@ try {
     ['statement', opens, 'contains'],
   ]);
 
+  // Sideways: a statement's co-carriers, a question's siblings, a role's neighbours.
+  assert.deepEqual(
+    fromLift.alongside.map((item) => [item.kind, item.label, item.via]),
+    [['statement', opens, 'Does the stage open?']],
+    'The rule read from the other statement carries the question with it',
+  );
+  assert.deepEqual(
+    walk({
+      kind: 'question',
+      text: 'Who inspects the lift?',
+      scopePlacementId: root,
+    }).alongside.map((item) => [item.kind, item.label, item.via]),
+    [['question', 'Does the stage open?', inspects]],
+    'The other question resting on the same statement',
+  );
+  assert.deepEqual(fromRole.alongside, [], 'Stage carries its questions alone');
+  // The same case asked again under a new identifier is the same question:
+  // its earlier check is superseded, not a second question in the frontier.
+  const situation = (placementId) => ({
+    placementId,
+    sources: [{ text: 'The lift is inspected.' }],
+  });
+  const cased = [
+    {
+      ...run('Does the stage open?', root, []),
+      caseSelection: situation('case-1'),
+      projectDigest: 'revision-1',
+    },
+    {
+      ...run(
+        'Does the stage open?',
+        root,
+        [{ text: 'Yes', sourceIds: [lift.id], ruleIds: [rule], fragmentIds: [] }],
+        { sources: [lift] },
+      ),
+      caseSelection: situation('case-2'),
+    },
+  ];
+  const recased = recoil(
+    { data, digest, runs: cased, readings },
+    { kind: 'statement', text: inspects },
+  );
+  assert.deepEqual(recased.frontier, [], 'An earlier check of the same case is superseded');
+  assert.equal(recased.consequences.filter((visit) => visit.kind === 'question').length, 1);
   const bounded = walk({ kind: 'statement', text: inspects }, { limit: 3 });
   assert(bounded.origins.length + bounded.consequences.length <= 2);
   assert(

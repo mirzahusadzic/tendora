@@ -64,8 +64,14 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
   const authoredRules = new Map(knowledgeSnapshot(data).rules.map((rule) => [rule.id, rule]));
 
   // The latest check of each saved question; a question saved without one is unchecked.
+  // A case is the situation it states: asked again with the same statements, it
+  // is the same question, whatever the case's own identifier.
+  const caseIdentity = (selection) =>
+    selection?.sources?.length
+      ? selection.sources.map((source) => source.text).join('\n')
+      : (selection?.placementId ?? null);
   const questionKey = (text, scope, selection) =>
-    JSON.stringify([text.trim(), scope, selection?.placementId ?? null]);
+    JSON.stringify([text.trim(), scope, caseIdentity(selection)]);
   const questions = new Map();
   for (const run of runs) {
     const text = run.questions?.[0]?.text;
@@ -283,6 +289,60 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       else unaffected++;
     }
   }
+  // Sideways: what shares the locus's place. For a statement, the statements
+  // the questions resting on it also cite (directly or through a rule read
+  // from them); for a role, the other roles those come from; for a question,
+  // the other questions resting on the statements it rests on.
+  const alongside = [],
+    beside = new Set();
+  const side = (entry) => {
+    const key = JSON.stringify([entry.kind, entry.id]);
+    if (beside.has(key)) return;
+    beside.add(key);
+    alongside.push({
+      ...entry,
+      label: label(entry.kind, entry.id),
+      via: label('question', entry.through) ?? label('statement', entry.through),
+    });
+  };
+  const carriers = (question) =>
+    (citations.get(question) ?? []).flatMap((link) =>
+      link.kind === 'statement' && link.current
+        ? [link.id]
+        : link.kind === 'rule'
+          ? (ruleOrigins(link.id) ?? [])
+          : [],
+    );
+  if (start.kind === 'statement' || start.kind === 'role') {
+    const own = new Set(
+      start.kind === 'statement' ? [start.id] : contained(start.id).map((item) => item.id),
+    );
+    const resting = visits
+      .filter((visit) => visit.direction === 'consequence' && visit.kind === 'question')
+      .map((visit) => visit.id);
+    for (const question of resting)
+      for (const id of carriers(question))
+        if (!own.has(id))
+          side(
+            start.kind === 'statement'
+              ? { kind: 'statement', id, through: question, relation: 'carries with it' }
+              : {
+                  kind: 'role',
+                  id: statements.get(id).nodeId,
+                  through: question,
+                  relation: 'carries with it',
+                },
+          );
+  } else
+    for (const id of carriers(start.id))
+      for (const { question } of restingOn(id))
+        if (question !== start.id)
+          side({
+            kind: 'question',
+            id: question,
+            through: id,
+            relation: 'rests on the same statement',
+          });
   const strip = ({ locus: _locus, ...visit }) => visit;
   return {
     locus: { ...start, label: label(start.kind, start.id) },
@@ -292,6 +352,7 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       .filter((visit) => visit.direction === 'consequence' && !visit.locus)
       .map(strip),
     frontier: frontier.map(strip),
+    alongside,
     // Questions whose scope reaches the locus, checked at this revision, whose
     // answers do not rest on it.
     unaffected,
