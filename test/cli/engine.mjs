@@ -217,6 +217,18 @@ const args = [
   '--offline',
   '--json',
 ];
+// Who wrote the statements, declared beside the project: exported answers
+// carry it with the corpus's identity.
+const accepted = { by: 'Workshop reviewer', on: '2026-10-25' };
+await writeFile(
+  join(location, 'provenance.json'),
+  JSON.stringify({
+    version: 1,
+    statements: [
+      { text: 'Sam repairs bicycles.', author: 'Workshop author', accepted, number: 'W1' },
+    ],
+  }),
+);
 const answerResult = await command(args);
 assert.equal(
   answerResult.stderr,
@@ -231,6 +243,19 @@ assert(answer.answer.answers[0].bindings.length);
 assert(answer.answer.answers[0].derivation.tree, 'The answer retains its chart proof');
 assert(answer.answer.grammar.corpora[0].rules > 0);
 assert(answer.calls.every((call) => call.client === 'PENMAN'));
+assert.deepEqual(answer.provenance, {
+  projectId: project.data.id,
+  projectRevision: answer.projectDigest,
+  statements: [
+    {
+      sourceId: answer.answer.answers[0].sourceIds[0],
+      text: 'Sam repairs bicycles.',
+      author: 'Workshop author',
+      accepted,
+      number: 'W1',
+    },
+  ],
+});
 
 const previousFetch = globalThis.fetch;
 globalThis.fetch = () => assert.fail('TUI parity check must use frozen readings');
@@ -256,6 +281,11 @@ try {
     proof(answer),
     'CLI and TUI use the same attributed answer services',
   );
+  assert.deepEqual(
+    captured.recording.provenance,
+    answer.provenance,
+    'A recording carries the same provenance',
+  );
 } finally {
   globalThis.fetch = previousFetch;
 }
@@ -265,6 +295,7 @@ assert.equal(machine(detailed).status, 'supported');
 assert.match(detailed.stderr, /Check scoped source revisions/u);
 const shown = machine(await command(['show', '--project', location, '--run', answer.id, '--json']));
 assert.equal(shown.id, answer.id);
+assert.deepEqual(shown.provenance, answer.provenance, 'and so does a saved check shown again');
 assert.equal(shown.questions[0].text, question);
 const human = await command(['show', '--project', location, '--run', answer.id, '--explain']);
 successful(human);

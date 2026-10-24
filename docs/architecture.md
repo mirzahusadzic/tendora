@@ -50,7 +50,11 @@ it (`actor`) and through what (`via`: the editor, or a library call); an actor i
 a label, not a verified identity. An engine run records the interface it came
 through (`via`: the workbench, the CLI, or a library call such as a script) and
 its actor: the workbench's, the CLI's `--actor`, or `unrecorded`, so checks run
-unattended are visible as such. An identical acquired question can
+unattended are visible as such. A project may declare who wrote, proposed and
+accepted each statement in `provenance.json` beside its manifest; an exported
+answer (`--json`, a recording) carries the project id, the revision digest of
+its check and the provenance of every statement it rests on, `unrecorded` where
+none is declared. Provenance, like an actor, is declared, not verified. An identical acquired question can
 reuse its checked reading. A changed graph can produce a candidate correspondence, but graph
 mapping or compiled wording does not by itself establish preservation. Scope,
 case, source or project changes invalidate earlier support and require a fresh

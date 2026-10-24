@@ -4,6 +4,7 @@ import { access, readFile } from 'node:fs/promises';
 import { EngineUsageError, parseEngineArguments } from './engine-options.mjs';
 import { createProject, openProject, saveProject } from '../project/authoring/project.mjs';
 import { authorEngineKnowledge } from '../project/authoring/knowledge.mjs';
+import { answerProvenance, readProvenance } from '../project/authoring/provenance.mjs';
 import { selectCase, authorCase } from '../project/inquiries/investigation.mjs';
 import { resolveInquiryPlacement } from '../project/inquiries/scope.mjs';
 import { inputFromProject } from '../engine/input.mjs';
@@ -193,9 +194,19 @@ try {
           : 'Deleted engine run and its owned data: ' + values.run;
     } else if (action === 'show') {
       const run = await readEngineRun(project, values.run);
+      // A released check keeps no input: its statements are named by id only.
+      const input = run.inputRef
+        ? await readEngineArtifact(project, run.inputRef).catch(() => null)
+        : null;
       output = values.json
         ? {
             ...run,
+            provenance: answerProvenance(
+              { projectId: run.projectId, projectRevision: run.projectDigest },
+              await readProvenance(project),
+              run.answer?.answers,
+              [...(input?.sources ?? []), ...(input?.cases ?? [])],
+            ),
             ...(values.explain && run.resultRef
               ? { result: await readEngineArtifact(project, run.resultRef) }
               : {}),
@@ -236,7 +247,17 @@ try {
       await compactProjectStorage(project);
       if (values.json) {
         const stored = await readEngineRun(project, run.id);
-        output = { ...run, cache: stored.cache };
+        output = {
+          ...run,
+          cache: stored.cache,
+          // The corpus the answer was checked against, and who wrote what it rests on.
+          provenance: answerProvenance(
+            { projectId: run.projectId, projectRevision: run.projectDigest },
+            await readProvenance(project),
+            run.answer?.answers,
+            [...input.sources, ...input.cases],
+          ),
+        };
         if (stored.cache === 'recheck') {
           for (const key of ['inputRef', 'sourceInputRef', 'resultRef', 'errorRef'])
             delete output[key];
