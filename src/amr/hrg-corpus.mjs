@@ -4,6 +4,7 @@
  * merely by using the same rule or concept label.
  */
 import { extractHrg, boundaryValences } from './hrg-decomposition.mjs';
+import { contentName } from './hash.mjs';
 export const grammarProfile = 'amr-ordered-hrg-v1';
 const attribute = (role) => !role.startsWith(':') || role === ':instance';
 // localeCompare's order, without building a collator for every comparison.
@@ -19,13 +20,24 @@ const groupOf = (fact) => fact.ruleId ?? fact.sourceIds?.[0] ?? 'relations';
 // A statement's facts compile to the same productions wherever they occur, so
 // its compilation is kept by content and shared across rounds, roles and
 // questions; only the assembly into one grammar, which numbers rules and
-// nonterminals in order, is redone. The key is the facts themselves, exactly.
+// nonterminals in order, is redone. The key names the statement's facts (their
+// ids and triples, in order) by a 106-bit content name, so the cache holds no
+// second copy of them.
+export const clearCompiledGroups = () => compiledGroups.clear();
 const compiledGroups = new Map(),
   groupLimit = 100000;
-const factTexts = new WeakMap();
-const factText = (fact) => {
-  let text = factTexts.get(fact);
-  if (text === undefined) factTexts.set(fact, (text = JSON.stringify([fact.id, fact.triple])));
+const factParts = function* (entries) {
+  for (const fact of entries) {
+    yield fact.id ?? '\u0001';
+    for (const term of fact.triple) yield String(term);
+  }
+};
+// The same label or valence recurs across statements: kept once.
+const interned = new Map();
+const intern = (text) => {
+  const known = interned.get(text);
+  if (known !== undefined) return known;
+  interned.set(text, text);
   return text;
 };
 // One cohort is grouped once, for its signature and its compilation alike.
@@ -47,7 +59,7 @@ function grouped(facts) {
       return {
         group,
         entries,
-        key: `${group}\u0000${entries.map(factText).join('\u0000')}`,
+        key: `${group}\u0000${contentName(factParts(entries))}`,
       };
     });
   groupings.set(facts, { groups, length: facts.length, last: facts.at(-1) });
@@ -66,7 +78,7 @@ function compileGroup(entries) {
     const [from, role, to] = fact.triple;
     return {
       id: fact.id,
-      label: JSON.stringify(attribute(role) ? [role, { value: to }] : [role]),
+      label: intern(JSON.stringify(attribute(role) ? [role, { value: to }] : [role])),
       vertices: attribute(role) ? [from] : [from, to],
     };
   });
@@ -89,7 +101,7 @@ function compileGroup(entries) {
     components.push(
       Object.freeze({
         width: extracted.width,
-        valences: boundaryValences(extracted).map((shape) => JSON.stringify(shape)),
+        valences: boundaryValences(extracted).map((shape) => intern(JSON.stringify(shape))),
         rules: extracted.rules.map((r) =>
           Object.freeze({
             id: r.id,
