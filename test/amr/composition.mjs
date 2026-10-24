@@ -142,6 +142,44 @@ for (const inputs of [evidence, evidence.slice(1)]) {
   );
 }
 assert(!inferRelations([], independent).facts.some((fact) => fact.triple[1] === 'answer'));
+// A derived node is named by what derived it, not by when: the same rules in
+// another order derive the same facts under the same names.
+const growing = [
+  {
+    id: 'kin',
+    name: 'Each crew has a lead',
+    when: [['?c', ':instance', 'crew']],
+    then: [
+      ['?c', ':lead', '$l'],
+      ['$l', ':instance', 'person'],
+    ],
+  },
+  {
+    id: 'tool',
+    name: 'Each person has a tool',
+    when: [['?p', ':instance', 'person']],
+    then: [
+      ['?p', ':tool', '$t'],
+      ['$t', ':instance', 'tool'],
+    ],
+  },
+];
+const crews = ['north', 'south'].map((crew) => ({
+  triple: [crew, ':instance', 'crew'],
+  sourceIds: [crew],
+}));
+const derivedTriples = (rules) =>
+  inferRelations(crews, rules)
+    .facts.map((fact) => JSON.stringify(fact.triple))
+    .sort();
+assert.deepEqual(derivedTriples(growing), derivedTriples([...growing].reverse()));
+assert.deepEqual(
+  derivedTriples(growing),
+  inferRelations([...crews].reverse(), growing)
+    .facts.map((fact) => JSON.stringify(fact.triple))
+    .sort(),
+  'Nor does the order of the premises name what is derived',
+);
 // Semi-naive rounds: a chain derives one link a round, and only the rule that
 // reads the new link runs again; the rest found everything they could.
 const chain = Array.from({ length: 8 }, (_, i) => ({

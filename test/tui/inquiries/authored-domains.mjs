@@ -258,7 +258,10 @@ const proof = (answer) =>
         sourceIds,
         ruleIds,
       })),
-    }).replace(/case-[a-f0-9]{8}-[a-f0-9-]{27}/gu, 'independent-case'),
+    })
+      .replace(/case-[a-f0-9]{8}-[a-f0-9-]{27}/gu, 'independent-case')
+      // A derived node is named by its bindings, which include the case's.
+      .replace(/derived:[0-9a-z~]+:/gu, 'derived:'),
   );
 try {
   globalThis.fetch = async (url, options) => {
