@@ -39,6 +39,7 @@ export const suites = {
     'engine/contribution-revisions.mjs',
     'engine/reference.mjs',
     'engine/cloze.mjs',
+    'engine/readings.mjs',
     'engine/closest.mjs',
     'tui/shell.mjs',
     'tui/launcher.mjs',

@@ -12,6 +12,8 @@ export function checkAnswer(project, input, result, options) {
   const checked =
     settleSharedWording(recording, knowledge, options, input, answer) ??
     settleReference(recording, knowledge, options, answer) ??
+    settleModalWord(recording, knowledge, options, answer) ??
+    settleWordForm(recording, knowledge, options, answer) ??
     answer;
   return checked.answers.length ? checked : { ...checked, related: closestStatements(recording) };
 }
@@ -236,6 +238,120 @@ function participantConcept(recording, id) {
   const source = recording.sources.find((item) => item.id === id.slice(0, at));
   const graph = recording.graphs.find((item) => item.id === source?.graphId);
   return graph?.nodes.find((node) => node.id === id.slice(at + 1))?.concept;
+}
+
+/** One modal word, read two ways: “May a participant withdraw?” is read as
+ * permission (permit-01), “A participant may withdraw.” as possibility
+ * (possible-01). When the question and the answering source use the same
+ * modal word, the question's modal is read as the source's. Only that word:
+ * “must” never answers “may”, and a source without the word answers nothing.
+ */
+const modalWords = {
+  may: ['permit-01', 'possible-01'],
+  might: ['permit-01', 'possible-01'],
+  can: ['possible-01', 'capable-01', 'permit-01'],
+  could: ['possible-01', 'capable-01', 'permit-01'],
+};
+const tokens = (text) =>
+  String(text)
+    .toLowerCase()
+    .match(/[\p{L}\p{N}]+/gu) ?? [];
+export function settleModalWord(recording, knowledge, options, answer) {
+  if (answer.status !== 'open') return null;
+  const query = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);
+  if (!query) return null;
+  const asked = tokens(recording.inquiry.text);
+  for (const [word, frames] of Object.entries(modalWords)) {
+    if (!asked.includes(word)) continue;
+    const modal = query.nodes.find((node) => frames.includes(node.concept));
+    if (!modal) continue;
+    for (const frame of frames.filter((frame) => frame !== modal.concept)) {
+      const graph = {
+        ...query,
+        nodes: query.nodes.map((node) => (node === modal ? { ...node, concept: frame } : node)),
+      };
+      const settled = evaluateAnswer(
+        {
+          ...recording,
+          graphs: recording.graphs.map((item) =>
+            item.id === query.id ? { ...graph, id: query.id } : item,
+          ),
+        },
+        knowledge,
+        options,
+      );
+      if (!['supported', 'conditional'].includes(settled.status)) continue;
+      const sayIt = (binding) =>
+        binding.sourceIds.some((id) =>
+          tokens(recording.sources.find((source) => source.id === id)?.text ?? '').includes(word),
+        );
+      const answers = settled.answers.filter(sayIt);
+      if (!answers.length) continue;
+      return {
+        ...settled,
+        answers: answers.map((item) => ({ ...item, readAs: 'modal-word', modalWord: word })),
+        clarifications: [],
+      };
+    }
+  }
+  return null;
+}
+
+/** One word, two concept forms: “rollback” read as a noun in one text and as
+ * roll-back-02 in another. A question concept with no occurrence in the
+ * sources is read as the one source concept of the same form (sense number
+ * and hyphens aside), and cited.
+ */
+const wordForm = (concept) => concept.replace(/-\d+$/u, '').replaceAll('-', '');
+export function settleWordForm(recording, knowledge, options, answer) {
+  if (answer.status !== 'open') return null;
+  const query = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);
+  if (!query) return null;
+  const present = new Set(
+    recording.graphs
+      .filter((graph) => graph.id !== query.id)
+      .flatMap((graph) => graph.nodes.map((node) => node.concept))
+      .filter(Boolean),
+  );
+  const forms = new Map();
+  for (const concept of present) {
+    if (!forms.has(wordForm(concept))) forms.set(wordForm(concept), new Set());
+    forms.get(wordForm(concept)).add(concept);
+  }
+  const readings = new Map();
+  for (const node of query.nodes) {
+    if (!node.concept || present.has(node.concept) || node.literal !== undefined) continue;
+    const same = [...(forms.get(wordForm(node.concept)) ?? [])];
+    if (same.length === 1 && wordForm(node.concept).length >= 4) readings.set(node.id, same[0]);
+  }
+  if (!readings.size) return null;
+  const graph = {
+    ...query,
+    nodes: query.nodes.map((node) =>
+      readings.has(node.id) ? { ...node, concept: readings.get(node.id) } : node,
+    ),
+  };
+  const settled = evaluateAnswer(
+    {
+      ...recording,
+      graphs: recording.graphs.map((item) =>
+        item.id === query.id ? { ...graph, id: query.id } : item,
+      ),
+    },
+    knowledge,
+    options,
+  );
+  if (!['supported', 'conditional'].includes(settled.status) || !settled.answers.length)
+    return null;
+  const readAs = [...readings].map(([id, concept]) => ({
+    asked: query.nodes.find((node) => node.id === id).concept,
+    read: concept,
+  }));
+  return {
+    ...settled,
+    answers: settled.answers.map((item) => ({ ...item, readAs: 'word-form', wordForms: readAs })),
+    clarifications: [],
+  };
 }
 
 /** A proposal whose source uses the question's own words, read differently,

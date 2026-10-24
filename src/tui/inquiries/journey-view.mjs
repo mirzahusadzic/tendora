@@ -1,6 +1,7 @@
 /** The question's actual visits, with local matches kept separate from answer proofs. */
 import { relationMeaning } from '../concepts/meaning.mjs';
 import { placementLabel } from '../concepts/placement-label.mjs';
+import { readingNote } from '../../recording/answer-output.mjs';
 import { questionExplanation } from './question-explanation.mjs';
 import { frameLineageRows } from '../../recording/frame.mjs';
 
@@ -346,6 +347,7 @@ export function journeySection({ project, run, input, result, recording }, place
               ],
             ]
           : []),
+        ...(readingNote(answer) ? [['Read as', readingNote(answer)]] : []),
         // A source's clause qualifies the answer; it is a condition only when
         // the source says so (“in the incident channel” is where, not if).
         ...(answer.dependsOn ?? answer.qualifications ?? []).map((text) => [

@@ -7,6 +7,8 @@ const concise = ({
   readAs,
   sharedWording,
   reference,
+  modalWord,
+  wordForms,
   polarity,
 }) => ({
   text,
@@ -16,8 +18,27 @@ const concise = ({
   ...(readAs ? { readAs } : {}),
   ...(sharedWording ? { sharedWording } : {}),
   ...(reference ? { reference } : {}),
+  ...(modalWord ? { modalWord } : {}),
+  ...(wordForms ? { wordForms } : {}),
   ...(polarity ? { polarity } : {}),
 });
+
+const words = (concept) => concept.replace(/-\d+$/u, '').replaceAll('-', ' ');
+/** How an answer read the question, for the readings named by a word or a
+ * form; null for other answers. */
+export function readingNote(answer, [open, close] = ['“', '”']) {
+  if (answer.readAs === 'modal-word')
+    return `The question and the source both say ${open}${answer.modalWord}${close}; read as in the source.`;
+  if (answer.readAs === 'word-form')
+    return answer.wordForms
+      .map(({ asked, read }) =>
+        words(asked) === words(read)
+          ? `The question's ${open}${words(asked)}${close} is read in the source's sense.`
+          : `The question's ${open}${words(asked)}${close} is read as the source's ${open}${words(read)}${close}.`,
+      )
+      .join(' ');
+  return null;
+}
 
 function supportingInterpretations(answer, rules) {
   const facts = new Map(answer.facts.map((fact) => [fact.id, fact]));

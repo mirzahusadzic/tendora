@@ -45,8 +45,13 @@ try {
     assert(c.run.answer.answers[0].derivation.tree);
     assert.equal(c.result.exploration.visits.length, 12);
   }
+  // “Returns” is read return-01 in the question and return-02 in the source:
+  // the question's sense is read in the source's sense, and cited.
+  const returns = await ui.ask(tendoraQuestions[3]);
+  assert.equal(returns.run.answer.answers[0].text, 'customer service');
+  assert.equal(returns.run.answer.answers[0].readAs, 'word-form');
   // These current acquisition/binding limitations remain explicit; no fixture repair or alias.
-  for (const q of tendoraQuestions.slice(3)) assert.equal((await ui.ask(q)).run.status, 'open', q);
+  for (const q of tendoraQuestions.slice(4)) assert.equal((await ui.ask(q)).run.status, 'open', q);
   const askCase = async (text) => {
     await ui.key('a');
     await ui.key('ALT_U');

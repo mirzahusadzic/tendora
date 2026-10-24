@@ -11,6 +11,7 @@ import {
 import { bindReferences } from './reference-bindings.mjs';
 import { graphLiterals } from '../amr/literals.mjs';
 import { conditionalReading } from '../amr/conditions.mjs';
+import { unopened } from '../amr/labels.mjs';
 import { conditionOpenings } from '../amr/condition-openings.mjs';
 import { caseSpeakerBinding } from './case-speaker.mjs';
 import { caseSources, sourceScopesFor } from './case-sources.mjs';
@@ -903,7 +904,12 @@ function evaluateReading(recording, knowledge, limits, reading) {
               break;
             start = tokens[index].start;
           }
-          const text = source.text.slice(start, tokens[at].end);
+          // A name keeps its capital; a sentence's opening capital is not the phrase's.
+          const named = inference.facts.some(
+            (fact) => fact.triple[0] === id && fact.triple[1] === ':name',
+          );
+          const spanned = source.text.slice(start, tokens[at].end);
+          const text = named ? spanned : unopened(spanned, start, source.text);
           if (text.toLowerCase() !== stem(base).toLowerCase())
             choices.push({ text, witnesses: [...new Set(witnesses)] });
         }
@@ -954,8 +960,9 @@ function evaluateReading(recording, knowledge, limits, reading) {
               matchesWord(token, words[0]) && matchesWord(tokens[i + 1] ?? '', words[1]),
           );
           if (at < 0) continue;
+          const phrase = tokens.slice(at, at + words.length).join(' ');
           choices.push({
-            text: tokens.slice(at, at + words.length).join(' '),
+            text: at === 0 ? unopened(phrase, 0, phrase) : phrase,
             witnesses: [edge.id, description.id],
           });
           break;

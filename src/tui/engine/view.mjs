@@ -2,6 +2,7 @@
 import { graphPenmanLines } from '../recordings/graph-preview.mjs';
 import { meaningConcepts } from '../../engine/concepts.mjs';
 import { assessmentMarks, relationMeaning } from '../concepts/meaning.mjs';
+import { readingNote } from '../../recording/answer-output.mjs';
 
 // Contributions retain the composed graph separately from their language acquisitions.
 // Read the saved snapshot; displaying evidence must not acquire or recompose anything.
@@ -187,6 +188,7 @@ export function inquirySections(
             ],
           ]
         : []),
+      ...(readingNote(answer) ? [['Read as', readingNote(answer)]] : []),
       ...(answer.dependsOn ?? answer.qualifications ?? []).map((q) => ['Qualification', q]),
     ]),
     ...(run?.case ? [['Case', run.case, 'input']] : []),

@@ -1,3 +1,10 @@
+/** A capital that opens the sentence belongs to the sentence, not the word:
+ * “Consent alone…” names “consent”. Acronyms (“AI”) keep their capitals;
+ * names are read from :name and never pass through here. */
+export const unopened = (label, start, text) =>
+  start === String(text).search(/[\p{L}\p{N}]/u) && /^\p{Lu}\p{Ll}/u.test(label)
+    ? label[0].toLowerCase() + label.slice(1)
+    : label;
 const determiners = new Set(
   'a an the this these those its their his her our your my every each any some no'.split(' '),
 );
@@ -15,16 +22,18 @@ export function labelReading(graph, text, checks = []) {
         .map((e) => graph.nodes.find((n) => n.id === e.to)?.literal?.replace(/^"|"$/gu, ''))
         .filter(Boolean);
     if (parts?.length) labels.set(node.id, parts.join(' '));
-    else if (lexical.has(node.id)) labels.set(node.id, lexical.get(node.id).text);
-    else {
-      const words = text.match(/[\p{L}][\p{L}'-]*/gu) ?? [];
+    else if (lexical.has(node.id)) {
+      const evidence = lexical.get(node.id);
+      labels.set(node.id, unopened(evidence.text, evidence.start, text));
+    } else {
+      const words = [...text.matchAll(/[\p{L}][\p{L}'-]*/gu)];
       const word = words.find(
-        (w) =>
+        ([w]) =>
           w.toLowerCase() === node.concept ||
           w.toLowerCase() === node.concept + 's' ||
           w.toLowerCase() + 's' === node.concept,
       );
-      if (word) labels.set(node.id, word);
+      if (word) labels.set(node.id, unopened(word[0], word.index, text));
       else {
         // A predicate's own surface word names the participant only as a
         // noun: right after a determiner (“a question”), never as a verb
@@ -40,7 +49,8 @@ export function labelReading(graph, text, checks = []) {
           .filter((e) => e.to === node.id && /^:ARG[01]$/u.test(e.role))
           .map((e) => lexical.get(e.from))
           .filter((e) => e && (e.method !== 'surface' || determined(e)));
-        if (descriptors.length === 1) labels.set(node.id, descriptors[0].text);
+        if (descriptors.length === 1)
+          labels.set(node.id, unopened(descriptors[0].text, descriptors[0].start, text));
       }
     }
   }
@@ -86,7 +96,7 @@ export function answerLabels(graph, text, checks = []) {
     ...Object.fromEntries(
       graph.nodes
         .filter((n) => predicate(n) && attested.has(n.id))
-        .map((n) => [n.id, attested.get(n.id).text]),
+        .map((n) => [n.id, unopened(attested.get(n.id).text, attested.get(n.id).start, text)]),
     ),
     ...abstractLabels(graph, text, checks),
   };

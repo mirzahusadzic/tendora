@@ -8,6 +8,7 @@ import { selectCase, authorCase } from '../project/inquiries/investigation.mjs';
 import { resolveInquiryPlacement } from '../project/inquiries/scope.mjs';
 import { inputFromProject } from '../engine/input.mjs';
 import { runEngine } from '../engine/run.mjs';
+import { readingNote } from '../recording/answer-output.mjs';
 import { deleteEngineRuns } from '../project/inquiries/delete-engine-runs.mjs';
 import {
   compactProjectStorage,
@@ -72,6 +73,7 @@ try {
           lines.push(
             `  The question and a source both say "${answer.sharedWording.join('", "')}"; read as in the source.`,
           );
+        if (readingNote(answer, ['"', '"'])) lines.push('  ' + readingNote(answer, ['"', '"']));
         for (const detail of answer.dependsOn ?? answer.qualifications ?? [])
           lines.push('  ' + detail);
         if (values.explain) {
