@@ -112,7 +112,10 @@ async function runParallel(selected) {
       child.stderr.on('data', (bytes) => (err += bytes));
       child.on('close', (code) => {
         const seconds = ((performance.now() - began) / 1000).toFixed(1);
-        if (code === 0) (times[path] = Number(seconds)), passed++;
+        if (code === 0) {
+          times[path] = Number(seconds);
+          passed++;
+        }
         console.error(`${code === 0 ? 'Passed' : 'FAILED'} ${path} (${seconds} s)`);
         process.stdout.write(out);
         if (code !== 0) {
