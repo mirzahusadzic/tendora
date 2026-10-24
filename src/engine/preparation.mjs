@@ -70,15 +70,23 @@ export async function prepareInquiry(
     const { audit, source } = await propbankAuditor();
     const items = [];
     let predicates = 0;
+    // A text with the same reading is audited once, however many roles repeat it.
+    const audited = new Map();
     for (const record of auditable) {
       signal?.throwIfAborted();
-      let result = audit(record.text, record.graph);
-      // A value the text settles is repaired here; the acquisition stays as read.
-      const repaired = repairReading(record.text, record.graph, result.checks);
-      if (repaired.repairs.length) {
-        record.graph = validateGraph(repaired.graph);
-        record.repairs = repaired.repairs;
-        result = audit(record.text, record.graph);
+      const key = `${record.text}\u0000${JSON.stringify(record.graph)}`;
+      if (!audited.has(key)) {
+        let result = audit(record.text, record.graph);
+        // A value the text settles is repaired here; the acquisition stays as read.
+        const repaired = repairReading(record.text, record.graph, result.checks);
+        const graph = repaired.repairs.length ? validateGraph(repaired.graph) : null;
+        if (graph) result = audit(record.text, graph);
+        audited.set(key, { result, graph, repairs: graph ? repaired.repairs : null });
+      }
+      const { result, graph, repairs } = audited.get(key);
+      if (graph) {
+        record.graph = graph;
+        record.repairs = repairs;
       }
       record.lexicalAudit = result;
       predicates += result.checks.length;

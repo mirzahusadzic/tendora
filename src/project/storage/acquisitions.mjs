@@ -67,6 +67,12 @@ export async function retainAcquisitions(project, captures, { origin = null } = 
 export async function acquiredTexts(project, texts) {
   const index = await readAcquisitions(project);
   if (!index) return null;
+  // A statement repeated under many roles is read once.
+  const reads = new Map();
+  const read = (ref) => {
+    if (!reads.has(ref)) reads.set(ref, readObject(root(project), 'acquisitions/objects', ref));
+    return reads.get(ref);
+  };
   return Promise.all(
     texts.map(async (text) => {
       const key = sentenceRevision(text),
@@ -78,7 +84,7 @@ export async function acquiredTexts(project, texts) {
           status: 'missing',
           reason: 'This exact text has no retained AMR. No model acquisition was attempted.',
         };
-      const capture = await readObject(root(project), 'acquisitions/objects', ref);
+      const capture = await read(ref);
       if (capture.text !== text || capture.textDigest !== key)
         throw new Error('Retained AMR text or revision mismatch');
       return { ...capture, ref, status: 'retained' };
