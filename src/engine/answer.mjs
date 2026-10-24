@@ -1,5 +1,5 @@
 /** Check normalized source relations against the complete question, without acquisition. */
-import { evaluateAnswer } from '../recording/answers.mjs';
+import { answerBase, evaluateAnswer } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { buildClarifications } from './clarify.mjs';
 import { answerLabels } from '../amr/labels.mjs';
@@ -7,6 +7,16 @@ import { answerLabels } from '../amr/labels.mjs';
 export function checkAnswer(project, input, result, options) {
   const recording = answerRecording(project, input, result);
   const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
+  // The question settled another way (a reference, a modal word, a word form)
+  // is checked against the same sources, and the question is not part of
+  // their material: one base serves every reading, as a caller's supplied
+  // base would. (Where a reading's interpretation is material, or another
+  // knowledge is checked, a base is made for it.)
+  if (!options?.supplied) {
+    let base = null;
+    const supplied = { knowledge, of: () => (base ??= answerBase(recording, knowledge, options)) };
+    options = { ...options, supplied };
+  }
   const answer = evaluateAnswer(recording, knowledge, options);
   answer.clarifications = buildClarifications(project, input, result, answer);
   const checked =
