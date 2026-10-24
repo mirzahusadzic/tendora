@@ -43,6 +43,17 @@ export function conditionalReading(
   if (graph.edges.some((edge) => edge.role === ':concession'))
     return fail('Concessive conditions require an explicit interpretation.');
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  // “Only when X, Y” says Y requires X, not that X brings Y about: read as a
+  // sufficient condition it would answer Yes wherever X holds.
+  if (
+    graph.edges.some(
+      (edge) =>
+        edge.from === conditions[0].to &&
+        edge.role === ':mod' &&
+        nodes.get(edge.to)?.concept === 'only',
+    )
+  )
+    return fail('A necessary condition (only when, only if) requires an explicit interpretation.');
   if (graph.nodes.some((node) => node.concept === 'amr-unknown'))
     return fail('A question cannot supply a conditional assertion.');
   const condition = conditions[0],

@@ -82,6 +82,18 @@ const modify = (g, fn) => {
   fn(copy);
   return copy;
 };
+// “Only when a ticket concerns frequent failures” is necessary, not sufficient:
+// the same evidence does not make the conclusion hold.
+const onlyWhen = modify(policy, (g) => {
+  g.nodes.push({ id: 'only', concept: 'only' });
+  g.edges.push({ id: 'only', from: 'c', role: ':mod', to: 'only' });
+});
+assert.match(conditionalReading(onlyWhen).reason, /necessary condition/u);
+assert.equal(
+  evaluateAnswer(record([onlyWhen, evidence])).status,
+  'open',
+  'A necessary condition never answers as a sufficient one',
+);
 const incomplete = modify(evidence, (g) => {
   g.nodes = g.nodes.filter((n) => n.id !== 'n');
   g.edges = g.edges.filter((e) => e.from !== 'n');
