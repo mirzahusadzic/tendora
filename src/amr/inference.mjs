@@ -310,8 +310,19 @@ export function inferRelations(
   return { facts: [...facts.values()], complete: false, rounds };
 }
 
+// Tracing runs once per match against one fact array: index it once, not per
+// trace, or answering costs matches × facts. A grown array is indexed again.
+const traceIndexes = new WeakMap();
+function factsById(facts) {
+  const cached = traceIndexes.get(facts);
+  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached.byId;
+  const byId = new Map(facts.map((fact) => [fact.id, fact]));
+  traceIndexes.set(facts, { byId, length: facts.length, last: facts.at(-1) });
+  return byId;
+}
+
 export function traceRelations(facts, witnesses) {
-  const byId = new Map(facts.map((fact) => [fact.id, fact])),
+  const byId = factsById(facts),
     visited = new Set(),
     sourceIds = new Set(),
     ruleIds = new Set(),
