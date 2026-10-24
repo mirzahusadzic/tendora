@@ -205,6 +205,30 @@ try {
   );
   assert.deepEqual(recased.frontier, [], 'An earlier check of the same case is superseded');
   assert.equal(recased.consequences.filter((visit) => visit.kind === 'question').length, 1);
+  // A supported part of an open question only partly rests on its statement.
+  const partly = recoil(
+    {
+      data,
+      digest,
+      runs: [
+        {
+          ...run('Who inspects and repairs the lift?', root, [], { sources: [lift] }),
+          answer: {
+            answers: [],
+            candidates: [],
+            sources: [lift],
+            partial: { parts: [{ sourceIds: [lift.id] }] },
+          },
+        },
+      ],
+      readings,
+    },
+    { kind: 'statement', text: inspects },
+  );
+  assert.deepEqual(
+    partly.consequences.filter((visit) => visit.kind === 'question').map((visit) => visit.relation),
+    ['a supported part rests on'],
+  );
   const bounded = walk({ kind: 'statement', text: inspects }, { limit: 3 });
   assert(bounded.origins.length + bounded.consequences.length <= 2);
   assert(

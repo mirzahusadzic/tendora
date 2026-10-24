@@ -27,23 +27,24 @@ export const recoilFrontier = {
   bound: 'The walk stopped at its bound before visiting this.',
 };
 
-export async function projectRecoil(project, locus, options) {
+/** What recoil reads, loaded once for any number of walks at one revision. */
+export async function recoilContext(project) {
   const [runs, investigations, acquisitions] = await Promise.all([
     listEngineRuns(project),
     listInvestigations(project),
     readAcquisitions(project),
   ]);
-  return recoil(
-    {
-      data: project.data,
-      digest: project.digest,
-      runs,
-      asks: investigations.flatMap(({ data }) => data.asks),
-      readings: acquisitions ? new Set(Object.keys(acquisitions.entries)) : null,
-    },
-    locus,
-    options,
-  );
+  return {
+    data: project.data,
+    digest: project.digest,
+    runs,
+    asks: investigations.flatMap(({ data }) => data.asks),
+    readings: acquisitions ? new Set(Object.keys(acquisitions.entries)) : null,
+  };
+}
+
+export async function projectRecoil(project, locus, options) {
+  return recoil(await recoilContext(project), locus, options);
 }
 
 /** `readings`, when given, holds the text revisions that have a retained reading. */
@@ -162,7 +163,17 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
     for (const [key, links] of citations)
       for (const link of links)
         if (link.kind === 'statement' && link.id === statementId && link.current)
-          found.push({ question: key, relation: 'rests on' });
+          // An answer rests on it; a possible answer or a supported part only
+          // partly does, and says so.
+          found.push({
+            question: key,
+            relation:
+              link.relation === 'possible answer'
+                ? 'a possible answer rests on'
+                : link.relation === 'supported part'
+                  ? 'a supported part rests on'
+                  : 'rests on',
+          });
         else if (link.kind === 'rule' && ruleOrigins(link.id)?.includes(statementId))
           found.push({ question: key, relation: 'rests on a rule read from' });
     return found;
