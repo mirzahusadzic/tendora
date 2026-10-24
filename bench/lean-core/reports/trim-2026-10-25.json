@@ -1,0 +1,348 @@
+{
+  "profile": "lean-core-trim-bench-v1",
+  "at": "2026-10-24T22:39:42.253Z",
+  "machine": {
+    "cpu": "Apple M5 Pro",
+    "threads": 18,
+    "os": "25.6.0"
+  },
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)",
+  "swiftFlags": [
+    "-O",
+    "-enforce-exclusivity=unchecked",
+    "-swift-version 5"
+  ],
+  "node": "v25.9.0",
+  "rounds": 3,
+  "captures": [
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 16,
+      "replicas": 1,
+      "facts": 140960,
+      "engineFacts": 140960,
+      "terms": 35323,
+      "engineTerms": 35323,
+      "occurrenceTerms": 30352,
+      "rules": 208,
+      "patterns": 1280,
+      "columnBytes": 573440,
+      "page": 16384,
+      "baseMs": 932,
+      "rounds": 2
+    },
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 64,
+      "replicas": 1,
+      "facts": 563840,
+      "engineFacts": 563840,
+      "terms": 138427,
+      "engineTerms": 138427,
+      "occurrenceTerms": 121408,
+      "rules": 832,
+      "patterns": 5120,
+      "columnBytes": 2260992,
+      "page": 16384,
+      "baseMs": 5743,
+      "rounds": 2
+    },
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 64,
+      "replicas": 16,
+      "facts": 9021440,
+      "engineFacts": 563840,
+      "terms": 1959547,
+      "engineTerms": 138427,
+      "occurrenceTerms": 121408,
+      "rules": 832,
+      "patterns": 5120,
+      "columnBytes": 36093952,
+      "page": 16384,
+      "baseMs": 5748,
+      "rounds": 2
+    }
+  ],
+  "summary": [
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "js-fast",
+      "kept": 448,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 7.7,
+        "p10": 2.93,
+        "p90": 8.87,
+        "min": 2.82,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "swift-cpu-1",
+      "kept": 448,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.61,
+        "p10": 0.58,
+        "p90": 0.96,
+        "min": 0.57,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "swift-cpu-18",
+      "kept": 448,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.33,
+        "p10": 0.26,
+        "p90": 0.54,
+        "min": 0.24,
+        "runs": 63
+      }
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "metal-index",
+      "kept": 448,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.69,
+        "p10": 0.25,
+        "p90": 0.81,
+        "min": 0.24,
+        "runs": 93
+      },
+      "gpuMs": {
+        "median": 0.498,
+        "p10": 0.108,
+        "p90": 0.506,
+        "min": 0.107,
+        "runs": 93
+      },
+      "setupMs": 57.64,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "metal-dense",
+      "kept": 448,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.91,
+        "p10": 0.52,
+        "p90": 0.99,
+        "min": 0.5,
+        "runs": 45
+      },
+      "gpuMs": {
+        "median": 0.702,
+        "p10": 0.359,
+        "p90": 0.71,
+        "min": 0.358,
+        "runs": 45
+      },
+      "setupMs": 50.58,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "js-fast",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 27.1,
+        "p10": 26.46,
+        "p90": 39.49,
+        "min": 26.3,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "swift-cpu-1",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 6.28,
+        "p10": 6.12,
+        "p90": 6.43,
+        "min": 6,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "swift-cpu-18",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 1.13,
+        "p10": 1.09,
+        "p90": 1.17,
+        "min": 1.08,
+        "runs": 63
+      }
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "metal-index",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.76,
+        "p10": 0.65,
+        "p90": 1.13,
+        "min": 0.63,
+        "runs": 93
+      },
+      "gpuMs": {
+        "median": 0.429,
+        "p10": 0.423,
+        "p90": 0.822,
+        "min": 0.42,
+        "runs": 93
+      },
+      "setupMs": 55.92,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "metal-dense",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 2.09,
+        "p10": 2.04,
+        "p90": 2.15,
+        "min": 2.02,
+        "runs": 45
+      },
+      "gpuMs": {
+        "median": 1.824,
+        "p10": 1.815,
+        "p90": 1.835,
+        "min": 1.806,
+        "runs": 45
+      },
+      "setupMs": 55.81,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "js-fast",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 934.87,
+        "p10": 910.98,
+        "p90": 1032.46,
+        "min": 875.91,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "swift-cpu-1",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 191.35,
+        "p10": 187.73,
+        "p90": 200.64,
+        "min": 186.42,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "swift-cpu-18",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 26.45,
+        "p10": 25.65,
+        "p90": 27.19,
+        "min": 25.33,
+        "runs": 63
+      }
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "metal-index",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 11.87,
+        "p10": 11.81,
+        "p90": 12.02,
+        "min": 11.76,
+        "runs": 93
+      },
+      "gpuMs": {
+        "median": 11.573,
+        "p10": 11.54,
+        "p90": 11.767,
+        "min": 11.494,
+        "runs": 93
+      },
+      "setupMs": 93.76,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "metal-dense",
+      "kept": 1792,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 33.22,
+        "p10": 33.06,
+        "p90": 33.39,
+        "min": 32.94,
+        "runs": 45
+      },
+      "gpuMs": {
+        "median": 32.905,
+        "p10": 32.784,
+        "p90": 33.059,
+        "min": 32.66,
+        "runs": 45
+      },
+      "setupMs": 92.03,
+      "pipelineFromArchive": true
+    }
+  ]
+}
