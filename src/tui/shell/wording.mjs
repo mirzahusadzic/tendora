@@ -4,6 +4,14 @@ import { reviseGraph } from '../../amr/revision.mjs';
 
 const escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 /** Name the blocked operation and its exact dependencies in Findings and previews. */
+/** A selected case in a few words: its label, else its text or its sources'
+ * texts. A check saved before selections were kept names its case as text. */
+export function caseName(selection) {
+  if (!selection || typeof selection !== 'object') return selection ? String(selection) : '';
+  const texts = (selection.sources ?? []).map((source) => source.text).filter(Boolean);
+  return selection.label ?? selection.text ?? (texts.length ? texts.join(' ') : 'Selected case');
+}
+
 export function unavailableReadings(items) {
   return items.flatMap((item) =>
     item.kind === 'missing source'

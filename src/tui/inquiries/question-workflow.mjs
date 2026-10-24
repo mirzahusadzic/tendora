@@ -22,6 +22,7 @@ import { readSavedRecording } from '../../project/storage/recordings.mjs';
 import { inputFromProject } from '../../engine/input.mjs';
 import { retainPartialContribution } from '../../engine/partial.mjs';
 import { partialIdentity } from '../../amr/partial-coverage.mjs';
+import { caseName } from '../shell/wording.mjs';
 import { backgroundEngineStorage } from '../../project/inquiries/background.mjs';
 
 export function createQuestionWorkflow({
@@ -114,9 +115,7 @@ export function createQuestionWorkflow({
     questionProject = project.data.id;
     questions = grouped([...items.values()]).map((item) => ({
       ...item,
-      label:
-        item.question +
-        (item.caseSelection ? ` / Case: ${item.caseSelection.label ?? item.caseSelection}` : ''),
+      label: item.question + (item.caseSelection ? ` / Case: ${caseName(item.caseSelection)}` : ''),
       scope: project.data.placements.some((p) => p.id === item.scopePlacementId)
         ? placementLabel(project.data, item.scopePlacementId)
         : 'Removed role',
@@ -411,9 +410,7 @@ export function createQuestionWorkflow({
         rows: [
           ['Question', item.question, 'input'],
           ['Asked at', item.scope],
-          ...(item.caseSelection
-            ? [['Case', item.caseSelection.label ?? String(item.caseSelection)]]
-            : []),
+          ...(item.caseSelection ? [['Case', caseName(item.caseSelection)]] : []),
           run
             ? ['Last check', assessedState[run.status] ?? run.status]
             : ['Draft', 'Saved; not checked yet.'],

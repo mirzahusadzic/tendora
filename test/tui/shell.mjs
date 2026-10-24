@@ -27,7 +27,7 @@ import { createRecordingContent } from '../../src/tui/recordings/recording-conte
 import { createText } from '../../src/tui/shell/text.mjs';
 import { createContent } from '../../src/tui/shell/content.mjs';
 import { engineSections } from '../../src/tui/engine/view.mjs';
-import { unavailableReadings } from '../../src/tui/shell/wording.mjs';
+import { caseName, unavailableReadings } from '../../src/tui/shell/wording.mjs';
 import { tableWidths } from '../../src/tui/shell/layout.mjs';
 import { detailTable } from '../../src/tui/shell/tree.mjs';
 import { createProject, saveProject, openProject } from '../../src/project/authoring/project.mjs';
@@ -174,6 +174,15 @@ class TestTerminal extends EventEmitter {
   );
 }
 
+// A case is named by its label, else its text or its sources' texts; a check
+// saved before selections were kept names it as text. Never "[object Object]".
+assert.equal(caseName({ label: 'Inspection', text: 'An inspection is due.' }), 'Inspection');
+assert.equal(
+  caseName({ placementId: 'p', sources: [{ text: 'An inspection is due.' }] }),
+  'An inspection is due.',
+);
+assert.equal(caseName({ placementId: 'p' }), 'Selected case');
+assert.equal(caseName('An inspection is due.'), 'An inspection is due.');
 const directory = await mkdtemp(join(tmpdir(), 'tendora-tui-'));
 const config = {
   projectsHome: directory,

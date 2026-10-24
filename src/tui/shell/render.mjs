@@ -15,6 +15,7 @@ import {
 import { pageLabels, readingDevelopment, hasRecordingProject } from './state.mjs';
 import { currentRun } from '../inquiries/inquiry-groups.mjs';
 import { placementLabel } from '../concepts/placement-label.mjs';
+import { caseName } from './wording.mjs';
 
 /** DEC 2026 prevents the terminal from displaying an incomplete frame, even
  * when one write is split across PTY reads. Unsupported private modes are ignored.
@@ -588,7 +589,7 @@ export function createRenderer({
           ...wrap(
             {
               ...row(
-                `   ↳ ${item.scope}${item.caseSelection ? ` / ${item.caseSelection.label ?? item.caseSelection}` : ''}`,
+                `   ↳ ${item.scope}${item.caseSelection ? ` / ${caseName(item.caseSelection)}` : ''}`,
                 'muted',
               ),
               hangingIndent: 5,
