@@ -131,7 +131,28 @@ try {
   // A conditional statement asked without its condition is marked, not open.
   const [crew] = clozeProbes(conditional);
   assert.equal(crew.conditional, true);
+  assert(
+    !crew.graph.nodes.some((node) => node.concept === 'sound-01'),
+    'The condition is the case',
+  );
+  assert.equal(crew.case.top, 's');
+  assert.equal(
+    check(crew),
+    'recovered',
+    'Asked with its condition as the case, the rule read from the statement answers',
+  );
   assert.equal(check(crew, [conditional.id]), 'conditional');
+  // Only when the alarm sounds: necessary, so nothing is expected back from it.
+  const onlyWhen = structuredClone(conditional);
+  onlyWhen.graph.nodes.push({ id: 'o', concept: 'only' });
+  onlyWhen.graph.edges.push({ id: 'eo', from: 's', role: ':mod', to: 'o' });
+  const [necessary] = clozeProbes(onlyWhen);
+  assert.equal(necessary.necessary, true);
+  assert.equal(
+    check(necessary, [conditional.id]),
+    'necessary',
+    'A necessary condition is not read as sufficient',
+  );
   console.log(
     'ok cloze probes: participants and truth asked back from the reading; recovered, elsewhere, otherwise, open and conflict',
   );
