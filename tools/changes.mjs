@@ -138,8 +138,14 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const targets = formatTargets(changedFiles({ since }));
   if (!targets.length) console.log('No changed files to check.');
   else
-    execFileSync(join(root, 'node_modules/.bin/prettier'), ['--check', ...targets], {
-      cwd: root,
-      stdio: 'inherit',
-    });
+    try {
+      execFileSync(join(root, 'node_modules/.bin/prettier'), ['--check', ...targets], {
+        cwd: root,
+        stdio: 'inherit',
+      });
+    } catch (error) {
+      // Prettier has already named the files; its status is the answer.
+      if (typeof error.status !== 'number') throw error;
+      process.exitCode = error.status;
+    }
 }

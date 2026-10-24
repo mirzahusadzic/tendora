@@ -750,6 +750,26 @@ function evaluateReading(recording, knowledge, limits, reading) {
         ),
       ].sort(),
     );
+  // The clauses the sources' main clauses reach, and which nodes are
+  // predicates, depend on the material alone: found once, when first needed.
+  let clausal = null;
+  const sourceClauses = () => {
+    if (clausal) return clausal;
+    const reaches = new Map(),
+      predicates = new Set();
+    for (const { triple } of material.facts)
+      if (triple[1] === ':instance') {
+        if (/-\d+$/u.test(triple[2]) && !/-91$/u.test(triple[2])) predicates.add(triple[0]);
+      } else if (triple[1].startsWith(':')) {
+        if (!reaches.has(triple[0])) reaches.set(triple[0], []);
+        reaches.get(triple[0]).push(triple[2]);
+      }
+    const clauses = new Set(
+      material.facts.filter((fact) => fact.triple[1] === '@root').map((fact) => fact.triple[2]),
+    );
+    for (const id of clauses) for (const to of reaches.get(id) ?? []) clauses.add(to);
+    return (clausal = { clauses, predicates });
+  };
   for (const match of matching.matches) {
     if (conflictingQuery) break;
     if (
@@ -1114,21 +1134,8 @@ function evaluateReading(recording, knowledge, limits, reading) {
     const matched = new Set(assigned);
     // Actions the source's main clause reaches forward. A predicate that only
     // describes a participant (the release manager) is not one.
-    const clauses = new Set(
-      material.facts.filter((fact) => fact.triple[1] === '@root').map((fact) => fact.triple[2]),
-    );
-    for (const id of clauses)
-      for (const { triple } of material.facts)
-        if (triple[0] === id && triple[1].startsWith(':') && triple[1] !== ':instance')
-          clauses.add(triple[2]);
-    const predicate = (id) =>
-      material.facts.some(
-        (fact) =>
-          fact.triple[0] === id &&
-          fact.triple[1] === ':instance' &&
-          /-\d+$/u.test(fact.triple[2]) &&
-          !/-91$/u.test(fact.triple[2]),
-      );
+    const { clauses, predicates } = sourceClauses();
+    const predicate = (id) => predicates.has(id);
     const qualifies = ({ triple: [from, role] }) =>
       clauses.has(from) &&
       !answerDescription.has(from) &&

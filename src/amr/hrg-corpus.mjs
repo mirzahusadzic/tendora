@@ -6,11 +6,20 @@
 import { extractHrg, boundaryValences } from './hrg-decomposition.mjs';
 export const grammarProfile = 'amr-ordered-hrg-v1';
 const attribute = (role) => !role.startsWith(':') || role === ':instance';
+// localeCompare's order, without building a collator for every comparison.
+const collate = new Intl.Collator().compare;
+const sameList = (a, b) => a.length === b.length && a.every((item, i) => item === b[i]);
+// A retained grammar's terminal labels are parsed once.
+const labels = new WeakMap();
+const terminalLabel = (terminal) => {
+  if (!labels.has(terminal)) labels.set(terminal, JSON.parse(terminal.label));
+  return labels.get(terminal);
+};
 export const factKey = (facts) =>
   JSON.stringify(
     facts
       .map((f) => [f.id, f.triple, f.ruleId ?? f.sourceIds?.[0] ?? 'relations'])
-      .sort(([a], [b]) => a.localeCompare(b)),
+      .sort(([a], [b]) => collate(a, b)),
   );
 export function compileCorpus(facts, retained = null, signature = factKey(facts)) {
   if (retained?.profile === grammarProfile && retained.signature === signature)
@@ -32,8 +41,8 @@ export function compileCorpus(facts, retained = null, signature = factKey(facts)
     return symbols.get(key);
   };
   const widths = [];
-  for (const [group, entries] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
-    entries.sort((a, b) => a.id.localeCompare(b.id));
+  for (const [group, entries] of [...groups].sort(([a], [b]) => collate(a, b))) {
+    entries.sort((a, b) => collate(a.id, b.id));
     const terminals = entries.map((fact) => {
       const [from, role, to] = fact.triple;
       return {
@@ -122,22 +131,19 @@ export function grammarFacts(grammar, facts) {
     visited.add(id);
     if (expectedSymbol !== null && rule.symbol !== expectedSymbol)
       throw new Error('HRG nonterminal mismatch');
-    if (
-      expectedPorts &&
-      JSON.stringify(instance.vertices.slice(0, rule.rank)) !== JSON.stringify(expectedPorts)
-    )
+    if (expectedPorts && !sameList(instance.vertices.slice(0, rule.rank), expectedPorts))
       throw new Error('HRG attachment mismatch');
     const begin = emitted.length;
     for (let i = 0; i < rule.terminals.length; i++) {
       const t = rule.terminals[i],
-        [role, value] = JSON.parse(t.label);
+        [role, value] = terminalLabel(t);
       const triple = [
         instance.vertices[t.ports[0]],
         role,
         attribute(role) ? value.value : instance.vertices[t.ports[1]],
       ];
       const record = records.get(instance.terminals[i]);
-      if (!record || JSON.stringify(record.triple) !== JSON.stringify(triple))
+      if (!record || !sameList(record.triple, triple))
         throw new Error('HRG terminal does not match its source occurrence');
       emitted.push({ ...record, triple, grammar: { rule: rule.id, instance: id, terminal: i } });
     }

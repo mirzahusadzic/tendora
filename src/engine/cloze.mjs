@@ -221,7 +221,12 @@ export function checkProbe(project, input, result, probe, { withhold = [], ...op
     options.knowledge ?? knowledgeSnapshot(project.data),
     options,
   );
-  return { ...outcome(probe, answer), status: answer.status };
+  return {
+    ...outcome(probe, answer),
+    status: answer.status,
+    // Probes of one check share its corpus; the next probe reuses its grammar.
+    grammarCache: { profile: answer.grammar.profile, grammars: answer.grammar.corpora },
+  };
 }
 
 /** recovered: the statement itself supplies the blank; also elsewhere: other
