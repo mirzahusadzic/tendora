@@ -576,6 +576,64 @@ export function withheldSupport(graph, withheld) {
   return holds;
 }
 
+/** The level from which each fact and proof holds, when each source is
+ * available from a level (`levelOf(sourceId)`, undefined for never): a proof
+ * holds from the latest level of its sources and premises, a fact from its
+ * earliest proof. What holds at level k is what holds without the sources
+ * after k, for every k at once, so a role order's checks need no check
+ * before them. Settled in increasing level, as shortest paths are (each level
+ * a bucket); a cyclic proof never comes earlier than the facts it rests on.
+ * NONE for never. */
+export function supportLevels(graph, levelOf) {
+  const proofs = graph.proofFact.length;
+  const sourceLevels = new Map();
+  const sourceLevel = (n) => {
+    let level = sourceLevels.get(n);
+    if (level === undefined) {
+      const found = levelOf(graph.sourceIds[n]);
+      level = Number.isInteger(found) && found >= 0 ? found : NONE;
+      sourceLevels.set(n, level);
+    }
+    return level;
+  };
+  const facts = new Uint32Array(graph.length).fill(NONE),
+    proofLevels = new Uint32Array(proofs).fill(NONE),
+    reach = new Uint32Array(proofs),
+    missing = new Uint32Array(proofs);
+  const buckets = [];
+  const ready = (p) => {
+    (buckets[reach[p]] ??= []).push(p);
+  };
+  for (let p = 0; p < proofs; p++) {
+    let level = 0;
+    for (let i = graph.sourceStart[p]; i < graph.sourceStart[p + 1]; i++)
+      level = Math.max(level, sourceLevel(graph.sourcePool[i]));
+    reach[p] = graph.broken[p] ? NONE : level;
+    missing[p] = graph.premiseStart[p + 1] - graph.premiseStart[p];
+    if (reach[p] !== NONE && !missing[p]) ready(p);
+  }
+  for (let level = 0; level < buckets.length; level++) {
+    const bucket = buckets[level];
+    if (!bucket) continue;
+    // A bucket grows while it is read: a premise settled here readies proofs
+    // at this level.
+    for (let i = 0; i < bucket.length; i++) {
+      const p = bucket[i];
+      proofLevels[p] = level;
+      const f = graph.proofFact[p];
+      if (facts[f] !== NONE) continue;
+      facts[f] = level;
+      for (let j = graph.premiseOfStart[f]; j < graph.premiseOfStart[f + 1]; j++) {
+        const q = graph.premiseOf[j];
+        if (reach[q] === NONE) continue;
+        reach[q] = Math.max(reach[q], level);
+        if (--missing[q] === 0) ready(q);
+      }
+    }
+  }
+  return { facts, proofs: proofLevels };
+}
+
 /** For every fact, the sources each of its proofs rests on, directly or
  * through its premises: the sources without which it would not hold. The
  * greatest fixpoint, from every source: a cyclic proof never removes a source

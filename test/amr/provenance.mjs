@@ -7,6 +7,7 @@ import {
   inferRelations,
   necessarySources,
   proofGraph,
+  supportLevels,
   withheldSupport,
 } from '../../src/amr/inference.mjs';
 import { FactStore, storePrefix } from '../../src/amr/fact-store.mjs';
@@ -77,6 +78,30 @@ for (const source of sources) {
     assert.equal(!necessity.of(f).includes(source), truth.has(id), `${id} needs ${source}?`);
   }
 }
+// Levels: for a source order, what holds at level k is what holds without the
+// sources after k, and a proof is usable from the level its sources and
+// premises allow. Every prefix of several orders, and sources never given.
+const orders = [sources, [...sources].reverse(), [...sources.slice(1), sources[0]]];
+for (const order of orders)
+  for (const never of [null, order[0]]) {
+    const at = new Map(order.map((source, i) => [source, i]));
+    if (never) at.delete(never);
+    const levels = supportLevels(graph, (source) => at.get(source));
+    for (let k = 0; k < order.length; k++) {
+      const withheld = sources.filter((source) => !(at.get(source) <= k));
+      const holds = withheldSupport(graph, withheld);
+      for (let f = 0; f < graph.length; f++)
+        assert.equal(levels.facts[f] <= k, Boolean(holds[f]), `${graph.facts[f].id} at ${k}`);
+      for (let p = 0; p < graph.proofFact.length; p++) {
+        let usable = !graph.broken[p];
+        for (let i = graph.sourceStart[p]; i < graph.sourceStart[p + 1]; i++)
+          usable &&= !withheld.includes(graph.sourceIds[graph.sourcePool[i]]);
+        for (let i = graph.premiseStart[p]; i < graph.premiseStart[p + 1]; i++)
+          usable &&= Boolean(holds[graph.premises[i]]);
+        assert.equal(levels.proofs[p] <= k, usable, `proof ${p} at ${k}`);
+      }
+    }
+  }
 // Read from inference's store or from the objects, the graph is the same.
 const objects = proofGraph([...full.facts]);
 assert.notEqual(objects, graph);
