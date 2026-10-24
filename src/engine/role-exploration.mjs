@@ -5,6 +5,11 @@ import { answerBase, withheldBase } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 
 export const roleExplorationProfile = 'ranked-role-exploration-v1';
+// Questions of one scope and case at one revision read the same sources: the
+// base of all of them is kept for the next question (the latest two), keyed by
+// the revision (which carries the knowledge) and every source's reading.
+const fullBases = new Map();
+const keepBases = 2;
 export async function exploreRoles(
   project,
   input,
@@ -45,15 +50,30 @@ export async function exploreRoles(
   const supplied = {
     knowledge,
     of: (recording) => {
-      full ??= answerBase(
-        answerRecording(
-          project,
-          { ...input, sources: allSources },
-          { ...result, inputs: [...allSources, ...context] },
-        ),
-        knowledge,
-        { grammarCache },
-      );
+      if (!full) {
+        const key = JSON.stringify([
+          project.digest,
+          input.scopePlacementId,
+          context
+            .filter((item) => item.kind !== 'question')
+            .map((item) => [item.id, item.revision ?? null, item.text, item.penman ?? null]),
+          allSources.map((item) => [item.id, item.revision ?? null, item.penman ?? null]),
+        ]);
+        full = fullBases.get(key);
+        if (!full) {
+          full = answerBase(
+            answerRecording(
+              project,
+              { ...input, sources: allSources },
+              { ...result, inputs: [...allSources, ...context] },
+            ),
+            knowledge,
+            { grammarCache },
+          );
+          fullBases.set(key, full);
+          while (fullBases.size > keepBases) fullBases.delete(fullBases.keys().next().value);
+        }
+      }
       fullIds ??= new Set(full.recording.sources.map((source) => source.id));
       const present = new Set(recording.sources.map((source) => source.id));
       const withheld = full.material.sources
