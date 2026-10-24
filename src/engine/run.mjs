@@ -64,6 +64,9 @@ async function executeEngineRun(
     input,
     signal,
     actor = 'participant',
+    // The interface the run came through: the workbench, the CLI, or a library
+    // call (a script, a test, a tool). A receipt, not a credential.
+    via = 'library',
     onUpdate = () => {},
     clients = {},
     bounds,
@@ -94,6 +97,7 @@ async function executeEngineRun(
     profile: semanticChainProfile,
     startedAt: new Date().toISOString(),
     actor,
+    via,
     purpose,
     status: 'running',
     ask: input.question.ask,

@@ -11,7 +11,7 @@ import {
   spareWorker,
   stopChild,
 } from '../../src/project/inquiries/background.mjs';
-import { activeEngineRunIds } from '../../src/project/storage/engine-runs.mjs';
+import { activeEngineRunIds, readEngineRun } from '../../src/project/storage/engine-runs.mjs';
 import { journeyWorkbench } from '../support/journey-workbench.mjs';
 
 await mkdir('tmp', { recursive: true });
@@ -134,6 +134,11 @@ const answer = scoped.recording.reasoning.answer.answers[0];
 assert.equal(answer.text, 'technician');
 assert(answer.derivation.tree);
 assert.equal(answer.sourceIds.length, 1);
+assert.equal(
+  (await readEngineRun(project, scoped.recording.reasoning.runId)).via,
+  'workbench',
+  "The workbench's question process records its checks as the workbench's",
+);
 // The question process stays warm for the next question.
 const warm = spareWorker();
 assert(warm, 'A finished question leaves its process idle for the next');

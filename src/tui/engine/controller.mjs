@@ -286,6 +286,7 @@ export function createEngine({ state, forms, projects, draw, setNotice }) {
             input,
             signal,
             trace: previous.policy?.search !== 'HRG query derivations',
+            via: 'workbench',
             purpose: 'question-refresh',
             onUpdate(run) {
               if (signal.aborted || view.currentCheck !== check) return;

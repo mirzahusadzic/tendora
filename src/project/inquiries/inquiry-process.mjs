@@ -66,7 +66,12 @@ process.on('message', async (message) => {
       message.query,
       (progress) => send({ id: message.id, progress }),
       controller.signal,
-      { ...message.options, onEngineUpdate: (run) => send({ id: message.id, run }) },
+      // The workbench's question process: its checks come through the workbench.
+      {
+        ...message.options,
+        via: 'workbench',
+        onEngineUpdate: (run) => send({ id: message.id, run }),
+      },
     );
     controller.signal.throwIfAborted();
     await send({ id: message.id, result, worker: { pid: process.pid, served } });

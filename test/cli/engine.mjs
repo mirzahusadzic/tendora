@@ -170,6 +170,7 @@ const missing = machine(
 );
 assert.equal(missing.status, 'needs-amr');
 assert.equal(missing.calls.length, 0);
+assert.equal(missing.via, 'cli', 'A run records the interface it came through');
 project = await saveProject(
   project,
   editConcept(project.data, project.data.concepts[0].id, 'Workshop', ['Sam repairs bicycles.']),

@@ -38,6 +38,7 @@ export function createDevelopment({
       acquireMissing: true,
       trace: false,
       signal,
+      via: 'workbench',
       purpose: 'contribution-assessment',
     });
   }

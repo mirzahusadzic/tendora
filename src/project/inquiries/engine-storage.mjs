@@ -78,6 +78,7 @@ function questionRecord(run) {
     'finishedAt',
     'purpose',
     'actor',
+    'via',
     'questions',
     'case',
     'caseSelection',
