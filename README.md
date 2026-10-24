@@ -17,7 +17,7 @@ Tendora is a domain corpus engine: each project develops the narrow part of lang
 
 It answers only what its sources support. Answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it.
 
-The open problem is answering questions worded independently of a domain's statements. The demo's seventeen questions were written together with its statements. Three more domains were written as held-out benchmarks, two of them blind with a sealed answer key. When first run, the engine supported 0 of their 18 warranted answers, kept all 5 open or ambiguous questions open and supported nothing false. These questions have since been [diagnosed in detail](docs/held-out-diagnosis.md) and now serve as development sets: the engine supports 4 of the 18, still with nothing false. Asked again in wording the engine has not seen (46 blind rewordings with the same answer keys), it supports 2 of 34, keeps all 9 unknowns open, answers nothing wrongly, and proposes the right connection for 4 more. A claim about generalisation needs a new sealed domain:
+The open problem is answering questions worded independently of a domain's statements. The demo's original seventeen questions were written together with its statements. Three more domains were written as held-out benchmarks, two of them blind with a sealed answer key. When first run, the engine supported 0 of their 18 warranted answers, kept all 5 open or ambiguous questions open and supported nothing false. These questions have since been [diagnosed in detail](docs/held-out-diagnosis.md) and now serve as development sets: the engine supports 4 of the 18, still with nothing false. Asked again in wording the engine has not seen (46 blind rewordings with the same answer keys), it supports 2 of 34, keeps all 9 unknowns open, answers nothing wrongly, and proposes the right connection for 4 more. A claim about generalisation needs a new sealed domain:
 
 ```sh
 node test/acceptance/independent-domain.mjs
@@ -40,7 +40,7 @@ Choose a role; `n` adds statements, `a` asks a new question, and `o` opens Devel
 
 ## Try a question
 
-The single bundled project, **Payments On-Call**, has six roles, nineteen statements and seventeen questions with computed answers and evidence. It explores what the written sources support, including conditions and role boundaries.
+The single bundled project, **Payments On-Call**, has six roles, nineteen statements and twenty-one questions with computed answers and evidence: seventeen written with the statements and four asked later in the workbench. It explores what the written sources support, including conditions and role boundaries.
 
 ```sh
 npm run engine -- ask --project .proj/payments-demo \

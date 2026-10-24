@@ -24,7 +24,7 @@ npm run workbench -- --project .proj/payments-demo
 ```
 
 The demo contains `project.json`, retained material in `material.sqlite`, and
-seventeen computed results with their evidence in `engine/artifacts.sqlite`.
+twenty-one computed results with their evidence in `engine/artifacts.sqlite`.
 Work on a copy to keep the bundled snapshot unchanged; generated databases and
 engine data elsewhere are ignored. `npm run demo` leaves an existing copy
 unchanged; `npm run demo -- --reset` discards it and starts again.

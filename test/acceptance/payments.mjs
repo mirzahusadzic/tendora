@@ -56,10 +56,22 @@ try {
   const cli = promisify(execFile);
   const session = await terminalCapture(
     { project, output, name: 'payments-offline', width: 180, height: 54 },
-    async ({ step, clickText }) => {
+    async ({ step, screen }) => {
       await step({ waitFor: 'Incident Commander', expect: ['Roles'] });
-      await step({ keys: ['o'], waitFor: 'What does the release', expect: ['Development'] });
-      await clickText('What does the release');
+      await step({ keys: ['o'], waitFor: 'Development' });
+      // Newer saved questions come first: move down Development until the
+      // walkthrough's question is listed there, then select it by pointer.
+      const walkthrough = 'What does the release';
+      const listed = () =>
+        screen()
+          .split('\n')
+          .findIndex((row) => row.includes(walkthrough) && row.indexOf(walkthrough) < 40);
+      for (let i = 0; i < 30 && listed() < 0; i++) await step({ keys: ['DOWN'] });
+      const y = listed();
+      assert(y >= 0, `Development lists ${walkthrough}`);
+      await step({
+        mouse: [{ x: screen().split('\n')[y].indexOf(walkthrough) + 2, y: y + 1 }],
+      });
       await step({ waitFor: 'Answer: deployments', timeout: 30 });
       await step({
         keys: ['ESC', 'a', 'ALT_U'],

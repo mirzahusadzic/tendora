@@ -54,17 +54,32 @@ assert.deepEqual(
     'Who freezes deployments during a major incident?',
     'Who freezes deployments during a major incident, and who approves the database vendor invoice?',
     'Who reports a leaked payment key to the incident commander?',
+    // Asked later in the workbench, worded independently of the statements.
+    'What does Sam collects?',
+    'What Sam collects?',
+    'Why does Sam collects customer reports?',
+    'Why Sam collects customer reports?',
   ].sort(),
 );
+// No statement gives a reason, so these stay open.
+const unanswered = new Set([
+  'Why does Sam collects customer reports?',
+  'Why Sam collects customer reports?',
+]);
 const runs = await listEngineRuns(payments);
-assert.equal(runs.length, 17, 'Every demo question has a computed result');
+assert.equal(runs.length, 21, 'Every demo question has a computed result');
 const savedResults = new Map(runs.map((run) => [run.questions[0].text, run]));
-assert.equal(savedResults.size, 17);
+assert.equal(savedResults.size, 21);
 for (const run of runs) {
   assert.equal(run.projectDigest, payments.digest);
   assert.equal(run.cache, 'retained');
   assert.equal(run.recording, undefined, 'Bundled results have no machine-specific recording path');
-  assert(run.answer?.answers.length, run.questions[0].text);
+  assert(run.answer, run.questions[0].text);
+  assert.equal(
+    run.answer.answers.length > 0,
+    !unanswered.has(run.questions[0].text),
+    run.questions[0].text,
+  );
   const input = await readEngineArtifact(payments, run.inputRef);
   const result = await readEngineArtifact(payments, run.resultRef);
   assert.equal(input.question.text, run.questions[0].text);
@@ -167,14 +182,18 @@ for (const [question, expectedStatus, answer] of [
   ['Which engineer must rotate a leaked payment key?', 'conditional', 'Priya'],
   ['When does the release manager freeze deployments?', 'conditional', 'major incident'],
   ['Which manager freezes deployments during a major incident?', 'conditional', 'Morgan'],
+  ['What does Sam collects?', 'conditional', 'affected customer reports'],
+  ['What Sam collects?', 'conditional', 'affected customer reports'],
 ]) {
   const result = await ask(question);
   assert.equal(result.status, expectedStatus, question);
   assert.equal(result.answer.answers[0].text, answer, question);
 }
 
+for (const question of unanswered) assert.equal(await status(question), 'open', question);
+
 await rm(scratch, { recursive: true, force: true });
 
 console.log(
-  'ok all 17 bundled answers and evidence survive relocation and agree with fresh offline checks',
+  'ok all 21 bundled answers and evidence survive relocation and agree with fresh offline checks',
 );

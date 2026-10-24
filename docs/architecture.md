@@ -52,7 +52,7 @@ in `material.sqlite` retain authored records, acquisitions, role vectors and
 questions, preserving their decoded bytes and references. sqlite-vec stores
 128-dimensional float32 vectors for local ranking; its index can be rebuilt
 from retained acquisitions. Engine artifacts and recordings are rebuildable;
-the demo includes computed answers and evidence for its seventeen questions.
+the demo includes computed answers and evidence for its twenty-one questions.
 CLI `ask` and the TUI use the same checking engine.
 
 | Location               | Responsibility                                                   |
