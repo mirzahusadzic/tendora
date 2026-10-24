@@ -107,6 +107,23 @@ export function createMouse({
         };
     } else state.preferredSidebar = sidebarSize((term.width ?? 80) - 1, data.x - 1);
   }
+  /** The list entry under the pointer, in the left column: every line of it
+   * shows what a click selects. True when it changed. */
+  function updateHover(position = state.mousePosition) {
+    const node = nodeAt(position),
+      developed = !node && developmentAt(position),
+      recording = !node && !developed && recordingAt(position);
+    const hover = node
+      ? { key: 'navigationId', id: node.id }
+      : developed
+        ? { key: 'developmentId', id: developed.id }
+        : recording
+          ? { key: 'recordingPath', id: recording.path }
+          : null;
+    if (hover?.key === state.hover?.key && hover?.id === state.hover?.id) return false;
+    state.hover = hover;
+    return true;
+  }
   function handleMouse(name, data) {
     // terminal-kit decodes wheel buttons 6/7 as UP/DOWN too. Their raw code
     // retains bit 1: horizontal trackpad movement must not scroll vertically.
@@ -114,7 +131,11 @@ export function createMouse({
     state.mousePosition = data;
     updatePointer();
     if (state.closed || !state.viewport || state.quitPrompt) return;
-    if (name === 'MOUSE_MOTION') return;
+    if (name === 'MOUSE_MOTION') {
+      if (!state.resizing && updateHover()) draw();
+      return;
+    }
+    updateHover();
     if (!state.resizing && ['MOUSE_WHEEL_UP', 'MOUSE_WHEEL_DOWN'].includes(name)) {
       if (
         (!state.form || state.form.workspace) &&

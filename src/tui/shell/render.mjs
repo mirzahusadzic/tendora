@@ -850,6 +850,15 @@ export function createRenderer({
         if (item) item.scrollbar = i >= thumb.start && i < thumb.start + thumb.size ? '┃' : '┆';
       }
     }
+    // The entry under the pointer, all its lines; a selected entry keeps its look.
+    if (state.hover)
+      for (const pane of [nodePane, developmentPane, recordingsPane]) {
+        const hovered = (item) => item?.[state.hover.key] === state.hover.id;
+        if (pane.rows.some((item) => hovered(item) && item.tone === 'selected')) continue;
+        pane.rows = pane.rows.map((item) =>
+          hovered(item) ? { ...item, surface: text.hoverBand } : item,
+        );
+      }
     state.viewport = {
       visibleRows,
       readingWidth,

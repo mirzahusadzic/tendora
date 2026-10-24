@@ -90,6 +90,8 @@ export function createState(
     projectLayouts: initial.projectLayouts ?? {},
     resizing: null,
     mousePosition: null,
+    // The left-column list entry under the pointer: { key, id }.
+    hover: null,
     pointerShape: null,
     // Project/session history and home screen.
     homeIndex: 0,

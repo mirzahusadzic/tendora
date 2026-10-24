@@ -8,6 +8,8 @@ export function createText({ noColor = false } = {}) {
   const rgb = (r, g, b) => `\x1b[38;2;${r};${g};${b}m`;
   const background = '\x1b[48;2;16;20;28m';
   const sidebar = '\x1b[48;2;26;33;45m';
+  // A row under the pointer: lighter than the sidebar, darker than a selection.
+  const hoverBand = '\x1b[48;2;36;46;62m';
   const sourceBand = sidebar;
   const inquiryBand = '\x1b[48;2;31;39;53m';
   const historyBand = inquiryBand;
@@ -545,6 +547,7 @@ export function createText({ noColor = false } = {}) {
     progressHeader,
     background,
     sidebar,
+    hoverBand,
     sourceBand,
     inquiryBand,
     headerBand,

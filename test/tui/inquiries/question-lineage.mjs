@@ -81,6 +81,32 @@ try {
   assert.equal(shown('From outside · a link (1)'), 1);
   ui.app.dispose();
 
+  // Hovering any line of a question shows all of it as one target; a selected
+  // question keeps its look.
+  const colored = journeyWorkbench(project, directory, { noColor: false });
+  await colored.app.idle();
+  await colored.key('o');
+  const hoverBand = '\x1b[48;2;36;46;62m';
+  const frameRows = () =>
+    new Map(
+      [...colored.term.frame.matchAll(/\x1b\[(\d+);1H(.*?)(?=\x1b\[\d+;1H|$)/gsu)].map(
+        ([, y, line]) => [Number(y), line],
+      ),
+    );
+  const hits = colored.state.viewport.developmentHits;
+  const target = hits.find((hit) => hit.id !== colored.state.workflow.selectedQuestion()?.id);
+  const lines = hits.filter((hit) => hit.id === target.id).map((hit) => hit.y);
+  colored.term.emit('mouse', 'MOUSE_MOTION', { x: 6, y: lines.at(-1) });
+  await colored.app.idle();
+  assert.deepEqual(colored.state.hover, { key: 'developmentId', id: target.id });
+  const painted = [...frameRows()].filter(([, line]) => line.includes(hoverBand)).map(([y]) => y);
+  assert.deepEqual(painted, lines, 'Every line of the hovered question, and only those');
+  colored.term.emit('mouse', 'MOUSE_MOTION', { x: 6, y: 2 });
+  await colored.app.idle();
+  assert.equal(colored.state.hover, null);
+  assert(![...frameRows().values()].some((line) => line.includes(hoverBand)));
+  colored.app.dispose();
+
   const single = await createProject(join(directory, 'single'), 'Single', 'Work');
   await save(single, 'Who inspects the lift?', null);
   await save(single, 'Who repairs the lift?', null);
