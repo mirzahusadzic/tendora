@@ -18,23 +18,59 @@ export function compilePattern(patterns) {
   );
 }
 
-// Position indexes depend only on the facts; one interpreted cohort serves
-// every pattern matched against it.
-const indexCache = new WeakMap();
-function factIndexes(facts) {
-  const cached = indexCache.get(facts);
+// Facts as integer columns: each term is numbered once, a fact is its three
+// term numbers, and for each position the facts with one term are one run of
+// an index array, in the facts' order. One interpreted cohort serves every
+// pattern matched against it.
+const columnCache = new WeakMap();
+function factColumns(facts) {
+  const cached = columnCache.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
-  const indexes = [new Map(), new Map(), new Map()];
-  const byId = new Map(facts.map((fact) => [fact.id, fact]));
-  for (const fact of facts)
-    fact.triple.forEach((term, i) => {
-      if (!indexes[i].has(term)) indexes[i].set(term, []);
-      indexes[i].get(term).push(fact);
-    });
-  const entry = { indexes, byId, length: facts.length, last: facts.at(-1) };
-  indexCache.set(facts, entry);
+  const numbers = new Map(),
+    terms = [];
+  const number = (term) => {
+    let n = numbers.get(term);
+    if (n === undefined) {
+      n = terms.length;
+      numbers.set(term, n);
+      terms.push(term);
+    }
+    return n;
+  };
+  const count = facts.length;
+  const columns = [new Uint32Array(count), new Uint32Array(count), new Uint32Array(count)];
+  for (let f = 0; f < count; f++)
+    for (let i = 0; i < 3; i++) columns[i][f] = number(facts[f].triple[i]);
+  const runs = columns.map((column) => {
+    const offsets = new Uint32Array(terms.length + 1);
+    for (let f = 0; f < count; f++) offsets[column[f] + 1]++;
+    for (let t = 0; t < terms.length; t++) offsets[t + 1] += offsets[t];
+    const order = new Uint32Array(count),
+      fill = offsets.slice(0, terms.length);
+    for (let f = 0; f < count; f++) order[fill[column[f]]++] = f;
+    return { offsets, order };
+  });
+  const run = (i, n) =>
+    n === undefined ? none : runs[i].order.subarray(runs[i].offsets[n], runs[i].offsets[n + 1]);
+  let all = null,
+    positions = null;
+  const entry = {
+    facts,
+    numbers,
+    terms,
+    columns,
+    run,
+    // Every fact, for a terminal without fixed terms.
+    all: () => (all ??= Uint32Array.from({ length: count }, (_, f) => f)),
+    // A seed names facts by id.
+    position: (id) => (positions ??= new Map(facts.map((fact, f) => [fact.id, f]))).get(id),
+    length: count,
+    last: facts.at(-1),
+  };
+  columnCache.set(facts, entry);
   return entry;
 }
+const none = new Uint32Array(0);
 
 export function matchChart(
   patterns,
@@ -53,10 +89,12 @@ export function matchChart(
     ),
   } = {},
 ) {
-  const { indexes, byId } = factIndexes(facts);
+  const { numbers, terms, columns, run, all, position } = factColumns(facts);
   // An absent fixed terminal makes the whole pattern impossible. Avoid building
   // unrelated charts in that case, without declaring a bounded search complete.
-  if (patterns.some((p) => p.some((term, i) => !variable(term) && !indexes[i].has(term))))
+  if (
+    patterns.some((p) => p.some((term, i) => !variable(term) && !run(i, numbers.get(term)).length))
+  )
     return { matches: [], complete: true, work: 0, plan, chart: {} };
   let work = 0,
     complete = true;
@@ -70,6 +108,7 @@ export function matchChart(
     return true;
   };
   const charts = new Map();
+  // Values are term numbers until the matches are read out.
   const injective = (values) => {
     const assigned = [...injectiveVariables].filter((v) => v in values).map((v) => values[v]);
     return new Set(assigned).size === assigned.length;
@@ -85,6 +124,9 @@ export function matchChart(
       children: [...a.children, ...b.children],
     };
   };
+  const seededPositions = seed
+    ? new Set([...seed.ids].map(position).filter((f) => f !== undefined))
+    : null;
   const visit = (id) => {
     const rule = plan.rules[id];
     const relations = rule.children.map((child) => {
@@ -100,16 +142,16 @@ export function matchChart(
     // terms bound its candidates; once a vertex of it is joined, it is looked
     // up through that vertex instead, so a selective relation trims the rest.
     for (const terminal of rule.terminals) {
-      const choices = terminal.pattern.flatMap((term, i) =>
-        variable(term) ? [] : [indexes[i].get(term) ?? []],
-      );
+      const codes = terminal.pattern.map((term) => (variable(term) ? -1 : numbers.get(term)));
+      const choices = codes.flatMap((code, i) => (code === -1 ? [] : [run(i, code)]));
       const narrowest = choices.length
         ? choices.reduce((a, b) => (a.length < b.length ? a : b))
-        : facts;
-      const seeded = seed?.pattern === terminal.id ? seed.ids : null;
-      const candidates = seeded ? narrowest.filter((fact) => seeded.has(fact.id)) : narrowest;
+        : all();
+      const seeded = seed?.pattern === terminal.id ? seededPositions : null;
+      const candidates = seeded ? narrowest.filter((f) => seeded.has(f)) : narrowest;
       relations.push({
         terminal,
+        codes,
         candidates,
         seeded,
         size: candidates.length,
@@ -117,26 +159,28 @@ export function matchChart(
       });
     }
     // The terminal's own values for one fact, consistent with a joined row.
-    const read = (pattern, fact, bound) => {
+    const read = (pattern, codes, f, bound) => {
       const values = {};
       for (let i = 0; i < 3; i++) {
-        const term = pattern[i],
-          actual = fact.triple[i];
-        if (!variable(term)) {
-          if (term !== actual) return null;
-        } else if (term in values) {
+        const actual = columns[i][f];
+        if (codes[i] !== -1) {
+          if (codes[i] !== actual) return null;
+          continue;
+        }
+        const term = pattern[i];
+        if (term in values) {
           if (values[term] !== actual) return null;
         } else if (term in bound && bound[term] !== actual) return null;
         else values[term] = actual;
       }
       return injective(values) ? values : null;
     };
-    const scan = ({ terminal, candidates }) => {
+    const scan = ({ terminal, codes, candidates }) => {
       const rows = [];
-      for (const fact of candidates) {
+      for (const f of candidates) {
         if (!tick()) break;
-        const values = read(terminal.pattern, fact, {});
-        if (values) rows.push({ values, evidence: { [terminal.id]: fact.id }, children: [] });
+        const values = read(terminal.pattern, codes, f, {});
+        if (values) rows.push({ values, evidence: { [terminal.id]: f }, children: [] });
       }
       return rows;
     };
@@ -160,22 +204,21 @@ export function matchChart(
       const shared = relation.keys.filter((key) => known.has(key));
       const next = [];
       if (relation.terminal && shared.length) {
-        // Every index list keeps the facts' order, so looking a terminal up
-        // through a joined vertex yields the rows a full scan would, in order.
+        // Every run keeps the facts' order, so looking a terminal up through a
+        // joined vertex yields the rows a full scan would, in order.
         const { pattern, id } = relation.terminal;
         const through = pattern.flatMap((term, i) => (shared.includes(term) ? [i] : []));
         for (const a of joined) {
           let list = relation.candidates;
           for (const i of through) {
-            const found = indexes[i].get(a.values[pattern[i]]) ?? [];
+            const found = run(i, a.values[pattern[i]]);
             if (found.length < list.length) list = found;
           }
-          for (const fact of list) {
-            if (relation.seeded && !relation.seeded.has(fact.id)) continue;
+          for (const f of list) {
+            if (relation.seeded && !relation.seeded.has(f)) continue;
             if (!tick()) break;
-            const values = read(pattern, fact, a.values);
-            const merged =
-              values && combine(a, { values, evidence: { [id]: fact.id }, children: [] });
+            const values = read(pattern, relation.codes, f, a.values);
+            const merged = values && combine(a, { values, evidence: { [id]: f }, children: [] });
             if (merged) {
               if (next.length >= limit) {
                 complete = false;
@@ -193,7 +236,7 @@ export function matchChart(
         continue;
       }
       const rows = relation.terminal ? scan(relation) : relation.rows;
-      const keyOf = (values) => JSON.stringify(shared.map((key) => values[key]));
+      const keyOf = (values) => shared.map((key) => values[key]).join(',');
       const lookup = new Map();
       for (const row of rows) {
         const key = keyOf(row.values);
@@ -225,11 +268,11 @@ export function matchChart(
     for (const row of joined)
       row.derivation = {
         rule: id,
-        ports: rule.vertices.slice(0, rule.rank).map((key) => [key, row.values[key]]),
+        ports: rule.vertices.slice(0, rule.rank).map((key) => [key, terms[row.values[key]]]),
         terminals: rule.terminals.map((t) => ({
           pattern: t.id,
-          fact: row.evidence[t.id],
-          production: byId.get(row.evidence[t.id])?.grammar,
+          fact: facts[row.evidence[t.id]]?.id,
+          production: facts[row.evidence[t.id]]?.grammar,
         })),
         children: row.children,
       };
@@ -237,8 +280,8 @@ export function matchChart(
     return joined;
   };
   const matches = visit(plan.start).map((row) => ({
-    values: row.values,
-    witnesses: patterns.map((_, i) => row.evidence[i]),
+    values: Object.fromEntries(Object.entries(row.values).map(([key, n]) => [key, terms[n]])),
+    witnesses: patterns.map((_, i) => facts[row.evidence[i]]?.id),
     derivation: row.derivation,
   }));
   return { matches, complete, work, plan, chart: Object.fromEntries(charts) };
