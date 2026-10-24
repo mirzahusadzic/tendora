@@ -398,7 +398,14 @@ async function executeEngineRun(
             },
           );
         }
-        result.answer = answer;
+        // The compiled grammars are kept by the grammar cache above; the stored
+        // result keeps what they were (profile, statistics), as the run does.
+        const grammar = {
+          profile: answer.grammar.profile,
+          ...answer.grammar.stats,
+          corpora: answer.grammar.corpora.map((g) => g.stats),
+        };
+        result.answer = { ...answer, grammar };
         const summarize = ({ facts: _facts, ...binding }) => binding;
         const sourceIds = new Set(
           [...answer.answers, ...answer.candidates].flatMap((binding) => binding.sourceIds),
@@ -416,11 +423,7 @@ async function executeEngineRun(
           clarifications: answer.clarifications,
           partial: answer.partial,
           ...(answer.related ? { related: answer.related } : {}),
-          grammar: {
-            profile: answer.grammar.profile,
-            ...answer.grammar.stats,
-            corpora: answer.grammar.corpora.map((g) => g.stats),
-          },
+          grammar,
         };
         run.coverage.reasoning = answer.coverage;
         run.status = answer.status;
