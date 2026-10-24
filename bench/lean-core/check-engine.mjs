@@ -1,9 +1,9 @@
-/** The trim against the engine: on a scaled Corpus P base, every rule is matched
+/** The trim against the engine: on a scaled corpus base, every rule is matched
  * by the engine's own grammar matcher over the whole store, and again over only
  * the facts the trim keeps for that rule. The trim must keep every witness of
  * every match, and the two sets of matches must be the same.
  *
- *   node bench/lean-core/check-engine.mjs <copies> [--project <dir>] [--question <text>]
+ *   node bench/lean-core/check-engine.mjs <copies> --project <dir> --question <text>
  *
  * The project and question are capture.mjs's.
  */
@@ -25,10 +25,12 @@ const option = (name) => {
   const at = args.indexOf(name);
   return at < 0 ? null : args.splice(at, 2)[1];
 };
-const projectDir = resolve(option('--project') ?? join(repo, 'tmp/corpus-p-dream'));
-const question = option('--question') ?? 'Who brings intention to the shared work?';
+const projectArg = option('--project');
+const question = option('--question');
+if (!projectArg || !question)
+  throw new Error('Usage: check-engine.mjs <copies> --project <dir> --question <text>');
 const copies = Number(args[0] ?? 4);
-const project = await openProject(projectDir);
+const project = await openProject(resolve(projectArg));
 const [run] = (await listEngineRuns(project))
   .filter(
     (r) =>

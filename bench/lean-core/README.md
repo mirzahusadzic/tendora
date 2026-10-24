@@ -7,7 +7,8 @@ Apple M5 Pro (6 Super and 12 Performance cores, 48 GB), macOS 26.7.1, Swift
 output is at the end.
 
 A benchmark, not part of Tendora: nothing in `src/` imports it, and it is not
-run by `npm run check` or CI (it needs macOS, Metal and a Corpus P copy).
+run by `npm run check` or CI (it needs macOS, Metal and a corpus project to
+capture).
 
 ## The trim
 
@@ -19,7 +20,7 @@ its own survivors; repeated to the greatest fixpoint. A rule with a pattern
 left empty keeps nothing. Injectivity is not trimmed. Output: per pattern, the
 surviving fact positions in ascending order.
 
-Against the engine (`check-engine.mjs`): on Corpus P repeated 1, 4, 16 and 64
+Against the engine (`check-engine.mjs`): on the corpus repeated 1, 4, 16 and 64
 times, the trim keeps exactly the facts the engine's matches use (64×: 1,792
 of 26.9 million candidates, 512 of 832 rules matching), and the engine's
 grammar matcher over only those facts gives the same matches. Trimming leaves
@@ -28,7 +29,7 @@ on any device.
 
 ## The workload
 
-`capture.mjs` writes a scaled Corpus P base's store columns and the bodies of the
+`capture.mjs` writes a scaled corpus base's store columns and the bodies of the
 rules inference matches against it:
 
 | capture | facts     | terms     | rules | patterns | how                                   |
@@ -38,7 +39,9 @@ rules inference matches against it:
 | 9.0M    | 9,021,440 | 1,959,547 | 832   | 5,120    | the 64× store repeated 16×, occurrence terms renumbered; not built by the engine |
 
 Every pattern fixes its role; a rule has at most 13 patterns and 5 variables.
-Repeating Corpus P repeats its rules too; no version exploits that.
+The corpus is one of 209 statements in 15 roles, developed beside Tendora and
+not in this repository. Repeating it repeats its rules too; no version exploits
+that.
 
 ## Versions
 
@@ -89,14 +92,14 @@ index; the GPU's 2.2× over 18 threads at 9M is that ratio.
 
 ## What it says
 
-- At Corpus P's sizes, up to 564k facts, the GPU gives nothing worth a native
+- At the corpus's sizes, up to 564k facts, the GPU gives nothing worth a native
   bridge: 18 CPU threads trim in 0.3 to 1.1 ms, the GPU in 0.4 to 0.5 ms plus
   about 0.3 ms to submit and read back.
 - At 9 million facts the GPU is 2.2× the best CPU (12 against 26 ms): the
   hardware's ratio for random reads on unified memory. The dense trim loses to
   the index-driven one on the GPU (33 ms) and to the CPU.
 - The trim is the lever, not the device: it keeps exactly the matches'
-  facts, in 8 to 27 ms in JS at Corpus P's sizes, while the engine's joins take
+  facts, in 8 to 27 ms in JS at the corpus's sizes, while the engine's joins take
   seconds at scale. A trim before the join belongs in the engine first, in
   JS; native code is 4 to 13× faster on one thread; the GPU is about 2× more
   than every CPU core, at millions of facts.
@@ -126,21 +129,19 @@ history at `6e89809`.
 
 ## Regenerating the captures
 
-The captures come from `tmp/corpus-p-dream`: a copy of `.proj/corpus-p` at revision
-`d1b723ad3c91` (Shared making v2, 209 statements; the working tree's Corpus P on
-2026-10-25) holding a saved check of "Who brings intention to the shared
-work?". To make one: copy the project, ask that question once (the question
-needs a reading from the local eGemma service unless one is retained), and
-pass `--project` to `capture.mjs` and `check-engine.mjs` if it lives
-elsewhere. A capture of the same revision is the same, byte for byte (16×,
-checked after the move to `bench/`).
+The captures come from a copy of the corpus project at revision
+`d1b723ad3c91` holding a saved check of one of its questions; `--project` and
+`--question` name them. To make one: copy the project and ask the question once
+(it needs a reading from the local eGemma service unless one is retained). A
+capture of the same revision is the same, byte for byte (16×, checked after
+the move to `bench/`).
 
 ```sh
-node bench/lean-core/capture.mjs 16 tmp/lean/k16
-node bench/lean-core/capture.mjs 64 tmp/lean/k64
-node --max-old-space-size=16000 bench/lean-core/capture.mjs 64 tmp/lean/k64x16 --replicate 16
+node bench/lean-core/capture.mjs 16 tmp/lean/k16 --project <copy> --question <text>
+node bench/lean-core/capture.mjs 64 tmp/lean/k64 --project <copy> --question <text>
+node --max-old-space-size=16000 bench/lean-core/capture.mjs 64 tmp/lean/k64x16 --project <copy> --question <text> --replicate 16
 node --max-old-space-size=30000 bench/lean-core/trim.mjs tmp/lean/k64x16 --oracle --out tmp/lean/k64x16/oracle.bin
-node bench/lean-core/check-engine.mjs 16
+node bench/lean-core/check-engine.mjs 16 --project <copy> --question <text>
 node bench/lean-core/bench.mjs --rounds 3 --out bench/lean-core/reports/<name>.json tmp/lean/k16 tmp/lean/k64 tmp/lean/k64x16
 ```
 

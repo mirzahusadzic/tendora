@@ -1,14 +1,12 @@
 /** Capture a trimming workload from the engine: the fact store of a scaled
- * Corpus P base (its real columns) and the bodies of the rules inference matches
+ * corpus base (its real columns) and the bodies of the rules inference matches
  * against it, as binary files every implementation reads.
  *
- *   node bench/lean-core/capture.mjs <copies> <out-dir> [--replicate <n>]
- *     [--project <dir>] [--question <text>]
+ *   node bench/lean-core/capture.mjs <copies> <out-dir> --project <dir>
+ *     --question <text> [--replicate <n>]
  *
- * The project (tmp/corpus-p-dream by default) must hold a saved check of the
- * question (by default "Who brings intention to the shared work?") at its
- * revision; its sources are the base. That check's sources are repeated as
- * distinct occurrences, as
+ * The project must hold a saved check of the question at its revision; that
+ * check's sources are the base. They are repeated as distinct occurrences, as
  * tmp/scale.mjs does, and its base built with the bounds lifted. With
  * --replicate the store's columns are repeated n times more, the terms that
  * name occurrences (statements, nodes, literals of one occurrence) renumbered
@@ -41,16 +39,16 @@ const option = (name) => {
   return at < 0 ? null : args.splice(at, 2)[1];
 };
 const replicas = Number(option('--replicate') ?? 1);
-const projectDir = resolve(option('--project') ?? join(repo, 'tmp/corpus-p-dream'));
-const question = option('--question') ?? 'Who brings intention to the shared work?';
+const projectArg = option('--project');
+const question = option('--question');
 const [copiesText, outDir] = args;
 const copies = Number(copiesText);
-if (!copies || !outDir)
+if (!copies || !outDir || !projectArg || !question)
   throw new Error(
-    'Usage: capture.mjs <copies> <out-dir> [--replicate <n>] [--project <dir>] [--question <text>]',
+    'Usage: capture.mjs <copies> <out-dir> --project <dir> --question <text> [--replicate <n>]',
   );
 
-const project = await openProject(projectDir);
+const project = await openProject(resolve(projectArg));
 const [run] = (await listEngineRuns(project))
   .filter(
     (r) =>
