@@ -271,7 +271,7 @@ export function inferRelations(
       if (!complete) break;
       for (const { values, witnesses, derivation } of matches) {
         const witnessed = new Set(witnesses);
-        if (witnesses.some((id) => !guardedEvidence(facts.get(id), witnessed).length)) continue;
+        if (witnesses.some((id) => !store.guarded(store.position(id), witnessed))) continue;
         // A confirmed interpretation belongs to the selected source assertion.
         // Its participants may come from the premises of a grounded condition;
         // requiring every terminal to be owned by the policy would break that
@@ -629,6 +629,8 @@ export function necessarySources(graph, { maxRounds = 64 } = {}) {
 }
 
 export function traceRelations(facts, witnesses) {
+  const store = storeOf(facts);
+  if (store) return traceStore(store, facts, witnesses);
   const byId = factsById(facts),
     visited = new Set(),
     sourceIds = new Set(),
@@ -660,5 +662,56 @@ export function traceRelations(facts, witnesses) {
     fragmentIds: [...fragmentIds],
     ...(bindingIds.size ? { bindingIds: [...bindingIds] } : {}),
     facts: [...visited].map((id) => byId.get(id)),
+  };
+}
+// The same trace over a store prefix's proof rows: witnesses and premises as
+// fact positions, sources, rules, fragments and bindings as term numbers
+// until they are read out, in the order the objects would give them.
+function traceStore(store, facts, witnesses) {
+  const length = facts.length,
+    terms = store.terms;
+  const at = (id) => {
+    const f = store.position(id);
+    if (f === undefined || f >= length) throw new Error('Missing derivation premise');
+    return f;
+  };
+  const visited = new Set(),
+    sourceIds = new Set(),
+    ruleIds = new Set(),
+    bindingIds = new Set(),
+    fragmentIds = new Set(),
+    seenProofs = new Set();
+  const pending = [witnesses.map(at)];
+  for (let i = 0; i < pending.length; i++) {
+    const group = new Set(pending[i]);
+    for (const f of group)
+      for (let p = store.firstProof.data[f]; p !== NONE; p = store.proofNext.data[p]) {
+        if (!store.guardsHeldAt(p, group) || seenProofs.has(p)) continue;
+        seenProofs.add(p);
+        visited.add(f);
+        for (const n of store.listRun('sourceIds', p)) sourceIds.add(n);
+        for (const n of store.listRun('bindingIds', p)) bindingIds.add(n);
+        for (const n of store.listRun('fragmentIds', p)) fragmentIds.add(n);
+        const rule = store.proofRule.data[p];
+        if (rule !== NONE && terms[rule]) ruleIds.add(rule);
+        const from = store.premiseStart.data[p],
+          count = store.premiseCount.data[p];
+        if (count) {
+          const premises = [];
+          for (let q = from; q < from + count; q++) {
+            if (store.premises.data[q] >= length) throw new Error('Missing derivation premise');
+            premises.push(store.premises.data[q]);
+          }
+          pending.push(premises);
+        }
+      }
+  }
+  const named = (set) => [...set].map((n) => terms[n]);
+  return {
+    sourceIds: named(sourceIds),
+    ruleIds: named(ruleIds),
+    fragmentIds: named(fragmentIds),
+    ...(bindingIds.size ? { bindingIds: named(bindingIds) } : {}),
+    facts: [...visited].map((f) => facts[f]),
   };
 }

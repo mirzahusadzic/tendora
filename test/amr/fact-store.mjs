@@ -3,7 +3,7 @@
  * facts, derivations, ids that are not their triple's key, unknown fields. */
 import assert from 'node:assert/strict';
 import { FactStore, storeOf, storePrefix } from '../../src/amr/fact-store.mjs';
-import { inferRelations } from '../../src/amr/inference.mjs';
+import { inferRelations, traceRelations } from '../../src/amr/inference.mjs';
 import { createGrammarMatcher } from '../../src/amr/hrg-query.mjs';
 import { corpusSignature } from '../../src/amr/hrg-corpus.mjs';
 
@@ -105,6 +105,42 @@ assert.equal(
   JSON.stringify(createGrammarMatcher().match(ways, [...inferred], { seed })),
   'A seed found through the store',
 );
+// Traced through the store's proof rows, as through the objects: a guarded
+// proof counts only with its guard among the witnesses.
+const guarded = inferRelations(
+  [
+    { triple: ['east', ':door', 'west'], sourceIds: ['notes'] },
+    { triple: ['east', ':lock', 'open'], sourceIds: ['keys'] },
+    { triple: ['west', ':door', 'yard'], sourceIds: ['plan'] },
+  ],
+  [
+    {
+      id: 'pass',
+      name: 'An open door passes',
+      when: [['?a', ':door', '?b']],
+      then: [['?a', ':pass', '?b']],
+      guards: [['?a', ':lock', 'open']],
+      sourceIds: ['rules'],
+      fragmentIds: ['rules/pass'],
+    },
+    ...rules,
+  ],
+).facts;
+const id = (triple) => JSON.stringify(triple);
+for (const witnesses of [
+  [id(['east', ':pass', 'west'])],
+  [id(['east', ':pass', 'west']), id(['east', ':lock', 'open'])],
+  [id(['east', ':way', 'yard'])],
+]) {
+  const traced = traceRelations(guarded, witnesses);
+  assert.equal(JSON.stringify(traced), JSON.stringify(traceRelations([...guarded], witnesses)));
+}
+assert.equal(traceRelations(guarded, [id(['east', ':pass', 'west'])]).facts.length, 0);
+assert.deepEqual(
+  traceRelations(guarded, [id(['east', ':pass', 'west']), id(['east', ':lock', 'open'])]).sourceIds,
+  ['rules', 'keys', 'notes'],
+);
+assert.throws(() => traceRelations(guarded, ['missing']), /Missing derivation premise/);
 assert.throws(() => storePrefix([inferred[1]], inferredStore), /Not a prefix/);
 const grown = storePrefix(inferred.slice(0, 2), inferredStore);
 grown.push(inferred[2]);

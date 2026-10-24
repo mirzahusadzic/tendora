@@ -188,6 +188,33 @@ export class FactStore {
     }
     return this.extras.get(p)?.[key];
   }
+  /** A list field of a proof row as term numbers. */
+  listRun(field, p) {
+    const list = this.lists[field],
+      start = list.start.data[p];
+    return list.pool.data.subarray(start, start + list.count.data[p]);
+  }
+  /** Whether a proof row's guards are all among the witnesses (fact ids). */
+  guardsHeld(p, witnesses) {
+    const guards = this.listRun('guards', p);
+    for (let i = 0; i < guards.length; i++) if (!witnesses.has(this.terms[guards[i]])) return false;
+    return true;
+  }
+  /** The same, with the witnesses as fact positions. */
+  guardsHeldAt(p, positions) {
+    const guards = this.listRun('guards', p);
+    for (let i = 0; i < guards.length; i++) {
+      const f = this.positions.get(this.terms[guards[i]]);
+      if (f === undefined || !positions.has(f)) return false;
+    }
+    return true;
+  }
+  /** Whether a fact has a proof whose guards the witnesses hold. */
+  guarded(f, witnesses) {
+    for (let p = this.firstProof.data[f]; p !== NONE; p = this.proofNext.data[p])
+      if (this.guardsHeld(p, witnesses)) return true;
+    return false;
+  }
   proofs(f) {
     const rows = [];
     for (let p = this.firstProof.data[f]; p !== NONE; p = this.proofNext.data[p]) rows.push(p);
