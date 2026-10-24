@@ -71,6 +71,8 @@ async function executeEngineRun(
     answer = true,
     trace = true,
     progress = () => {},
+    // Receives the stored result itself, so a caller need not read it back.
+    onResult = () => {},
     purpose = 'inquiry',
   } = {},
   runId,
@@ -456,5 +458,6 @@ async function executeEngineRun(
     run.finishedAt = new Date().toISOString();
     await update();
   }
+  if (result && run.resultRef) onResult(result);
   return run;
 }

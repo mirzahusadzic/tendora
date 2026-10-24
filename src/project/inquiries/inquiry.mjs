@@ -158,8 +158,10 @@ async function captureInquiry(project, placementId, query, progress, signal, opt
       children: matches.get(node.id)?.children ?? node.crossings,
     })),
   };
+  let stored = null;
   const engine = await runEngine(project, {
     input,
+    onResult: (value) => (stored = value),
     acquireMissing: options.acquireMissing ?? true,
     signal,
     progress,
@@ -179,7 +181,9 @@ async function captureInquiry(project, placementId, query, progress, signal, opt
       );
     },
   });
-  const reasoning = engine.resultRef ? await readEngineArtifact(project, engine.resultRef) : null;
+  // The result as stored, without decoding it again.
+  const reasoning =
+    stored ?? (engine.resultRef ? await readEngineArtifact(project, engine.resultRef) : null);
   if (
     signal?.aborted ||
     ['failed', 'cancelled', 'stale'].includes(engine.status) ||
