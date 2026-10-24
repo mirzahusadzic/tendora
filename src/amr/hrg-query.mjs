@@ -455,15 +455,18 @@ export function createGrammarMatcher(retained = {}) {
   };
   // Inference passes one immutable cohort to every rule of a round. Compile and
   // interpret it once; a changed array (length or last fact) is prepared again.
-  const prepared = new WeakMap();
+  // A store's prefix is kept by its length: inference's last cohort and its
+  // result are two arrays of the same facts.
+  const prepared = new WeakMap(),
+    preparedPrefixes = new WeakMap();
   const prepare = (facts) => {
-    const entry = prepared.get(facts);
+    const store = storeOf(facts);
+    const entry = store ? preparedPrefixes.get(store)?.get(facts.length) : prepared.get(facts);
     if (entry && entry.length === facts.length && entry.last === facts.at(-1)) {
       stats.reused++;
       return entry;
     }
-    const compiled = corpus(facts),
-      store = storeOf(facts);
+    const compiled = corpus(facts);
     const positionOf = store
       ? (id) => {
           const f = store.position(id);
@@ -477,7 +480,10 @@ export function createGrammarMatcher(retained = {}) {
       length: facts.length,
       last: facts.at(-1),
     };
-    prepared.set(facts, fresh);
+    if (store) {
+      if (!preparedPrefixes.has(store)) preparedPrefixes.set(store, new Map());
+      preparedPrefixes.get(store).set(facts.length, fresh);
+    } else prepared.set(facts, fresh);
     return fresh;
   };
   const match = (patterns, facts, options) => {
