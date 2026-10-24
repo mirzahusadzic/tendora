@@ -6,6 +6,7 @@ import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createProject, editConcept } from '../../src/project/authoring/project.mjs';
 import { checkProbe, clozeProbes, outcome } from '../../src/engine/cloze.mjs';
+import { knowledgeSnapshot } from '../../src/project/authoring/knowledge.mjs';
 
 const graph = (top, nodes, edges) => ({
   top,
@@ -150,6 +151,16 @@ try {
   );
   assert(framed[0].graph.edges.some((edge) => edge.from === 'r' && edge.to === 'cloze'));
   assert.equal(check(framed[0]), 'recovered', 'Who may repair the gate?');
+  // Probes share a base per check and knowledge, but only under the same
+  // limits: a base bounded by a small budget is not reused under a larger one.
+  const knowledge = knowledgeSnapshot(project.data);
+  const shared = (probe, options = {}) =>
+    checkProbe(project, input, result, probe, { knowledge, ...options });
+  assert.equal(shared(who, { workBudget: 1 }).status, 'limited');
+  const unbounded = shared(who);
+  assert.notEqual(unbounded.status, 'limited', 'The bounded base is not reused');
+  assert.equal(unbounded.outcome, check(who));
+  assert.equal(shared(who, { workBudget: 1 }).status, 'limited', 'Nor the full one under a bound');
   // A search that stops at its bound settles nothing: limited, never open.
   assert.equal(outcome(who, { status: 'limited', answers: [], candidates: [] }).outcome, 'limited');
   // A conditional statement asked without its condition is marked, not open.

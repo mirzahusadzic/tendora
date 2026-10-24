@@ -177,20 +177,37 @@ function connected(graph, start, removed, skip = null) {
 // Probes of one check share its material and inference: a probe's question
 // is not part of its material (no interpretation was made for a probe), so one
 // base serves every probe without a case, and a withheld view of it serves
-// every probe that withholds the same statements.
-const bases = new WeakMap();
-function probeBase(result, knowledge, key, make) {
+// every probe that withholds the same statements. A base is made under its
+// limits and preparation, and serves only those: one a small budget bounded is
+// not reused under a larger one.
+const bases = new WeakMap(),
+  preparations = new WeakMap();
+const limitsKey = (options) => {
+  const { preparation } = options;
+  if (preparation && !preparations.has(preparation))
+    preparations.set(preparation, preparations.size + 1);
+  return JSON.stringify([
+    options.workBudget,
+    options.matchLimit,
+    options.matchBudget,
+    options.maxFacts,
+    options.maxRounds,
+    options.maxDerivations,
+    preparation ? preparations.get(preparation) : 0,
+  ]);
+};
+function probeBase(result, knowledge, limits, withheld, make) {
   if (!bases.has(result)) bases.set(result, new WeakMap());
   const byKnowledge = bases.get(result);
   if (!byKnowledge.has(knowledge)) byKnowledge.set(knowledge, new Map());
-  const kept = byKnowledge.get(knowledge);
-  if (!kept.has(key)) {
-    // The full base stays; of the withheld views, only the latest: the probes
-    // that withhold one statement come together.
-    for (const other of kept.keys()) if (other !== '') kept.delete(other);
-    kept.set(key, make());
-  }
-  return kept.get(key);
+  const byLimits = byKnowledge.get(knowledge);
+  if (!byLimits.has(limits)) byLimits.set(limits, { full: null, view: null });
+  const kept = byLimits.get(limits);
+  if (!withheld) return (kept.full ??= make());
+  // The full base stays; of the withheld views, only the latest: the probes
+  // that withhold one statement come together.
+  if (kept.view?.key !== withheld) kept.view = { key: withheld, base: make() };
+  return kept.view.base;
 }
 
 export function checkProbe(project, input, result, probe, { withhold = [], ...options } = {}) {
@@ -242,10 +259,13 @@ export function checkProbe(project, input, result, probe, { withhold = [], ...op
   let recording, base;
   if (shared) {
     recording = record(full([]));
-    base = probeBase(result, knowledge, '', () => answerBase(recording, knowledge, options));
+    const limits = limitsKey(options);
+    base = probeBase(result, knowledge, limits, '', () =>
+      answerBase(recording, knowledge, options),
+    );
     if (withhold.length) {
       const key = JSON.stringify([...withhold].sort());
-      base = probeBase(result, knowledge, key, () => withheldBase(base, withhold));
+      base = probeBase(result, knowledge, limits, key, () => withheldBase(base, withhold));
     }
   }
   if (!base) recording = record(full(withhold));
