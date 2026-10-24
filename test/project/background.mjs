@@ -6,7 +6,11 @@ import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createProject, saveProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
-import { backgroundProjectInquiry, stopChild } from '../../src/project/inquiries/background.mjs';
+import {
+  backgroundProjectInquiry,
+  spareWorker,
+  stopChild,
+} from '../../src/project/inquiries/background.mjs';
 import { activeEngineRunIds } from '../../src/project/storage/engine-runs.mjs';
 import { journeyWorkbench } from '../support/journey-workbench.mjs';
 
@@ -130,6 +134,14 @@ const answer = scoped.recording.reasoning.answer.answers[0];
 assert.equal(answer.text, 'technician');
 assert(answer.derivation.tree);
 assert.equal(answer.sourceIds.length, 1);
+// The question process stays warm for the next question.
+const warm = spareWorker();
+assert(warm, 'A finished question leaves its process idle for the next');
+const again = await backgroundProjectInquiry(project, 'p1', query, undefined, undefined, {
+  acquireMissing: false,
+});
+assert.equal(again.recording.reasoning.answer.answers[0].text, 'technician');
+assert.equal(spareWorker()?.pid, warm.pid, 'The next question is checked in the same process');
 
 const controller = new AbortController();
 let cancelledAt;
@@ -150,6 +162,7 @@ await assert.rejects(
   { name: 'AbortError' },
 );
 assert(performance.now() - cancelledAt < 100, 'Cancelling does not wait for compilation');
+assert.notEqual(spareWorker()?.pid, warm.pid, 'A cancelled process is not kept');
 for (let i = 0; i < 150 && (await activeEngineRunIds(project)).length; i++) await delay(20);
 assert.deepEqual(await activeEngineRunIds(project), [], 'Cancellation releases the inquiry lease');
 await assert.rejects(

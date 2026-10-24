@@ -45,50 +45,100 @@ export function stopChild(child, { termAfterMs = 2000, killAfterMs = 2000 } = {}
   return clear;
 }
 
+// One idle question process is kept warm: what it built for the last
+// question's sources (their base) serves the next. It never holds the
+// terminal open, and a cancelled or failed process is never reused.
+let spare = null,
+  requests = 0;
+const alive = (child) => child.connected && child.exitCode === null && child.signalCode === null;
+function takeWorker() {
+  const child = spare && alive(spare) ? spare : null;
+  spare = null;
+  if (child) {
+    child.ref();
+    child.channel?.ref?.();
+    return child;
+  }
+  return fork(fileURLToPath(new URL('./inquiry-process.mjs', import.meta.url)), [], {
+    stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    serialization: 'advanced',
+    execArgv: [],
+  });
+}
+function keepWorker(child) {
+  if (spare || !alive(child)) {
+    if (child.connected) child.disconnect();
+    return;
+  }
+  child.unref();
+  child.channel?.unref?.();
+  child.stderr?.unref?.();
+  spare = child;
+  child.once('exit', () => {
+    if (spare === child) spare = null;
+  });
+}
+/** The idle question process, for tests: its process id. */
+export const spareWorker = () => (spare && alive(spare) ? { pid: spare.pid } : null);
+
 function projectProcess(project, request, progress, signal, onEngineUpdate) {
   signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
-    const child = fork(fileURLToPath(new URL('./inquiry-process.mjs', import.meta.url)), [], {
-      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
-      serialization: 'advanced',
-      execArgv: [],
-    });
+    const child = takeWorker();
+    const id = ++requests;
     let settled = false,
       failure = '',
-      stopping = null;
+      stopping = null,
+      reusable = false;
+    const detach = () => {
+      child.off('message', onMessage);
+      child.off('error', onError);
+      child.off('close', onClose);
+      child.stderr?.off('data', onData);
+      signal?.removeEventListener('abort', cancel);
+    };
     const finish = (error, value) => {
       if (settled) return;
       settled = true;
-      signal?.removeEventListener('abort', cancel);
+      detach();
+      if (reusable) keepWorker(child);
       error ? reject(error) : resolve(value);
     };
     const cancel = () => {
-      if (child.connected) child.send({ cancel: true }, () => {});
+      if (child.connected) child.send({ id, cancel: true }, () => {});
       stopping ??= stopChild(child);
       finish(signal.reason ?? new DOMException('Question cancelled', 'AbortError'));
     };
-    child.stderr.on('data', (chunk) => {
+    const onData = (chunk) => {
       failure = (failure + chunk.toString()).slice(-4000);
-    });
-    child.on('message', (message) => {
-      if (settled) return;
+    };
+    const onMessage = (message) => {
+      if (settled || message.id !== id) return;
       if (message.progress !== undefined) progress?.(message.progress);
       else if (message.run) onEngineUpdate?.(message.run);
       else if (message.error) {
-        const error = Object.assign(new Error(message.error.message), message.error);
-        finish(error);
-      } else if (message.result) finish(null, message.result);
-    });
-    child.on('error', (error) => finish(error));
-    child.on('close', (code, stopped) => {
+        reusable = true;
+        finish(Object.assign(new Error(message.error.message), message.error));
+      } else if (message.result) {
+        reusable = true;
+        finish(null, message.result);
+      }
+    };
+    const onError = (error) => finish(error);
+    const onClose = (code, stopped) => {
       stopping?.();
       finish(
         new Error(failure.trim() || `Question process ended (${stopped ?? code}). Check again.`),
       );
-    });
+    };
+    child.stderr?.on('data', onData);
+    child.on('message', onMessage);
+    child.on('error', onError);
+    child.on('close', onClose);
     signal?.addEventListener('abort', cancel, { once: true });
     child.send(
       {
+        id,
         path: project.path,
         digest: project.digest,
         ...request,

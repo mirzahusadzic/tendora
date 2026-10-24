@@ -1,26 +1,47 @@
-/** One disposable local process owns an inquiry; corpus writes keep their existing locks. */
+/** A local process owns inquiries one at a time and stays warm between them:
+ * the base of a question's sources stays for the next question on the same
+ * sources. Corpus writes keep their existing locks. A cancelled inquiry ends
+ * the process; an idle one ends after a while, or with its parent. */
 import { dirname } from 'node:path';
 import { openProject } from '../authoring/project.mjs';
 import { captureProjectInquiry } from './inquiry.mjs';
 import { compactProjectStorage } from './project-storage.mjs';
 
-const controller = new AbortController();
-let started = false;
+const idleMs = 5 * 60 * 1000;
+let current = null,
+  idle = null,
+  served = 0;
 const send = (value) =>
   new Promise((resolve) => {
     if (process.connected) process.send(value, () => resolve());
     else resolve();
   });
-process.on('disconnect', () => controller.abort());
+const rest = () => {
+  clearTimeout(idle);
+  idle = setTimeout(() => process.connected && process.disconnect(), idleMs);
+};
+process.on('disconnect', () => {
+  current?.controller.abort();
+  clearTimeout(idle);
+});
 process.on('message', async (message) => {
-  if (message.cancel) return controller.abort();
-  if (started) return;
-  started = true;
+  if (message.cancel) {
+    if (current?.id === message.id) current.controller.abort();
+    return;
+  }
+  if (current) {
+    await send({ id: message.id, error: { message: 'This question process is busy.' } });
+    return;
+  }
+  clearTimeout(idle);
+  const controller = new AbortController();
+  current = { id: message.id, controller };
+  served++;
   try {
     const project = await openProject(dirname(message.path));
     if (message.maintenance) {
       const result = await compactProjectStorage(project);
-      await send({ result });
+      await send({ id: message.id, result, worker: { pid: process.pid, served } });
       return;
     }
     if (project.digest !== message.digest)
@@ -29,14 +50,15 @@ process.on('message', async (message) => {
       project,
       message.placementId,
       message.query,
-      (progress) => send({ progress }),
+      (progress) => send({ id: message.id, progress }),
       controller.signal,
-      { ...message.options, onEngineUpdate: (run) => send({ run }) },
+      { ...message.options, onEngineUpdate: (run) => send({ id: message.id, run }) },
     );
     controller.signal.throwIfAborted();
-    await send({ result });
+    await send({ id: message.id, result, worker: { pid: process.pid, served } });
   } catch (error) {
     await send({
+      id: message.id,
       error: {
         name: error.name,
         message: error.message,
@@ -45,6 +67,8 @@ process.on('message', async (message) => {
       },
     });
   } finally {
-    if (process.connected) process.disconnect();
+    current = null;
+    if (controller.signal.aborted) process.connected && process.disconnect();
+    else rest();
   }
 });
