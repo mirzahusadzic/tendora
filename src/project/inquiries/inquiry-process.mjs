@@ -3,9 +3,23 @@
  * sources. Corpus writes keep their existing locks. A cancelled inquiry ends
  * the process; an idle one ends after a while, or with its parent. */
 import { dirname } from 'node:path';
+import { availableParallelism } from 'node:os';
 import { openProject } from '../authoring/project.mjs';
 import { captureProjectInquiry } from './inquiry.mjs';
 import { compactProjectStorage } from './project-storage.mjs';
+import {
+  readyCheckpointWorkers,
+  useCheckpointWorkers,
+  warmPendingCheckpoints,
+} from '../../engine/checkpoint-pool.mjs';
+
+// Role checkpoints are checked in two worker threads as well (more add
+// little), started while the first question is read; each keeps a base of
+// its own. TENDORA_CHECKPOINT_WORKERS sets their number, 0 for none.
+useCheckpointWorkers(
+  Number(process.env.TENDORA_CHECKPOINT_WORKERS ?? Math.min(2, availableParallelism() - 2)),
+);
+readyCheckpointWorkers().catch(() => {});
 
 const idleMs = 5 * 60 * 1000;
 let current = null,
@@ -69,6 +83,10 @@ process.on('message', async (message) => {
   } finally {
     current = null;
     if (controller.signal.aborted) process.connected && process.disconnect();
-    else rest();
+    else {
+      rest();
+      // The answer is sent: warm the checkpoint workers for its revision.
+      warmPendingCheckpoints().catch(() => {});
+    }
   }
 });

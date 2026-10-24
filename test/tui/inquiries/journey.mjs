@@ -11,6 +11,13 @@ import {
   explorationRecordProfile,
   exploreRoles,
 } from '../../../src/engine/role-exploration.mjs';
+import {
+  checkpointStats,
+  checkpointsWarm,
+  readyCheckpointWorkers,
+  useCheckpointWorkers,
+  warmCheckpoints,
+} from '../../../src/engine/checkpoint-pool.mjs';
 import { theatre } from '../../../tools/harbour-theatre.mjs';
 import {
   journeyWorkbench,
@@ -119,6 +126,31 @@ try {
       record(check),
       `Checkpoint ${check.level} checked alone`,
     );
+  // With worker threads checking the checkpoints ahead, the exploration keeps
+  // the same checks, visits and answer.
+  useCheckpointWorkers(2);
+  try {
+    await readyCheckpointWorkers();
+    await warmCheckpoints(ui.state.project, approval.input, approval.result);
+    assert(checkpointsWarm(ui.state.project));
+    const before = checkpointStats.byWorkers;
+    const withoutFacts = (answers) =>
+      JSON.parse(JSON.stringify(answers.map(({ facts: _facts, ...answer }) => answer)));
+    // A cold worker opens the project and builds its base while this thread
+    // already checks; warm ones take checkpoints from the next run on.
+    for (let run = 0; run < 6 && checkpointStats.byWorkers === before; run++) {
+      const parallel = await exploreRoles(ui.state.project, approval.input, approval.result);
+      assert.deepEqual(parallel.exploration.checks.map(record), exploration.checks.map(record));
+      assert.deepEqual(parallel.exploration.visits, exploration.visits);
+      assert.deepEqual(
+        withoutFacts(parallel.answer.answers),
+        withoutFacts(approval.run.answer.answers),
+      );
+    }
+    assert(checkpointStats.byWorkers > before, 'Workers checked some checkpoints');
+  } finally {
+    useCheckpointWorkers(0);
+  }
   const firstProof = exploration.checks.find((c) => c.answers.length);
   assert(
     firstProof.visitedRoles < exploration.visits.length,

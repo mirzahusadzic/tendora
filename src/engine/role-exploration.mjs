@@ -4,6 +4,12 @@ import { answerRecording, checkAnswer } from './answer.mjs';
 import { answerBase, withheldBase } from '../recording/answers.mjs';
 import { proofGraph, supportLevels } from '../amr/inference.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
+import {
+  checkpointsWarm,
+  checkpointWorkers,
+  noteColdCheckpoints,
+  startCheckpoints,
+} from './checkpoint-pool.mjs';
 
 export const roleExplorationProfile = 'ranked-role-exploration-v1';
 // The record of an exploration: its checks are independent checkpoints along
@@ -180,6 +186,71 @@ export function checkCheckpoint(project, input, result, exploration, level, opti
   };
 }
 
+const sameSources = (a, b) =>
+  a.sources.length === b.sources.length && a.sources.every((source, i) => b.sources[i] === source);
+
+/** Check the final checkpoint in this thread and the intermediate ones in
+ * worker threads and here, all claimed from one counter, until the checks up
+ * to the first proof are known. Records by level, and answers for the ones
+ * checked here. */
+async function checkAhead(project, input, result, exploration, options) {
+  const { checkpoints } = exploration;
+  const intermediate = checkpoints.flatMap((checkpoint, level) =>
+    checkpoint.final ? [] : [level],
+  );
+  if (intermediate.length < 2) return null;
+  // Cold workers would open the project and build their base while this
+  // thread checks everything: they are warmed once the question is done.
+  if (!checkpointsWarm(project)) {
+    noteColdCheckpoints(project, input, result);
+    return null;
+  }
+  const records = new Map(),
+    answers = new Map();
+  const job = await startCheckpoints(
+    project,
+    input,
+    result,
+    intermediate,
+    (level, check) => records.set(level, check),
+    options.signal,
+  );
+  const here = (level) => {
+    const { answer, check } = checkCheckpoint(project, input, result, exploration, level, options);
+    records.set(level, check);
+    answers.set(level, answer);
+  };
+  // Known up to the first proof, or to the end.
+  const settled = () => {
+    for (const level of intermediate) {
+      const check = records.get(level);
+      if (!check) return false;
+      if (check.complete && check.answers.length) return true;
+    }
+    return true;
+  };
+  try {
+    here(checkpoints.length - 1);
+    while (!settled()) {
+      options.signal?.throwIfAborted();
+      const level = job.claim();
+      if (level !== undefined) {
+        if (!records.has(level)) here(level);
+        await yieldTurn(undefined, { signal: options.signal });
+      } else if (job.pending()) await job.next();
+      else
+        for (const level of intermediate)
+          if (!records.has(level)) {
+            here(level);
+            break;
+          }
+    }
+  } finally {
+    job.stop();
+  }
+  return { records, answers };
+}
+
 export async function exploreRoles(
   project,
   input,
@@ -193,11 +264,21 @@ export async function exploreRoles(
     grammarCache,
     knowledge,
   });
+  const started = performance.now();
+  // With worker threads, the intermediate checkpoints are checked ahead of
+  // need and in parallel; the loop below then keeps the same checks.
+  const ahead = checkpointWorkers()
+    ? await checkAhead(project, input, result, exploration, {
+        grammarCache,
+        knowledge,
+        supplied,
+        signal,
+      })
+    : null;
   const checks = [],
     checkAt = new Map();
   let answer,
     proofFound = false;
-  const started = performance.now();
   for (const [level, checkpoint] of checkpoints.entries()) {
     signal?.throwIfAborted();
     // Past the first proof only the final checkpoint is checked, and only
@@ -216,15 +297,22 @@ export async function exploreRoles(
       `Checking ${nodes.get(checkpoint.node.id).label} (${checkpoint.index + 1}/${order.length} roles)`,
     );
     await yieldTurn(undefined, { signal });
-    const checked = checkCheckpoint(project, input, result, exploration, level, {
-      grammarCache,
-      knowledge,
-      supplied,
-    });
-    answer = checked.answer;
+    // A check made ahead by a worker has its record; its answer is needed only
+    // when it would be the last check kept (the final one is skipped when a
+    // check holds every source in order), and then it is checked again here.
+    const needsAnswer = checkpoint.final || sameSources(checkpoint, checkpoints.at(-1));
+    const checked =
+      ahead?.answers.get(level) || (ahead?.records.has(level) && !needsAnswer)
+        ? { answer: ahead.answers.get(level), check: ahead.records.get(level) }
+        : checkCheckpoint(project, input, result, exploration, level, {
+            grammarCache,
+            knowledge,
+            supplied,
+          });
+    answer = checked.answer ?? answer;
     checks.push({ id: checks.length, ...checked.check });
     checkAt.set(checkpoint.index, checks.at(-1).id);
-    proofFound ||= answer.complete && answer.answers.length > 0;
+    proofFound ||= checked.check.complete && checked.check.answers.length > 0;
   }
   const visits = [],
     available = [];
