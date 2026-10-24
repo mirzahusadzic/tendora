@@ -5,7 +5,12 @@ import { join, resolve } from 'node:path';
 import { createProject, openProject } from '../../../src/project/authoring/project.mjs';
 import { listEngineRuns } from '../../../src/project/storage/engine-runs.mjs';
 import { checkAnswer } from '../../../src/engine/answer.mjs';
-import { exploreRoles } from '../../../src/engine/role-exploration.mjs';
+import {
+  checkCheckpoint,
+  explorationPlan,
+  explorationRecordProfile,
+  exploreRoles,
+} from '../../../src/engine/role-exploration.mjs';
 import { theatre } from '../../../tools/harbour-theatre.mjs';
 import {
   journeyWorkbench,
@@ -101,6 +106,19 @@ try {
       assert(answer.derivation?.tree, 'Every early answer has its actual chart proof');
     }
   }
+  // Checkpoints are independent: each checked again alone, in reverse order and
+  // with views of its own, gives the record the exploration kept.
+  const plan = explorationPlan(approval.input, approval.result);
+  const record = ({ id: _id, elapsedMs: _elapsed, ...check }) => JSON.parse(JSON.stringify(check));
+  assert.equal(exploration.profile, explorationRecordProfile);
+  for (const check of [...exploration.checks].reverse())
+    assert.deepEqual(
+      record(
+        checkCheckpoint(ui.state.project, approval.input, approval.result, plan, check.level).check,
+      ),
+      record(check),
+      `Checkpoint ${check.level} checked alone`,
+    );
   const firstProof = exploration.checks.find((c) => c.answers.length);
   assert(
     firstProof.visitedRoles < exploration.visits.length,

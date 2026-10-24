@@ -978,13 +978,14 @@ function keptFacts(facts, keep) {
  * by their application, so these are the facts and names a check without
  * the sources would derive. Null when the base's inference was bounded: a
  * capped proof list may lack the proof that would still hold. */
-export function withheldBase(base, withheld) {
+export function withheldBase(base, withheld, supported = null) {
   if (!base.inference.complete) return null;
   const out = new Set(withheld);
   const kept = (ids) => !(ids ?? []).some((id) => out.has(id));
-  // The least fixpoint, in one pass over the proofs as integer arrays.
+  // The least fixpoint, in one pass over the proofs as integer arrays, unless
+  // the caller read it from support levels.
   const graph = proofGraph(base.inference.facts);
-  const holding = withheldSupport(graph, withheld);
+  const holding = supported ?? withheldSupport(graph, withheld);
   const holds = new Set(graph.facts.filter((_, f) => holding[f]).map((fact) => fact.id));
   const usable = (proof) =>
     kept(proof.sourceIds) && (proof.premises ?? []).every((id) => holds.has(id));
