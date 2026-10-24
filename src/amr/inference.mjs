@@ -386,6 +386,142 @@ function factsById(facts) {
   return byId;
 }
 
+/** A fact array's proofs as integer arrays, built once: each fact's proofs
+ * (the fact's own, then its alternatives), each proof's sources and premises
+ * (fact positions), and the proofs each fact is a premise of. A premise not in
+ * the array leaves its proof unusable. */
+const proofGraphs = new WeakMap();
+export function proofGraph(facts) {
+  const cached = proofGraphs.get(facts);
+  if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
+  const position = new Map(facts.map((fact, f) => [fact.id, f]));
+  const sources = new Map(),
+    sourceIds = [];
+  const source = (id) => {
+    let n = sources.get(id);
+    if (n === undefined) {
+      n = sourceIds.length;
+      sources.set(id, n);
+      sourceIds.push(id);
+    }
+    return n;
+  };
+  const factProofs = new Uint32Array(facts.length + 1),
+    proofFact = [],
+    proofSources = [],
+    proofPremises = [],
+    broken = [];
+  for (let f = 0; f < facts.length; f++) {
+    factProofs[f] = proofFact.length;
+    for (const proof of [facts[f], ...(facts[f].alternatives ?? [])]) {
+      const premises = (proof.premises ?? []).map((id) => position.get(id));
+      proofFact.push(f);
+      proofSources.push([...new Set(proof.sourceIds ?? [])].map(source));
+      proofPremises.push(premises.filter((q) => q !== undefined));
+      broken.push(premises.some((q) => q === undefined));
+    }
+  }
+  factProofs[facts.length] = proofFact.length;
+  const premiseOf = Array.from({ length: facts.length }, () => []);
+  proofPremises.forEach((premises, p) => {
+    for (const q of premises) premiseOf[q].push(p);
+  });
+  const graph = {
+    facts,
+    position,
+    sourceIds,
+    sources,
+    factProofs,
+    proofFact,
+    proofSources,
+    proofPremises,
+    broken,
+    premiseOf,
+    length: facts.length,
+    last: facts.at(-1),
+  };
+  proofGraphs.set(facts, graph);
+  return graph;
+}
+
+/** Which facts still hold without some sources: a fact holds when one of its
+ * proofs uses none of them and rests on facts that hold (the least fixpoint),
+ * found in one pass: each proof counts its premises not yet shown to hold. */
+export function withheldSupport(graph, withheld) {
+  const out = new Set(
+    [...withheld].map((id) => graph.sources.get(id)).filter((n) => n !== undefined),
+  );
+  const proofs = graph.proofFact.length;
+  const dead = new Uint8Array(proofs),
+    missing = new Uint32Array(proofs),
+    holds = new Uint8Array(graph.length),
+    queue = [];
+  for (let p = 0; p < proofs; p++) {
+    dead[p] = graph.broken[p] || graph.proofSources[p].some((n) => out.has(n)) ? 1 : 0;
+    missing[p] = graph.proofPremises[p].length;
+  }
+  const prove = (p) => {
+    const f = graph.proofFact[p];
+    if (dead[p] || missing[p] || holds[f]) return;
+    holds[f] = 1;
+    queue.push(f);
+  };
+  for (let p = 0; p < proofs; p++) prove(p);
+  while (queue.length) for (const p of graph.premiseOf[queue.pop()]) (missing[p]--, prove(p));
+  return holds;
+}
+
+/** For every fact, the sources each of its proofs rests on, directly or
+ * through its premises: the sources without which it would not hold. The
+ * greatest fixpoint, from every source: a cyclic proof never removes a source
+ * that every proof from the inputs needs. Null for a fact without a usable
+ * proof. Reverse load-bearing for a whole check in one sweep. */
+export function necessarySources(graph, { maxRounds = 64 } = {}) {
+  const top = null; // every source
+  const necessary = new Array(graph.length).fill(top);
+  const union = (sets) => {
+    const all = new Set();
+    for (const set of sets) {
+      if (set === top) return top;
+      for (const n of set) all.add(n);
+    }
+    return all;
+  };
+  const meet = (a, b) => (a === top ? b : b === top ? a : new Set([...a].filter((n) => b.has(n))));
+  let changed = true,
+    rounds = 0;
+  for (; changed && rounds < maxRounds; rounds++) {
+    changed = false;
+    for (let f = 0; f < graph.length; f++) {
+      let value = top,
+        usable = false;
+      for (let p = graph.factProofs[f]; p < graph.factProofs[f + 1]; p++) {
+        if (graph.broken[p]) continue;
+        const premises = graph.proofPremises[p].map((q) => necessary[q]);
+        const through = union([new Set(graph.proofSources[p]), ...premises]);
+        value = meet(value, through);
+        usable = true;
+      }
+      const same =
+        value === necessary[f] ||
+        (value !== top &&
+          necessary[f] !== top &&
+          value.size === necessary[f].size &&
+          [...value].every((n) => necessary[f].has(n)));
+      if (!usable) continue;
+      if (!same) {
+        necessary[f] = value;
+        changed = true;
+      }
+    }
+  }
+  return {
+    complete: !changed,
+    rounds,
+    of: (f) => (necessary[f] === top ? null : [...necessary[f]].map((n) => graph.sourceIds[n])),
+  };
+}
+
 export function traceRelations(facts, witnesses) {
   const byId = factsById(facts),
     visited = new Set(),

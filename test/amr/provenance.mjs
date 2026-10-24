@@ -1,0 +1,88 @@
+/** Proofs as integer arrays: what holds without a source, found in one pass,
+ * is what inference without that source derives; and the sources every proof
+ * of a fact rests on are exactly those without which it fails. Alternatives,
+ * cycles and chains included. */
+import assert from 'node:assert/strict';
+import {
+  inferRelations,
+  necessarySources,
+  proofGraph,
+  withheldSupport,
+} from '../../src/amr/inference.mjs';
+
+// Two ways to a reachable gate, a cycle between two rooms, and a chain.
+const inputs = [
+  { triple: ['hall', ':door', 'yard'], sourceIds: ['plan'] },
+  { triple: ['yard', ':door', 'gate'], sourceIds: ['plan'] },
+  { triple: ['hall', ':path', 'gate'], sourceIds: ['survey'] },
+  { triple: ['east', ':door', 'west'], sourceIds: ['notes'] },
+  { triple: ['west', ':door', 'east'], sourceIds: ['notes'] },
+  { triple: ['hall', ':kind', 'room'], sourceIds: ['register'] },
+];
+const rules = [
+  {
+    id: 'step',
+    name: 'A door is a way',
+    sourceIds: ['doors'],
+    when: [['?a', ':door', '?b']],
+    then: [['?a', ':way', '?b']],
+  },
+  {
+    id: 'path',
+    name: 'A path is a way',
+    sourceIds: ['paths'],
+    when: [['?a', ':path', '?b']],
+    then: [['?a', ':way', '?b']],
+  },
+  {
+    id: 'reach',
+    name: 'Ways compose',
+    sourceIds: ['reach'],
+    when: [
+      ['?a', ':way', '?b'],
+      ['?b', ':way', '?c'],
+    ],
+    then: [['?a', ':way', '?c']],
+  },
+  {
+    id: 'marked',
+    name: 'A room with a way out is marked',
+    sourceIds: ['marks'],
+    when: [
+      ['?a', ':kind', 'room'],
+      ['?a', ':way', '?b'],
+    ],
+    then: [['?a', ':marked', '$m']],
+  },
+];
+const full = inferRelations(inputs, rules);
+assert(full.complete);
+const graph = proofGraph(full.facts);
+assert(graph.proofFact.length > graph.length, 'Some facts have alternative proofs');
+const sources = [...new Set([...inputs, ...rules].flatMap((item) => item.sourceIds))];
+const necessity = necessarySources(graph);
+assert(necessity.complete);
+for (const source of sources) {
+  const truth = new Set(
+    inferRelations(
+      inputs.filter((input) => !input.sourceIds.includes(source)),
+      rules.filter((rule) => !rule.sourceIds.includes(source)),
+    ).facts.map((fact) => fact.id),
+  );
+  const holds = withheldSupport(graph, [source]);
+  for (let f = 0; f < graph.length; f++) {
+    const id = graph.facts[f].id;
+    assert.equal(Boolean(holds[f]), truth.has(id), `${id} without ${source}`);
+    assert.equal(!necessity.of(f).includes(source), truth.has(id), `${id} needs ${source}?`);
+  }
+}
+const at = (triple) => graph.position.get(JSON.stringify(triple));
+assert.deepEqual(
+  necessity.of(at(['hall', ':way', 'gate'])),
+  [],
+  'Reached by a door and a path, by two rules: no single source is needed',
+);
+assert.deepEqual(necessity.of(at(['east', ':way', 'east'])).sort(), ['doors', 'notes', 'reach']);
+console.log(
+  'ok provenance: support without a source matches inference without it; necessary sources are exactly the ones whose absence breaks a fact',
+);

@@ -13,6 +13,7 @@ export const suites = {
     'engine/semantic-chain.mjs',
     'amr/conditions.mjs',
     'amr/kinds.mjs',
+    'amr/provenance.mjs',
     'amr/clause-fragments.mjs',
     'amr/hrg.mjs',
     'amr/composition.mjs',

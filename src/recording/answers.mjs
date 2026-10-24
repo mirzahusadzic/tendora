@@ -1,5 +1,11 @@
 /** Answer the unchanged recorded question using attributed sentence relations. */
-import { inferRelations, traceRelations, guardedEvidence } from '../amr/inference.mjs';
+import {
+  inferRelations,
+  traceRelations,
+  guardedEvidence,
+  proofGraph,
+  withheldSupport,
+} from '../amr/inference.mjs';
 import { reviseGraph } from '../amr/revision.mjs';
 import { graphRevision } from './revisions.mjs';
 import {
@@ -759,18 +765,12 @@ export function withheldBase(base, withheld) {
   if (!base.inference.complete) return null;
   const out = new Set(withheld);
   const kept = (ids) => !(ids ?? []).some((id) => out.has(id));
-  const holds = new Set();
+  // The least fixpoint, in one pass over the proofs as integer arrays.
+  const graph = proofGraph(base.inference.facts);
+  const holding = withheldSupport(graph, withheld);
+  const holds = new Set(graph.facts.filter((_, f) => holding[f]).map((fact) => fact.id));
   const usable = (proof) =>
     kept(proof.sourceIds) && (proof.premises ?? []).every((id) => holds.has(id));
-  // The least fixpoint: proofs rest only on facts already shown to hold.
-  for (let grew = true; grew;) {
-    grew = false;
-    for (const fact of base.inference.facts)
-      if (!holds.has(fact.id) && [fact, ...(fact.alternatives ?? [])].some(usable)) {
-        holds.add(fact.id);
-        grew = true;
-      }
-  }
   const facts = [];
   for (const fact of base.inference.facts) {
     if (!holds.has(fact.id)) continue;
