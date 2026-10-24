@@ -92,6 +92,11 @@ const lookups = (facts) => {
     ]),
   );
 };
+assert.equal(
+  lookups(base.inference.facts),
+  lookups([...base.inference.facts]),
+  "Inference's facts indexed from its store",
+);
 let replaced = 0;
 for (const withheld of [['shared'], ['any'], ['statement']]) {
   const without = withheldBase(base, withheld);

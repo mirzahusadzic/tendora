@@ -6,6 +6,7 @@ import {
   proofGraph,
   withheldSupport,
 } from '../amr/inference.mjs';
+import { storeOf } from '../amr/fact-store.mjs';
 import { reviseGraph } from '../amr/revision.mjs';
 import { graphRevision } from './revisions.mjs';
 import {
@@ -831,6 +832,52 @@ function ownPositions(facts) {
     uniqueIds: () => (position(undefined), uniqueIds),
   };
 }
+// Inference's facts are a prefix of its store: their keys are already term
+// numbers, so the runs are counted over the store's columns and proof pools.
+function storePositions(store, facts) {
+  const length = facts.length,
+    terms = store.terms.length;
+  const counted = (each) => {
+    const offsets = new Uint32Array(terms + 1);
+    for (let f = 0; f < length; f++) each(f, (n) => offsets[n + 1]++);
+    for (let n = 0; n < terms; n++) offsets[n + 1] += offsets[n];
+    const order = new Uint32Array(offsets[terms]),
+      fill = offsets.slice(0, terms);
+    for (let f = 0; f < length; f++) each(f, (n) => (order[fill[n]++] = f));
+    return (key) => {
+      const n = store.numbers.get(key);
+      return n === undefined || n >= terms ? none : order.subarray(offsets[n], offsets[n + 1]);
+    };
+  };
+  const [s, r, o] = [store.s.data, store.r.data, store.o.data];
+  const isRelation = new Uint8Array(terms),
+    instance = store.numbers.get(':instance');
+  for (let n = 0; n < terms; n++)
+    isRelation[n] = typeof store.terms[n] === 'string' && relation(store.terms[n]) ? 1 : 0;
+  // A fact's own proof is its first row; a list's terms count once a fact.
+  const ownList = (field) => (f, emit) => {
+    const run = store.listRun(field, store.firstProof.data[f]);
+    for (let i = 0; i < run.length; i++) if (run.indexOf(run[i]) === i) emit(run[i]);
+  };
+  return {
+    subjects: counted((f, emit) => emit(s[f])),
+    nodes: counted((f, emit) => {
+      if (!isRelation[r[f]]) return;
+      emit(s[f]);
+      if (o[f] !== s[f]) emit(o[f]);
+    }),
+    sources: counted(ownList('sourceIds')),
+    fragments: counted(ownList('fragmentIds')),
+    instances: counted((f, emit) => {
+      if (r[f] === instance) emit(o[f]);
+    }),
+    position: (id) => {
+      const f = store.position(id);
+      return f === undefined || f >= length ? undefined : f;
+    },
+    uniqueIds: () => true,
+  };
+}
 function viewPositions(facts, view) {
   const parent = factIndex(view.parent).at;
   const toView = new Int32Array(view.parent.length).fill(-1);
@@ -872,11 +919,14 @@ function viewPositions(facts, view) {
 export function factIndex(facts) {
   const cached = labelIndexes.get(facts);
   if (cached && cached.length === facts.length && cached.last === facts.at(-1)) return cached;
-  const view = indexViews.get(facts);
+  const view = indexViews.get(facts),
+    store = storeOf(facts);
   const at =
     view && view.length === facts.length && view.last === facts.at(-1)
       ? viewPositions(facts, view)
-      : ownPositions(facts);
+      : store
+        ? storePositions(store, facts)
+        : ownPositions(facts);
   const read = (positions) => {
     if (!positions.length) return none;
     const found = new Array(positions.length);
