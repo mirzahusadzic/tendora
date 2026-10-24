@@ -195,6 +195,45 @@ assert(
   chained.evaluations < 2 * chain.length,
   `Rules untouched by the last round are not matched again (${chained.evaluations} of ${chain.length * chained.rounds})`,
 );
+// A fact joins the base cohort without being new: X rests on P, which first
+// has only a view's proof (so X is outside the base) and later gains an
+// ordinary one. A view that reads X and an older fact, but not P, must still
+// match once X is in the base, as evaluating every rule again would.
+const rule = (id, from, to, extra = {}) => ({
+  id,
+  name: id,
+  when: [['?a', from, '?b']],
+  then: [['?a', to, '?b']],
+  ...extra,
+});
+const joined = inferRelations(
+  [
+    { triple: ['k', 'cue', 'v'], sourceIds: ['cue'] },
+    { triple: ['k', 'start', 'v'], sourceIds: ['start'] },
+    { triple: ['v', 'kind', 'place'], sourceIds: ['kind'] },
+  ],
+  [
+    rule('view-held', 'cue', 'held', { baseOnly: true }),
+    rule('linked', 'held', 'linked'),
+    rule('mid', 'start', 'mid'),
+    rule('late', 'mid', 'late'),
+    rule('held', 'late', 'held'),
+    {
+      id: 'view-answer',
+      name: 'view-answer',
+      when: [
+        ['?a', 'linked', '?b'],
+        ['?b', 'kind', 'place'],
+      ],
+      then: [['?a', 'answer', '?b']],
+      baseOnly: true,
+    },
+  ],
+);
+assert(
+  joined.facts.some((fact) => fact.triple[1] === 'answer'),
+  'A fact that joins the base cohort seeds the views that read it',
+);
 const duplicate = { triple: ['a', 'same', 'b'], sourceIds: ['one'], bindingIds: ['binding-one'] };
 const copies = inferRelations(
   [duplicate, duplicate, { ...duplicate, sourceIds: ['two'], bindingIds: ['binding-two'] }],

@@ -192,13 +192,22 @@ export function inferRelations(
   // that is new, or newly proved, since the last round at one of its patterns;
   // a match made only of older facts was found, and fired or refused, before.
   // A new proof counts: it can satisfy a witness's guards that refused one.
-  let changed = null;
+  let changed = null,
+    previousBase = null;
+  const delta = (all) => {
+    const byRole = new Map();
+    for (const fact of all) {
+      if (!byRole.has(fact.triple[1])) byRole.set(fact.triple[1], []);
+      byRole.get(fact.triple[1]).push(fact);
+    }
+    return { all, byRole, ids: new Set(all.map((fact) => fact.id)) };
+  };
   const fits = (pattern, triple) =>
     pattern.every((term, i) => variable(term) || term === triple[i]);
   // The patterns of a rule that a changed fact fits: each seeds a match that
   // must use one of those facts there. Every new match has such a witness:
   // one made only of older facts was found, and fired or refused, before.
-  const seeds = (rule) =>
+  const seeds = (rule, changed) =>
     !changed
       ? [null]
       : rule.when.flatMap((pattern, i) =>
@@ -243,8 +252,19 @@ export function inferRelations(
       return supported;
     };
     const baseCohort = viewRules.size ? cohort.filter((f) => unextended(f.id)) : cohort;
+    // A fact can join the base cohort without being new or newly proved: one
+    // resting on a fact whose only proof was a view's, once that fact gains an
+    // ordinary proof. For the rules that read the base, it is new there.
+    let baseChanged = changed;
+    if (viewRules.size) {
+      const joined = changed
+        ? baseCohort.filter((fact) => !previousBase.has(fact.id) && !changed.ids.has(fact.id))
+        : [];
+      if (joined.length) baseChanged = delta([...changed.all, ...joined]);
+      previousBase = new Set(baseCohort.map((fact) => fact.id));
+    }
     for (const rule of rules) {
-      const ruleSeeds = seeds(rule);
+      const ruleSeeds = seeds(rule, rule.baseOnly ? baseChanged : changed);
       if (!ruleSeeds.length) continue;
       const input = rule.baseOnly ? baseCohort : rule.inputOnly ? inputCohort : cohort;
       const scoped = rule.inputSourceIds
@@ -362,13 +382,7 @@ export function inferRelations(
         rounds: rounds + 1,
         evaluations,
       };
-    const all = [...touched].map((id) => facts.get(id)),
-      byRole = new Map();
-    for (const fact of all) {
-      if (!byRole.has(fact.triple[1])) byRole.set(fact.triple[1], []);
-      byRole.get(fact.triple[1]).push(fact);
-    }
-    changed = { all, byRole, ids: touched };
+    changed = delta([...touched].map((id) => facts.get(id)));
   }
   return {
     facts: storePrefix([...facts.values()], store),
