@@ -12,6 +12,7 @@ export const suites = {
     'inquiry/traversal.mjs',
     'engine/semantic-chain.mjs',
     'amr/conditions.mjs',
+    'amr/kinds.mjs',
     'amr/clause-fragments.mjs',
     'amr/hrg.mjs',
     'amr/composition.mjs',

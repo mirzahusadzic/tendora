@@ -11,6 +11,7 @@ import {
 import { bindReferences } from './reference-bindings.mjs';
 import { graphLiterals } from '../amr/literals.mjs';
 import { conditionalReading } from '../amr/conditions.mjs';
+import { kindReading } from '../amr/kinds.mjs';
 import { unopened } from '../amr/labels.mjs';
 import { conditionOpenings } from '../amr/condition-openings.mjs';
 import { caseSpeakerBinding } from './case-speaker.mjs';
@@ -449,6 +450,23 @@ export function answerMaterial(recording, knowledge = {}, preparation) {
           ],
           ...(reading.guards ? { guards: reading.guards } : {}),
         });
+      else if (!fragment.projection && source.development?.asserted !== false) {
+        // A kind statement extends every node its subject's description fits.
+        const kind = kindReading(fragment.graph, source.text);
+        if (kind)
+          conditions.push({
+            id: `${fragment.id}/kind-v1`,
+            name: 'Kind statement',
+            kind: 'amr-kind',
+            attribution:
+              'What the subject is said to be holds of every node its description fits, one way.',
+            sourceIds: [source.id],
+            fragmentIds: [fragment.id],
+            sources: [{ text: source.text, nodeId: source.nodeId }],
+            when: [[source.id, '@text', source.text], ...fragment.guards, ...kind.when],
+            then: kind.then,
+          });
+      }
       // An unresolved question in a case or corpus is not a positive assertion.
       if (
         source.development?.asserted !== false &&
