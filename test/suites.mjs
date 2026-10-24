@@ -54,6 +54,7 @@ export const suites = {
     'project/payments-demo-copy.mjs',
     'project/data-files.mjs',
     'project/engine-storage.mjs',
+    'project/recoil.mjs',
     'project/cooperative-frame.mjs',
     'project/scope.mjs',
     'project/role-matching.mjs',
