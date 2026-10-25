@@ -91,9 +91,18 @@ const usage = (result) =>
     ),
   ].join('\n');
 
+const changedSince = (run, digest) =>
+  Boolean(digest && run.projectDigest && run.projectDigest !== digest);
+/** A saved check as JSON, marked when the statements changed since it. */
+const saved = (run, digest) => ({
+  ...run,
+  ...(changedSince(run, digest) ? { statementsChanged: true } : {}),
+});
+
 /** A saved or fresh check in words. `relations` names the question's
- * relationships when its reading is at hand. */
-function describe(run, { explain = false, offline = false, relations } = {}) {
+ * relationships when its reading is at hand; `digest`, the project's current
+ * revision, says whether the statements changed since the check. */
+function describe(run, { explain = false, offline = false, relations, digest } = {}) {
   if (run.cache === 'recheck' && !run.answer)
     return (
       'Saved question: ' +
@@ -103,6 +112,8 @@ function describe(run, { explain = false, offline = false, relations } = {}) {
       run.id
     );
   const lines = [run.status + ': ' + (run.questions?.[0]?.text ?? run.id)];
+  if (changedSince(run, digest))
+    lines.push('The statements changed since this check; ask again to check them as they are now.');
   if (run.status === 'needs-reading')
     lines.push(
       'Not every statement in scope has a reading; the answer below rests on those that do and may change.',
@@ -289,9 +300,10 @@ try {
     } else if (action === 'runs') {
       const runs = await listEngineRuns(project);
       output = values.json
-        ? runs
-        : runs.map((run) => describe(run, { explain: values.explain })).join('\n\n') ||
-          'No engine runs';
+        ? runs.map((run) => saved(run, project.digest))
+        : runs
+            .map((run) => describe(run, { explain: values.explain, digest: project.digest }))
+            .join('\n\n') || 'No engine runs';
     } else if (action === 'delete') {
       const doomed = values.all ? await listEngineRuns(project) : [await savedRun(values.run)];
       const what = values.all
@@ -359,7 +371,7 @@ try {
       const answers = run.answer?.answers ?? run.lastAnswer?.answers;
       output = values.json
         ? {
-            ...run,
+            ...saved(run, project.digest),
             // The check's own provenance; one saved before checks kept it is
             // read now and says so.
             provenance: run.provenance ?? {
@@ -391,6 +403,7 @@ try {
         : describe(run, {
             explain: values.explain,
             relations: await questionRelations(project, run),
+            digest: project.digest,
           });
     } else {
       const input = await inputFromProject(project, {

@@ -66,8 +66,10 @@ every CLI check records `via: cli`.
 
 ## Inspecting saved checks
 
-`recoil`, `tensions` and `probe` read the project's saved checks at its current
-revision. They check nothing again and save nothing.
+`show` reads one saved check and `runs` lists them; each says when the
+statements changed since a check (`statementsChanged` in JSON). `recoil`,
+`tensions` and `probe` read the saved checks at the project's current revision.
+None of them checks again or saves anything.
 
 ```sh
 npx tendora recoil --project .proj/payments-demo \

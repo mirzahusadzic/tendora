@@ -378,6 +378,20 @@ successful(human);
 assert.match(human.stdout, /Answer: Sam/u);
 assert.match(human.stdout, /Evidence: Sam repairs bicycles/u);
 assert.equal(human.stderr, '');
+assert.doesNotMatch(human.stdout, /changed since/u);
+assert.equal(shown.statementsChanged, undefined);
+// A check made before the statements changed says so (final review #12),
+// shown alone or listed; it is read, never checked again.
+const earlier = ['show', '--project', location, '--run', named.id];
+assert.match(
+  (await command(earlier)).stdout,
+  /^needs-amr: Who repairs bicycles\?\nThe statements changed since this check; ask again to check them as they are now\./u,
+);
+assert.equal(machine(await command([...earlier, '--json'])).statementsChanged, true);
+assert.match(
+  (await command(['runs', '--project', location])).stdout,
+  /needs-amr: Who repairs bicycles\?\nThe statements changed since this check/u,
+);
 // A run retained before item-level lexical audits still renders its answer.
 const legacyRun = {
   ...structuredClone(await readEngineRun(project, answer.id)),
