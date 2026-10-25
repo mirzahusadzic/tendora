@@ -39,8 +39,9 @@ npx tendora ask --project .proj/payments-demo \
 ```
 
 The first line is the status: `supported`, `conditional` (it holds under a
-clause the output names), `open`, `ambiguous`, `conflict`, `limited`, or a
-failure (`needs-amr`, `failed`). Then each answer, how it was read when a step
+clause the output names), `open`, `ambiguous`, `conflict`, `limited`,
+`needs-reading` (a statement in scope has no reading, so the answer shown is
+incomplete) or a failure (`needs-amr`, `failed`). Then each answer, how it was read when a step
 read it (a pronoun, "should" from "must", one modal word), and what it depends
 on. An open check says why in words, names the closest statements and lists
 proposals: a connection that answers once a person confirms it in the workbench

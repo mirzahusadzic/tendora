@@ -441,6 +441,11 @@ async function executeEngineRun(
         };
         run.coverage.reasoning = answer.coverage;
         run.status = answer.status;
+        // A statement or case in scope without a reading could deny the answer:
+        // it is kept, but never given as supported (AGENTS.md: a missing
+        // acquisition never becomes a supported answer).
+        if (!run.coverage.complete && ['supported', 'conditional'].includes(run.status))
+          run.status = 'needs-reading';
         run.openings = [
           ...preparedInput.openings,
           ...answer.openings,

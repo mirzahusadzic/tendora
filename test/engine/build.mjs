@@ -194,17 +194,24 @@ try {
     reason: 'Deliberately withheld',
   });
   const partial = await runEngine(project, { input: partialInput, trace: false });
-  assert.equal(partial.status, run.status);
+  // A statement in scope without a reading could deny the answer: it is not
+  // given as supported, but kept, incomplete (final review, #2).
+  assert.equal(partial.status, 'needs-reading', 'A missing reading is never a supported answer');
+  assert.deepEqual(
+    partial.answer.answers.map((answer) => answer.text),
+    run.answer.answers.map((answer) => answer.text),
+    'The answer from the statements that were read stays visible',
+  );
   assert.equal(partial.coverage.complete, false);
   assert.deepEqual(partial.coverage.sources, { total: 2, prepared: 1 });
   assert(
     partial.openings.some((opening) => opening.kind === 'acquisition'),
-    'Missing AMRs remain visible even with a supported answer',
+    'Missing AMRs remain visible beside the incomplete answer',
   );
   omitted.acquisition = { status: 'retained', penman: '(' };
   partialInput.openings = [];
   const malformed = await runEngine(project, { input: partialInput, trace: false });
-  assert.equal(malformed.status, run.status);
+  assert.equal(malformed.status, 'needs-reading', 'An unusable reading is a missing one');
   assert.equal(malformed.coverage.complete, false);
   assert(malformed.openings.some((opening) => opening.kind === 'normalization'));
 

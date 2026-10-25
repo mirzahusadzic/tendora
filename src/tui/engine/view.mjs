@@ -142,7 +142,7 @@ export function inquirySections(
             ? 'Partly supported; open connections remain'
             : 'Not established by this corpus',
           'needs-amr': 'Some text has no retained reading',
-          'needs-reading': 'This question needs a current domain reading',
+          'needs-reading': 'Incomplete: some statements in scope have no reading',
           'invalid-amr': 'A reading could not be prepared',
           running: 'Checking the corpus',
           failed: 'The check did not finish',
@@ -382,7 +382,14 @@ export function engineSections(run, input, result, selected = {}, changes = []) 
         [
           'State',
           state,
-          ['failed', 'limited', 'stale inputs', 'needs-amr', 'invalid-amr'].includes(state)
+          [
+            'failed',
+            'limited',
+            'stale inputs',
+            'needs-amr',
+            'needs-reading',
+            'invalid-amr',
+          ].includes(state)
             ? 'warning'
             : 'plain',
         ],

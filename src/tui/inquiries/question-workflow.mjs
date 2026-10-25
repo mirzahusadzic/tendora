@@ -482,6 +482,7 @@ export function createQuestionWorkflow({
     changed: 'The statements changed since this check.',
     released: 'The full check was released from storage.',
     unfinished: 'The last check did not finish.',
+    unread: 'Some statements in scope had no reading; its answer was incomplete.',
   };
   /** A saved question as last checked, shown without checking it again. */
   function savedQuestion(item, held = null) {
@@ -677,9 +678,11 @@ export function createQuestionWorkflow({
       ? 'changed'
       : !run.resultRef
         ? 'released'
-        : run.semantic || unfinished.includes(run.status)
-          ? 'unfinished'
-          : null;
+        : run.status === 'needs-reading'
+          ? 'unread'
+          : run.semantic || unfinished.includes(run.status)
+            ? 'unfinished'
+            : null;
   const unfinished = [
     'cancelled',
     'interrupted',

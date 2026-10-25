@@ -103,6 +103,10 @@ function describe(run, { explain = false, offline = false, relations } = {}) {
       run.id
     );
   const lines = [run.status + ': ' + (run.questions?.[0]?.text ?? run.id)];
+  if (run.status === 'needs-reading')
+    lines.push(
+      'Not every statement in scope has a reading; the answer below rests on those that do and may change.',
+    );
   for (const answer of [...(run.answer?.answers ?? []), ...(run.answer?.candidates ?? [])]) {
     lines.push((run.answer?.answers.includes(answer) ? 'Answer: ' : 'Candidate: ') + answer.text);
     if (answer.readAs === 'requirement')
@@ -205,6 +209,8 @@ function describe(run, { explain = false, offline = false, relations } = {}) {
       lines.push('Interpretation: ' + issue.reason);
   if (run.status === 'needs-amr' && offline)
     lines.push('Hint: Run without --offline to acquire the missing question AMR.');
+  if (run.status === 'needs-reading' && offline)
+    lines.push('Hint: Run without --offline to read the statements that have no reading.');
   lines.push(
     'Run: ' +
       run.id +

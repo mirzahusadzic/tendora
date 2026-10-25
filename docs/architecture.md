@@ -41,7 +41,9 @@ recognition alone is not entailment.
   is proposed, never read in. It answers once a person confirms it.
 - **Open:** an open answer says why and names the closest statements; several
   answers leave it ambiguous. Search and alignment have budgets and report
-  when one is reached (_limited_, never open).
+  when one is reached (_limited_, never open). A statement or case in scope
+  without a usable reading could deny an answer, so the check is incomplete
+  (_needs-reading_), never supported.
 
 SEMCAT supplies bounded local Smatch++ and RoSE comparisons; similarity and
 embeddings help compare and navigate, and never establish an answer. There is no
