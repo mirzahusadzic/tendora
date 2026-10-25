@@ -194,19 +194,31 @@ try {
           : 'Deleted engine run and its owned data: ' + values.run;
     } else if (action === 'show') {
       const run = await readEngineRun(project, values.run);
-      // A released check keeps no input: its statements are named by id only.
+      // A released check keeps no input, only its last answer and the
+      // statements that answer rests on.
       const input = run.inputRef
         ? await readEngineArtifact(project, run.inputRef).catch(() => null)
         : null;
+      const answers = run.answer?.answers ?? run.lastAnswer?.answers;
       output = values.json
         ? {
             ...run,
-            provenance: answerProvenance(
-              { projectId: run.projectId, projectRevision: run.projectDigest },
-              await readProvenance(project),
-              run.answer?.answers,
-              [...(input?.sources ?? []), ...(input?.cases ?? [])],
-            ),
+            provenance: {
+              ...answerProvenance(
+                { projectId: run.projectId, projectRevision: run.projectDigest },
+                await readProvenance(project),
+                answers,
+                [
+                  ...(input?.sources ?? []),
+                  ...(input?.cases ?? []),
+                  ...(run.lastAnswer?.sources ?? []),
+                ],
+              ),
+              // Released before it kept them: its statements are not known.
+              ...(answers?.some((answer) => !answer.sourceIds)
+                ? { statementsUnrecorded: true }
+                : {}),
+            },
             ...(values.explain && run.resultRef
               ? { result: await readEngineArtifact(project, run.resultRef) }
               : {}),

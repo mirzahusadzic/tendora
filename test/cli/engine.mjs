@@ -12,6 +12,7 @@ import {
   saveEngineRun,
 } from '../../src/project/storage/engine-runs.mjs';
 import { captureProjectInquiry } from '../../src/project/inquiries/inquiry.mjs';
+import { compactEngineStorage } from '../../src/project/inquiries/engine-storage.mjs';
 
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/cli-engine-'));
@@ -401,6 +402,34 @@ const storage = machine(await command(['storage', '--project', location, '--json
 assert(storage.bytes > 0 && storage.allocated > 0);
 const compact = machine(await command(['compact', '--project', location, '--json']));
 assert(compact.after.allocated > 0);
+// A released check keeps the statements its answer rests on (review
+// 2026-10-25, #4): shown again, it exports the same provenance.
+await compactEngineStorage(await openProject(location), { force: true, budget: 32 * 1024 });
+const released = machine(
+  await command(['show', '--project', location, '--run', alias.id, '--json']),
+);
+assert.equal(released.cache, 'recheck', 'The check was released by compaction');
+assert.deepEqual(released.provenance, {
+  ...answer.provenance,
+  projectRevision: alias.projectDigest,
+});
+// One released before it kept them says its statements are not known.
+const releasedRun = await readEngineRun(project, alias.id);
+const olderRelease = {
+  ...releasedRun,
+  id: randomUUID(),
+  lastAnswer: {
+    status: releasedRun.lastAnswer.status,
+    answers: releasedRun.lastAnswer.answers.map(({ text }) => ({ text })),
+  },
+};
+await saveEngineRun(project, olderRelease);
+const older = machine(
+  await command(['show', '--project', location, '--run', olderRelease.id, '--json']),
+);
+assert.deepEqual(older.provenance.statements, []);
+assert.equal(older.provenance.statementsUnrecorded, true);
+assert.equal(released.provenance.statementsUnrecorded, undefined);
 const reset = machine(await command(['delete', '--project', location, '--all', '--json']));
 assert.equal(reset.reset, true);
 assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), []);

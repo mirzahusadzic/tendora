@@ -103,15 +103,27 @@ function questionRecord(run) {
     cache: 'recheck',
   };
 }
-const lastAnswer = (run) =>
-  run.lastAnswer ?? {
-    status: run.answer.status,
-    answers: run.answer.answers.map(({ text, conditional, qualifications, readAs }) => ({
+// It keeps the statements each answer rests on, by id and text, so an exported
+// answer still names them and their provenance (review 2026-10-25, #4).
+const lastAnswer = (run) => {
+  if (run.lastAnswer) return run.lastAnswer;
+  const answers = run.answer.answers.map(
+    ({ text, conditional, qualifications, readAs, sourceIds = [] }) => ({
       text,
       ...(conditional ? { conditional, qualifications } : {}),
       ...(readAs ? { readAs } : {}),
-    })),
+      sourceIds,
+    }),
+  );
+  const cited = new Set(answers.flatMap((answer) => answer.sourceIds));
+  return {
+    status: run.answer.status,
+    answers,
+    sources: (run.answer.sources ?? [])
+      .filter((source) => cited.has(source.id))
+      .map(({ id, text }) => ({ id, text })),
   };
+};
 
 export async function engineStorageUsage(project) {
   const root = dirname(project.path);
