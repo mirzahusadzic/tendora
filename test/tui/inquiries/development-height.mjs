@@ -47,6 +47,29 @@ try {
     Math.abs(saved.projects[project.data.id].developmentFraction * bodyHeight - taller) <= 1,
     'The height is saved for this project',
   );
+  // In the same session, another project opened from Projects keeps the
+  // default, even after this one's Development is made short (review
+  // 2026-10-25, #12).
+  const top = ui.state.viewport.recordingsTop;
+  drag('MOUSE_LEFT_BUTTON_PRESSED', top);
+  await ui.app.idle();
+  drag('MOUSE_DRAG', top + Math.floor(taller * 0.7));
+  drag('MOUSE_LEFT_BUTTON_RELEASED', top + Math.floor(taller * 0.7));
+  await ui.app.idle();
+  assert(ui.state.viewport.developmentHeight < developmentHeight, 'Development made short');
+  while (ui.state.focus !== 'nodes') await ui.key('TAB');
+  await ui.key('w');
+  await ui.key('DOWN');
+  await ui.key('ENTER');
+  while (ui.state.projectChoices[ui.state.homeIndex]?.name !== 'Theatre') await ui.key('DOWN');
+  await ui.key('ENTER');
+  assert.equal(ui.state.project.data.id, other.data.id);
+  await ui.key('o');
+  assert.equal(
+    ui.state.viewport.developmentHeight,
+    developmentHeight,
+    'A height chosen in one project does not carry to another',
+  );
   ui.app.dispose();
 
   // A new session restores it; another project keeps the default.

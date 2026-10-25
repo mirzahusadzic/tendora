@@ -97,14 +97,17 @@ export function createMouse({
           state.resizing.height + state.resizing.y - data.y,
         ),
       );
-      state[state.resizing.fraction] = height / state.viewport.bodyHeight;
-      // Development's height belongs to the project it was chosen in.
+      const fraction = height / state.viewport.bodyHeight;
+      // Development's height belongs to the project it was chosen in; the
+      // default another project starts from is left as it was (review
+      // 2026-10-25, #12).
       const id = state.project?.data.id;
       if (state.resizing.fraction === 'developmentFraction' && id)
         state.projectLayouts = {
           ...state.projectLayouts,
-          [id]: { developmentFraction: state.developmentFraction },
+          [id]: { developmentFraction: fraction },
         };
+      else state[state.resizing.fraction] = fraction;
     } else state.preferredSidebar = sidebarSize((term.width ?? 80) - 1, data.x - 1);
   }
   /** The list entry under the pointer, in the left column: every line of it
