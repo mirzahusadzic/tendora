@@ -2,6 +2,14 @@
 
 What Metal gives for trimming a module's rules against its fact store, measured
 against the best CPU versions known, every output compared with an oracle.
+
+The approach is John Tromp's [Cuckoo Cycle](https://github.com/tromp/cuckoo):
+there, edge trimming discards over 99.9% of a graph's edges before the cycle
+search and takes most of the runtime; here, the trim discards the facts no
+match can use before the engine joins. Its lean miner (a bit per edge,
+latency-bound) and mean miner (bucketed, bandwidth-bound) are the pattern of
+the two GPU variants below, and the lean miner names this directory. No Cuckoo
+Cycle code is used: the trim is arc consistency over rules and facts.
 Apple M5 Pro (6 Super and 12 Performance cores, 48 GB), macOS 26.7.1, Swift
 6.4, Node 25.9, 2026-10-25.
 
@@ -49,7 +57,8 @@ on any device.
   written in one pass in its order (SIMD-group prefix sums); a list reached
   through a domain is spread evenly over the lanes and sorted at the end.
 - `metal-dense` (`trim metal --variant dense`): the same kernel with every
-  pattern read from its own run: the cuckoo-style dense trim.
+  pattern read from its own run whole, bandwidth-bound like Cuckoo Cycle's mean
+  miner, where `metal-index` is latency-bound like its lean miner.
 
 ## Exactness
 

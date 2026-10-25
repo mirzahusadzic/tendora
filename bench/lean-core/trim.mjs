@@ -1,5 +1,6 @@
 /** Trimming a capture's rules against its store, in JS: the oracle and the
- * fastest JS version known. See README.md for the definition.
+ * fastest JS version known. See README.md for the definition; the approach is
+ * Cuckoo Cycle's edge trimming (John Tromp, github.com/tromp/cuckoo).
  *
  *   node bench/lean-core/trim.mjs <capture-dir> [--oracle] [--out <file>] [--warmup <n>] [--repeat <n>]
  *

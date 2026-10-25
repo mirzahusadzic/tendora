@@ -5,8 +5,8 @@
 // each holder arrives, then the fixpoint. A list read from a run is written in
 // one pass in its order (SIMD-group prefix sums); a list reached through a
 // domain is spread evenly over the lanes and sorted at the end. With --variant
-// dense every pattern is read from its own run (the cuckoo-style dense trim);
-// the output is the same.
+// dense every pattern is read from its own run whole (after Cuckoo Cycle's mean
+// miner, github.com/tromp/cuckoo); the output is the same.
 //
 // Columns are wrapped without copying (the capture's mapped pages, the index's
 // page-aligned arrays). Pipelines are compiled once into a Metal 4 archive and

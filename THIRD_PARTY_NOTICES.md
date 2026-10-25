@@ -27,6 +27,24 @@ for original contributions only.
 | Optional Bolinas checkout, into `.deps/` by `npm run setup:bolinas` | MIT core; bundled utilities under Apache-2.0, MIT and LGPL-3.0-or-later, plus ColorBrewer terms | [Fork component notices](https://github.com/mirzahusadzic/bolinas/blob/70fbac4afe7177d28f9658df4c88b2e1b4bcbfbb/NOTICES.md) |
 | npm and Python dependencies                                         | As supplied with each installed distribution                                                    | Their package metadata                                                                                                      |
 
+## Acknowledgements
+
+Work Tendora learned from, beyond what it ships:
+
+- **[Cuckoo Cycle](https://github.com/tromp/cuckoo)** (Cuck(at)oo Cycle), by
+  John Tromp. Its edge trimming, which discards over 99.9% of a graph's edges
+  before the cycle search and takes most of the runtime, is the model for
+  Tendora's trim: bulk, data-parallel trimming first, exact search over what
+  survives. Its lean miner (a bit per edge, latency-bound) and mean miner
+  (bucketed, bandwidth-bound) are the pattern of the trim's two GPU variants,
+  and the lean miner names `bench/lean-core`. The trim itself, arc
+  consistency over rules and facts, is written for Tendora; no Cuckoo Cycle
+  code is included.
+- **[Abstract Meaning Representation](https://github.com/amrisi/amr-guidelines)**,
+  the notation of every reading.
+- **[PENMAN](https://github.com/goodmami/penman)**, by Michael Wayne Goodman,
+  which reads and normalizes the readings (installed by setup).
+
 ## What this means in practice
 
 This is a summary, not legal advice; the license texts govern.
