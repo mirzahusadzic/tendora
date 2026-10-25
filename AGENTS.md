@@ -6,10 +6,12 @@ main authoring interface.
 
 ## Start here
 
-- [README.md](README.md): setup and the payments demo.
-- [docs/architecture.md](docs/architecture.md): boundaries and limitations.
-- [docs/development.md](docs/development.md): tests and dependency updates.
-- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): licensing scope.
+- [The README](README.md): what Tendora is, its capabilities, setup.
+- [The capability tour](docs/demo.md): every capability on the bundled demo.
+- [Architecture](docs/architecture.md): boundaries and limitations.
+- [Storage](docs/storage.md): layout, schemas and embeddings.
+- [Development](docs/development.md): tests and dependency updates.
+- [Licensing and attribution](THIRD_PARTY_NOTICES.md): licensing scope.
 
 Use Node.js 24+ and `npm ci`; `npm run setup:python` installs the local Python
 environment with uv. Test without a running model service: `npm run check`.

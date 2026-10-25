@@ -141,6 +141,21 @@ flowchart LR
 
 <p align="center"><em>Everything here is in the <a href="docs/demo.md">capability tour</a>, on the bundled demo, with the graphs of each step. Inspection reads the saved checks and checks nothing again.</em></p>
 
+## Capabilities
+
+| Capability          | What it gives                                                                                                                                   | CLI                         | Workbench                    | Tour                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------- | --------------------------------------------------------------- |
+| Question and answer | An answer with every statement and rule it rests on; conditional, ambiguous or open, and why                                                    | `ask`                       | `a`                          | [1](docs/demo.md#1-a-question-and-its-answer)                   |
+| Case                | The circumstances of one check; an answer that rests on them says so                                                                            | `ask --case-text`           | the ask form                 | [1](docs/demo.md#1-a-question-and-its-answer)                   |
+| Read in, and said   | "Must" answers "should", a pronoun, one modal word: each answer read that way says so                                                           | `ask`                       | the answer                   | [2](docs/demo.md#2-what-the-engine-reads-in)                    |
+| Proposal            | A connection one confirmation away, never read in by itself; the confirmation records who                                                       | `ask`                       | `d` in Development           | [3](docs/demo.md#3-open-and-why)                                |
+| Juxtaposition       | Where questions bring the role tree's branches together: resolved, gathered or open                                                             | `tensions`                  | a role with children         | [4](docs/demo.md#4-juxtaposition-what-questions-bring-together) |
+| Recoil              | From a statement, role or question: what it rests on, what rests on it, what shares its place                                                   | `recoil`                    | question and statement views | [5](docs/demo.md#5-recoil-down-up-and-sideways)                 |
+| Probes              | Each statement asked back from its own reading                                                                                                  | `probe`                     | a statement                  | [6](docs/demo.md#6-asked-back-from-its-own-reading)             |
+| Corpus fidelity     | What the statements can be asked back for, what questions rest on; with withholding, the [load-bearing](docs/load-bearing.md) test per variable | `fidelity`                  | the root role                | [7](docs/demo.md#7-corpus-fidelity)                             |
+| Provenance          | Who wrote each statement an answer rests on, kept with the check                                                                                | `ask --json`, `show --json` | a statement                  | [8](docs/demo.md#8-who-wrote-what)                              |
+| Saved checks        | Every check kept with its evidence; said when the statements changed since                                                                      | `runs`, `show`, `delete`    | `o` Development              | [CLI](docs/cli.md)                                              |
+
 ## Where it stands
 
 It answers only what its sources support: answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it. The open problem is questions worded independently of a domain's statements ([where they are lost](docs/held-out-diagnosis.md)):

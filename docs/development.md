@@ -108,8 +108,8 @@ PropBank is the only vendored dependency. Its lexical data has pinned source
 and derived hashes.
 
 For independent grammar validation, install the
-[Bolinas fork](https://github.com/mirzahusadzic/bolinas) at the revision in
-[`tools/bolinas.json`](../tools/bolinas.json):
+[Bolinas fork](https://github.com/mirzahusadzic/bolinas) at the revision its
+[dependency pin](../tools/bolinas.json) records:
 
 ```sh
 npm run setup:bolinas

@@ -71,7 +71,7 @@ premise was read and what it would let the engine conclude.
 
 ## The decision this needs
 
-[AGENTS.md](../AGENTS.md) currently says: "Do not add a second generative pass
+[The agent guide](../AGENTS.md) currently says: "Do not add a second generative pass
 for source interpretation, paraphrases or alignment." This proposal leaves
 source interpretation and alignment untouched but puts a generative model
 inside the authoring loop. Adopting it means adding an exception such as:

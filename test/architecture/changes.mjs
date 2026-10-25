@@ -28,7 +28,11 @@ assert(demo.includes('project/examples.mjs'), 'A named directory reaches its fil
 assert(demo.includes('acceptance/payments.mjs'));
 assert(!demo.includes('amr/hrg.mjs'));
 assert(reached('test/engine/cloze.mjs').includes('engine/cloze.mjs'), 'A suite reaches itself');
-assert.deepEqual(reached(docs), [], 'Documentation reaches no suite');
+assert.deepEqual(
+  reached(docs),
+  ['architecture/doc-links.mjs'],
+  'Documentation reaches only the check of its links',
+);
 for (const path of ['test/run.mjs', 'package.json', 'tools/changes.mjs'])
   assert.equal(reached(path).length, suites.check.length, `${path} reaches every suite`);
 assert(
