@@ -138,7 +138,7 @@ flowchart LR
     class OUT,IN group
 ```
 
-Everything here is in the [capability tour](docs/demo.md), on the bundled demo, with the graphs of each step. Inspection reads the saved checks and checks nothing again.
+<p align="center"><em>Everything here is in the <a href="docs/demo.md">capability tour</a>, on the bundled demo, with the graphs of each step. Inspection reads the saved checks and checks nothing again.</em></p>
 
 ## Where it stands
 
