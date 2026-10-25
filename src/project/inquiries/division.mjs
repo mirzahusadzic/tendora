@@ -1,7 +1,8 @@
 /** Collection and division: do these statements belong together, or apart?
  * Two statements are connected when they share a participant (by name) or a
  * content concept (a predicate's lemma, a thing's concept), never a generic
- * one (person, thing, a role frame). Then
+ * one (person, thing, a role frame, a quantifier) nor one nearly every
+ * statement has. Then
  *   division     a role whose own statements fall into groups connected to
  *                nothing in the others: one role, or several?
  *   collection   a statement that shares more with another role's statement
@@ -30,6 +31,27 @@ const generic = new Set([
   'we',
   'you',
   'i',
+  // Quantifiers and focus words say how much or which, not what about.
+  'both',
+  'another',
+  'other',
+  'only',
+  'all',
+  'each',
+  'every',
+  'some',
+  'any',
+  'same',
+  'one',
+  'this',
+  'that',
+  'also',
+  'still',
+  'again',
+  'even',
+  'just',
+  'more',
+  'most',
 ]);
 
 /** What a statement is about: its participants by name, its content
@@ -46,12 +68,17 @@ function keys(graph) {
       .join(' ');
     if (words) found.add(`name:${words.toLowerCase()}`);
   }
+  // A measure's unit (the minute of ten minutes) says how much, not what about.
+  const units = new Set(graph.edges.filter((edge) => edge.role === ':unit').map((edge) => edge.to));
   for (const node of graph.nodes) {
     const concept = node.concept;
+    if (units.has(node.id) || concept?.endsWith('-quantity')) continue;
     if (!concept || node.literal !== undefined || named.has(node.id) || node.concept === 'name')
       continue;
-    if (generic.has(concept) || /-91$/u.test(concept) || concept.startsWith('amr-')) continue;
-    found.add(`concept:${concept.replace(/-\d+$/u, '')}`);
+    const lemma = concept.replace(/-\d+$/u, '');
+    if (generic.has(concept) || generic.has(lemma) || /-91$/u.test(concept)) continue;
+    if (concept.startsWith('amr-') || concept.endsWith('-entity') || lemma === 'either') continue;
+    found.add(`concept:${lemma}`);
   }
   return found;
 }
@@ -59,7 +86,20 @@ function keys(graph) {
 export async function divisionReport(project) {
   const view = await corpusView(project);
   const items = view.statements.filter((item) => item.graph);
-  const about = new Map(items.map((item) => [item.id, keys(item.graph)]));
+  // A concept nearly every statement has connects everything and tells
+  // nothing: one in more than a tenth of the statements (and five) is left
+  // out. A name is never: it is who the statements are about.
+  const all = new Map(items.map((item) => [item.id, keys(item.graph)]));
+  const counts = new Map();
+  for (const found of all.values())
+    for (const key of found) counts.set(key, (counts.get(key) ?? 0) + 1);
+  const common = Math.max(5, items.length / 10);
+  const about = new Map(
+    [...all].map(([id, found]) => [
+      id,
+      new Set([...found].filter((key) => key.startsWith('name:') || counts.get(key) <= common)),
+    ]),
+  );
   const shared = (a, b) => [...about.get(a)].filter((key) => about.get(b).has(key));
   const byRole = new Map();
   for (const item of items) {
@@ -132,7 +172,7 @@ export async function divisionReport(project) {
       statements: view.named([id, other.id]),
       proposal: mutual
         ? `Do they say one thing from two roles (the tie between ${view.role(id)} and ${view.role(other.id)}), or does one belong with the other?`
-        : `Does “${item.text}” belong with ${view.role(other.id)}?`,
+        : `Does “${item.text}” belong with ${view.role(other.id)}, or does it tie ${view.role(id)} to ${view.role(other.id)}?`,
     });
   }
   return {

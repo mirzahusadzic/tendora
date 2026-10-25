@@ -25,7 +25,11 @@ const bundled = await openProject(plain);
 const texts = (finding) => finding.statements.map((item) => item.statement).sort();
 
 // Collection: the release manager confirms before the incident commander
-// closes, the incident commander closes after the release manager confirms.
+// closes, the incident commander closes after the release manager confirms
+// (each leans on the other); and the security engineer's rule leans on the
+// support lead's, which needs Priya to renew the certificate: both are ties
+// between roles. A role's own person ties its statements (a name always
+// counts), and a measure (ten minutes, five minutes) ties nothing.
 const division = await divisionReport(bundled);
 assert.deepEqual(
   division.findings.map((finding) => [finding.kind, texts(finding)]),
@@ -37,13 +41,21 @@ assert.deepEqual(
         'Morgan, the release manager, confirms that payments are healthy before the incident commander closes a major incident.',
       ],
     ],
+    [
+      'collection',
+      [
+        'If Priya renews the certificate, Sam, the support lead, notifies the customers.',
+        'If a certificate expires, Priya, the security engineer, renews the certificate.',
+      ],
+    ],
   ],
 );
 assert.match(
   division.findings[0].proposal,
   /the tie between Release Manager and Incident Commander/u,
 );
-assert.match(formatDivision(division), /1 proposal\./u);
+assert.match(division.findings[1].proposal, /or does it tie Security Engineer to Support Lead\?/u);
+assert.match(formatDivision(division), /2 proposals\./u);
 
 // On the bundled demo: no alternatives, no rule applies to one statement of a
 // shape and not another, and its two authors (Claude, and the unrecorded)

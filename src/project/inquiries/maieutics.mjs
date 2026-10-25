@@ -141,7 +141,11 @@ export async function maieuticsReport(project, { question = null, signal } = {})
         )
         .map((opening) => opening.from),
     );
+    // Among them, those the check found closest to the question (its own
+    // closest statements, when it kept them).
+    const closest = new Set((answer.related ?? []).map((item) => item.sourceId));
     const holds = (id) =>
+      (!closest.size || closest.has(id)) &&
       view.byId.get(id).graph?.nodes.some((node) => relations.has(node.concept));
     for (const id of new Set(reached))
       if (!covered.has(id) && !ruleOf.has(id) && run.status === 'open' && holds(id))
