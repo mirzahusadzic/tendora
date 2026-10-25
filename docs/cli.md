@@ -228,7 +228,9 @@ only on large stores, and a check's inference is bounded at 48,000 facts today:
 Metal holds at most 8 variables and 16 patterns a rule: `auto` passes a larger
 rule to Swift or `js`, and an explicit `metal` refuses it. A native program's
 output that does not fit what it was given fails the check; it is never read
-as a trim that kept nothing.
+as a trim that kept nothing. A native backend that fails as it runs (its
+device, its memory) fails a check that named it; under `auto` it hands the trim
+to the next, Swift and then `js`, which keep the same facts.
 
 ## Output and exit status
 

@@ -10,12 +10,22 @@ let pageSize = 16384
 
 func now() -> Double { Double(DispatchTime.now().uptimeNanoseconds) / 1e6 }
 
+/// The run ends with a reason on stderr, never a crash: 2 for what the caller
+/// gave (a flag, a capture that does not hold together), 3 for what this
+/// machine could not give (memory, a device, a pool too small).
+func refuse(_ reason: String, _ code: Int32 = 3) -> Never {
+  FileHandle.standardError.write("\(reason)\n".data(using: .utf8)!)
+  exit(code)
+}
+
 /// Page-aligned memory, so Metal can wrap it without copying.
 func alignedAlloc(_ count: Int) -> UnsafeMutablePointer<UInt32> {
   var raw: UnsafeMutableRawPointer?
   let bytes = max(pageSize, (count * 4 + pageSize - 1) / pageSize * pageSize)
-  precondition(posix_memalign(&raw, pageSize, bytes) == 0)
-  return raw!.bindMemory(to: UInt32.self, capacity: bytes / 4)
+  guard posix_memalign(&raw, pageSize, bytes) == 0, let raw else {
+    refuse("could not allocate \(bytes) bytes")
+  }
+  return raw.bindMemory(to: UInt32.self, capacity: bytes / 4)
 }
 func alignedBytes(_ count: Int) -> Int { max(pageSize, (count * 4 + pageSize - 1) / pageSize * pageSize) }
 
@@ -30,31 +40,83 @@ final class Capture {
   let mappedBytes: Int
   let columns: [UnsafeMutablePointer<UInt32>]
   let rules: [Rule]
-  init(dir: String) throws {
-    let meta = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: dir + "/meta.json"))) as! [String: Any]
-    facts = meta["facts"] as! Int
-    terms = meta["terms"] as! Int
-    columnBytes = meta["columnBytes"] as! Int
-    let fd = open(dir + "/columns.bin", O_RDONLY)
-    precondition(fd >= 0, "cannot open columns.bin")
-    mappedBytes = columnBytes * 3
-    // Private and writable, so the pages can be wrapped by Metal; never written.
-    let mapped = mmap(nil, mappedBytes, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)!
-    precondition(mapped != MAP_FAILED)
-    close(fd)
-    base = mapped
+  /// A capture is read only once it holds together: counts that are whole
+  /// numbers, files as long as they say, rules that end where the file does,
+  /// and every word of a rule a variable it has, a constant below `terms`, or
+  /// MISSING. What does not is refused with why (the column values are checked
+  /// as the index is built).
+  init(dir: String) {
+    guard let metaData = FileManager.default.contents(atPath: dir + "/meta.json") else {
+      refuse("the capture has no readable meta.json", 2)
+    }
+    guard let meta = (try? JSONSerialization.jsonObject(with: metaData)) as? [String: Any] else {
+      refuse("meta.json is not a JSON object", 2)
+    }
+    func count(_ key: String) -> Int {
+      guard let number = meta[key] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+        let value = Int(exactly: number), value >= 0, value <= Int(UInt32.max)
+      else { refuse("meta.json: \(key) is not a count", 2) }
+      return value
+    }
+    facts = count("facts")
+    terms = count("terms")
+    columnBytes = count("columnBytes")
+    guard columnBytes % 4 == 0, facts * 4 <= columnBytes else {
+      refuse("meta.json: \(facts) facts do not fit columns of \(columnBytes) bytes", 2)
+    }
+    if columnBytes == 0 {
+      // No facts: one zeroed page stands for the three empty columns.
+      let page = alignedAlloc(pageSize / 4)
+      page.initialize(repeating: 0, count: pageSize / 4)
+      base = UnsafeMutableRawPointer(page)
+      mappedBytes = pageSize
+    } else {
+      let fd = open(dir + "/columns.bin", O_RDONLY)
+      guard fd >= 0 else { refuse("the capture has no readable columns.bin", 2) }
+      var info = stat()
+      guard fstat(fd, &info) == 0, Int(info.st_size) >= columnBytes * 3 else {
+        close(fd)
+        refuse("columns.bin holds \(info.st_size) bytes; meta.json says 3 × \(columnBytes)", 2)
+      }
+      mappedBytes = columnBytes * 3
+      // Private and writable, so the pages can be wrapped by Metal; never written.
+      guard let mapped = mmap(nil, mappedBytes, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0),
+        mapped != MAP_FAILED
+      else {
+        close(fd)
+        refuse("could not map columns.bin")
+      }
+      close(fd)
+      base = mapped
+    }
     let stride = columnBytes
-    columns = (0..<3).map { mapped.advanced(by: $0 * stride).bindMemory(to: UInt32.self, capacity: stride / 4) }
-    let words = try Data(contentsOf: URL(fileURLWithPath: dir + "/rules.bin")).withUnsafeBytes { Array($0.bindMemory(to: UInt32.self)) }
+    let mapped = base
+    columns = (0..<3).map { mapped.advanced(by: $0 * stride).bindMemory(to: UInt32.self, capacity: max(1, stride / 4)) }
+    guard let ruleData = FileManager.default.contents(atPath: dir + "/rules.bin"),
+      ruleData.count % 4 == 0, ruleData.count >= 4
+    else { refuse("rules.bin is missing or not whole 32-bit words", 2) }
+    let words = ruleData.withUnsafeBytes { Array($0.bindMemory(to: UInt32.self)) }
     var at = 1
     var rules: [Rule] = []
-    for _ in 0..<Int(words[0]) {
+    let termLimit = UInt32(clamping: self.terms)
+    for r in 0..<Int(words[0]) {
+      guard at + 2 <= words.count else { refuse("rules.bin ends inside rule \(r)", 2) }
       let count = Int(words[at]), vars = Int(words[at + 1])
       at += 2
+      guard count <= (words.count - at) / 3 else { refuse("rules.bin ends inside rule \(r)", 2) }
       var patterns: [[UInt32]] = []
-      for _ in 0..<count { patterns.append([words[at], words[at + 1], words[at + 2]]); at += 3 }
+      for _ in 0..<count {
+        let pattern = [words[at], words[at + 1], words[at + 2]]
+        for word in pattern where word != MISSING {
+          let fits = word & VAR != 0 ? Int(word & ~VAR) < vars : word < termLimit
+          guard fits else { refuse("rules.bin: rule \(r) names \(word), no variable it has nor a term", 2) }
+        }
+        patterns.append(pattern)
+        at += 3
+      }
       rules.append(Rule(patterns: patterns, vars: vars))
     }
+    guard at == words.count else { refuse("rules.bin holds \(words.count - at) words past its rules", 2) }
     self.rules = rules
   }
 }
@@ -72,7 +134,12 @@ final class Index {
       let column = c.columns[i]
       let off = alignedAlloc(c.terms + 1)
       off.initialize(repeating: 0, count: c.terms + 1)
-      for f in 0..<c.facts { off[Int(column[f]) + 1] &+= 1 }
+      for f in 0..<c.facts {
+        let t = Int(column[f])
+        // A term past `terms` would index past the runs: the capture is refused.
+        guard t < c.terms else { refuse("columns.bin: fact \(f) holds term \(t) of \(c.terms)", 2) }
+        off[t + 1] &+= 1
+      }
       for t in 0..<c.terms { off[t + 1] &+= off[t] }
       let ord = alignedAlloc(c.facts)
       let fill = UnsafeMutablePointer<UInt32>.allocate(capacity: c.terms)
@@ -351,6 +418,8 @@ func encode(_ lists: [[UInt32]]) -> [UInt32] {
   return words
 }
 func write(_ words: [UInt32], to path: String) {
-  words.withUnsafeBytes { try! Data($0).write(to: URL(fileURLWithPath: path)) }
+  words.withUnsafeBytes {
+    do { try Data($0).write(to: URL(fileURLWithPath: path)) } catch { refuse("could not write \(path): \(error.localizedDescription)") }
+  }
 }
 func median(_ xs: [Double]) -> Double { let s = xs.sorted(); return s[s.count / 2] }

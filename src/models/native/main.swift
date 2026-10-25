@@ -1,28 +1,40 @@
 // trim cpu <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file]
 // trim metal <capture-dir> [--warmup n] [--repeat n] [--out file] [--variant index|dense|lean|wide|packed]
 // --repeat 0 loads and indexes (and sets Metal up) only, for the footprint before any trim.
+// Exit 2: a flag or a capture refused, with why; 3: memory, a device or the pool.
 import Foundation
 
+let usage = "usage: trim cpu|metal <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file] [--variant index|dense|lean|wide|packed]"
 var args = Array(CommandLine.arguments.dropFirst())
 func option(_ name: String) -> String? {
-  guard let at = args.firstIndex(of: name), at + 1 < args.count else { return nil }
+  guard let at = args.firstIndex(of: name) else { return nil }
+  guard at + 1 < args.count else { refuse("\(name) needs a value\n\(usage)", 2) }
   let value = args[at + 1]
   args.removeSubrange(at...(at + 1))
   return value
 }
-let threads = Int(option("--threads") ?? "") ?? ProcessInfo.processInfo.activeProcessorCount
-let repeatCount = Int(option("--repeat") ?? "") ?? 5
-let warmup = Int(option("--warmup") ?? "") ?? 0
+/// A whole-number flag within its range, or its default when absent; any
+/// other value is refused, never read as the default.
+func number(_ name: String, _ fallback: Int, _ range: ClosedRange<Int>) -> Int {
+  guard let given = option(name) else { return fallback }
+  guard let value = Int(given), range.contains(value) else {
+    refuse("\(name) takes a whole number from \(range.lowerBound) to \(range.upperBound), not \(given)", 2)
+  }
+  return value
+}
+let threads = number("--threads", ProcessInfo.processInfo.activeProcessorCount, 1...1024)
+let repeatCount = number("--repeat", 5, 0...100_000)
+let warmup = number("--warmup", 0, 0...100_000)
 let outPath = option("--out")
 let variant = option("--variant") ?? "index"
-guard args.count == 2 else {
-  print("usage: trim cpu|metal <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file] [--variant index|dense|lean|wide|packed]")
-  exit(2)
-}
+let variants = ["index", "dense", "lean", "wide", "packed"]
+guard variants.contains(variant) else { refuse("--variant is one of \(variants.joined(separator: ", ")), not \(variant)", 2) }
+guard args.count == 2 else { refuse(usage, 2) }
 let mode = args[0], dir = args[1]
+guard ["cpu", "metal"].contains(mode) else { refuse("unknown mode \(mode)\n\(usage)", 2) }
 
 var t = now()
-let capture = try Capture(dir: dir)
+let capture = Capture(dir: dir)
 let loadMs = now() - t
 t = now()
 let index = Index(capture)
@@ -37,8 +49,10 @@ func report(_ version: String, _ lists: [[UInt32]], _ times: [Double], _ extra: 
   ]
   if !times.isEmpty { fields["medianMs"] = (median(times) * 100).rounded() / 100 }
   for (k, v) in extra { fields[k] = v }
-  let data = try! JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys])
-  print(String(data: data, encoding: .utf8)!)
+  guard let data = try? JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys]) else {
+    refuse("could not write the report")
+  }
+  print(String(decoding: data, as: UTF8.self))
 }
 
 switch mode {
@@ -60,6 +74,5 @@ case "metal":
   exit(3)
   #endif
 default:
-  print("unknown mode \(mode)")
-  exit(2)
+  refuse("unknown mode \(mode)\n\(usage)", 2)
 }

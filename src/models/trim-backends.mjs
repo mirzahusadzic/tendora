@@ -27,7 +27,7 @@ import {
 import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MISSING, decodeTrim, trimFast, useTrim } from '../amr/trim.mjs';
+import { MISSING, checkCapture, decodeTrim, trimFast, useTrim } from '../amr/trim.mjs';
 
 export const trimBackends = ['js', 'swift', 'metal', 'auto'];
 // Where a native backend starts to pay: the trim in JS takes about 20 ms at
@@ -64,6 +64,9 @@ function compiler() {
 
 const builds = new Map();
 /** The native program for a backend, built once; or why it cannot be. */
+export function nativeProgram(kind) {
+  return program(kind);
+}
 function program(kind) {
   if (builds.has(kind)) return builds.get(kind);
   const tool = compiler();
@@ -100,9 +103,13 @@ function program(kind) {
   return builds.set(kind, built).get(kind);
 }
 
+// How long one native trim may run before the check gives it up.
+const nativeTimeout = 300_000;
 let scratch;
 /** A capture as the native program reads it: page-aligned u32 columns, the
- * rules, and their counts (bench/lean-core/capture.mjs). */
+ * rules, and their counts (bench/lean-core/capture.mjs). One scratch directory
+ * a thread is enough: a trim is written, run and read back synchronously, and
+ * each worker thread has its own. */
 function writeCapture(capture) {
   scratch ??= mkdtempSync(join(tmpdir(), 'tendora-trim-'));
   const page = 16384,
@@ -160,6 +167,7 @@ function nativeTrim(kind) {
   if (built.reason) throw unavailable(kind, built.reason);
   const threads = availableParallelism();
   const trim = (capture) => {
+    checkCapture(capture);
     const { sent, restore } = withoutMissing(capture);
     if (!sent.rules.length) return restore([]);
     const over = kind === 'metal' && metalLimit(sent.rules);
@@ -176,16 +184,24 @@ function nativeTrim(kind) {
         {
           encoding: 'utf8',
           env: { ...process.env, TRIM_POOL: String(pool), TRIM_ARCHIVE: built.archive },
+          // A trim takes well under a second; one that hangs fails the check.
+          timeout: nativeTimeout,
         },
       );
+      if (ran.error?.code === 'ETIMEDOUT')
+        throw unavailable(kind, `it ran longer than ${nativeTimeout / 1000} seconds`);
       if (ran.status === 0) {
-        trim.report = JSON.parse(ran.stdout.trim().split('\n').at(-1));
+        try {
+          trim.report = JSON.parse(ran.stdout.trim().split('\n').at(-1));
+        } catch {
+          throw unavailable(kind, 'its report was not JSON');
+        }
         // Output that does not fit the capture fails the check; it is never
-        // read as a trim that kept nothing.
+        // read as a trim that kept nothing, nor retried elsewhere.
         try {
           return restore(decodeTrim(readFileSync(out), sent));
         } catch (error) {
-          throw unavailable(kind, error.message);
+          throw Object.assign(unavailable(kind, error.message), { invalidOutput: true });
         }
       }
       if (kind === 'metal' && /pool .* ran out/u.test(ran.stderr) && pool < 1 << 30) continue;
@@ -250,8 +266,19 @@ export function trimBackend(name = 'js') {
   if (name === 'js') return trimFast;
   if (name === 'auto')
     return (capture) => {
-      const chosen = chooseBackend(capture.facts, undefined, capture.rules);
-      return chosen === 'js' ? trimFast(capture) : works(chosen).trim(capture);
+      // The fastest here; a native one that fails as it runs (its device, its
+      // memory) hands the trim to the next, Swift then JavaScript, which give
+      // the same lists. Output that does not fit is a fault, never retried.
+      let chosen = chooseBackend(capture.facts, undefined, capture.rules);
+      for (;;) {
+        if (chosen === 'js') return trimFast(capture);
+        try {
+          return works(chosen).trim(capture);
+        } catch (error) {
+          if (error.code !== 'BACKEND_UNAVAILABLE' || error.invalidOutput) throw error;
+          chosen = chosen === 'metal' && works('swift').available ? 'swift' : 'js';
+        }
+      }
     };
   const found = works(name);
   if (!found.available) throw unavailable(name, found.reason);

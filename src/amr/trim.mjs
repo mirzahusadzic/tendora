@@ -15,6 +15,45 @@
 export const VAR = 0x80000000,
   MISSING = 0xffffffff;
 
+/** A capture that holds together, or a refusal with why (CAPTURE_INVALID):
+ * whole counts, three columns of at least `facts` terms each below `terms`,
+ * and rules whose every word is a variable the rule has, a term, or MISSING.
+ * Every backend refuses the same capture, so none pads, ignores or reads past
+ * what another refuses (review of the Metal trim, 2026-10-25, #4). */
+export function checkCapture(capture) {
+  const refuse = (why) => {
+    throw Object.assign(new Error(`Invalid trim capture: ${why}.`), { code: 'CAPTURE_INVALID' });
+  };
+  const { columns, rules, facts, terms } = capture ?? {};
+  const count = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
+  if (!count(facts) || !count(terms)) refuse('facts and terms are whole counts');
+  if (!Array.isArray(columns) || columns.length !== 3) refuse('it has three columns');
+  columns.forEach((column, c) => {
+    if (!(column?.length >= facts)) refuse(`column ${c} holds fewer than ${facts} facts`);
+    const typed = column instanceof Uint32Array;
+    for (let f = 0; f < facts; f++) {
+      const term = column[f];
+      if (term >= terms || (!typed && !(Number.isInteger(term) && term >= 0)))
+        refuse(`column ${c}: fact ${f} holds ${term}, no term of ${terms}`);
+    }
+  });
+  if (!Array.isArray(rules)) refuse('it has rules');
+  rules.forEach((rule, r) => {
+    if (!count(rule?.vars) || !Array.isArray(rule.patterns))
+      refuse(`rule ${r} has vars and patterns`);
+    for (const pattern of rule.patterns) {
+      if (pattern?.length !== 3) refuse(`rule ${r}: a pattern is three words`);
+      for (const word of pattern) {
+        if (word === MISSING) continue;
+        const whole = Number.isInteger(word) && word >= 0 && word < MISSING;
+        if (!whole || (word & VAR ? (word & ~VAR) >= rule.vars : word >= terms))
+          refuse(`rule ${r} names ${word}, no variable it has nor a term`);
+      }
+    }
+  });
+  return capture;
+}
+
 /** Per column, the facts with each term as one run in fact order (CSR). */
 export function buildIndex({ columns, terms, facts }) {
   return columns.map((column) => {
@@ -54,7 +93,7 @@ export function narrowest(index, pattern, facts) {
 
 /** The oracle: every pattern's candidates filtered by domains held as Sets,
  * pattern by pattern, until nothing changes. Written to be read, not fast. */
-export function trimReference(capture, index = buildIndex(capture)) {
+export function trimReference(capture, index = buildIndex(checkCapture(capture))) {
   const { columns, rules, facts } = capture;
   const out = [];
   for (const { patterns, vars } of rules) {
@@ -98,7 +137,7 @@ export function trimReference(capture, index = buildIndex(capture)) {
  * in one array per variable slot, tagged from a running clock, so nothing is
  * cleared between rules. The greatest fixpoint is the oracle's: starting from
  * fewer candidates than it does only skips filtering steps it would take. */
-export function trimFast(capture, index = buildIndex(capture)) {
+export function trimFast(capture, index = buildIndex(checkCapture(capture))) {
   const { columns, rules, facts, terms } = capture;
   const maxVars = rules.reduce((m, rule) => Math.max(m, rule.vars), 0);
   const marks = Array.from({ length: maxVars }, () => new Uint32Array(terms));

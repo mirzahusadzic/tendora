@@ -588,25 +588,45 @@ func trimPipeline(_ device: MTLDevice, archivePath: String) throws -> (MTLComput
 /// A buffer the device gave, or a clear refusal: a failed allocation ends the
 /// run with a reason the engine reports, never a crash.
 func allocated(_ buffer: MTLBuffer?, _ what: String) -> MTLBuffer {
-  guard let buffer else {
-    FileHandle.standardError.write("Metal could not allocate \(what).\n".data(using: .utf8)!)
-    exit(3)
-  }
+  guard let buffer else { refuse("Metal could not allocate \(what).") }
   return buffer
+}
+/// What the device gave (a queue, an encoder), or a refusal naming it.
+func made<T>(_ value: T?, _ what: String) -> T {
+  guard let value else { refuse("Metal could not make \(what).") }
+  return value
+}
+/// A whole number from the environment within its range, its default when
+/// unset; anything else is refused, never read as the default.
+func setting(_ name: String, _ fallback: Int, _ range: ClosedRange<Int>) -> Int {
+  guard let given = ProcessInfo.processInfo.environment[name] else { return fallback }
+  guard let value = Int(given), range.contains(value) else {
+    refuse("\(name) takes a whole number from \(range.lowerBound) to \(range.upperBound), not \(given)", 2)
+  }
+  return value
 }
 
 func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeatCount: Int, report: (String, [[UInt32]], [Double], [String: Any]) -> Void) {
   let setupStarted = now()
-  guard let device = MTLCreateSystemDefaultDevice() else {
-    // No GPU reachable: none here, or a sandbox that withholds it.
-    FileHandle.standardError.write("no Metal device is reachable from this process\n".data(using: .utf8)!)
-    exit(3)
-  }
-  let archivePath = (ProcessInfo.processInfo.environment["TRIM_ARCHIVE"] ?? "tmp/lean/trim.mtl4archive")
-  let (pipeline, pipelineMs, fromArchive) = try! trimPipeline(device, archivePath: archivePath)
+  // No GPU reachable: none here, or a sandbox that withholds it.
+  guard let device = MTLCreateSystemDefaultDevice() else { refuse("no Metal device is reachable from this process") }
   let maxVars = c.rules.map { $0.vars }.max() ?? 1
   let maxPatterns = c.rules.map { $0.patterns.count }.max() ?? 1
-  precondition(maxVars <= 8 && maxPatterns <= 16, "the kernel holds at most 8 variables and 16 patterns a rule")
+  guard maxVars <= 8 && maxPatterns <= 16 else {
+    refuse("a rule has \(maxVars) variables and \(maxPatterns) patterns; the kernel holds at most 8 and 16", 2)
+  }
+  // No rules is no lists: the empty result, with nothing to set up.
+  if c.rules.isEmpty {
+    report("metal-\(variant)", [], [Double](repeating: 0, count: repeatCount), ["device": device.name])
+    return
+  }
+  let archivePath = (ProcessInfo.processInfo.environment["TRIM_ARCHIVE"] ?? "tmp/lean/trim.mtl4archive")
+  let pipeline: MTLComputePipelineState, pipelineMs: Double, fromArchive: Bool
+  do {
+    (pipeline, pipelineMs, fromArchive) = try trimPipeline(device, archivePath: archivePath)
+  } catch {
+    refuse("Metal could not build the trim pipeline: \(error.localizedDescription)")
+  }
 
   // The plan: per rule its offset, then P, V, missing, first pattern, patterns.
   var plan = [UInt32](repeating: 0, count: c.rules.count)
@@ -624,11 +644,13 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
 
   // Buffers: what the CPU already holds is wrapped, not copied.
   let shared: MTLResourceOptions = [.storageModeShared, .hazardTrackingModeUntracked]
-  let columnsBuffer = device.makeBuffer(bytesNoCopy: c.base, length: c.mappedBytes, options: shared, deallocator: nil)!
-  let offsetBuffers = (0..<3).map { device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(index.offsets[$0]), length: alignedBytes(c.terms + 1), options: shared, deallocator: nil)! }
-  let orderBuffers = (0..<3).map { device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(index.order[$0]), length: alignedBytes(c.facts), options: shared, deallocator: nil)! }
-  let planBuffer = plan.withUnsafeBytes { device.makeBuffer(bytes: $0.baseAddress!, length: $0.count, options: shared)! }
-  // The variant's level (Params.level): index and dense 0, lean 1, wide 2, packed 3.
+  let columnsBuffer = allocated(device.makeBuffer(bytesNoCopy: c.base, length: c.mappedBytes, options: shared, deallocator: nil), "the columns")
+  let offsetBuffers = (0..<3).map { allocated(device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(index.offsets[$0]), length: alignedBytes(c.terms + 1), options: shared, deallocator: nil), "the run offsets") }
+  let orderBuffers = (0..<3).map { allocated(device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(index.order[$0]), length: alignedBytes(c.facts), options: shared, deallocator: nil), "the run order") }
+  // Rules are present, so the plan holds at least their offsets.
+  let planBuffer = allocated(plan.withUnsafeBytes { device.makeBuffer(bytes: $0.baseAddress!, length: $0.count, options: shared) }, "the plan")
+  // The variant's level (Params.level): index and dense 0, lean 1, wide 2,
+  // packed 3; main.swift refuses any other name.
   let level: UInt32 = ["lean": 1, "wide": 2, "packed": 3][variant] ?? 0
   // Packed: each fact's three terms in one 16-byte record, made in setup.
   var packedBuffer = columnsBuffer
@@ -642,30 +664,30 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   }
   let words = (c.terms + 31) / 32
   // Persistent threadgroups: enough to fill the GPU, each with its own bitsets.
-  let groups = Int(ProcessInfo.processInfo.environment["TRIM_GROUPS"] ?? "") ?? 64
+  let groups = setting("TRIM_GROUPS", 64, 1...4096)
   let bitsBytes = groups * 8 * (maxVars + 1) * words * 4
   // No terms is no bits: a buffer is still one page, never zero bytes.
   let bitsBuffer = allocated(device.makeBuffer(length: max(pageSize, bitsBytes), options: [.storageModePrivate, .hazardTrackingModeUntracked]), "\(bitsBytes) bytes of bitsets")
-  let poolCapacity = Int(ProcessInfo.processInfo.environment["TRIM_POOL"] ?? "") ?? 96_000_000
+  let poolCapacity = setting("TRIM_POOL", 96_000_000, 1...Int(UInt32.max))
   let poolBuffer = allocated(device.makeBuffer(length: poolCapacity * 4, options: shared), "a pool of \(poolCapacity * 4) bytes")
-  let controlBuffer = device.makeBuffer(length: 16, options: shared)!
+  let controlBuffer = allocated(device.makeBuffer(length: 16, options: shared), "the control words")
   let outputBuffer = allocated(device.makeBuffer(length: max(8, patterns * 8), options: shared), "\(patterns * 8) bytes of output")
   var params: [UInt32] = [UInt32(c.rules.count), UInt32(words), UInt32(c.facts), UInt32(c.terms), UInt32(poolCapacity), variant == "dense" ? 1 : 0, UInt32(maxVars), level]
-  let paramsBuffer = device.makeBuffer(bytes: &params, length: params.count * 4, options: shared)!
+  let paramsBuffer = allocated(device.makeBuffer(bytes: &params, length: params.count * 4, options: shared), "the parameters")
 
   let residencyDescriptor = MTLResidencySetDescriptor()
   residencyDescriptor.initialCapacity = 16
-  let residency = try! device.makeResidencySet(descriptor: residencyDescriptor)
+  let residency = made(try? device.makeResidencySet(descriptor: residencyDescriptor), "a residency set")
   for b in [columnsBuffer, planBuffer, bitsBuffer, poolBuffer, controlBuffer, outputBuffer, paramsBuffer] + offsetBuffers + orderBuffers { residency.addAllocation(b) }
   if level >= 3 { residency.addAllocation(packedBuffer) }
   residency.commit()
   residency.requestResidency()
-  let queue = device.makeMTL4CommandQueue()!
+  let queue = made(device.makeMTL4CommandQueue(), "a command queue")
   queue.addResidencySet(residency)
-  let allocator = device.makeCommandAllocator()!
+  let allocator = made(device.makeCommandAllocator(), "a command allocator")
   let tableDescriptor = MTL4ArgumentTableDescriptor()
   tableDescriptor.maxBufferBindCount = 16
-  let table = try! device.makeArgumentTable(descriptor: tableDescriptor)
+  let table = made(try? device.makeArgumentTable(descriptor: tableDescriptor), "an argument table")
   for i in 0..<3 { table.setAddress(columnsBuffer.gpuAddress + UInt64(i * c.columnBytes), index: i) }
   for i in 0..<3 { table.setAddress(offsetBuffers[i].gpuAddress, index: 3 + i); table.setAddress(orderBuffers[i].gpuAddress, index: 6 + i) }
   table.setAddress(planBuffer.gpuAddress, index: 9)
@@ -678,9 +700,9 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
 
   // The bitsets start empty once; every rule leaves them empty.
   do {
-    let commands = device.makeCommandBuffer()!
+    let commands = made(device.makeCommandBuffer(), "a command buffer")
     commands.beginCommandBuffer(allocator: allocator)
-    let encoder = commands.makeComputeCommandEncoder()!
+    let encoder = made(commands.makeComputeCommandEncoder(), "a compute encoder")
     encoder.fill(buffer: bitsBuffer, range: 0..<bitsBytes, value: 0)
     encoder.endEncoding()
     commands.endCommandBuffer()
@@ -698,9 +720,9 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
     let wall = now()
     memset(controlBuffer.contents(), 0, 16)
     allocator.reset()
-    let commands = device.makeCommandBuffer()!
+    let commands = made(device.makeCommandBuffer(), "a command buffer")
     commands.beginCommandBuffer(allocator: allocator)
-    let encoder = commands.makeComputeCommandEncoder()!
+    let encoder = made(commands.makeComputeCommandEncoder(), "a compute encoder")
     encoder.setComputePipelineState(pipeline)
     encoder.setArgumentTable(table)
     encoder.dispatchThreadgroups(threadgroupsPerGrid: MTLSize(width: groups, height: 1, depth: 1), threadsPerThreadgroup: MTLSize(width: 256, height: 1, depth: 1))
@@ -717,9 +739,10 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
     }
     queue.commit([commands], options: options)
     done.wait()
-    if let failure { fatalError("GPU error: \(failure)") }
+    if let failure { refuse("the GPU reported an error: \(failure.localizedDescription)") }
     let control = controlBuffer.contents().bindMemory(to: UInt32.self, capacity: 4)
-    if control[2] != 0 { fatalError("the pool of \(poolCapacity) words ran out; set TRIM_POOL") }
+    // The host retries larger on exactly this message (trim-backends.mjs).
+    if control[2] != 0 { refuse("the pool of \(poolCapacity) words ran out; set TRIM_POOL") }
     // Read the lists out in pattern order.
     let out = outputBuffer.contents().bindMemory(to: UInt32.self, capacity: patterns * 2)
     let pool = poolBuffer.contents().bindMemory(to: UInt32.self, capacity: poolCapacity)
