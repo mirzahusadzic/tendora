@@ -1,13 +1,37 @@
 /** Transport regressions from the real UI run: closed sockets and visible failure stage. */
 import assert from 'node:assert/strict';
-import { embedTexts, acquire, parseTexts } from '../../src/models/acquisition.mjs';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { embedTexts, acquire, parseTexts, serviceKey } from '../../src/models/acquisition.mjs';
+
+// The key may come from a file, kept out of the environment others inherit.
+const keys = await mkdtemp(join(tmpdir(), 'tendora-key-'));
+try {
+  await writeFile(join(keys, 'key'), 'from-file\n');
+  await writeFile(join(keys, 'empty'), '\n');
+  assert.equal(serviceKey({}), 'dummy-key');
+  assert.equal(serviceKey({ EGEMMA_API_KEY: 'from-env' }), 'from-env');
+  assert.equal(
+    serviceKey({ EGEMMA_API_KEY: 'from-env', EGEMMA_API_KEY_FILE: join(keys, 'key') }),
+    'from-file',
+    'A named file wins over the variable',
+  );
+  assert.throws(
+    () => serviceKey({ EGEMMA_API_KEY_FILE: join(keys, 'missing') }),
+    /cannot be read/u,
+  );
+  assert.throws(() => serviceKey({ EGEMMA_API_KEY_FILE: join(keys, 'empty') }), /empty file/u);
+} finally {
+  await rm(keys, { recursive: true, force: true });
+}
 
 const fetch = globalThis.fetch;
 try {
   let calls = 0;
   globalThis.fetch = async (_url, options) => {
     calls++;
-    assert(options.headers.Authorization === `Bearer ${process.env.EGEMMA_API_KEY ?? 'dummy-key'}`);
+    assert(options.headers.Authorization === `Bearer ${serviceKey()}`);
     assert.equal(options.headers.Connection, 'close');
     if (calls === 1) throw new Error('fetch failed', { cause: { code: 'EPIPE' } });
     return {

@@ -1,9 +1,23 @@
 /** eGemma acquisition: request exact texts, validate cohorts, and adapt returned AMRs. */
 import { graphView } from '../amr/graph.mjs';
 import { setTimeout as delay } from 'node:timers/promises';
+import { readFileSync } from 'node:fs';
 
 const base = process.env.EGEMMA_URL ?? 'http://127.0.0.1:8000';
-const key = process.env.EGEMMA_API_KEY ?? 'dummy-key';
+/** The service key: a file named by EGEMMA_API_KEY_FILE, which keeps it out of
+ * the environment child processes and logs inherit, else EGEMMA_API_KEY. */
+export function serviceKey(env = process.env) {
+  if (env.EGEMMA_API_KEY_FILE) {
+    try {
+      const value = readFileSync(env.EGEMMA_API_KEY_FILE, 'utf8').trim();
+      if (value) return value;
+    } catch (error) {
+      throw new Error(`EGEMMA_API_KEY_FILE cannot be read: ${error.message}`);
+    }
+    throw new Error('EGEMMA_API_KEY_FILE names an empty file.');
+  }
+  return env.EGEMMA_API_KEY ?? 'dummy-key';
+}
 const retryDelay = (response, detail) => {
   const header = response.headers?.get('Retry-After');
   if (header !== null && header !== undefined) {
@@ -25,7 +39,7 @@ async function post(path, body, signal, progress = () => {}) {
       response = await fetch(`${base}${path}`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${key}`,
+          Authorization: `Bearer ${serviceKey()}`,
           Connection: 'close',
           'Content-Type': 'application/json',
         },
