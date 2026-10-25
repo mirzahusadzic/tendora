@@ -19,7 +19,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 360
+        wrappingWidth: 240
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -93,7 +93,9 @@ graphs['question-and-answer'] = block(
       `${chain.status}; rests on 2 statements, 2 rules and the case`,
     ),
     '',
-    '    Q -->|"asked with"| C',
+    // The question and the case come in side by side: the question asks for
+    // a rule's conclusion, the case meets the first condition.
+    '    Q -->|"asks for the conclusion of"| S2',
     '    C -->|"meets the condition of"| S1',
     '    S1 -->|"its conclusion meets the condition of"| S2',
     '    S2 -->|"concludes"| A',
@@ -179,16 +181,17 @@ graphs['recoil-up'] = block(
   upLines,
 );
 
+// Sideways: the questions side by side, resting on the statements they share.
 const side = down.sideways;
 const sideLines = [box('Q', 'Question', down.locus.label)];
+side.forEach((row, i) => sideLines.push(box(`O${i}`, 'Question', row.label)));
 const through = [...new Set(side.flatMap((row) => row.through))];
 through.forEach((label, i) => sideLines.push(box(`T${i}`, 'Statement', label)));
-side.forEach((row, i) => sideLines.push(box(`O${i}`, 'Question', row.label)));
 sideLines.push('');
 through.forEach((_, i) => sideLines.push(`    Q -->|"rests on"| T${i}`));
 side.forEach((row, i) =>
   row.through.forEach((label) =>
-    sideLines.push(`    T${through.indexOf(label)} -->|"also rests on it"| O${i}`),
+    sideLines.push(`    O${i} -->|"also rests on"| T${through.indexOf(label)}`),
   ),
 );
 sideLines.push(
@@ -198,7 +201,7 @@ sideLines.push(
 graphs['recoil-sideways'] = block(
   [
     ['Q_', ring.kept],
-    ['T', ring.person],
+    ['O', ring.kept],
   ],
   sideLines,
 );

@@ -35,7 +35,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 360
+        wrappingWidth: 240
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -69,7 +69,7 @@ flowchart LR
     S2["<b>Support Lead</b><br/>If Priya renews the certificate, Sam, the support lead, notifies the customers."]
     A["<b>Answer: Sam</b><br/>supported; rests on 2 statements, 2 rules and the case"]
 
-    Q -->|"asked with"| C
+    Q -->|"asks for the conclusion of"| S2
     C -->|"meets the condition of"| S1
     S1 -->|"its conclusion meets the condition of"| S2
     S2 -->|"concludes"| A
@@ -143,7 +143,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 360
+        wrappingWidth: 240
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -210,7 +210,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 360
+        wrappingWidth: 240
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -273,7 +273,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 360
+        wrappingWidth: 240
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -328,7 +328,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 360
+        wrappingWidth: 240
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -342,7 +342,7 @@ config:
         background: var(--fill) !important; border-radius: 4px;
         box-shadow: 0 0 0 5px var(--fill), 0 0 0 7px var(--ring); }
         .label[data-id^="L_Q_"] .labelBkg { --ring: #4d6bfe; }
-        .label[data-id^="L_T"] .labelBkg { --ring: #8e5bd6; }
+        .label[data-id^="L_O"] .labelBkg { --ring: #4d6bfe; }
         .edgeLabel p, .edgeLabel span, .edgeLabel text {
         --halo: var(--fill, var(--vscode-editor-background,
         var(--bgColor-default,
@@ -355,11 +355,11 @@ config:
 ---
 flowchart LR
     Q["<b>Question</b><br/>Who notifies the customers? / Case: A certificate expires."]
-    T0["<b>Statement</b><br/>If a certificate expires, Priya, the security engineer, renews the certificate."]
     O0["<b>Question</b><br/>Who renews the certificate? / Case: A certificate expires."]
+    T0["<b>Statement</b><br/>If a certificate expires, Priya, the security engineer, renews the certificate."]
 
     Q -->|"rests on"| T0
-    T0 -->|"also rests on it"| O0
+    O0 -->|"also rests on"| T0
     class Q,O0 person
     class T0 kept
     classDef default fill:#8a96a82e,stroke:#8a96a8,stroke-width:1px

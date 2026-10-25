@@ -21,7 +21,7 @@ config:
     layout: elk
     look: neo
     flowchart:
-        wrappingWidth: 400
+        wrappingWidth: 220
     themeCSS: >-
         foreignObject { overflow: visible; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
@@ -34,11 +34,8 @@ config:
         --fill: color-mix(in srgb, var(--ring) 30%, var(--knock));
         background: var(--fill) !important; border-radius: 4px;
         box-shadow: 0 0 0 5px var(--fill), 0 0 0 7px var(--ring); }
-        .label[data-id^="L_PE_"] .labelBkg { --ring: #8e5bd6; }
         .label[data-id^="L_IF_"] .labelBkg { --ring: #b5bcc6; }
-        .label[data-id^="L_EG_"] .labelBkg { --ring: #e3a008; }
         .label[data-id^="L_PJ_"] .labelBkg { --ring: #4d6bfe; }
-        .label[data-id^="L_EN_"] .labelBkg { --ring: #2e9e5b; }
         .edgeLabel p, .edgeLabel span, .edgeLabel text {
         --halo: var(--fill, var(--vscode-editor-background,
         var(--bgColor-default,
@@ -54,15 +51,12 @@ flowchart LR
     IF["<b>Workbench and CLI</b><br/>one engine behind both"]
     EG["<b>eGemma</b><br/>reads new text into AMR"]
     PJ["<b>Project</b><br/>statements by role, readings, saved checks"]
-    EN["<b>Deterministic engine</b><br/>a grammar from the readings, a check in scope"]
-    OUT["<b>Results</b><br/>answers with their sources, openings, proposals"]
+    EN["<b>Deterministic engine</b><br/>answers with their sources, openings and proposals, saved with provenance"]
 
-    PE -->|"statements and questions"| IF
-    IF -->|"text without a reading"| EG
-    IF -->|"statements, their authors, questions"| PJ
-    EG -->|"readings, kept with model and revision"| PJ
-    PJ -->|"the statements in scope"| EN
-    EN -->|"saved, exported with provenance"| OUT
+    PE --> IF
+    IF <-->|"new text, its reading"| EG
+    IF -->|"statements, readings"| PJ
+    PJ -->|"statements in scope"| EN
 
     classDef default fill:#8a96a82e,stroke:#8a96a8,stroke-width:1px
     classDef person fill:#8e5bd64d,stroke:#8e5bd6,stroke-width:2px
@@ -74,7 +68,7 @@ flowchart LR
     class IF interface
     class EG service
     class PJ kept
-    class EN,OUT engine
+    class EN engine
 ```
 
 <p align="center"><em>Text leaves the machine only to eGemma, for a reading or an embedding not yet retained; a check with <code>--offline</code> sends nothing. Comparison and ranking help navigate; only the engine answers.</em></p>
