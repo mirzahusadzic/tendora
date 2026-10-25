@@ -142,7 +142,14 @@ Everything here is in the [capability tour](docs/demo.md), on the bundled demo, 
 
 ## Where it stands
 
-It answers only what its sources support: answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it. The open problem is questions worded independently of a domain's statements. Three held-out domains, two of them blind with a sealed answer key, first gave 0 of 18 warranted answers, kept all 5 unknowns open and supported nothing false. [Diagnosed](docs/held-out-diagnosis.md) and now development sets, they give none of the 18 by itself and propose the right connection for 4; reworded blind (46 questions), 1 of 34 with 5 more one confirmation away, all 9 unknowns open, nothing wrong. A claim about generalisation needs a new sealed domain (`node test/acceptance/independent-domain.mjs`).
+It answers only what its sources support: answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it. The open problem is questions worded independently of a domain's statements ([where they are lost](docs/held-out-diagnosis.md)):
+
+| Held-out questions                         | Answered | One confirmation away | Unknowns kept open | Wrong |
+| ------------------------------------------ | -------- | --------------------- | ------------------ | ----- |
+| Three domains, two blind with a sealed key | 0 of 18  | 4                     | 5 of 5             | 0     |
+| The same, reworded blind (46 questions)    | 1 of 34  | 5                     | 9 of 9             | 0     |
+
+A claim about generalisation needs a new sealed domain (`node test/acceptance/independent-domain.mjs`).
 
 ## Start
 
