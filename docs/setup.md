@@ -24,7 +24,8 @@ npm run workbench -- --project .proj/payments-demo
 ```
 
 The demo contains `project.json`, retained material in `material.sqlite`, and
-twenty-one computed results with their evidence in `engine/artifacts.sqlite`.
+36 computed results with their evidence in `engine/artifacts.sqlite`; the
+[capability tour](demo.md) walks through them.
 Work on a copy to keep the bundled snapshot unchanged; generated databases and
 engine data elsewhere are ignored. `npm run demo` leaves an existing copy
 unchanged; `npm run demo -- --reset` discards it and starts again.
@@ -68,8 +69,8 @@ Defaults are `http://127.0.0.1:8000` and `dummy-key`. A key file stays out of
 the environment that child processes and logs inherit. Tendora does not start the
 server or bundle model weights. Ordinary interactive use and CLI checks without
 `--offline` can send source, case and question text to the configured service
-when readings are missing. The sixteen other retained payments questions are
-listed in the project; arbitrary new wording may need acquisition.
+when readings are missing. The demo's 36 questions and their cases replay
+offline; new wording needs a reading.
 
 The service must support `POST /amr/parse-batch` and `POST /embed/texts`.
 Embedding requests use `dimensions: 768` and `prompt_name: "STS"`; role ordering

@@ -1,105 +1,112 @@
 # Architecture
 
-Tendora develops a corpus through natural-language statements and questions,
-organized by roles. A role controls the scope from which a question is checked.
-The engine retains sources, intermediate artifacts and dependencies so an answer
-or partial contribution can be inspected and revisited as the material changes.
+A project is statements organized by roles. A question is checked against the
+statements in its scope (a role and its children), by a deterministic engine
+that retains its sources, intermediate artifacts and dependencies, so an answer
+can be inspected and revisited as the statements change.
 
-## Acquisition and checking
+## Reading
 
-Text is acquired as an Abstract Meaning Representation (AMR) through eGemma.
-The acquired PENMAN graph, model and revision are retained. Local PENMAN
-processing normalizes roles while preserving original variable identities.
-PropBank supplies lexical inspection data; it does not certify a parser reading.
+eGemma reads text into an Abstract Meaning Representation (AMR); the PENMAN
+graph, the model and its revision are retained, so a text is read once. Local
+PENMAN processing normalizes roles and keeps the original variables. PropBank
+supplies lexical checks (an unlisted sense, a number or time the text does not
+give, a dropped negation); it does not certify a reading. A reading's `:wiki`
+link is the parser's guess at a real-world referent and is not used in
+reasoning; names keep their parts. The
+[AMR guidelines](https://github.com/amrisi/amr-guidelines/blob/master/amr.md)
+were the reference for notation.
 
-The [AMR annotation guidelines](https://github.com/amrisi/amr-guidelines/blob/master/amr.md)
-were a development reference for AMR notation and interpretation.
+## Checking
 
-The deterministic engine compiles source graphs into hyperedge replacement
-grammar (HRG) material, matches questions through a query chart and checks
-attributed answers. Conditions, modality, polarity, reference and source
-boundaries constrain what can be supported. A question never supplies its own
-evidence, and grammar recognition alone is not entailment.
+The engine compiles the statements' readings into hyperedge replacement grammar
+(HRG) material, matches the question through a query chart and checks
+attributed answers. A question never supplies its own evidence, and grammar
+recognition alone is not entailment.
 
-Statements never share an entity merely because they share a word; identity
-across statements comes from authored language. A condition ("If a participant
-locks the passage, …") applies to whatever its condition fits. A kind statement
-("Shared work is a project.") extends every node its subject's description fits,
-one way, when its reading agrees with the sentence; negated, modal, named and
-asked statements extend nothing.
+- **Boundaries:** conditions, modality, polarity, reference and scope constrain
+  what holds. An answer that holds under a source's clause is _conditional_ and
+  names the clause. A participant the question names is identified; what a
+  source adds about it qualifies nothing.
+- **Rules from statements:** a condition ("If a certificate expires, …") applies
+  to whatever meets it, and rules chain; a negated conclusion answers No under
+  its condition. A kind statement ("A deployment is a change.") extends every
+  node its subject fits, one way. Identity across statements comes from authored
+  language, never from a shared word.
+- **Read in, and said:** "must" answers "should"; one modal word read two ways
+  is read as in the source; a question's unresolved pronoun reads as the one
+  entity it names. Each answer read that way says so.
+- **Proposals:** where the question and a source share words but were read
+  differently, or a source denies what a yes/no question asks, the connection
+  is proposed, never read in. It answers once a person confirms it.
+- **Open:** an open answer says why and names the closest statements; several
+  answers leave it ambiguous. Search and alignment have budgets and report
+  when one is reached (_limited_, never open).
 
-SEMCAT supplies bounded local Smatch++ and global RoSE comparisons with
-correspondences and provenance. Similarity and embeddings assist comparison
-and navigation; their scores do not by themselves establish an answer.
-There is no second generative pass to reinterpret or align the corpus.
+SEMCAT supplies bounded local Smatch++ and RoSE comparisons; similarity and
+embeddings help compare and navigate, and never establish an answer. There is no
+second generative pass.
+
+## Inspecting
+
+Read-only views over the saved checks at the project's revision (CLI `recoil`,
+`tensions`, `probe`; the workbench's question, statement and role views):
+
+| View          | Shows                                                                                                                                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recoil        | From a statement, role or question: what it rests on (down), what rests on it (up), what shares its place (sideways); the frontier is what the walk cannot see, never absence |
+| Tension lines | Which role branches a question's answer draws on: resolved by one composed answer, gathered by separate ones, or open                                                         |
+| Probes        | Each participant of a statement asked back from its own reading, and its truth                                                                                                |
+
+## Attribution
+
+| Record                 | `actor`                                                     | `via`                         |
+| ---------------------- | ----------------------------------------------------------- | ----------------------------- |
+| A statement            | who wrote or last edited it; `unrecorded` before recording  | `editor`, `library`           |
+| A confirmed connection | who confirmed it                                            | `editor`, `library`           |
+| A check (engine run)   | the workbench's actor, the CLI's `--actor`, or `unrecorded` | `workbench`, `cli`, `library` |
+
+A project may also declare authorship in `provenance.json` beside its manifest,
+for statements written elsewhere or proposed by a model. An exported answer
+(`--json`, a recording) carries the project id, the revision digest of its check
+and, for every statement it rests on, the recorded author, then what
+`provenance.json` adds. An actor is a label, not a verified identity.
 
 ## Retained work
 
-The workbench can preserve supported parts alongside unresolved relations
-(aporias), including openings at a specific relation or participant. A changed
-source can invalidate a dependent part without erasing its history. Saved
-questions and partial contributions can be revisited through Development.
+Supported parts are kept beside unresolved relations (aporias), at a relation
+or a participant. A changed source invalidates what depends on it without
+erasing its history. An ask keeps a versioned frame (reading, purpose, scope,
+case, source revisions); following an opening creates a linked frame that
+records who carried it and why. Scope, case, source or project changes require
+a fresh check; a purpose-only change keeps the assessment.
 
-Workbench Asks retain a versioned inquiry frame: the question reading when
-acquired, intention/purpose, scope, selected case, source identities and source
-revisions.
-Following an opening creates a distinct receiving frame linked to the originating
-recording and opening. The carry records its actor, rationale, changed frame
-dimensions and support consequence. A confirmed connection records who declared
-it (`actor`) and through what (`via`: the editor, or a library call); an actor is
-a label, not a verified identity. An engine run records the interface it came
-through (`via`: the workbench, the CLI, or a library call such as a script) and
-its actor: the workbench's, the CLI's `--actor`, or `unrecorded`, so checks run
-unattended are visible as such. A statement records who wrote it (`actor`) and
-through what (`via`) when it is written or edited; statements written before
-that name no one. A project may also declare authorship in `provenance.json`
-beside its manifest, for statements written elsewhere or proposed by a model.
-An exported answer (`--json`, a recording) carries the project id, the revision
-digest of its check and, for every statement it rests on, the recorded author,
-then what `provenance.json` adds, `unrecorded` where nothing is known.
-Authorship, like an actor, is declared, not verified. An identical acquired question can
-reuse its checked reading. A changed graph can produce a candidate correspondence, but graph
-mapping or compiled wording does not by itself establish preservation. Scope,
-case, source or project changes invalidate earlier support and require a fresh
-check. A purpose-only change preserves the earlier assessment when the question
-revision and checking context are unchanged; it does not manufacture a new proof.
-Version 1 and 2 continuations remain readable without being rewritten as framed
-records.
+`project.json` is the manifest. `material.sqlite` holds compressed,
+hash-checked blocks: authored records, readings, role vectors and questions,
+their decoded bytes and references preserved. sqlite-vec stores 128-dimension
+vectors for ranking, rebuildable from the readings. Engine artifacts and
+recordings are rebuildable; the demo bundles its 36 answers with their
+evidence.
 
-Projects keep their manifest in `project.json`. Compressed, hash-checked blocks
-in `material.sqlite` retain authored records, acquisitions, role vectors and
-questions, preserving their decoded bytes and references. sqlite-vec stores
-128-dimensional float32 vectors for local ranking; its index can be rebuilt
-from retained acquisitions. Engine artifacts and recordings are rebuildable;
-the demo includes computed answers and evidence for its twenty-one questions.
-CLI `ask` and the TUI use the same checking engine.
-
-| Location               | Responsibility                                                   |
-| ---------------------- | ---------------------------------------------------------------- |
-| `src/amr/`             | Graphs, fragments, grammar, correspondences and answer structure |
-| `src/engine/`          | Preparation, compilation, checking and retained contributions    |
-| `src/models/`          | eGemma clients, PENMAN and SEMCAT transports                     |
-| `src/project/`         | Authored records, scope, inquiries and storage                   |
-| `src/tui/`, `src/cli/` | Interactive authoring and scriptable checks                      |
-| `test/`, `tools/`      | Regressions, fixtures, experiments and PTY capture               |
-| `python/semcat/`       | Python adapter and pinned SEMCAT integration                     |
-| `vendor/propbank/`     | Pinned lexical resources                                         |
+| Location               | Responsibility                                                    |
+| ---------------------- | ----------------------------------------------------------------- |
+| `src/amr/`             | Graphs, fragments, grammar, correspondences and answer structure  |
+| `src/engine/`          | Preparation, compilation, checking, cloze probes and explanations |
+| `src/models/`          | eGemma clients, PENMAN and SEMCAT transports                      |
+| `src/project/`         | Authored records, scope, inquiries, inspection and storage        |
+| `src/tui/`, `src/cli/` | Interactive authoring and scriptable checks                       |
+| `test/`, `tools/`      | Regressions, fixtures, demo tools and PTY capture                 |
+| `python/semcat/`       | Python adapter and pinned SEMCAT integration                      |
+| `vendor/propbank/`     | Pinned lexical resources                                          |
+| `bench/lean-core/`     | The trim benchmark (JS, Swift, Metal); not part of the engine     |
 
 ## Present limits
 
-Acquired graphs can misread language; lexical audits and source inspection
-help review those readings. Answers rest on shared vocabulary: a question worded
-differently from its sources usually stays open or becomes a proposal one
-confirmation away. Offline replay uses retained wording. Search and
-alignment have explicit budgets and report when a limit is reached.
-
-The cooperative frame is a first vertical slice. It does not yet provide a
-general hypothetical-premise overlay, branch merging, or neural answer
-realization. Those remain proposals rather than engine behavior, as does
-[proposing premises at openings](consensual-premises.md).
-
-The payments project demonstrates role-scoped questions about written incident
-procedures. Storage and interfaces are evolving with the research prototype.
-
-[Load-bearing as situated meaning](../load-bearing.md) defines the local
+Readings can be wrong; lexical checks and source inspection help review them.
+Answers rest on shared vocabulary: a question worded differently from its
+sources usually stays open or becomes a proposal. Offline replay uses retained
+wording. The cooperative frame is a first slice: no hypothetical-premise
+overlay, branch merging or neural answer realization; those remain proposals,
+as does [proposing premises at openings](consensual-premises.md).
+[Load-bearing as situated meaning](../load-bearing.md) defines the
 counterfactual criterion used by the research measurement helper.

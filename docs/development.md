@@ -64,9 +64,19 @@ The time budget is twice the recorded engine time, scaled by a short
 calibration workload so that slower machines are not penalised. A claim about
 generalisation needs a new sealed domain that has not been diagnosed.
 
-Refresh all bundled answers offline with `node tools/refresh-payments-demo.mjs`.
-It computes results on a disposable copy, verifies the retained material and
-portable evidence, then replaces the demo's two compact SQLite stores.
+The bundled demo is built by tools, never edited by hand:
+
+```sh
+node tools/extend-payments-demo.mjs          # the tour's statements and questions; reads new text through eGemma once
+node tools/refresh-payments-demo.mjs         # recompute every answer offline and pack the stores
+node tools/demo-graphs.mjs --write docs/demo.md   # redraw the tour's graphs from the saved checks
+```
+
+The refresh computes results on a disposable copy, verifies the retained
+material and portable evidence, then replaces the demo's two compact SQLite
+stores (`--project` refreshes a copy instead). `test/acceptance/demo-tour.mjs`
+replays the tour offline; `test/project/demo-graphs.mjs` fails when the tour's
+graphs no longer match the demo.
 
 ## External research profiles
 

@@ -60,6 +60,7 @@ export const suites = {
     'architecture/test-layout.mjs',
     'project/storage.mjs',
     'project/examples.mjs',
+    'project/demo-graphs.mjs',
     'project/payments-demo-copy.mjs',
     'project/data-files.mjs',
     'project/engine-storage.mjs',
