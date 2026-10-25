@@ -95,10 +95,13 @@ const knowledge = {
   ],
 };
 const started = performance.now();
+// Every bound lifted, the derivations of one fact too: each copy of a kind
+// statement derives the same facts again, an alternative proof per copy.
 const base = answerBase(recording, knowledge, {
   maxFacts: 1e9,
   matchLimit: 1e8,
   matchBudget: 1e10,
+  maxDerivations: 1e6,
 });
 const baseMs = performance.now() - started;
 if (!base.inference.complete) throw new Error('The base is bounded; the capture would be partial');
@@ -107,10 +110,11 @@ const n0 = store.length,
   terms0 = store.terms.length;
 
 // A term names an occurrence when it belongs to a statement (its id, a node,
-// a literal of it): every source id contains '/s' followed by its number.
+// a literal of it): an imported passage's id contains '/s' and its number, a
+// statement written in the workbench's is a contribution's.
 const local = new Uint8Array(terms0);
 store.terms.forEach((term, t) => {
-  if (/\/s\d+/u.test(String(term))) local[t] = 1;
+  if (/\/s\d+|(?:^|\W)contribution:/u.test(String(term))) local[t] = 1;
 });
 const localCount = local.reduce((a, b) => a + b, 0);
 const n = n0 * replicas;

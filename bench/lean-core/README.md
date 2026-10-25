@@ -3,12 +3,15 @@
 What Metal gives for trimming a module's rules against its fact store, measured
 against the best CPU versions known, every output compared with an oracle.
 Apple M5 Pro (6 Super and 12 Performance cores, 48 GB), macOS 26.7.1, Swift
-6.4, Node 25.9, 2026-10-25. Report: `reports/trim-2026-10-25.json`; the raw
-output is at the end.
+6.4, Node 25.9, 2026-10-25.
+
+Two workloads: the bundled demo, which anyone can capture and run again
+(`reports/trim-demo-2026-10-25.json`), and the first run, on a corpus developed
+beside Tendora and not in this repository (`reports/trim-2026-10-25.json`, raw
+output at the end).
 
 A benchmark, not part of Tendora: nothing in `src/` imports it, and it is not
-run by `npm run check` or CI (it needs macOS, Metal and a corpus project to
-capture).
+run by `npm run check` or CI (it needs macOS and Metal).
 
 ## The trim
 
@@ -26,22 +29,6 @@ of 26.9 million candidates, 512 of 832 rules matching), and the engine's
 grammar matcher over only those facts gives the same matches. Trimming leaves
 the join almost nothing to do; that is the largest result here, and it holds
 on any device.
-
-## The workload
-
-`capture.mjs` writes a scaled corpus base's store columns and the bodies of the
-rules inference matches against it:
-
-| capture | facts     | terms     | rules | patterns | how                                   |
-| ------- | --------- | --------- | ----- | -------- | ------------------------------------- |
-| 16×     | 140,960   | 35,323    | 208   | 1,280    | built by the engine                   |
-| 64×     | 563,840   | 138,427   | 832   | 5,120    | built by the engine                   |
-| 9.0M    | 9,021,440 | 1,959,547 | 832   | 5,120    | the 64× store repeated 16×, occurrence terms renumbered; not built by the engine |
-
-Every pattern fixes its role; a rule has at most 13 patterns and 5 variables.
-The corpus is one of 209 statements in 15 roles, developed beside Tendora and
-not in this repository. Repeating it repeats its rules too; no version exploits
-that.
 
 ## Versions
 
@@ -65,23 +52,94 @@ that.
 
 ## Exactness
 
-Every output is byte-identical to the oracle's at all three sizes (the 9M oracle
-takes 55 s), in every round. Engine cross-check at 1×, 4×, 16× and 64×.
+In both runs every output is byte-identical to its capture's oracle, at every
+size, in every round, and the trim keeps exactly the facts the engine's own
+matches use (`check-engine.mjs`).
 
 Each capture has its own oracle, `oracle.bin`, written by `trim.mjs --oracle`,
-and `bench.mjs` refuses a capture without one. The report's run had all three.
-The procedure below once listed only the 9M oracle, and `bench.mjs` then
-compared a capture without an oracle against `js-fast`, so `js-fast` was
-checked against itself (found by the 2026-10-25 review). After the review, the
-oracles were made again for every size: they are byte-identical to the ones
-the report used, and one more round of every version matched them (raw output
-below).
+and `bench.mjs` refuses a capture without one. The first run's procedure once
+listed only the 9M oracle, and `bench.mjs` then compared a capture without an
+oracle against `js-fast`, so `js-fast` was checked against itself (found by the
+2026-10-25 review). After the review, the oracles were made again for every
+size: byte-identical to the ones the report used, and one more round of every
+version matched them (raw output at the end).
 
-At 9M the trim keeps the same 1,792 positions as at 64×: the 16 renumbered
-copies keep nothing, so the two oracles are the same bytes. Exactness at 9M
-therefore shows that nothing more survives, over 16 times the facts.
+In the first run, the trim keeps the same 1,792 positions at 9M as at 64×: the
+16 renumbered copies keep nothing, so the two oracles are the same bytes and
+exactness at 9M shows that nothing more survives. On the demo the copies keep
+their share (2,654,496 positions at 9M, about 16 times the 288× capture's
+166,176): the kind statement reaches across them.
 
-## Results
+## On the bundled demo (reproducible)
+
+Captured from a copy of the demo, at the saved check of "Who freezes changes
+during a major incident?" (all 25 statements, 1,969 facts, 5 rules), repeated:
+
+| capture | facts     | rules | patterns | kept      | how                                                      |
+| ------- | --------- | ----- | -------- | --------- | -------------------------------------------------------- |
+| 72×     | 141,768   | 360   | 3,096    | 10,440    | built by the engine                                      |
+| 288×    | 567,072   | 1,440 | 12,384   | 166,176   | built by the engine                                      |
+| 9.1M    | 9,073,152 | 1,440 | 12,384   | 2,654,496 | the 288× store repeated 16×, occurrence terms renumbered |
+
+Every output is byte-identical to its oracle, in every round (the 9M oracle
+takes 204 s); the trim agrees with the engine at 1×, 4×, 16× and 72×
+(`check-engine.mjs`). Medians of three interleaved rounds:
+
+| facts     | js-fast | swift 1 thread | swift 18 threads | metal-index GPU (wall) | metal-dense GPU (wall) |
+| --------- | ------- | -------------- | ---------------- | ---------------------- | ---------------------- |
+| 141,768   | 20.0 ms | 4.83 ms        | 0.80 ms          | 0.33 (0.54) ms         | 0.20 (0.41) ms         |
+| 567,072   | 292 ms  | 65.9 ms        | 6.27 ms          | 3.65 (3.94) ms         | 2.36 (2.69) ms         |
+| 9,073,152 | 13.8 s  | 3.14 s         | 394 ms           | 136 (137) ms           | 80.2 (81.2) ms         |
+
+- Much more survives here than in the first run (29% of the facts against
+  0.3%): repeating the demo repeats its kind statement, "A deployment is a
+  change.", and each copy extends every copy's deployments, so a copy's rules
+  match across copies. The trim then keeps a large share and does more work.
+- With so much surviving, the dense trim, which reads every pattern's run
+  whole, beats the index-driven one on the GPU, and the GPU is 4.9× the best
+  CPU at 9M (80 ms against 394 ms), against 2.2× in the first run. Which
+  variant wins, and by how much, depends on how much of the store survives.
+- Native code is 4 to 4.5× faster than JS on one thread, 25 to 47× on 18.
+
+To reproduce (macOS with Metal; a few minutes, most of it the 9M oracle):
+
+```sh
+npm run demo -- --target tmp/bench-demo
+Q="Who freezes changes during a major incident?"
+node bench/lean-core/capture.mjs 72 tmp/lean-demo/k72 --project tmp/bench-demo --question "$Q"
+node bench/lean-core/capture.mjs 288 tmp/lean-demo/k288 --project tmp/bench-demo --question "$Q"
+node --max-old-space-size=16000 bench/lean-core/capture.mjs 288 tmp/lean-demo/k288x16 --project tmp/bench-demo --question "$Q" --replicate 16
+for size in k72 k288 k288x16; do
+  node --max-old-space-size=30000 bench/lean-core/trim.mjs tmp/lean-demo/$size --oracle --out tmp/lean-demo/$size/oracle.bin
+done
+for copies in 1 4 16 72; do node bench/lean-core/check-engine.mjs $copies --project tmp/bench-demo --question "$Q"; done
+node --max-old-space-size=16000 bench/lean-core/bench.mjs --rounds 3 --out tmp/trim-demo.json tmp/lean-demo/k72 tmp/lean-demo/k288 tmp/lean-demo/k288x16
+```
+
+The report's 72× and 288× capture records come from a re-capture after the
+capture learned to count a workbench statement's terms as its own (they matter
+only when a store is replicated); their columns and rules are byte-identical to
+the benchmarked ones.
+
+## The first run: a corpus not in this repository
+
+### The workload
+
+`capture.mjs` writes a scaled corpus base's store columns and the bodies of the
+rules inference matches against it:
+
+| capture | facts     | terms     | rules | patterns | how                                                                              |
+| ------- | --------- | --------- | ----- | -------- | -------------------------------------------------------------------------------- |
+| 16×     | 140,960   | 35,323    | 208   | 1,280    | built by the engine                                                              |
+| 64×     | 563,840   | 138,427   | 832   | 5,120    | built by the engine                                                              |
+| 9.0M    | 9,021,440 | 1,959,547 | 832   | 5,120    | the 64× store repeated 16×, occurrence terms renumbered; not built by the engine |
+
+Every pattern fixes its role; a rule has at most 13 patterns and 5 variables.
+The corpus is one of 209 statements in 15 roles, developed beside Tendora and
+not in this repository. Repeating it repeats its rules too; no version exploits
+that.
+
+### Results
 
 The trim alone, its index and inputs in memory; medians over three interleaved
 rounds (JS 21 runs, CPU 21 to 63, Metal 45 to 93). GPU: the command buffer's
@@ -103,7 +161,7 @@ The ceiling (`gather.swift`): random 4-byte reads from a 144 MB array reach
 1.8 G/s on the CPU (12 threads; 18 give 1.6) and 3.5 G/s on the GPU. The trim is such reads into the columns and the
 index; the GPU's 2.2× over 18 threads at 9M is that ratio.
 
-## What it says
+### What it says
 
 - At the corpus's sizes, up to 564k facts, the GPU gives nothing worth a native
   bridge: 18 CPU threads trim in 0.3 to 1.1 ms, the GPU in 0.4 to 0.5 ms plus
@@ -122,24 +180,7 @@ index; the GPU's 2.2× over 18 threads at 9M is that ratio.
   memory exposed to JS), not as ordinary SharedArrayBuffers. At about 2× this
   does not decide the allocation now; it can wait until the core goes native.
 
-## Best known: yes, with these shortcuts
-
-On both sides: `fits` reads all three columns, though the run's own column is
-known; a (term, role) index would visit fewer facts; the rules a copy repeats
-are trimmed again. CPU: `-O` with exclusivity checks off (`-Ounchecked`
-crashed and was not investigated). GPU: each SIMD group's slot holds a bitset
-over every term per variable (1.5 MB at 9M), so more than about 512 in flight
-thrash the cache; a compressed or hashed domain could allow more; the index is
-built on the CPU; the forward-progress pipeline options need macOS 27. Tried
-and kept though they changed nothing measurable: testing a bit before setting
-it atomically; spreading a domain's runs evenly over the lanes. Not tried:
-decoupled look-back scans (Apple GPUs give no forward-progress guarantee
-between threadgroups), Metal 4 machine-learning encoders (not a fit).
-
-This replaces a first prototype: one semijoin on synthetic data, an unordered
-atomic compaction, columns copied, the shader compiled every run.
-
-## Regenerating the captures
+### Regenerating the captures
 
 The captures come from a copy of the corpus project at revision
 `d1b723ad3c91` holding a saved check of one of its questions; `--project` and
@@ -165,23 +206,7 @@ archive is kept at `tmp/lean/trim.mtl4archive` and made again when the shader
 changes. The ceiling: `swiftc -O bench/lean-core/gather.swift -o
 tmp/lean/gather && tmp/lean/gather`.
 
-## Open questions about the CPU baseline
-
-- **Core types.** The 18 threads mix 6 Super cores (16 MB L2) and 12
-  Performance cores (8 MB L2). Rules come from a shared counter, so slower
-  cores take fewer, but no QoS class was set and macOS gives no affinity. At
-  9M: 6 threads 42.8 ms, 12 29.2, 18 26.9. Whether another split or QoS would
-  lower the best CPU figure was not measured.
-- **NEON.** The CPU loops are scalar Swift, without NEON intrinsics. NEON has
-  no gather, and the trim's time is in random reads (1.8 G/s at best here), so
-  vectorizing the compare-and-compact steps may gain little; not measured.
-  Nor were C with explicit prefetching, or `-Ounchecked` (it crashed; not
-  investigated).
-- **Allocation.** Each CPU trim allocates its threads' bitsets (1.5 MB a
-  thread at 9M) and the JS trim its mark arrays; the GPU's are allocated once,
-  in setup. Inside the CPU figures; small against them, not measured apart.
-
-## Raw output
+### Raw output
 
 Every line below is copied from the runs that produced the figures above,
 except the re-verification after the review, which is marked. The final
@@ -292,3 +317,36 @@ metal (GPU):      a threadgroup per rule 25.1 → a SIMD group per rule 19.3 to 
                   → cost counts capped as on the CPU 20.8 to 20.9 (no change) → one pass 17.0 → narrowed domains 11.6
 metal dense:      147.6 → 61.2 (SIMD group per rule) → 35.7 (one pass) → 32.9
 ```
+
+## Best known: yes, with these shortcuts
+
+On both sides: `fits` reads all three columns, though the run's own column is
+known; a (term, role) index would visit fewer facts; the rules a copy repeats
+are trimmed again. CPU: `-O` with exclusivity checks off (`-Ounchecked`
+crashed and was not investigated). GPU: each SIMD group's slot holds a bitset
+over every term per variable (1.5 MB at 9M), so more than about 512 in flight
+thrash the cache; a compressed or hashed domain could allow more; the index is
+built on the CPU; the forward-progress pipeline options need macOS 27. Tried
+and kept though they changed nothing measurable: testing a bit before setting
+it atomically; spreading a domain's runs evenly over the lanes. Not tried:
+decoupled look-back scans (Apple GPUs give no forward-progress guarantee
+between threadgroups), Metal 4 machine-learning encoders (not a fit).
+
+This replaces a first prototype: one semijoin on synthetic data, an unordered
+atomic compaction, columns copied, the shader compiled every run.
+
+## Open questions about the CPU baseline
+
+- **Core types.** The 18 threads mix 6 Super cores (16 MB L2) and 12
+  Performance cores (8 MB L2). Rules come from a shared counter, so slower
+  cores take fewer, but no QoS class was set and macOS gives no affinity. At
+  9M: 6 threads 42.8 ms, 12 29.2, 18 26.9. Whether another split or QoS would
+  lower the best CPU figure was not measured.
+- **NEON.** The CPU loops are scalar Swift, without NEON intrinsics. NEON has
+  no gather, and the trim's time is in random reads (1.8 G/s at best here), so
+  vectorizing the compare-and-compact steps may gain little; not measured.
+  Nor were C with explicit prefetching, or `-Ounchecked` (it crashed; not
+  investigated).
+- **Allocation.** Each CPU trim allocates its threads' bitsets (1.5 MB a
+  thread at 9M) and the JS trim its mark arrays; the GPU's are allocated once,
+  in setup. Inside the CPU figures; small against them, not measured apart.

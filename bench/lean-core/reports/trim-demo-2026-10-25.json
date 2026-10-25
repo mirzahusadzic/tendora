@@ -1,0 +1,349 @@
+{
+  "profile": "lean-core-trim-bench-v1",
+  "at": "2026-10-25T03:35:29.817Z",
+  "machine": {
+    "cpu": "Apple M5 Pro",
+    "threads": 18,
+    "os": "25.6.0"
+  },
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)",
+  "swiftFlags": [
+    "-O",
+    "-enforce-exclusivity=unchecked",
+    "-swift-version 5"
+  ],
+  "node": "v25.9.0",
+  "rounds": 3,
+  "captures": [
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 72,
+      "replicas": 1,
+      "facts": 141768,
+      "engineFacts": 141768,
+      "terms": 27538,
+      "engineTerms": 27538,
+      "occurrenceTerms": 26856,
+      "rules": 360,
+      "patterns": 3096,
+      "columnBytes": 573440,
+      "page": 16384,
+      "baseMs": 1076,
+      "rounds": 2
+    },
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 288,
+      "replicas": 1,
+      "facts": 567072,
+      "engineFacts": 567072,
+      "terms": 109402,
+      "engineTerms": 109402,
+      "occurrenceTerms": 107424,
+      "rules": 1440,
+      "patterns": 12384,
+      "columnBytes": 2277376,
+      "page": 16384,
+      "baseMs": 6445,
+      "rounds": 2
+    },
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 288,
+      "replicas": 16,
+      "facts": 9073152,
+      "engineFacts": 567072,
+      "terms": 1720762,
+      "engineTerms": 109402,
+      "occurrenceTerms": 107424,
+      "rules": 1440,
+      "patterns": 12384,
+      "columnBytes": 36306944,
+      "page": 16384,
+      "baseMs": 6490,
+      "rounds": 2
+    }
+  ],
+  "summary": [
+    {
+      "capture": "k72",
+      "facts": 141768,
+      "version": "js-fast",
+      "kept": 10440,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 20.04,
+        "p10": 19.83,
+        "p90": 26.51,
+        "min": 19.71,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k72",
+      "facts": 141768,
+      "version": "swift-cpu-1",
+      "kept": 10440,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 4.83,
+        "p10": 4.61,
+        "p90": 6.25,
+        "min": 4.59,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k72",
+      "facts": 141768,
+      "version": "swift-cpu-18",
+      "kept": 10440,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.8,
+        "p10": 0.72,
+        "p90": 0.89,
+        "min": 0.67,
+        "runs": 63
+      }
+    },
+    {
+      "capture": "k72",
+      "facts": 141768,
+      "version": "metal-index",
+      "kept": 10440,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.54,
+        "p10": 0.48,
+        "p90": 0.8,
+        "min": 0.44,
+        "runs": 93
+      },
+      "gpuMs": {
+        "median": 0.328,
+        "p10": 0.323,
+        "p90": 0.578,
+        "min": 0.32,
+        "runs": 93
+      },
+      "setupMs": 50.98,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k72",
+      "facts": 141768,
+      "version": "metal-dense",
+      "kept": 10440,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 0.41,
+        "p10": 0.35,
+        "p90": 0.52,
+        "min": 0.33,
+        "runs": 45
+      },
+      "gpuMs": {
+        "median": 0.204,
+        "p10": 0.2,
+        "p90": 0.318,
+        "min": 0.197,
+        "runs": 45
+      },
+      "setupMs": 55.77,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k288",
+      "facts": 567072,
+      "version": "js-fast",
+      "kept": 166176,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 291.54,
+        "p10": 284.61,
+        "p90": 294.54,
+        "min": 284.45,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k288",
+      "facts": 567072,
+      "version": "swift-cpu-1",
+      "kept": 166176,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 65.85,
+        "p10": 62.7,
+        "p90": 66.32,
+        "min": 62.41,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k288",
+      "facts": 567072,
+      "version": "swift-cpu-18",
+      "kept": 166176,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 6.27,
+        "p10": 5.98,
+        "p90": 6.65,
+        "min": 5.87,
+        "runs": 63
+      }
+    },
+    {
+      "capture": "k288",
+      "facts": 567072,
+      "version": "metal-index",
+      "kept": 166176,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 3.94,
+        "p10": 3.83,
+        "p90": 4.05,
+        "min": 3.71,
+        "runs": 93
+      },
+      "gpuMs": {
+        "median": 3.648,
+        "p10": 3.544,
+        "p90": 3.77,
+        "min": 3.451,
+        "runs": 93
+      },
+      "setupMs": 54.25,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k288",
+      "facts": 567072,
+      "version": "metal-dense",
+      "kept": 166176,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 2.69,
+        "p10": 2.6,
+        "p90": 2.77,
+        "min": 2.58,
+        "runs": 45
+      },
+      "gpuMs": {
+        "median": 2.361,
+        "p10": 2.308,
+        "p90": 2.432,
+        "min": 2.273,
+        "runs": 45
+      },
+      "setupMs": 54.37,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k288x16",
+      "facts": 9073152,
+      "version": "js-fast",
+      "kept": 2654496,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 13808.92,
+        "p10": 13439.37,
+        "p90": 13889.99,
+        "min": 13311.19,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k288x16",
+      "facts": 9073152,
+      "version": "swift-cpu-1",
+      "kept": 2654496,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 3139.88,
+        "p10": 3116.61,
+        "p90": 3161.15,
+        "min": 3098.24,
+        "runs": 21
+      }
+    },
+    {
+      "capture": "k288x16",
+      "facts": 9073152,
+      "version": "swift-cpu-18",
+      "kept": 2654496,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 393.9,
+        "p10": 386.25,
+        "p90": 399.99,
+        "min": 381.5,
+        "runs": 63
+      }
+    },
+    {
+      "capture": "k288x16",
+      "facts": 9073152,
+      "version": "metal-index",
+      "kept": 2654496,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 136.52,
+        "p10": 133.9,
+        "p90": 139.35,
+        "min": 132.25,
+        "runs": 93
+      },
+      "gpuMs": {
+        "median": 135.632,
+        "p10": 132.949,
+        "p90": 138.528,
+        "min": 131.399,
+        "runs": 93
+      },
+      "setupMs": 89.64,
+      "pipelineFromArchive": true
+    },
+    {
+      "capture": "k288x16",
+      "facts": 9073152,
+      "version": "metal-dense",
+      "kept": 2654496,
+      "equalToReference": true,
+      "reference": "oracle",
+      "ms": {
+        "median": 81.22,
+        "p10": 79.38,
+        "p90": 83.67,
+        "min": 78.9,
+        "runs": 45
+      },
+      "gpuMs": {
+        "median": 80.201,
+        "p10": 78.441,
+        "p90": 82.744,
+        "min": 77.823,
+        "runs": 45
+      },
+      "setupMs": 79.4,
+      "pipelineFromArchive": true
+    }
+  ],
+  "note": "The 72 and 288 capture records are from a re-capture after occurrence terms of workbench statements were counted; their columns.bin and rules.bin are byte-identical to the benchmarked ones."
+}
