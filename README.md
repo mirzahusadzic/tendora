@@ -6,6 +6,8 @@ Knowledge as a corpus of plain-language statements, by role: it answers only wha
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](docs/setup.md)
 [![Code: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](THIRD_PARTY_NOTICES.md)
+[![Version](https://img.shields.io/github/v/tag/mirzahusadzic/tendora?sort=semver&label=version)](https://github.com/mirzahusadzic/tendora/tags)
+[![Platform: macOS | Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)](docs/setup.md)
 
 Write statements, organize them by role, and ask questions within a scope. A deterministic engine answers only what the statements support, names every statement an answer rests on, and keeps what they do not settle open.
 
