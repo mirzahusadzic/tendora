@@ -2,22 +2,24 @@
 
 Copyright © 2026 Mirza Husadzic for original Tendora contributions.
 
-Tendora is not under a single license. Its original code is MIT; a small
-adapter and two bundled resources carry their own terms, and setup installs
-further components under theirs. The [LICENSE](LICENSE) file is the MIT text
-for original contributions only.
+Tendora is not under a single license. Its original code is under the Apache
+License 2.0; a small adapter and two bundled resources carry their own terms,
+and setup installs further components under theirs. The [LICENSE](LICENSE) file
+is the Apache 2.0 text, for original contributions only, and [NOTICE](NOTICE)
+their notice.
 
 ## In this repository
 
 | Path                                                                                                       | License      | Notices                                              |
 | ---------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------- |
-| Everything not listed below: application code, tests, tools, documentation and the synthetic payments demo | MIT          | [LICENSE](LICENSE)                                   |
+| Everything not listed below: application code, tests, tools, documentation and the synthetic payments demo | Apache-2.0   | [LICENSE](LICENSE), [NOTICE](NOTICE)                 |
 | `python/semcat/adapter/` (SEMCAT Python adapter)                                                           | GPL-3.0-only | [Adapter license](python/semcat/adapter/LICENSE)     |
-| `vendor/propbank/lexicon.json` (PropBank-derived data; the `build.py` beside it is MIT)                    | CC BY-SA 4.0 | [License and attribution](vendor/propbank/README.md) |
+| `vendor/propbank/lexicon.json` (PropBank-derived data; the `build.py` beside it is Apache-2.0)             | CC BY-SA 4.0 | [License and attribution](vendor/propbank/README.md) |
 | `docs/load-bearing.md`, the essay [Load-bearing as situated meaning](docs/load-bearing.md)                 | CC BY 4.0    | [License](licenses/CC-BY-4.0.txt), Mirza Husadzic    |
 
 `package.json` states the same scope as an SPDX expression:
-`MIT AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0`.
+`Apache-2.0 AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0`. Versions before
+the switch were MIT.
 
 ## Installed by setup, not stored here
 
@@ -31,13 +33,15 @@ for original contributions only.
 
 This is a summary, not legal advice; the license texts govern.
 
-- The MIT-licensed files can be reused under MIT on their own, with the
-  copyright notice retained.
+- The Apache-2.0 files can be reused under Apache 2.0 on their own: keep the
+  license and the NOTICE, and say what you changed. The license also grants
+  the contributors' patent rights in what they contributed.
 - Running, studying and modifying Tendora locally places no further
   conditions on you.
 - Distributing Tendora together with the SEMCAT adapter or runtime, as an
   integrated application, must comply with GPLv3, including its
-  corresponding-source obligations, while preserving the MIT notices.
+  corresponding-source obligations, while preserving the Apache-2.0 and MIT
+  notices.
 - Redistributing the PropBank-derived lexicon, or adaptations of it, requires
   attribution and the same CC BY-SA 4.0 terms.
 

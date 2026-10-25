@@ -4,7 +4,7 @@
   "private": true,
   "description": "Knowledge as a corpus of plain-language statements, by role: answers only what it supports and names the statements behind every answer.",
   "type": "module",
-  "license": "MIT AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0",
+  "license": "Apache-2.0 AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mirzahusadzic/tendora.git"

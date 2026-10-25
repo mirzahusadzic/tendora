@@ -5,7 +5,7 @@ Knowledge as a corpus of plain-language statements, by role: it answers only wha
 [![CI](https://github.com/mirzahusadzic/tendora/actions/workflows/ci.yml/badge.svg)](https://github.com/mirzahusadzic/tendora/actions/workflows/ci.yml)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](docs/setup.md)
-[![Code: MIT](https://img.shields.io/badge/code-MIT-blue)](THIRD_PARTY_NOTICES.md)
+[![Code: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](THIRD_PARTY_NOTICES.md)
 
 Write statements, organize them by role, and ask questions within a scope. A deterministic engine answers only what the statements support, names every statement an answer rests on, and keeps what they do not settle open.
 
@@ -220,7 +220,7 @@ JavaScript ES modules · terminal-kit · SQLite / sqlite-vec · Python / PENMAN 
 
 ## License
 
-Tendora's original code, tests, tools, documentation and payments demo are [MIT](LICENSE). Some parts carry other terms:
+Tendora's original code, tests, tools, documentation and payments demo are under the [Apache License 2.0](LICENSE) (with its [NOTICE](NOTICE)). Some parts carry other terms:
 
 - `python/semcat/adapter/` is GPL-3.0-only; the SEMCAT runtime that setup installs is GPL-3.0-only AND MIT. Distributing Tendora integrated with SEMCAT must comply with GPLv3.
 - `vendor/propbank/lexicon.json` is PropBank-derived data under CC BY-SA 4.0.

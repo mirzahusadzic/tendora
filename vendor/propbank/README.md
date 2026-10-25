@@ -6,7 +6,7 @@ at release **v3.4.0**, commit
 and the contributors identified in its frame files. This derived lexical data
 is distributed under **CC BY-SA 4.0**; see the upstream [LICENSE](LICENSE).
 That license covers the derived data only: `build.py` and this guide are
-original Tendora code under the repository's [MIT license](../../LICENSE).
+original Tendora code under the repository's [Apache 2.0 license](../../LICENSE).
 [UPSTREAM.json](UPSTREAM.json) records source, archive and derived-file hashes.
 
 `lexicon.json` contains 11,205 rolesets. Each entry retains the roleset description,

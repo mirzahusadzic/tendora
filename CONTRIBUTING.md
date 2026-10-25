@@ -47,8 +47,8 @@ problem, see [the security policy](SECURITY.md) instead.
 
 ## Licensing
 
-Contributions are made under the license of the part they change: MIT for code,
-tests, tools and documentation; CC BY 4.0 for the essay
+Contributions are made under the license of the part they change (section 5 of
+the Apache License): Apache 2.0 for code, tests, tools and documentation; CC BY 4.0 for the essay
 [Load-bearing as situated meaning](docs/load-bearing.md); GPL-3.0-only for the
 SEMCAT adapter. [Licensing and attribution](THIRD_PARTY_NOTICES.md) lists every
 path. Credit what you build on.
