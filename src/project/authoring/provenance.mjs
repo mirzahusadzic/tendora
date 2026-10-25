@@ -46,14 +46,26 @@ export async function readProvenance(project) {
 }
 
 /** The authors recorded when statements were written, by the id a check cites
- * them with: a contribution's part, or a passage edited in the workbench. A
- * statement written before authors were recorded is not listed. */
+ * them with: a contribution's part, or a passage edited in the workbench; and
+ * who confirmed a connection or declared a wording. What was written before
+ * authors were recorded is not listed. */
 export function recordedAuthors(data) {
   const recorded = new Map();
   const entry = ({ actor, via, at }) => ({ author: actor, via, ...(at ? { at } : {}) });
-  for (const c of data.contributions ?? [])
+  for (const c of data.contributions ?? []) {
     for (const r of c.responses ?? [])
       if (r.actor) recorded.set(`contribution:${c.id}:${r.id}`, entry(r));
+    // A confirmed connection is the confirmer's decision about a source; a
+    // declared wording, its author's. Neither authors the source itself.
+    for (const w of c.wordings ?? [])
+      if (w.confirmation?.actor)
+        recorded.set(`contribution:${c.id}:${w.id}`, {
+          ...entry(w.confirmation),
+          kind: 'confirmed connection',
+        });
+      else if (w.actor)
+        recorded.set(`contribution:${c.id}:${w.id}`, { ...entry(w), kind: 'wording' });
+  }
   for (const item of sourceCatalog(data))
     if (!item.development && item.actor)
       recorded.set(`${item.nodeId}/s${item.index + 1}`, entry(item));

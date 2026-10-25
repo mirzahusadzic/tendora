@@ -121,6 +121,24 @@ try {
       proposer: { model: 'M', run: 'r1' },
     },
   ]);
+  // A confirmed connection is a person's decision: it exports who confirmed it,
+  // through what and when, as a confirmation, not as an unrecorded statement
+  // (final review, #6).
+  const decided = structuredClone(project.data);
+  decided.contributions[0].wordings.push({
+    id: 'w1',
+    kind: 'clarification',
+    text: 'Who repairs bicycles?',
+    graph: { top: 'z0', nodes: [{ id: 'z0', concept: 'repair-01' }], edges: [] },
+    basisSources: [{ text: 'The mechanic repairs bicycles.' }],
+    confirmation: { actor: 'Reviewer R', via: 'editor', at: '2026-10-25T04:00:00.000Z' },
+  });
+  assert.deepEqual(recordedAuthors(decided).get(`contribution:${written.contribution.id}:w1`), {
+    author: 'Reviewer R',
+    via: 'editor',
+    at: '2026-10-25T04:00:00.000Z',
+    kind: 'confirmed connection',
+  });
   console.log('ok authorship: statements record who wrote them; export names them first');
 } finally {
   globalThis.fetch = originalFetch;
