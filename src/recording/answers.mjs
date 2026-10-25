@@ -23,7 +23,7 @@ import { unopened } from '../amr/labels.mjs';
 import { conditionOpenings } from '../amr/condition-openings.mjs';
 import { caseSpeakerBinding } from './case-speaker.mjs';
 import { caseSources, sourceScopesFor } from './case-sources.mjs';
-import { canonicalGraph, canonicalRelation } from '../amr/roles.mjs';
+import { canonicalGraph, canonicalRelation, withoutWikiLinks } from '../amr/roles.mjs';
 import { clauseFragments, clauseProfile } from '../amr/clause-fragments.mjs';
 import { createGrammarMatcher } from '../amr/hrg-query.mjs';
 import { grammarProfile } from '../amr/hrg-corpus.mjs';
@@ -104,7 +104,7 @@ export function preparedGraph(graph, preparation) {
       item.revision === graphRevision(graph) &&
       (!item.graphIds || item.graphIds.includes(graph.id)),
   );
-  return prepared ? { ...prepared.graph, id: graph.id } : canonicalGraph(graph);
+  return withoutWikiLinks(prepared ? { ...prepared.graph, id: graph.id } : canonicalGraph(graph));
 }
 
 export function answerQuery(recording, knowledge = {}, preparation) {
@@ -1226,18 +1226,44 @@ function evaluateReading(recording, knowledge, limits, reading) {
         const next = from === id ? to : to === id ? from : null;
         if (next && !boundary.has(next)) answerDescription.add(next);
       }
+    // A participant the question identifies by name is identified: what a
+    // source adds about it ("Jordan, the database administrator") narrows
+    // nothing. Collected like the answer's description, stopping at every other
+    // participant and relation the question binds.
+    const named = new Set(
+      query.nodes
+        .filter((node) =>
+          query.edges.some((edge) => edge.from === node.id && edge.role === ':name'),
+        )
+        .map((node) => match.values[variables.get(node.id)])
+        .filter(Boolean),
+    );
+    const assignedNodes = new Set(assigned);
+    const namedDescription = new Set(named);
+    for (const id of namedDescription)
+      for (const fact of materialAt.touching(id)) {
+        const [from, , to] = fact.triple;
+        const next = from === id ? to : to === id ? from : null;
+        if (next && !assignedNodes.has(next)) namedDescription.add(next);
+      }
     const supportedWitnesses = new Set(
       traceRelations(inference.facts, match.witnesses).facts.map((f) => f.id),
     );
-    const sourceScope = materialAt
-      .inFragments([...assertedFragments])
-      .filter(
-        (fact) =>
-          fact.triple[1].startsWith(':') &&
-          fact.triple[1] !== ':instance' &&
-          !(answerDescription.has(fact.triple[0]) && answerDescription.has(fact.triple[2])) &&
-          !supportedWitnesses.has(JSON.stringify(fact.triple)),
-      );
+    // A name or a :wiki link says who a participant is; it qualifies nothing.
+    const assertedFacts = materialAt.inFragments([...assertedFragments]);
+    const nameNodes = new Set(
+      assertedFacts.filter((fact) => fact.triple[1] === ':name').map((fact) => fact.triple[2]),
+    );
+    const sourceScope = assertedFacts.filter(
+      (fact) =>
+        fact.triple[1].startsWith(':') &&
+        fact.triple[1] !== ':instance' &&
+        ![':name', ':wiki'].includes(fact.triple[1]) &&
+        !nameNodes.has(fact.triple[0]) &&
+        !(answerDescription.has(fact.triple[0]) && answerDescription.has(fact.triple[2])) &&
+        !(namedDescription.has(fact.triple[0]) && namedDescription.has(fact.triple[2])) &&
+        !supportedWitnesses.has(JSON.stringify(fact.triple)),
+    );
     if (sourceScope.length) conditional = true;
     const ids = answerSlotIds.map((id) => match.values[variables.get(id)]).filter(Boolean);
     const labelWitnesses = [];
@@ -1469,13 +1495,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
           .map((source) => source.text),
       ]),
     ];
-    const text = ids.length
-      ? ids.map((id) => label(id)).join(', ')
-      : match.negative
-        ? 'No'
-        : conditional
-          ? qualifications.join('\n')
-          : 'Yes';
+    const text = ids.length ? ids.map((id) => label(id)).join(', ') : match.negative ? 'No' : 'Yes';
     const proof = traceRelations(inference.facts, [
       ...match.witnesses,
       ...labelWitnesses,

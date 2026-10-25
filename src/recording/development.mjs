@@ -1,5 +1,6 @@
 /** Revisit persistent open contributions by graph context, never by question text. */
 import { connectQuestion } from '../amr/development.mjs';
+import { withoutWikiLinks } from '../amr/roles.mjs';
 
 export function relatedContributions(contributions, query) {
   return (contributions ?? []).flatMap((c) => {
@@ -44,8 +45,10 @@ export function relatedContributions(contributions, query) {
       ...c.wordings.filter((w) => !w.withdrawn),
       ...(c.partial?.parts ?? []).filter((part) => part.graph),
     ]) {
-      let match = connectQuestion(reading.graph, query, { partial: true });
-      if (!match.matches.length) match = connectQuestion(query, reading.graph, { partial: true });
+      // Like the prepared query, a saved reading is matched without its :wiki links.
+      const graph = withoutWikiLinks(reading.graph);
+      let match = connectQuestion(graph, query, { partial: true });
+      if (!match.matches.length) match = connectQuestion(query, graph, { partial: true });
       if (!match.complete || !match.matches.length) continue;
       if (aporias.length)
         return aporias.map((opening) => ({

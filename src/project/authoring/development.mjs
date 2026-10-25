@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { validateGraph } from '../../amr/revision.mjs';
 import { validateRule } from '../../amr/inference.mjs';
+import { ruleWithoutWikiLinks } from '../../amr/roles.mjs';
 
 export const contributionRevision = (value) =>
   createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -132,7 +133,7 @@ export function contributionRules(data) {
       )
       .flatMap((w) =>
         [w.rule, w.reverseRule].filter(Boolean).map((rule, direction) => ({
-          ...rule,
+          ...ruleWithoutWikiLinks(rule),
           baseOnly: true,
           id: `contribution:${c.id}:wording:${w.id}:${direction}`,
           scopePlacementId: c.scopePlacementId,

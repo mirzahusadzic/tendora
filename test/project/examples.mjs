@@ -115,6 +115,11 @@ const ask = async (question) => {
   return result;
 };
 const status = async (question) => (await ask(question)).status;
+// A participant's name in the source qualifies nothing: the question need not repeat it.
+assert.equal(
+  await status('What does the database administrator keep in the password vault?'),
+  'supported',
+);
 const run = await ask('What does the database administrator keep in the password vault?');
 assert.equal(run.answer.answers[0].text, 'break-glass credentials');
 assert.equal(
@@ -166,21 +171,21 @@ assert.equal(
 );
 
 for (const [question, expectedStatus, answer] of [
-  ['What does the release manager freeze during a major incident?', 'conditional', 'deployments'],
+  ['What does the release manager freeze during a major incident?', 'supported', 'deployments'],
   [
     'Where does the support lead collect affected customer reports?',
-    'conditional',
+    'supported',
     'incident channel',
   ],
   [
     'What does the support lead post after the incident commander declares a major incident?',
-    'conditional',
+    'supported',
     'customer updates',
   ],
   ['Who confirms that payments are healthy?', 'conditional', 'Morgan'],
   ['Who reports a leaked payment key to the incident commander?', 'supported', 'Priya'],
   ['Which engineer must rotate a leaked payment key?', 'conditional', 'Priya'],
-  ['When does the release manager freeze deployments?', 'conditional', 'major incident'],
+  ['When does the release manager freeze deployments?', 'supported', 'major incident'],
   ['Which manager freezes deployments during a major incident?', 'conditional', 'Morgan'],
   ['What does Sam collects?', 'conditional', 'affected customer reports'],
   ['What Sam collects?', 'conditional', 'affected customer reports'],

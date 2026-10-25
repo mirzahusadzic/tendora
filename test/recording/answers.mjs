@@ -523,7 +523,8 @@ const conditional = evaluateAnswer(
   { rules: [conditionalRule] },
 );
 assert.equal(conditional.status, 'conditional');
-assert.equal(conditional.answers[0].text, 'May happen');
+assert.equal(conditional.answers[0].text, 'Yes', 'A qualified Yes says Yes');
+assert.deepEqual(conditional.answers[0].qualifications, ['May happen']);
 assert(conditional.answers[0].facts.some((fact) => fact.triple[1] === '@qualification'));
 const questionAsSource = graph('s', 'event', { event: 'act-01', unknown: 'amr-unknown' }, [
   ['event', ':polarity', 'unknown'],

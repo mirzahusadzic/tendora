@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "calibrationMs": 207,
+  "calibrationMs": 214,
   "benchmarks": {
     "independent-domain": {
-      "engineMs": 143,
+      "engineMs": 149,
       "results": [
         {
           "id": "archive/catalog-nominalization",
@@ -95,7 +95,7 @@
       ]
     },
     "blind-domain": {
-      "engineMs": 1010,
+      "engineMs": 987,
       "results": [
         {
           "id": "archive-water/q01",
@@ -298,7 +298,6 @@
             "relation unjoined lead-02 :ARG0 person",
             "relation unjoined lead-02 :ARG1 line",
             "relation unjoined order :name name",
-            "relation unjoined order :wiki -",
             "relation unjoined start-01 :ARG0 person",
             "relation unmatched act-02 :ARG0 person",
             "relation unmatched clear-01 :ARG0 person",
@@ -317,7 +316,6 @@
           "answers": [],
           "evidence": [],
           "openings": [
-            "concept unmatched Ariane 4",
             "concept unmatched require-01",
             "relation unjoined mass-quantity :quant 42",
             "relation unjoined mass-quantity :quant amr-unknown",
@@ -340,8 +338,7 @@
             "relation unmatched remain-01 :ARG3 assign-01",
             "relation unmatched remain-01 :time after",
             "relation unmatched remain-01 :time clear-01",
-            "relation unmatched require-01 :ARG1 reserve-01",
-            "relation unmatched spaceship :wiki Ariane 4"
+            "relation unmatched require-01 :ARG1 reserve-01"
           ]
         },
         {
@@ -356,8 +353,7 @@
             "relation unmatched cancel-01 :ARG1 school",
             "relation unmatched cancel-01 :time date-entity",
             "relation unmatched date-entity :time 11:00",
-            "relation unmatched school :name name",
-            "relation unmatched school :wiki -"
+            "relation unmatched school :name name"
           ]
         },
         {
@@ -385,7 +381,6 @@
             "relation unmatched justify-01 :ARG1 record-01",
             "relation unmatched observe-01 :ARG1 seal",
             "relation unmatched product :name name",
-            "relation unmatched product :wiki -",
             "relation unmatched require-01 :ARG1 inspect-01",
             "relation unmatched require-01 :time after"
           ]
@@ -532,7 +527,6 @@
             "relation unjoined name :op1 Reed-26",
             "relation unjoined restart-01 :ARG0 person",
             "relation unmatched aircraft-type :name name",
-            "relation unmatched aircraft-type :wiki -",
             "relation unmatched by :op1 deadline",
             "relation unmatched date-entity :time 11:00",
             "relation unmatched deadline :mod amr-unknown",
@@ -551,7 +545,7 @@
       ]
     },
     "requestioned": {
-      "engineMs": 1624,
+      "engineMs": 1679,
       "results": [
         {
           "id": "archive/catalog-nominalization~1",
@@ -1076,7 +1070,6 @@
             "relation unmatched act-02 :ARG0 person",
             "relation unmatched act-02 :mod further",
             "relation unmatched aircraft-type :name name",
-            "relation unmatched aircraft-type :wiki -",
             "relation unmatched begin-01 :ARG0 person",
             "relation unmatched begin-01 :ARG1 order-02",
             "relation unmatched begin-01 :time date-entity",
@@ -1098,7 +1091,6 @@
           "evidence": [],
           "openings": [
             "concept unmatched A17-P",
-            "concept unmatched Lockheed Martin A-17 Globemaster III",
             "concept unmatched act-02",
             "concept unmatched aircraft-type",
             "concept unmatched need-01",
@@ -1111,7 +1103,6 @@
             "relation unjoined start-01 :ARG0 person",
             "relation unmatched act-02 :ARG0 person",
             "relation unmatched aircraft-type :name name",
-            "relation unmatched aircraft-type :wiki Lockheed Martin A-17 Globemaster III",
             "relation unmatched before :op1 clear-01",
             "relation unmatched clear-01 :ARG2 hold",
             "relation unmatched name :op1 A17-P",
@@ -1132,7 +1123,6 @@
           "evidence": [],
           "openings": [
             "assertion unmatched leave-17",
-            "concept unmatched Ariane 4",
             "concept unmatched free-04",
             "concept unmatched leave-17",
             "concept unmatched put-01",
@@ -1156,8 +1146,7 @@
             "relation unmatched name :op1 Aster-17",
             "relation unmatched put-01 :ARG1 reserve-01",
             "relation unmatched put-01 :ARG2 aside",
-            "relation unmatched require-01 :ARG1 reserve-01",
-            "relation unmatched spaceship :wiki Ariane 4"
+            "relation unmatched require-01 :ARG1 reserve-01"
           ]
         },
         {
@@ -1181,7 +1170,6 @@
             "relation unmatched allocate-01 :time remove-01",
             "relation unmatched asteroid :name name",
             "relation unmatched asteroid :quant mass-quantity",
-            "relation unmatched asteroid :wiki -",
             "relation unmatched available-02 :ARG2 mass-quantity",
             "relation unmatched available-02 :mod still",
             "relation unmatched available-02 :purpose allocate-01",
@@ -1206,8 +1194,7 @@
             "relation unmatched cancel-01 :ARG1 school",
             "relation unmatched date-entity :time 11:00",
             "relation unmatched possible-01 :time date-entity",
-            "relation unmatched school :name name",
-            "relation unmatched school :wiki -"
+            "relation unmatched school :name name"
           ]
         },
         {
@@ -1228,7 +1215,6 @@
             "relation unmatched call-off-08 :time date-entity",
             "relation unmatched date-entity :time 11:00",
             "relation unmatched event :name name",
-            "relation unmatched event :wiki -",
             "relation unmatched possible-01 :ARG1 call-off-08"
           ]
         },
@@ -1258,7 +1244,6 @@
             "relation unmatched obligate-01 :time after",
             "relation unmatched pass-07 :ARG1 check",
             "relation unmatched product :name name",
-            "relation unmatched product :wiki -",
             "relation unmatched put-01 :ARG0 seal",
             "relation unmatched put-01 :ARG1 check",
             "relation unmatched put-01 :ARG2 down",
@@ -1293,7 +1278,6 @@
             "relation unmatched log-03 :ARG1 check-01",
             "relation unmatched observe-01 :ARG1 seal",
             "relation unmatched product :name name",
-            "relation unmatched product :wiki -",
             "relation unmatched warrant-01 :ARG0 seal",
             "relation unmatched warrant-01 :ARG1 check-01"
           ]
@@ -1577,7 +1561,6 @@
           "openings": [
             "assertion unmatched achieve-01",
             "concept unmatched 11:00",
-            "concept unmatched McDonnell Douglas F-26 Raptor",
             "concept unmatched achieve-01",
             "concept unmatched again",
             "concept unmatched aircraft-type",
@@ -1593,7 +1576,6 @@
             "relation unmatched achieve-01 :ARG1 thing",
             "relation unmatched achieve-01 :time as-of",
             "relation unmatched aircraft-type :name name",
-            "relation unmatched aircraft-type :wiki McDonnell Douglas F-26 Raptor",
             "relation unmatched as-of :op1 date-entity",
             "relation unmatched date-entity :time 11:00",
             "relation unmatched get-04 :ARG0 person",
