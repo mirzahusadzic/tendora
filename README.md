@@ -1,6 +1,6 @@
 # Tendora
 
-A terminal workbench for developing knowledge through natural language, with traceable reasoning across roles.
+Knowledge as a corpus of plain-language statements, by role: it answers only what it supports, names the statements behind every answer, and keeps the rest open, so people and models can check it and build on it. Built and inspected in a terminal workbench.
 
 [![CI](https://github.com/mirzahusadzic/tendora/actions/workflows/ci.yml/badge.svg)](https://github.com/mirzahusadzic/tendora/actions/workflows/ci.yml)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
