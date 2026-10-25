@@ -55,7 +55,7 @@ const sameWordsReason = (wording) =>
   ).table.entries[0].cells[1];
 assert.equal(
   sameWordsReason('crates scheduled for freezing'),
-  'A source says “crates scheduled for freezing” too, but each was read differently. Confirm the connection to use it.',
+  'A statement says “crates scheduled for freezing” too, but the two were read differently.',
 );
 assert.equal(
   sameWordsReason('intake registrar'),

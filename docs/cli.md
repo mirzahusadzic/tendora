@@ -40,15 +40,23 @@ npx tendora ask --project .proj/payments-demo \
   --question "Who notifies the customers?" --case-text "A certificate expires." --offline
 ```
 
-The first line is the status: `supported`, `conditional` (it holds under a
-clause the output names), `open`, `ambiguous`, `conflict`, `limited`,
-`needs-reading` (a statement in scope has no reading, so the answer shown is
-incomplete) or a failure (`needs-amr`, `failed`). Then each answer, how it was
-read when a step read it (a pronoun, "should" from "must", one modal word), and
-what it depends on. An open check says why in words, names the closest
-statements and lists proposals: a connection that answers once a person
-confirms it in the workbench (Development, `d`). `--explain` adds sources,
-bindings, rules and evidence.
+```
+supported: Who notifies the customers? (case: A certificate expires.)
+Answer: Sam
+  rests on the case and 2 statements
+Saved as 0fee2666 in 0.09 s.
+```
+
+The first line is the status and the question: `supported`, `conditional` (it
+holds under a clause the answer names), `open`, `ambiguous`, `conflict`,
+`limited`, `needs-reading` (a statement in scope has no reading, so the answer
+may change) or a failure (`needs-amr`, `failed`). Then each answer and what it
+rests on; an open check says why, what is one confirmation away (confirmed in
+the workbench, Development, `d`) and the closest statements; a check missing a
+reading says which. The last line names the saved check: its first 8
+characters serve wherever a check is named (`show`, `delete`). `--explain`
+adds sources, rules, evidence, readings and vocabulary findings, and prints
+each stage of the check as it runs.
 
 `--json` writes the full result with the provenance the check kept: the
 project, the revision checked, the digest of the `provenance.json` it read
@@ -59,8 +67,8 @@ check saved before checks kept provenance has it read at export, marked
 
 `--scope` and `--case` take a role label, a `/Root/Child` path or a placement
 ID. `--case-text` states the circumstances of this check: rules apply to it and
-an answer may rest on it, saying so ("Rests on the case and 2 statements", or
-"From the case alone"); it never becomes a statement, and provenance names it
+an answer may rest on it, saying so ("rests on the case and 2 statements", or
+"from the case alone"); it never becomes a statement, and provenance names it
 as the case, with whoever made the check.
 Without `--offline`, text without a retained reading is sent to eGemma.
 `--actor` labels the check; without it the check records `unrecorded`, and

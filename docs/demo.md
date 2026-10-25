@@ -24,9 +24,10 @@ saying so, but it never becomes a statement. Here two rules in two roles chain:
 ```
 $ npx tendora ask --project .proj/payments-demo --offline \
     --question "Who notifies the customers?" --case-text "A certificate expires."
-supported: Who notifies the customers?
+supported: Who notifies the customers? (case: A certificate expires.)
 Answer: Sam
-  Rests on the case and 2 statements.
+  rests on the case and 2 statements
+Saved as …
 ```
 
 <!-- graph: question-and-answer -->
@@ -109,11 +110,12 @@ deployment. Each step that read the question says how.
 $ npx tendora ask --project .proj/payments-demo --offline \
     --question "Who may approve a rollback of the payments service?"
 open: Who may approve a rollback of the payments service?
-Why it stays open:
-  …: A source says “rollback of the payments service” too, but each was read differently. Confirm the connection to use it.
-Proposal, one confirmation away: Maya
-  From: Maya, the incident commander, may approve a rollback of the payments service.
-  Confirm it in the workbench: Development, d.
+Why it stays open: A statement says “rollback of the payments service” too, but the two were read differently.
+Proposal: Maya, one confirmation away (in the workbench: Development, d)
+  from: Maya, the incident commander, may approve a rollback of the payments service.
+Closest statements (none answers it):
+  Maya, the incident commander, may approve a rollback of the payments service.
+…
 ```
 
 A proposal answers only once a person confirms it; the confirmation records who
@@ -390,9 +392,11 @@ check is current, so there is none.
 $ npx tendora probe --project .proj/payments-demo --statement "If a certificate expires"
 If a certificate expires, Priya, the security engineer, renews the certificate.  [Security Engineer]
   who or what: If a certificate expires, ___ renews the certificate.
-    recovered → Priya: the statement answers its own blank
+    recovered: Priya
   what: If a certificate expires, Priya, the security engineer, renews the ___.
-    recovered → certificate: the statement answers its own blank
+    recovered: certificate
+…
+3 recovered.
 ```
 
 A probe leaves one participant blank and asks the statement back from its

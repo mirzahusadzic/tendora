@@ -224,7 +224,7 @@ assert.equal(reinit.code, 1);
 assert.match(reinit.stderr, /material\.sqlite without a project\.json/u);
 await assert.rejects(access(join(orphaned, 'project.json')), { code: 'ENOENT' });
 assert.deepEqual(await readFile(join(orphaned, 'material.sqlite')), orphanedStore);
-assert.equal((await command(['runs', '--project', location])).stdout.trim(), 'No engine runs');
+assert.equal((await command(['runs', '--project', location])).stdout.trim(), 'No saved checks.');
 assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), []);
 
 const question = 'Who repairs bicycles?';
@@ -410,7 +410,7 @@ assert.match(
 assert.equal(machine(await command([...earlier, '--json'])).statementsChanged, true);
 assert.match(
   (await command(['runs', '--project', location])).stdout,
-  /needs-amr: Who repairs bicycles\?\nThe statements changed since this check/u,
+  /^[0-9a-f]{8} +needs-amr +Who repairs bicycles\? {2}\(statements changed since\)$/mu,
 );
 // A run retained before item-level lexical audits still renders its answer.
 const legacyRun = {
@@ -510,6 +510,37 @@ const borne = await command(['fidelity', '--project', location, '--withhold']);
 successful(borne);
 assert.match(borne.stdout, /^Corpus fidelity at revision [0-9a-f]{12}\n/u);
 assert.match(borne.stdout, /withheld: borne alone 3, shared with another statement 0/u);
+// A saved check can be named by the 8 characters the output shows.
+const byShortId = machine(
+  await command(['show', '--project', location, '--run', answer.id.slice(0, 8), '--json']),
+);
+assert.equal(byShortId.id, answer.id);
+// A copy of the demo that is not the bundled one says how to renew it,
+// rather than sending the reader to eGemma (review of the docs, 2026-10-25).
+const oldDemo = join(directory, 'old-demo');
+await cp(resolve('.proj/payments-on-call'), oldDemo, { recursive: true });
+await writeFile(
+  join(oldDemo, 'project.json'),
+  (await readFile(join(oldDemo, 'project.json'), 'utf8')) + '\n',
+);
+const stale = await command([
+  'ask',
+  '--project',
+  oldDemo,
+  '--offline',
+  '--question',
+  'Who renews the certificate after an expiry?',
+]);
+assert.equal(stale.code, 1);
+assert.match(
+  stale.stdout,
+  /No retained reading for the question\.\nThis copy of the demo differs from the bundled one \(edited, or made from an older one\); npm run demo -- --reset renews it\.\n/u,
+);
+assert.doesNotMatch(stale.stdout, /Run without --offline/u);
+assert.match(
+  (await command(['recoil', '--project', oldDemo, '--statement', 'Nothing says this'])).stderr,
+  /npm run demo -- --reset renews it/u,
+);
 // A statement that matches nothing names the closest, not the help.
 const missingStatement = await command([
   'recoil',
@@ -610,8 +641,9 @@ const piped = machine(
   }),
 );
 assert.deepEqual([piped.questions[0].text, piped.status], ['Who approves the rehearsal?', 'open']);
+// By the 8 characters the output shows: the check itself is deleted.
 const deleted = machine(
-  await command(['delete', '--project', location, '--run', cancelled.id, '--json']),
+  await command(['delete', '--project', location, '--run', cancelled.id.slice(0, 8), '--json']),
 );
 assert.deepEqual(deleted.deleted, [cancelled.id]);
 const noLongerThere = await command([
@@ -709,7 +741,7 @@ const inCase = [
 ];
 const caseAnswer = await command(inCase);
 successful(caseAnswer);
-assert.match(caseAnswer.stdout, /Answer: Rowan\n {2}From the case alone; no statement says it\./u);
+assert.match(caseAnswer.stdout, /Answer: Rowan\n {2}from the case alone; no statement says it\n/u);
 assert.deepEqual(
   machine(await command([...inCase, '--json'])).provenance.statements.map(
     ({ kind, author, via }) => [kind, author, via],

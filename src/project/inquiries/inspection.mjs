@@ -344,13 +344,16 @@ export function formatRecoil(report) {
     for (const row of rows) lines.push('  ' + line(row));
     if (!rows.length) lines.push('  nothing');
   };
-  section('Down: what it rests on', report.down, (r) => `${r.relation}: ${r.kind} “${r.label}”`);
-  section('Up: what rests on it', report.up, (r) => `${r.relation}: ${r.kind} “${r.label}”`);
+  // A row's relations read general to specific ("rests on; rests on a rule
+  // read from"): the last says it all.
+  const how = (r) => r.relation.split('; ').at(-1);
+  section('Down: what it rests on', report.down, (r) => `${how(r)}: ${r.kind} “${r.label}”`);
+  section('Up: what rests on it', report.up, (r) => `${how(r)}: ${r.kind} “${r.label}”`);
   section(
     'Sideways: what shares its place',
     report.sideways,
     (r) =>
-      `${r.relation}: ${r.kind} “${r.label}”${r.through.length ? ` (through “${r.through.join('”, “')}”)` : ''}`,
+      `${how(r)}: ${r.kind} “${r.label}”${r.through.length ? ` (through “${r.through.join('”, “')}”)` : ''}`,
   );
   if (report.frontier.length)
     section(
@@ -360,7 +363,6 @@ export function formatRecoil(report) {
     );
   if (report.locus.kind !== 'question')
     lines.push('', `Unaffected at this revision: ${report.unaffected} questions`);
-  lines.push('Read-only: nothing was checked again.');
   return lines.join('\n');
 }
 
@@ -389,7 +391,6 @@ export function formatTensions(report) {
     ])
       for (const question of line[status]) lines.push(`  ${status} (${meaning}): ${question}`);
   }
-  lines.push('', 'Read-only: an open line is a place to ask or to author, never an answer.');
   return lines.join('\n');
 }
 
@@ -401,7 +402,7 @@ export function formatProbes(report) {
     for (const probe of item.probes)
       lines.push(
         `  ${probe.asks}: ${probe.blanked}`,
-        `    ${probe.outcome}${probe.answers.length ? ` → ${probe.answers.join('; ')}` : ''}: ${probe.meaning}`,
+        `    ${probe.outcome}${probe.answers.length ? `: ${probe.answers.join('; ')}` : ''}${probe.outcome === 'recovered' ? '' : ` (${probe.meaning})`}`,
         ...(probe.alsoFrom ? [`    also from: ${probe.alsoFrom.join(' | ')}`] : []),
       );
     lines.push('');
@@ -409,6 +410,6 @@ export function formatProbes(report) {
   const counts = Object.entries(report.counts)
     .map(([outcome, n]) => `${n} ${outcome}`)
     .join(', ');
-  lines.push(`Probes: ${counts || 'none'}. They answer nothing; they show where to ask or reword.`);
+  lines.push(`${counts || 'No probes'}.`);
   return lines.join('\n');
 }

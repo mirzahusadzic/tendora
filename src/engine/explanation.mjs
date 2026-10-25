@@ -111,7 +111,7 @@ export function openingNeeds(run, relations = new Map()) {
       reason = referent
         ? 'No source connection identifies this reference.'
         : sameWords(item)
-          ? `A source says “${sameWords(item)}” too, but each was read differently. Confirm the connection to use it.`
+          ? `A statement says “${sameWords(item)}” too, but the two were read differently.`
           : 'No source connects these participants in this relationship.';
     else
       reason =

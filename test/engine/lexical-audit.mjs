@@ -102,7 +102,7 @@ try {
     ],
     { encoding: 'utf8', timeout: 10000 },
   );
-  assert(cli.includes('AMR vocabulary:'));
+  assert(cli.includes('Unverified word in the source:'));
   assert(cli.includes('intercede-01'));
   assert(cli.includes('interact-01'));
   assert(cli.includes('supported:'));

@@ -77,7 +77,7 @@ try {
     'A certificate expires.',
     '--offline',
   );
-  assert.match(said.stdout, /Answer: Sam\n {2}Rests on the case and 2 statements\./u);
+  assert.match(said.stdout, /Answer: Sam\n {2}rests on the case and 2 statements\n/u);
   const ungrounded = await ask('Who notifies the customers?');
   assert.equal(ungrounded.status, 'open', 'Without its case, a rule answers nothing');
   // A negated conclusion under a condition.
