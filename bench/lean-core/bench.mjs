@@ -99,6 +99,27 @@ const versions = [
     warmup: 5,
     repeat: 15,
   },
+  {
+    name: 'metal-lean',
+    command: binary,
+    args: (dir) => ['metal', dir, '--variant', 'lean'],
+    warmup: 5,
+    repeat: 15,
+  },
+  {
+    name: 'metal-wide',
+    command: binary,
+    args: (dir) => ['metal', dir, '--variant', 'wide'],
+    warmup: 5,
+    repeat: 15,
+  },
+  {
+    name: 'metal-packed',
+    command: binary,
+    args: (dir) => ['metal', dir, '--variant', 'packed'],
+    warmup: 5,
+    repeat: 15,
+  },
 ];
 const run = (version, dir, { warmup = version.warmup, repeat = version.repeat, out } = {}) => [
   version.command,
