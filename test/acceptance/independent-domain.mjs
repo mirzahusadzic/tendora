@@ -112,7 +112,7 @@ await mkdir('tmp', { recursive: true });
 for (const benchmark of benchmarks) {
   const before = await fixtureHash(benchmark.fixtures);
   const directory = await mkdtemp(resolve(`tmp/${benchmark.name}-`));
-  await promisify(execFile)(
+  const running = promisify(execFile)(
     process.execPath,
     [
       'tools/evaluate-projects.mjs',
@@ -127,6 +127,21 @@ for (const benchmark of benchmarks) {
     ],
     { timeout: 300_000, maxBuffer: 16 * 1024 * 1024 },
   );
+  // The machine's speed while the benchmark runs, sampled beside it about once
+  // a second: a busy moment (other suites, a shared runner) slows both, so the
+  // budget measures the engine, not the moment.
+  const samples = [];
+  let finished = false;
+  running.then(
+    () => (finished = true),
+    () => (finished = true),
+  );
+  while (!finished) {
+    samples.push(calibrate());
+    await new Promise((done) => setTimeout(done, 1000));
+  }
+  await running;
+  const during = samples.sort((a, b) => a - b)[Math.floor(samples.length / 2)] ?? calibration;
   const report = JSON.parse(await readFile(join(directory, 'run', 'evidence', 'report.json')));
   const { summary } = report;
   assert.equal(report.mode, 'disposable-copy');
@@ -171,8 +186,10 @@ for (const benchmark of benchmarks) {
       recorded.results,
       `${benchmark.name}: behaviour changed; if intended, regenerate ${snapshotPath}`,
     );
-    // Twice the recorded engine time, scaled to this machine's speed.
-    const budget = 2 * recorded.engineMs * Math.max(1, calibration / snapshot.calibrationMs);
+    // Twice the recorded engine time, scaled to this machine's speed as it
+    // was while the benchmark ran.
+    const speed = Math.max(calibration, during);
+    const budget = 2 * recorded.engineMs * Math.max(1, speed / snapshot.calibrationMs);
     assert(
       engineMs <= budget,
       `${benchmark.name}: engine time ${Math.round(engineMs)} ms exceeds its budget of ${Math.round(budget)} ms`,
