@@ -78,6 +78,7 @@ export const suites = {
     'recording/withheld.mjs',
     'recording/answers.mjs',
     'recording/question-names.mjs',
+    'recording/descriptors.mjs',
     'recording/frame.mjs',
     'recording/case-support.mjs',
     'recording/reference-bindings.mjs',

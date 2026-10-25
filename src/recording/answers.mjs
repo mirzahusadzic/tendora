@@ -1265,6 +1265,28 @@ function evaluateReading(recording, knowledge, limits, reading) {
         !supportedWitnesses.has(JSON.stringify(fact.triple)),
     );
     if (sourceScope.length) conditional = true;
+    // Read as the participant a bare modifier asks about ("What kind of
+    // device …?", "Which engineer …?"), an answer must carry a description
+    // the question did not bind (a modifier, a name, a role): a bare "device"
+    // says nothing about its kind.
+    if (
+      limits?.descriptorFallback &&
+      [...descriptorParents.values()].some((parentId) => {
+        const id = match.values[variables.get(parentId)];
+        return (
+          id &&
+          !materialAt
+            .touching(id)
+            .some(
+              (fact) =>
+                ![':instance', ':wiki'].includes(fact.triple[1]) &&
+                fact.triple[1].startsWith(':') &&
+                !assignedNodes.has(fact.triple[0] === id ? fact.triple[2] : fact.triple[0]),
+            )
+        );
+      })
+    )
+      continue;
     const ids = answerSlotIds.map((id) => match.values[variables.get(id)]).filter(Boolean);
     const labelWitnesses = [];
     const stem = (value) => value.replace(/-\d+$/u, '').replaceAll('_', ' ').trim();
