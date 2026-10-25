@@ -46,33 +46,13 @@ uses that mode. `NO_COLOR=1`, `TERM=dumb` or `--no-color` disable color.
 ## Scriptable checks
 
 ```sh
-npm run engine -- ask --project .proj/payments-demo \
-  --scope 'Incident Commander' \
-  --question 'Who freezes deployments during a major incident?' --offline --explain
-
-npm run --silent engine -- runs --project .proj/payments-demo --json
-npm run engine -- ask --help
+npx tendora ask --project .proj/payments-demo \
+  --question 'Who freezes deployments during a major incident?' --offline
+npx tendora --help
 ```
 
-`ask` checks current sources; `runs` lists saved checks; `show --run ID` reads
-a saved result. Use `init --project PATH` for a new empty project and the TUI
-to author it. `--scope` accepts a role label or `/Root/Child` path. Duplicate
-nested labels need a full path. `--case` and `--case-text` supply independent
-case material; a question or case does not become corpus evidence.
-
-| Option      | Behavior                                                                 |
-| ----------- | ------------------------------------------------------------------------ |
-| `--offline` | Reuse exact retained AMRs; do not acquire missing readings.              |
-| `--explain` | Include evidence and proof details; progress goes to stderr.             |
-| `--json`    | Write a structured result to stdout. Use npm's `--silent` for pipelines. |
-| `--trace`   | Retain detailed local comparison diagnostics.                            |
-| `--actor`   | Record the check as made by this name; without it, `unrecorded`.         |
-
-Exit codes are `0` for a completed check, `1` for a failure or missing reading,
-`2` for invalid arguments, and `130` for interruption. A completed check may
-be conditional or open: inspect its status, not just its exit code. `show`
-does not reassess changed sources. `delete` requires `--run ID` or `--all` and
-acts immediately; `compact` removes rebuildable cached state.
+[The CLI reference](cli.md) covers every command, its output, exit status and
+environment.
 
 ## Fresh language with eGemma
 
@@ -81,10 +61,11 @@ its base URL and bearer token in the environment that launches Tendora:
 
 ```sh
 export EGEMMA_URL=http://127.0.0.1:8000
-export EGEMMA_API_KEY=your-service-key
+export EGEMMA_API_KEY_FILE=~/.config/egemma/key   # or EGEMMA_API_KEY=your-service-key
 ```
 
-Defaults are `http://127.0.0.1:8000` and `dummy-key`. Tendora does not start the
+Defaults are `http://127.0.0.1:8000` and `dummy-key`. A key file stays out of
+the environment that child processes and logs inherit. Tendora does not start the
 server or bundle model weights. Ordinary interactive use and CLI checks without
 `--offline` can send source, case and question text to the configured service
 when readings are missing. The sixteen other retained payments questions are

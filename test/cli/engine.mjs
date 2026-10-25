@@ -1,6 +1,6 @@
 /** Real engine processes: useful arguments, pure JSON, offline proof and cancellation. */
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, writeFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -21,13 +21,14 @@ const noNetwork =
   'data:text/javascript,' +
   encodeURIComponent('globalThis.fetch = () => { throw new Error("NETWORK_FORBIDDEN"); };');
 const observations = [];
-function command(args, { interrupt = false, closeOutput = false } = {}) {
+function command(args, { interrupt = false, closeOutput = false, input } = {}) {
   return new Promise((done, reject) => {
     const child = spawn(process.execPath, ['--import', noNetwork, 'src/cli/engine.mjs', ...args], {
       cwd: resolve('.'),
       env: { ...process.env, NODE_NO_WARNINGS: '1' },
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
     });
+    if (input !== undefined) child.stdin.end(input);
     let stdout = '',
       stderr = '',
       sent = false;
@@ -71,7 +72,8 @@ function machine(result, code = 0) {
 
 const rootHelp = await command([]);
 successful(rootHelp);
-assert.match(rootHelp.stdout, /Usage: engine <command>/u);
+assert.match(rootHelp.stdout, /Usage: tendora <command>/u);
+assert.match(rootHelp.stdout, /Inspect saved checks/u);
 assert.equal(rootHelp.stderr, '');
 assert.match(rootHelp.stdout, /130 interrupted/u);
 const closedPipe = await command(['--help'], { closeOutput: true });
@@ -87,19 +89,31 @@ for (const action of [
   'knowledge',
   'storage',
   'compact',
+  'recoil',
+  'tensions',
+  'probe',
 ]) {
   const result = await command([action, '--help']);
   successful(result);
-  assert.match(result.stdout, new RegExp('Usage: engine ' + action + ' --project', 'u'));
+  assert.match(result.stdout, new RegExp('Usage: tendora ' + action + ' --project', 'u'));
+  assert.match(result.stdout, /Example:\n {2}tendora /u, 'Every command shows an example');
   assert.equal(result.stderr, '');
-  if (!['ask', 'run'].includes(action)) assert(!result.stdout.includes('--scope'));
+  if (!['ask', 'run', 'recoil'].includes(action)) assert(!result.stdout.includes('--scope'));
 }
+const version = await command(['--version']);
+successful(version);
+assert.equal(
+  version.stdout.trim(),
+  `tendora ${JSON.parse(await readFile('package.json', 'utf8')).version}`,
+);
 assert.match((await command(['ask', '-h'])).stdout, /missing AMRs may be acquired/u);
-assert.match((await command(['delete', '--help'])).stdout, /runs immediately/u);
+assert.match((await command(['delete', '--help'])).stdout, /asks before deleting, unless --yes/u);
 
 const absent = join(directory, 'must not be created');
 const invalid = [
-  { args: ['unknown'], match: /Unknown engine command/u },
+  { args: ['unknown'], match: /Unknown command: unknown\./u },
+  { args: ['aks'], match: /Unknown command: aks\. Did you mean ask\?/u },
+  { args: ['ask', '--qestion', 'Who?'], match: /Did you mean --question\?/u },
   { args: ['init', 'extra', '--project', absent], match: /Unexpected argument: extra/u },
   { args: ['init', '--project', absent, '--offline'], match: /--offline is not available/u },
   {
@@ -126,7 +140,25 @@ const invalid = [
   },
   { args: ['storage', '--project', absent, '--trace'], match: /--trace is not available/u },
   { args: ['runs', '--project', absent, '--scope', 'Root'], match: /--scope is not available/u },
-  { args: ['--project', absent], match: /Choose an engine command/u },
+  { args: ['--project', absent], match: /Choose a command/u },
+  {
+    args: ['recoil', '--project', absent],
+    match: /Choose one of --statement, --role, --question/u,
+  },
+  {
+    args: ['recoil', '--project', absent, '--role', 'A', '--statement', 'B'],
+    match: /Choose one of/u,
+  },
+  {
+    args: ['recoil', '--project', absent, '--role', 'A', '--scope', 'B'],
+    match: /add --question/u,
+  },
+  { args: ['probe', '--project', absent], match: /Choose one of --statement, --role/u },
+  { args: ['tensions', '--project', absent, '--grain', '0'], match: /whole number/u },
+  {
+    args: ['ask', '--project', absent, '--question', 'Who?', '--offline'],
+    match: /No project at/u,
+  },
   { args: ['ask', '--not-real'], match: /Unknown option/u },
   { args: ['ask', '--question'], match: /argument missing/u },
 ];
@@ -314,6 +346,60 @@ const legacy = await command(['show', '--project', location, '--run', legacyRun.
 successful(legacy);
 assert.match(legacy.stdout, /Answer: Sam/u);
 assert.doesNotMatch(legacy.stdout, /AMR vocabulary/u);
+// What a person reads: why a question stays open, in words; the inspection
+// commands over the saved checks; storage in sizes.
+const openHuman = await command([
+  'ask',
+  '--project',
+  location,
+  '--question',
+  'Who approves the rehearsal?',
+  '--offline',
+]);
+successful(openHuman);
+assert.match(openHuman.stdout, /Why it stays open:/u);
+assert.doesNotMatch(openHuman.stdout, /approve-01|:ARG/u, 'No raw relations without --explain');
+const recoiled = await command(['recoil', '--project', location, '--statement', 'Sam repairs']);
+successful(recoiled);
+assert.match(recoiled.stdout, /^statement: Sam repairs bicycles\./u);
+assert.match(
+  recoiled.stdout,
+  /Up: what rests on it[^\n]*\n {2}rests on: question “Who repairs bicycles\?”/u,
+);
+const recoilJson = machine(
+  await command(['recoil', '--project', location, '--question', question, '--json']),
+);
+assert.deepEqual(Object.keys(recoilJson).sort(), [
+  'down',
+  'frontier',
+  'locus',
+  'revision',
+  'sideways',
+  'unaffected',
+  'up',
+]);
+assert(recoilJson.down.some((row) => row.kind === 'statement' && row.relation === 'answer'));
+const lines = await command(['tensions', '--project', location]);
+successful(lines);
+assert.match(lines.stdout, /No question brings two roles together yet/u);
+const probed = machine(
+  await command(['probe', '--project', location, '--statement', 'Sam repairs', '--json']),
+);
+assert.deepEqual(
+  probed.statements[0].probes.map((probe) => [probe.asks, probe.blanked, probe.outcome]),
+  [
+    ['who or what', '___ repairs bicycles.', 'recovered'],
+    ['what', 'Sam repairs ___.', 'recovered'],
+    ['is it so (Yes)', 'Sam repairs bicycles.', 'recovered'],
+  ],
+);
+const sizes = await command(['storage', '--project', location]);
+successful(sizes);
+assert.match(sizes.stdout, /in use \(.+ on disk\)/u);
+assert.doesNotMatch(sizes.stdout, /^\{/u, 'Storage is reported in words unless --json');
+const unknownRun = await command(['show', '--project', location, '--run', 'not-a-run']);
+assert.equal(unknownRun.code, 2);
+assert.match(unknownRun.stderr, /No saved check not-a-run.*tendora runs --project/su);
 const alias = machine(await command(['run', ...args.slice(1)]));
 assert.equal(alias.status, answer.status);
 const open = machine(
@@ -350,6 +436,50 @@ assert.deepEqual(
   machine(await command(['runs', '--project', location, '--json'])),
   beforeBadDelete,
 );
+// A dry run lists what would go and deletes nothing.
+const before = machine(await command(['runs', '--project', location, '--json']));
+assert.deepEqual(
+  machine(
+    await command(['delete', '--project', location, '--run', cancelled.id, '--dry-run', '--json']),
+  ),
+  { dryRun: true, all: false, runs: [cancelled.id] },
+);
+assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), before);
+// On a terminal, delete asks first; anything but yes deletes nothing.
+const terminal = spawnSync(
+  'python3',
+  [
+    'test/support/terminal-driver.py',
+    '--check',
+    '--',
+    process.execPath,
+    'src/cli/engine.mjs',
+    'delete',
+    '--project',
+    location,
+    '--run',
+    cancelled.id,
+  ],
+  {
+    input:
+      [
+        { waitFor: '[y/N]', timeout: 20 },
+        { text: 'n\r', waitFor: 'Nothing was deleted', expectExit: true, exitCode: 1, timeout: 20 },
+      ]
+        .map((step) => JSON.stringify(step))
+        .join('\n') + '\n',
+    encoding: 'utf8',
+  },
+);
+assert.equal(terminal.status, 0, terminal.stdout + terminal.stderr);
+assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), before);
+// A question given as - is read from standard input.
+const piped = machine(
+  await command(['ask', '--project', location, '--question', '-', '--offline', '--json'], {
+    input: 'Who approves the rehearsal?\n',
+  }),
+);
+assert.deepEqual([piped.questions[0].text, piped.status], ['Who approves the rehearsal?', 'open']);
 const deleted = machine(
   await command(['delete', '--project', location, '--run', cancelled.id, '--json']),
 );
@@ -362,9 +492,9 @@ const noLongerThere = await command([
   cancelled.id,
   '--json',
 ]);
-assert.equal(noLongerThere.code, 1);
+assert.equal(noLongerThere.code, 2, 'A deleted check is an unknown one');
 assert.equal(noLongerThere.stdout, '');
-assert.match(noLongerThere.stderr, /^Error:/u);
+assert.match(noLongerThere.stderr, /^Error: No saved check/u);
 assert.equal((await openProject(location)).digest, frozenDigest);
 
 const knowledgePath = join(directory, 'knowledge.json');
