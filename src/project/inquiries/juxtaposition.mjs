@@ -19,7 +19,7 @@
  * to author, never an answer.
  */
 import { questionIdentity } from './investigation.mjs';
-import { recoilContext, ruleOrigins } from './recoil.mjs';
+import { recoilContext, ruleOrigins, statementCatalog } from './recoil.mjs';
 
 const questionPurposes = new Set(['inquiry', 'question-refresh']);
 
@@ -40,12 +40,22 @@ export function branchAt(data, grain = 1) {
   };
 }
 
-/** A source identifier names its placement: `<placement>/s<n>`. */
-const placementOf = (sourceId) => /^(.*)\/s\d+$/u.exec(sourceId)?.[1] ?? null;
+/** The role each statement is placed at, by the id a check cites it with: an
+ * imported passage's `<placement>/s<n>` or a contribution's own id. */
+const passagePlacement = (sourceId) => /^(.*)\/s\d+$/u.exec(sourceId)?.[1] ?? null;
+export const placementsOf = (data) => {
+  const placements = new Map(statementCatalog(data).map((item) => [item.id, item.nodeId]));
+  return (sourceId) => placements.get(sourceId) ?? passagePlacement(sourceId);
+};
 
 /** A binding rests on its statements and on those its rules come from
  * (`originsOf`, as recoil reads them; review 2026-10-25, #6). */
-export function activation(answer, branchOf, originsOf = () => null) {
+export function activation(
+  answer,
+  branchOf,
+  originsOf = () => null,
+  placementOf = passagePlacement,
+) {
   const branches = (ids) =>
     new Set(ids.map((id) => branchOf(placementOf(id))).filter((branch) => branch !== null));
   const restsOn = (binding) => [
@@ -83,6 +93,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
   const { data, digest, runs } = context ?? (await recoilContext(project));
   const branchOf = branchAt(data, grain);
   const originsOf = ruleOrigins(data);
+  const placementOf = placementsOf(data);
   const concepts = new Map(data.concepts.map((concept) => [concept.id, concept]));
   const placements = new Map(data.placements.map((placement) => [placement.id, placement]));
   const name = (id) => concepts.get(placements.get(id)?.conceptId)?.name ?? id;
@@ -100,7 +111,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     ...(run.caseSelection?.sources?.length
       ? { case: run.caseSelection.sources.map((source) => source.text).join(' ') }
       : {}),
-    ...activation(run.answer, branchOf, originsOf),
+    ...activation(run.answer, branchOf, originsOf, placementOf),
   }));
   const lines = new Map();
   for (const item of questions)

@@ -76,7 +76,8 @@ export async function projectRecoil(project, locus, options) {
   return recoil(await recoilContext(project), locus, options);
 }
 
-/** `readings`, when given, holds the text revisions that have a retained reading. */
+/** `readings`, when given, holds the text revisions that have a retained reading;
+ * a statement written in the workbench carries its own. */
 export function recoil({ data, digest, runs, asks = [], readings = null }, locus, options = {}) {
   const { limit = 500 } = options;
   const catalog = statementCatalog(data);
@@ -250,7 +251,10 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       enqueue({ kind, id, direction: 'origin', from: entry.id, relation, ...extra });
     if (entry.kind === 'statement') {
       next('role', statements.get(entry.id).nodeId, 'placed at');
-      if (readings && !readings.has(statements.get(entry.id).revision))
+      // A statement written in the workbench carries its reading; an imported
+      // passage has one when its text revision was acquired.
+      const statement = statements.get(entry.id);
+      if (readings && !statement.graph && !readings.has(statement.revision))
         hide({ kind: 'reading', id: entry.id, direction: 'origin', from: entry.id }, 'no reading');
     } else if (entry.kind === 'role' && entry.locus)
       for (const item of contained(entry.id)) next('statement', item.id, 'contains');
