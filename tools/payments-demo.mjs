@@ -1,12 +1,13 @@
 /** Create the ignored working copy of the payments demo; --reset starts it over from the snapshot. */
-import { cp, readFile, rename, rm, stat } from 'node:fs/promises';
+import { cp, readdir, readFile, rename, rm, stat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { refuseTarget } from './demo-target.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const source = join(root, '.proj/payments-on-call');
+const source = join(root, 'demo/payments-on-call');
 const { values } = parseArgs({
   options: {
     reset: { type: 'boolean', default: false },
@@ -15,9 +16,6 @@ const { values } = parseArgs({
 });
 const target = resolve(values.target),
   shown = relative(process.cwd(), target) || '.';
-const within = (parent, child) => !relative(parent, child).startsWith('..');
-if (within(target, source) || within(source, target))
-  throw new Error('The working copy cannot replace the bundled snapshot.');
 const exists = await stat(target).then(
   () => true,
   (error) => {
@@ -25,6 +23,18 @@ const exists = await stat(target).then(
     throw error;
   },
 );
+const bundledManifest = await readFile(join(source, 'project.json'), 'utf8');
+const refused = refuseTarget({
+  target,
+  root,
+  source,
+  demoId: JSON.parse(bundledManifest).id,
+  // What is there matters only when a reset would delete it.
+  exists: exists && values.reset,
+  manifest: exists ? await readFile(join(target, 'project.json'), 'utf8').catch(() => null) : null,
+  entries: exists ? await readdir(target) : [],
+});
+if (refused) throw new Error(`${shown}: ${refused}`);
 const same = async () => {
   const [copy, bundled] = await Promise.all(
     [target, source].map((at) => readFile(join(at, 'project.json'), 'utf8').catch(() => null)),

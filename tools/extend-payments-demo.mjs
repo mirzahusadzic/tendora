@@ -25,7 +25,7 @@ import { compactDataFiles } from '../src/project/storage/data-files.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const { values } = parseArgs({
-  options: { target: { type: 'string', default: join(root, '.proj/payments-on-call') } },
+  options: { target: { type: 'string', default: join(root, 'demo/payments-on-call') } },
 });
 const author = { actor: 'Claude', via: 'library' };
 

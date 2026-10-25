@@ -26,7 +26,7 @@ import { openArtifactDatabase, loadArtifact } from '../src/project/storage/engin
 const root = fileURLToPath(new URL('../', import.meta.url));
 // --project refreshes another copy of the demo in place, for a trial.
 const at = process.argv.indexOf('--project');
-const bundled = at > 0 ? resolve(process.argv[at + 1]) : join(root, '.proj/payments-on-call');
+const bundled = at > 0 ? resolve(process.argv[at + 1]) : join(root, 'demo/payments-on-call');
 await mkdir(join(root, 'tmp'), { recursive: true });
 const directory = await mkdtemp(join(root, 'tmp/payments-refresh-'));
 const before = new Map();

@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { terminalCapture, captureGallery } from '../../tools/support/terminal-capture.mjs';
 
-const original = resolve('.proj/payments-on-call');
+const original = resolve('demo/payments-on-call');
 const snapshot = async () => {
   const files = (await readdir(original, { recursive: true, withFileTypes: true }))
     .filter((entry) => entry.isFile())

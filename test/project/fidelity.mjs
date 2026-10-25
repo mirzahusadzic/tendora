@@ -36,7 +36,7 @@ for (const [checked, kind] of [
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/fidelity-'));
 try {
-  await cp(resolve('.proj/payments-on-call'), join(directory, 'demo'), { recursive: true });
+  await cp(resolve('demo/payments-on-call'), join(directory, 'demo'), { recursive: true });
   const project = await openProject(join(directory, 'demo'));
   const report = await fidelityReport(project, { withhold: true });
   const t = report.totals;

@@ -72,7 +72,7 @@ if (!native.length)
       .map(({ name, detail }) => `${name}: ${detail}`)
       .join('; ')}`,
   );
-const project = await openProject('.proj/payments-on-call');
+const project = await openProject('demo/payments-on-call');
 const knowledge = knowledgeSnapshot(project.data);
 const shape = (inference) =>
   JSON.stringify(

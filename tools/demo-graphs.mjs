@@ -56,7 +56,7 @@ const block = (rings, lines) =>
 const root = fileURLToPath(new URL('../', import.meta.url));
 const at = process.argv.indexOf('--project');
 const project = await openProject(
-  at > 0 ? resolve(process.argv[at + 1]) : join(root, '.proj/payments-on-call'),
+  at > 0 ? resolve(process.argv[at + 1]) : join(root, 'demo/payments-on-call'),
 );
 const rows = projectTree(project.data);
 const roleOf = (placementId) => rows.find((row) => row.placement.id === placementId)?.concept.name;

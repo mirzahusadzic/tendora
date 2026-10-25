@@ -14,7 +14,7 @@ const noNetwork =
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/demo-tour-'));
 const project = join(directory, 'payments-demo');
-await cp(resolve('.proj/payments-on-call'), project, { recursive: true });
+await cp(resolve('demo/payments-on-call'), project, { recursive: true });
 
 function tendora(...args) {
   return new Promise((done, reject) => {

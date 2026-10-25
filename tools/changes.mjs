@@ -46,7 +46,7 @@ const imports = [
   /\bimport\s+['"](\.{1,2}\/[^'"]+)['"]/gu,
   /new URL\(\s*['"]([^'"]+)['"]\s*,\s*import\.meta\.url/gu,
 ];
-const named = /['"`]((?:src|test|tools|\.proj|python|vendor|docs)\/[^'"`$]*)['"`]/gu;
+const named = /['"`]((?:src|test|tools|\.proj|demo|python|vendor|docs)\/[^'"`$]*)['"`]/gu;
 
 /** Repository paths a file depends on, followed through the modules it reaches. */
 export function dependencies(start, cache = new Map()) {

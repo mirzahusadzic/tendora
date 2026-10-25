@@ -16,14 +16,14 @@ const questions = async (project) =>
 
 const scratch = await mkdtemp(join(tmpdir(), 'tracked-examples-'));
 assert.deepEqual(
-  (await readdir('.proj/payments-on-call')).sort(),
+  (await readdir('demo/payments-on-call')).sort(),
   ['engine', 'material.sqlite', 'project.json'],
   'The bundled demo contains its manifest, packed material and computed results',
 );
-assert.deepEqual(await readdir('.proj/payments-on-call/engine'), ['artifacts.sqlite']);
+assert.deepEqual(await readdir('demo/payments-on-call/engine'), ['artifacts.sqlite']);
 const copySource = async (name) => {
   const target = join(scratch, name);
-  await cp(join('.proj', name), target, {
+  await cp(join('demo', name), target, {
     recursive: true,
     filter: (path) => !path.includes('/recordings'),
   });

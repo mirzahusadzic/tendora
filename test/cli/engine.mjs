@@ -518,7 +518,7 @@ assert.equal(byShortId.id, answer.id);
 // A copy of the demo that is not the bundled one says how to renew it,
 // rather than sending the reader to eGemma (review of the docs, 2026-10-25).
 const oldDemo = join(directory, 'old-demo');
-await cp(resolve('.proj/payments-on-call'), oldDemo, { recursive: true });
+await cp(resolve('demo/payments-on-call'), oldDemo, { recursive: true });
 await writeFile(
   join(oldDemo, 'project.json'),
   (await readFile(join(oldDemo, 'project.json'), 'utf8')) + '\n',

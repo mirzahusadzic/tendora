@@ -23,7 +23,7 @@ assert(!recoil.includes('amr/kinds.mjs'), 'and not suites that never reach it');
 const matcher = reached('src/amr/hrg-query.mjs');
 assert(matcher.includes('acceptance/payments.mjs'), 'through the modules a suite reaches');
 assert(matcher.includes('amr/hrg.mjs'));
-const demo = reached('.proj/payments-on-call/material.sqlite');
+const demo = reached('demo/payments-on-call/material.sqlite');
 assert(demo.includes('project/examples.mjs'), 'A named directory reaches its files');
 assert(demo.includes('acceptance/payments.mjs'));
 assert(!demo.includes('amr/hrg.mjs'));

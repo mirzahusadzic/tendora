@@ -112,7 +112,7 @@ const clearStatus = () => {
   if (process.stderr.isTTY) process.stderr.write('\r\x1b[2K');
 };
 // The bundled demo, to name a copy of it that is no longer the same.
-const bundledDemo = new URL('../../.proj/payments-on-call/project.json', import.meta.url);
+const bundledDemo = new URL('../../demo/payments-on-call/project.json', import.meta.url);
 function demoCopyNote(project) {
   let bundled;
   try {

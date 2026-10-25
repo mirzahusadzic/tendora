@@ -35,7 +35,7 @@ Run `npm run format:changed` (or `format:check` for everything) before committin
 ## Work safely
 
 Use disposable copies under `tmp/` or ignored `.proj/` directories. Preserve the
-canonical `.proj/payments-on-call` snapshot; change it only through its tools
+canonical `demo/payments-on-call` snapshot; change it only through its tools
 (`docs/development.md`), then redraw the tour's graphs. It is the only bundled demo;
 synthetic regression fixtures and external research harnesses live under `test/`
 and `tools/`.

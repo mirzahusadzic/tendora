@@ -21,7 +21,7 @@ import {
 } from '../../src/amr/trim.mjs';
 
 assert.equal(currentTrim(), trimFast, 'JavaScript is the default backend');
-const project = await openProject('.proj/payments-on-call');
+const project = await openProject('demo/payments-on-call');
 const knowledge = knowledgeSnapshot(project.data);
 const shape = (inference) =>
   JSON.stringify({

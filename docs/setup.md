@@ -26,10 +26,12 @@ npm run workbench -- --project .proj/payments-demo
 The demo contains `project.json`, retained material in `material.sqlite`, and
 36 computed results with their evidence in `engine/artifacts.sqlite`; the
 [capability tour](demo.md) walks through them.
-Work on a copy to keep the bundled snapshot unchanged; generated databases and
-engine data elsewhere are ignored. `npm run demo` leaves an existing copy
-alone and says whether it still matches the bundled demo; `npm run demo --
---reset` discards it and starts again.
+The bundled snapshot lives in `demo/payments-on-call` and changes only through
+its tools; `npm run demo` copies it to `.proj/payments-demo`, the one project in
+`.proj/`, which is yours to change. Run again, it leaves an existing copy alone
+and says whether it still matches the bundled demo; `npm run demo -- --reset`
+discards the copy and starts again, and replaces nothing that is not a copy of
+the demo.
 The payments sources and acquisitions contain synthetic incident material.
 
 The editor starts with a role tree. Use `n` to add statements, `e` to edit,
