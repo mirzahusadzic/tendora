@@ -72,6 +72,41 @@ assert.equal(
   'A source that does not say the word answers nothing',
 );
 
+assert.equal(
+  settle(
+    settleModalWord,
+    recording(asked('possible-01'), 'Can a crew leave the hall?', [
+      [leaving('s', 'permit-01'), 'A crew may leave the hall.'],
+    ]),
+  ),
+  null,
+  '“Can” never answers “may”',
+);
+// Two modal words: which modal the source's reading settles is not known, so
+// none is rewritten. “May a crew that can swim leave the hall?”
+const swimming = (id, modal) => {
+  const g = leaving(id, modal);
+  g.nodes.push({ id: 'k', concept: 'capable-01' }, { id: 'w', concept: 'swim-01' });
+  g.edges.push(
+    { id: 'ek', from: 'k', role: ':ARG1', to: 'w' },
+    { id: 'ew', from: 'w', role: ':ARG0', to: 'c' },
+  );
+  return g;
+};
+const twoModals = swimming('q', 'permit-01');
+twoModals.nodes.push({ id: 'u', concept: 'amr-unknown' });
+twoModals.edges.push({ id: 'eu', from: 'm', role: ':polarity', to: 'u' });
+assert.equal(
+  settle(
+    settleModalWord,
+    recording(twoModals, 'May a crew that can swim leave the hall?', [
+      [swimming('s', 'possible-01'), 'A crew that can swim may leave the hall.'],
+    ]),
+  ),
+  null,
+  'A question with two modal words settles none',
+);
+
 // An answer recorded through a word's other form, before the engine stopped
 // reading questions that way, still says how it was read.
 assert.equal(

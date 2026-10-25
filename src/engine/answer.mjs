@@ -240,7 +240,8 @@ export function settleReference(recording, knowledge, options, answer) {
  * permission (permit-01), “A participant may withdraw.” as possibility
  * (possible-01). When the question and the answering source use the same
  * modal word, the question's modal is read as the source's. Only that word:
- * “must” never answers “may”, and a source without the word answers nothing.
+ * “must” never answers “may”, a source without the word answers nothing, and a
+ * question with two modal words settles none.
  */
 const modalWords = {
   may: ['permit-01', 'possible-01'],
@@ -257,6 +258,13 @@ export function settleModalWord(recording, knowledge, options, answer) {
   const query = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);
   if (!query) return null;
   const asked = tokens(recording.inquiry.text);
+  // With two modal words, which one the source's reading settles is not known.
+  const modalFrames = new Set(Object.values(modalWords).flat());
+  if (
+    Object.keys(modalWords).filter((word) => asked.includes(word)).length !== 1 ||
+    query.nodes.filter((node) => modalFrames.has(node.concept)).length !== 1
+  )
+    return null;
   for (const [word, frames] of Object.entries(modalWords)) {
     if (!asked.includes(word)) continue;
     const modal = query.nodes.find((node) => frames.includes(node.concept));
