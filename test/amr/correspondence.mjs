@@ -92,6 +92,51 @@ const reversed = graph('reversed', 'r', { r: 'repair-01', p: 'person', b: 'bike'
 ]);
 assert.equal(answer(reversed, [accepted]).status, 'open');
 
+// A denial answers a yes/no question too: "Silence does not cancel a
+// permission." read in another sense of cancel proposes No, one confirmation
+// away; confirmed, the question answers No, and a who-question gets nothing.
+{
+  const asked = graph(
+    'denial-question',
+    'c',
+    { c: 'cancel-01', u: 'amr-unknown', s: 'silence', p: 'permission' },
+    [
+      ['c', ':polarity', 'u'],
+      ['c', ':ARG0', 's'],
+      ['c', ':ARG1', 'p'],
+    ],
+  );
+  const denial = graph(
+    'denial',
+    'c',
+    { c: 'cancel-02', s: 'silence', p: 'permission', n: { concept: '-', literal: '-' } },
+    [
+      ['c', ':ARG0', 's'],
+      ['c', ':ARG1', 'p'],
+      ['c', ':polarity', 'n'],
+    ],
+  );
+  const denials = [{ id: 'denial', graph: denial, text: 'Silence does not cancel a permission.' }];
+  const [proposal] = proposeCorrespondences(asked, denials);
+  assert.equal(proposal?.answerLabel, 'No', 'A denial is proposed as No');
+  const record = {
+    inquiry: { text: 'Does silence cancel a permission?', graphId: asked.id },
+    project: { placementId: 'root' },
+    graphs: [asked, denial],
+    sources: [{ id: 'denial', nodeId: 'root', text: denials[0].text, graphId: denial.id }],
+  };
+  assert.equal(evaluateAnswer(record).status, 'open');
+  const confirmed = evaluateAnswer(record, { rules: [{ id: 'denial-rule', ...proposal.rule }] });
+  assert.deepEqual(
+    [confirmed.status, confirmed.answers.map((answer) => answer.text)],
+    ['supported', ['No']],
+  );
+  const who = graph('denial-who', 'c', { c: 'cancel-01', u: 'amr-unknown', p: 'permission' }, [
+    ['c', ':ARG0', 'u'],
+    ['c', ':ARG1', 'p'],
+  ]);
+  assert.deepEqual(proposeCorrespondences(who, denials), [], 'A denial names no participant');
+}
 assert.deepEqual(proposeCorrespondences(question, []), []);
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], asserted: false }]), []);
 assert.deepEqual(proposeCorrespondences(question, [{ ...bases[0], withdrawn: true }]), []);

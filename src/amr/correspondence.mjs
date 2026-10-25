@@ -215,7 +215,30 @@ function answerPorts(question, source, slot, contexts, occupied) {
  * Candidate discovery may compare predicate lemmas, but generated rules retain
  * both exact senses and every explicit qualification.
  */
-function proposeLocal(question, bases, { limit, account }) {
+/** The question as denied, when it asks yes or no at its root and the source's
+ * root is negated: the question gains the source's "-". Otherwise null. */
+function denial(question, source, asksYesNo) {
+  const negated = source.edges.some(
+    (edge) =>
+      edge.from === source.top &&
+      edge.role === ':polarity' &&
+      source.nodes.find((node) => node.id === edge.to)?.concept === '-',
+  );
+  if (
+    !asksYesNo ||
+    !negated ||
+    question.edges.some((edge) => edge.from === question.top && edge.role === ':polarity')
+  )
+    return null;
+  const id = 'denied-polarity';
+  return {
+    ...question,
+    nodes: [...question.nodes, { id, concept: '-', literal: '-' }],
+    edges: [...question.edges, { id: `${id}-edge`, from: question.top, role: ':polarity', to: id }],
+  };
+}
+
+function proposeLocal(question, bases, { limit, account, asksYesNo = false }) {
   if (!Number.isInteger(limit) || limit < 0)
     throw new Error('Correspondence limit must be a nonnegative integer.');
   if (!limit || !bounded(question)) return [];
@@ -246,6 +269,11 @@ function proposeLocal(question, bases, { limit, account }) {
     if (conditional?.reason) continue;
     const graph = conditional?.conclusion ?? basis.graph;
     if (!sameRoot(rootConcept(question), rootConcept(graph))) continue;
+    // A yes/no question leaves its polarity open; a source that denies the
+    // relation answers it No. The proposal is read against the question as
+    // denied, so its rule carries the negation and nothing else moves.
+    const denied = denial(question, graph, asksYesNo);
+    const asked = denied ?? question;
     const contexts = contextAlignment(question, { ...basis, graph }, matcher, account);
     if (!contexts.length) continue;
     if (
@@ -259,7 +287,7 @@ function proposeLocal(question, bases, { limit, account }) {
       b = inquiryPattern(question);
     let aligned;
     try {
-      aligned = wordingAlignment(graph, question, { perspective: true, account });
+      aligned = wordingAlignment(graph, asked, { perspective: true, account });
     } catch {
       continue;
     }
@@ -293,7 +321,7 @@ function proposeLocal(question, bases, { limit, account }) {
       if (++attempts > 128 || account.work >= account.limit) return results;
       let rule;
       try {
-        rule = compileWording(basis.graph, question, {
+        rule = compileWording(basis.graph, asked, {
           perspective: true,
           answerNodeIds,
           isolated: true,
@@ -311,7 +339,9 @@ function proposeLocal(question, bases, { limit, account }) {
         answerNodeIds,
         answerLabel: nodes.length
           ? nodes.map((node) => label(node, graph)).join(', ')
-          : 'This relationship',
+          : denied
+            ? 'No'
+            : 'This relationship',
         rule,
         alignment: {
           kind: 'candidate-context',
@@ -337,6 +367,12 @@ export function proposeCorrespondences(question, bases, { limit = 12 } = {}) {
     throw new Error('Correspondence limit must be a nonnegative integer.');
   if (!limit || !bounded(question)) return [];
   validateGraph(question);
+  const asksYesNo = question.edges.some(
+    (edge) =>
+      edge.from === question.top &&
+      edge.role === ':polarity' &&
+      question.nodes.find((node) => node.id === edge.to)?.concept === 'amr-unknown',
+  );
   const branches = questionBranches(question),
     results = [],
     account = { work: 0, limit: 100000 },
@@ -365,6 +401,7 @@ export function proposeCorrespondences(question, bases, { limit = 12 } = {}) {
         const candidates = proposeLocal(branch.graph, [{ ...basis, graph: source.graph }], {
           limit: maximum - results.length,
           account,
+          asksYesNo: branch.graph.top === question.top && asksYesNo,
         });
         for (const candidate of candidates) {
           const composite =
