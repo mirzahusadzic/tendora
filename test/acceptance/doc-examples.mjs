@@ -1,4 +1,4 @@
-/** Every CLI example in the README, the CLI reference and the demo tour runs as
+/** Every CLI example in the README, the CLI reference and the two tours runs as
  * written, from a checkout after `npm run demo`, and shows what the document
  * says it shows. A block whose commands start with `$ ` gives each one's
  * output after it, trimmed where it says `…`. Nothing is acquired. */
@@ -70,7 +70,7 @@ try {
   await chmod(shim, 0o755);
 
   let count = 0;
-  for (const document of ['README.md', 'docs/cli.md', 'docs/demo.md']) {
+  for (const document of ['README.md', 'docs/cli.md', 'docs/demo.md', 'docs/methods-tour.md']) {
     const markdown = await readFile(join(repo, document), 'utf8');
     const found = examples(markdown);
     assert(found.length, `${document} has CLI examples`);

@@ -17,25 +17,36 @@ version as JSON. Help is text, with or without `--json`.
 
 ## Commands
 
-| Command     | Does                                                                   | Key options                                         |
-| ----------- | ---------------------------------------------------------------------- | --------------------------------------------------- |
-| `ask`       | Checks a question against the statements in scope                      | `--question`, `--scope`, `--case-text`, `--offline` |
-| `suppose`   | What would follow if a statement were said; nothing is saved           | `--text`, `--role`, `--offline`                     |
-| `runs`      | Lists saved checks                                                     | `--explain`                                         |
-| `show`      | Reads one saved check, without checking again                          | `--run`                                             |
-| `recoil`    | What a statement, role or question rests on, what rests on it          | `--statement` \| `--role` \| `--question`           |
-| `tensions`  | Juxtaposition: where questions bring the role tree's branches together | `--grain`                                           |
-| `probe`     | Asks statements back from their own readings                           | `--statement` \| `--role`                           |
-| `fidelity`  | Corpus fidelity: what the statements answer, what questions rest on    | `--withhold`                                        |
-| `init`      | Creates an empty project where there is no project or its storage      | `--name`, `--root`                                  |
-| `delete`    | Removes saved checks; authored statements stay                         | `--run` \| `--all`, `--dry-run`, `--yes`            |
-| `storage`   | Reports storage use                                                    |                                                     |
-| `compact`   | Compacts storage and rebuildable caches                                |                                                     |
-| `knowledge` | Imports authored engine knowledge (advanced)                           | `--file`                                            |
-| `backends`  | Lists where the trim can run on this machine (no project)              |                                                     |
+| Command          | Does                                                                   | Key options                                         |
+| ---------------- | ---------------------------------------------------------------------- | --------------------------------------------------- |
+| `ask`            | Checks a question against the statements in scope                      | `--question`, `--scope`, `--case-text`, `--offline` |
+| `runs`           | Lists saved checks                                                     | `--explain`                                         |
+| `show`           | Reads one saved check, without checking again                          | `--run`                                             |
+| `recoil`         | What a statement, role or question rests on, what rests on it          | `--statement` \| `--role` \| `--question`           |
+| `tensions`       | Juxtaposition: where questions bring the role tree's branches together | `--grain`                                           |
+| `probe`          | Asks statements back from their own readings                           | `--statement` \| `--role`                           |
+| `fidelity`       | Corpus fidelity: what the statements answer, what questions rest on    | `--withhold`                                        |
+| `suppose`        | Hypothesis: what would follow if a statement were said                 | `--text`, `--role`                                  |
+| `elenchus`       | Whether the statements refute a thesis                                 | `--text` \| `--statement`                           |
+| `aporia`         | Where the statements cannot hold together                              | `--role`                                            |
+| `counterexample` | Where a rule applies and is denied, or that it never applies           | `--statement`                                       |
+| `maieutics`      | Questions for authors that would complete what stays open              | `--question`                                        |
+| `equivocation`   | Words read in more than one sense                                      |                                                     |
+| `definition`     | What a term is, by what the statements say                             | `--term`                                            |
+| `division`       | Roles to split, statements that lean on another role's                 |                                                     |
+| `dilemma`        | What follows whichever alternative holds                               |                                                     |
+| `analogy`        | Whether a rule that applies here holds there                           |                                                     |
+| `dialogue`       | Where two authors clash or commit to the same                          |                                                     |
+| `init`           | Creates an empty project where there is no project or its storage      | `--name`, `--root`                                  |
+| `delete`         | Removes saved checks; authored statements stay                         | `--run` \| `--all`, `--dry-run`, `--yes`            |
+| `storage`        | Reports storage use                                                    |                                                     |
+| `compact`        | Compacts storage and rebuildable caches                                |                                                     |
+| `knowledge`      | Imports authored engine knowledge (advanced)                           | `--file`                                            |
+| `backends`       | Lists where the trim can run on this machine (no project)              |                                                     |
 
-`run` is an alias for `ask`, `hypothesis` for `suppose`, `juxtaposition` for `tensions`. `--question -`
-reads the question from standard input.
+`run` is an alias for `ask`, `hypothesis` for `suppose`, `collection` for
+`division`, `juxtaposition` for `tensions`. `--question -` reads the question
+from standard input.
 
 ## ask
 
@@ -77,7 +88,19 @@ Without `--offline`, text without a retained reading is sent to eGemma.
 `--actor` labels the check; without it the check records `unrecorded`, and
 every CLI check records `via: cli`.
 
-## suppose
+## Socratic methods
+
+The eleven commands from `suppose` to `dialogue` ask something of the whole
+corpus rather than one question: [the methods](methods.md) says what each asks
+and promises, and [the methods tour](methods-tour.md) shows and reads each on
+the demo. They read the latest check at the root role, as `probe` and
+`fidelity` do, and save nothing. `suppose` and `elenchus --text` read a new
+text once and retain its reading, like a question's; with `--offline` a text
+without a retained reading is not read, and the command exits 1. Each prints
+its findings, or says it found none; `--json` gives them in one shape
+(`method`, `kind`, `summary`, `statements`, `question` or `proposal`).
+
+### suppose
 
 ```console
 $ npx tendora suppose --project .proj/payments-demo --text "A certificate expires." --offline

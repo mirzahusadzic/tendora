@@ -12,7 +12,7 @@ import { cp, mkdir, mkdtemp } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { openProject } from '../../src/project/authoring/project.mjs';
 import { listEngineRuns } from '../../src/project/storage/engine-runs.mjs';
-import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
+import { acquiredTexts, retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
 import { elenchusReport, formatElenchus } from '../../src/project/inquiries/elenchus.mjs';
 import { aporiaReport, formatAporia } from '../../src/project/inquiries/aporia.mjs';
 import {
@@ -28,14 +28,14 @@ await mkdir('tmp', { recursive: true });
 const path = join(await mkdtemp(resolve('tmp/opposition-')), 'payments-demo');
 await cp(resolve('demo/payments-on-call'), path, { recursive: true });
 let project = await openProject(path);
-// Theses that are not statements, as eGemma read them.
+// Theses that are not statements, as eGemma read them (the demo reads the
+// tour's own; the rest are retained here).
+const held = await acquiredTexts(project, Object.keys(theses));
 await retainAcquisitions(
   project,
-  Object.entries(theses).map(([text, penman]) => ({
-    text,
-    penman,
-    origin: { kind: 'test-fixture' },
-  })),
+  Object.entries(theses)
+    .filter((_, index) => held?.[index]?.status !== 'retained')
+    .map(([text, penman]) => ({ text, penman, origin: { kind: 'test-fixture' } })),
 );
 project = await openProject(path);
 const runs = (await listEngineRuns(project)).length;

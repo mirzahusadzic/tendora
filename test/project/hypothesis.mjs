@@ -27,9 +27,9 @@ const path = join(directory, 'payments-demo');
 await cp(resolve('demo/payments-on-call'), path, { recursive: true });
 let project = await openProject(path);
 
-// Two readings a person might suppose, retained exactly as eGemma read them
-// (its wiki guesses too: Morgan is read as a company, in the saved question as
-// well), so the test reads them offline.
+// Two readings a person might suppose, as eGemma read them (its wiki guesses
+// too: Morgan is read as a company, in the saved question as well): the demo
+// reads the second for the methods tour; the first is retained here.
 const holiday = 'Sam is on holiday.',
   ships = 'A major incident is open, and Morgan ships a release.';
 await retainAcquisitions(project, [
@@ -37,12 +37,6 @@ await retainAcquisitions(project, [
     text: holiday,
     penman:
       '(z0 / holiday-01 :ARG0 (z1 / person :wiki "Kim Dae-jung" :name (z2 / name :op1 "Sam")))',
-    origin: { kind: 'test-fixture' },
-  },
-  {
-    text: ships,
-    penman:
-      '(z0 / and :op1 (z1 / open-01 :ARG1 (z2 / incident :ARG1-of (z3 / major-02))) :op2 (z4 / ship-01 :ARG0 (z5 / company :wiki "Morgan Stanley" :name (z6 / name :op1 "Morgan")) :ARG1 (z7 / release-01)))',
     origin: { kind: 'test-fixture' },
   },
 ]);

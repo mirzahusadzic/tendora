@@ -88,10 +88,11 @@ Read-only views over the saved checks at the project's revision (CLI `recoil`,
 | Probes          | Each participant of a statement asked back from its own reading, and its truth                                                                                                |
 | Corpus fidelity | Every statement's probes classed (answerable, silent, to review) and every checked question by what it rests on; with withholding, which answers each statement bears alone   |
 
-A hypothesis (CLI `suppose`) sets one more statement beside the others in an
-overlay that is never saved: its own probes, the rules that apply only with
-it, and the latest check of each saved question in its scope checked again
-with and without it. Its reading is retained like a question's.
+The [Socratic methods](methods.md) (CLI `suppose` to `dialogue`) ask the
+whole corpus rather than one question, all through one move: a reading asked as
+a yes/no question, with statements withheld, a statement set beside the others
+that is never saved (an overlay) or cases given. They return findings that rest
+on statements, as questions or proposals for a person, and save nothing.
 
 ## Attribution
 

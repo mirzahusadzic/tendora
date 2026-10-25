@@ -479,7 +479,7 @@ $ npx tendora ask --project .proj/payments-demo --offline --actor Dana --json \
 ```
 
 The eleven statements written for the tours (six for this one, five for the
-methods) record their author (through the library); the
+[methods tour](methods-tour.md)) record their author (through the library); the
 original nineteen predate recorded authorship and say
 `unrecorded`. A case is the check's, so it names who made the check. Each check
 keeps this as it stood when it ran. Authorship is declared, not verified.
@@ -510,6 +510,9 @@ The two checks whose case has the same words become ambiguous. The supposed
 certificate stands beside the case's certificate, and the engine does not
 decide they are one. A supposition from which nothing follows says so, and
 that is a result. One already said is reported as said.
+
+Supposing is the first of the [Socratic methods](methods.md); the
+[methods tour](methods-tour.md) shows all eleven on this demo.
 
 ## In the workbench
 

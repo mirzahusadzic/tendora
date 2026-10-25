@@ -118,36 +118,33 @@ export async function definitionReport(project, { term }) {
   };
 }
 
-/** The report as plain text, for the CLI. */
+/** The report as plain text, for the CLI: what the statements say, the
+ * genus even when nothing gives it (that is the question), the rest when
+ * there is some. */
 export function formatDefinition(report) {
   const lines = [`Definition of “${report.term}”, by what the statements say`];
-  const section = (title, rows, line) => {
-    lines.push('', `${title} (${rows.length})`);
+  const kind = (row) => `${row.kind}: “${row.statement}” [${row.role}]`;
+  const section = (title, rows, line, always = false) => {
+    if (!rows.length && !always) return;
+    lines.push('', `${title}`);
     for (const row of rows) lines.push(`  ${line(row)}`);
     if (!rows.length) lines.push('  nothing');
   };
-  section(
-    'Genus: what it is said to be',
-    report.genus,
-    (row) => `${row.kind}: “${row.statement}” [${row.role}]`,
-  );
-  section(
-    'Species: what is said to be one',
-    report.species,
-    (row) => `${row.kind}: “${row.statement}” [${row.role}]`,
-  );
-  section(
-    'Siblings: other kinds of its genus',
-    report.siblings,
-    (row) => `${row.kind}: “${row.statement}” [${row.role}]`,
-  );
+  section('Genus: what it is said to be', report.genus, kind, true);
+  section('Species: what is said to be one', report.species, kind);
+  section('Siblings: other kinds of its genus', report.siblings, kind);
   section(
     'Said of it',
     report.said,
     (row) => `${row.relation}: ${row.statements.map((item) => `“${item.statement}”`).join(', ')}`,
   );
   if (report.siblings.length)
-    section('Differentia: said of it and of no sibling', report.differentia, (row) => row.relation);
+    section(
+      'Differentia: said of it and of no sibling',
+      report.differentia,
+      (row) => row.relation,
+      true,
+    );
   for (const finding of report.findings) lines.push('', `${finding.summary} ${finding.question}`);
   return lines.join('\n');
 }

@@ -22,6 +22,7 @@ import {
 } from '../src/project/inquiries/investigation.mjs';
 import { captureProjectInquiry } from '../src/project/inquiries/inquiry.mjs';
 import { compactDataFiles } from '../src/project/storage/data-files.mjs';
+import { readText } from '../src/project/inquiries/corpus.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const { values } = parseArgs({
@@ -101,6 +102,13 @@ const questions = [
   ],
 ];
 
+// Texts the methods tour asks about that are not statements (elenchus's
+// theses), read once and retained so the tour replays offline.
+const theses = [
+  'If a major incident is open, Morgan ships a release.',
+  'A major incident is open, and Morgan ships a release.',
+];
+
 // Work on a copy: only the manifest and the packed material come back, as
 // tools/refresh-payments-demo.mjs does with the computed results.
 const target = resolve(values.target);
@@ -119,6 +127,11 @@ for (const [name, text] of statements) {
   const { data } = await addMaterial(project, { text, scopePlacementId: role(name) }, author);
   project = await saveProject(project, data);
   console.log(`statement at ${name}: ${text}`);
+}
+for (const text of theses) {
+  const reading = await readText(project, text, { offline: false, origin: 'tour-thesis' });
+  if (reading.status !== 'read') throw new Error(`The thesis was not read: ${text}`);
+  console.log(`thesis read: ${text}`);
 }
 const saved = new Set(
   (await listInvestigations(project)).flatMap(({ data }) =>
