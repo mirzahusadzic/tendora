@@ -22,10 +22,16 @@ Write statements, organize them by role, and ask questions within a scope. A det
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 220
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -52,8 +58,8 @@ flowchart LR
     PE["<b>People</b><br/>write statements and ask, by role"]
     IF["<b>Workbench and CLI</b><br/>one engine behind both"]
     EG["<b>eGemma</b><br/>reads new text into AMR"]
-    PJ["<b>Project</b><br/>statements by role, readings, saved checks"]
-    EN["<b>Deterministic engine</b><br/>answers with their sources, openings and proposals, saved with provenance"]
+    PJ["<b>Project</b><br/>statements by role,<br/>readings, saved checks"]
+    EN["<b>Deterministic engine</b><br/>answers with their sources,<br/>openings and proposals,<br/>saved with provenance"]
 
     PE --> IF
     IF <-->|"new text, its reading"| EG
@@ -82,10 +88,16 @@ flowchart LR
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 400
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -110,7 +122,7 @@ config:
 ---
 flowchart LR
     Q["<b>Ask</b><br/>a question, a scope, a case"]
-    EN["<b>Check</b><br/>only what the statements in scope support"]
+    EN["<b>Check</b><br/>only what the statements<br/>in scope support"]
     subgraph OUT["What comes back"]
         AN["<b>Answer</b><br/>with every statement it rests on"]
         OP["<b>Open</b><br/>why, and the closest statements"]

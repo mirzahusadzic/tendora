@@ -37,10 +37,16 @@ Saved as …
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 240
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -66,11 +72,11 @@ config:
         0 0 3px var(--halo), 0 0 4px var(--halo); }
 ---
 flowchart LR
-    Q["<b>Question</b><br/>Who notifies the customers? (at Incident Commander)"]
+    Q["<b>Question</b><br/>Who notifies the customers?<br/>(at Incident Commander)"]
     C["<b>Case</b><br/>A certificate expires."]
-    S1["<b>Security Engineer</b><br/>If a certificate expires, Priya, the security engineer, renews the certificate."]
-    S2["<b>Support Lead</b><br/>If Priya renews the certificate, Sam, the support lead, notifies the customers."]
-    A["<b>Answer: Sam</b><br/>supported; rests on 2 statements, 2 rules and the case"]
+    S1["<b>Security Engineer</b><br/>If a certificate expires,<br/>Priya, the security engineer,<br/>renews the certificate."]
+    S2["<b>Support Lead</b><br/>If Priya renews the<br/>certificate, Sam, the support<br/>lead, notifies the customers."]
+    A["<b>Answer: Sam</b><br/>supported; rests on 2<br/>statements, 2 rules and the case"]
 
     Q -->|"asks for the conclusion of"| S2
     C -->|"meets the condition of"| S1
@@ -148,10 +154,16 @@ Support Lead ↔ Security Engineer
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 240
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -176,7 +188,7 @@ config:
         0 0 3px var(--halo), 0 0 4px var(--halo); }
 ---
 flowchart LR
-    Q0["<b>Question</b><br/>Who notifies the customers? / Case: A certificate expires."]
+    Q0["<b>Question</b><br/>Who notifies the customers? /<br/>Case: A certificate expires."]
     Q1["<b>Question</b><br/>Are access logs reviewed?"]
     Q2["<b>Question</b><br/>Who reviews access logs?"]
     R0["<b>Support Lead</b>"]
@@ -219,10 +231,16 @@ $ npx tendora recoil --project .proj/payments-demo \
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 240
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -246,12 +264,12 @@ config:
         0 0 3px var(--halo), 0 0 4px var(--halo); }
 ---
 flowchart LR
-    Q["<b>Question</b><br/>Who notifies the customers? / Case: A certificate expires."]
-    D0["<b>Statement</b><br/>If Priya renews the certificate, Sam, the support lead, notifies the customers."]
-    D1["<b>Statement</b><br/>If a certificate expires, Priya, the security engineer, renews the certificate."]
+    Q["<b>Question</b><br/>Who notifies the customers? /<br/>Case: A certificate expires."]
+    D0["<b>Statement</b><br/>If Priya renews the<br/>certificate, Sam, the support<br/>lead, notifies the customers."]
+    D1["<b>Statement</b><br/>If a certificate expires,<br/>Priya, the security engineer,<br/>renews the certificate."]
     D2["<b>Case</b><br/>A certificate expires."]
-    D3["<b>Rule</b><br/>Rule read from “If Priya renews the certificate, Sam, the support lead, notifies the customers.”"]
-    D4["<b>Rule</b><br/>Rule read from “If a certificate expires, Priya, the security engineer, renews the certificate.”"]
+    D3["<b>Rule</b><br/>Rule read from “If Priya renews<br/>the certificate, Sam, the support<br/>lead, notifies the customers.”"]
+    D4["<b>Rule</b><br/>Rule read from “If a certificate<br/>expires, Priya, the security<br/>engineer, renews the certificate.”"]
     P0["<b>Support Lead</b>"]
     P1["<b>Security Engineer</b>"]
 
@@ -285,10 +303,16 @@ $ npx tendora recoil --project .proj/payments-demo --statement "If a certificate
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 240
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -312,9 +336,9 @@ config:
         0 0 3px var(--halo), 0 0 4px var(--halo); }
 ---
 flowchart LR
-    S["<b>Statement at Security Engineer</b><br/>If a certificate expires, Priya, the security engineer, renews the certificate."]
-    U0["<b>Question</b><br/>Who renews the certificate? / Case: A certificate expires."]
-    U1["<b>Question</b><br/>Who notifies the customers? / Case: A certificate expires."]
+    S["<b>Statement at Security Engineer</b><br/>If a certificate expires,<br/>Priya, the security engineer,<br/>renews the certificate."]
+    U0["<b>Question</b><br/>Who renews the certificate? /<br/>Case: A certificate expires."]
+    U1["<b>Question</b><br/>Who notifies the customers? /<br/>Case: A certificate expires."]
     N["<b>Unaffected</b><br/>32 other checked questions"]
 
     S -->|"rests on; rests on a rule read from"| U0
@@ -340,10 +364,16 @@ question as down):
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif'
     flowchart:
         wrappingWidth: 240
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -367,9 +397,9 @@ config:
         0 0 3px var(--halo), 0 0 4px var(--halo); }
 ---
 flowchart LR
-    Q["<b>Question</b><br/>Who notifies the customers? / Case: A certificate expires."]
-    O0["<b>Question</b><br/>Who renews the certificate? / Case: A certificate expires."]
-    T0["<b>Statement</b><br/>If a certificate expires, Priya, the security engineer, renews the certificate."]
+    Q["<b>Question</b><br/>Who notifies the customers? /<br/>Case: A certificate expires."]
+    O0["<b>Question</b><br/>Who renews the certificate? /<br/>Case: A certificate expires."]
+    T0["<b>Statement</b><br/>If a certificate expires,<br/>Priya, the security engineer,<br/>renews the certificate."]
 
     Q -->|"rests on"| T0
     O0 -->|"also rests on"| T0

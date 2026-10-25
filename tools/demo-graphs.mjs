@@ -14,14 +14,26 @@ import { recoilLocus, recoilReport, tensionReport } from '../src/project/inquiri
 import { statementCatalog } from '../src/project/inquiries/recoil.mjs';
 
 const ring = { person: '#8e5bd6', kept: '#4d6bfe', engine: '#2e9e5b', open: '#8a96a8' };
+// Labels keep one stated system font, never wrap on their own, and have room
+// to spare: GitHub draws a diagram in the reader's browser, where a page font
+// or a late web font would otherwise draw labels wider than they were
+// measured, out of their boxes.
+const font =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
 const style = (rings) => `---
 config:
     layout: elk
     look: neo
+    themeVariables:
+        fontFamily: '${font}'
     flowchart:
         wrappingWidth: 240
+        padding: 20
     themeCSS: >-
         foreignObject { overflow: visible; }
+        .node foreignObject, .node foreignObject *, .edgeLabel, .edgeLabel * {
+        font-family: ${font} !important; line-height: 1.5 !important; }
+        .node foreignObject, .node foreignObject * { white-space: nowrap !important; }
         .edgeLabel, .edgeLabel p, .edgeLabel span {
         background: transparent !important; }
         .edgeLabel rect { fill: transparent !important; }
@@ -49,7 +61,25 @@ const classes = `    classDef default fill:#8a96a82e,stroke:#8a96a8,stroke-width
     classDef engine fill:#2e9e5b4d,stroke:#2e9e5b,stroke-width:2px
     classDef open fill:#8a96a814,stroke:#8a96a8,stroke-width:2px,stroke-dasharray:6 4`;
 const text = (value) => String(value).replaceAll('"', '#quot;');
-const box = (id, title, body) => `    ${id}["<b>${text(title)}</b><br/>${text(body)}"]`;
+// A label's lines are broken here, not by the renderer: one longer than 36
+// characters into the fewest lines of at most 34, as even as they can be.
+const breakAt = (words, width) =>
+  words.reduce((lines, word) => {
+    const last = lines.at(-1);
+    if (last && last.length + 1 + word.length <= width) lines[lines.length - 1] = `${last} ${word}`;
+    else lines.push(word);
+    return lines;
+  }, []);
+const wrapped = (value) => {
+  const body = String(value),
+    words = body.split(' ');
+  if (body.length <= 36) return text(body);
+  const fewest = breakAt(words, 34).length;
+  let width = Math.ceil(body.length / fewest);
+  while (breakAt(words, width).length > fewest) width++;
+  return breakAt(words, width).map(text).join('<br/>');
+};
+const box = (id, title, body) => `    ${id}["<b>${text(title)}</b><br/>${wrapped(body)}"]`;
 const block = (rings, lines) =>
   ['```mermaid', style(rings), 'flowchart LR', ...lines, classes, '```'].join('\n');
 
