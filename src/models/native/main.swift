@@ -1,5 +1,5 @@
 // trim cpu <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file]
-// trim metal <capture-dir> [--warmup n] [--repeat n] [--out file] [--variant index|dense]
+// trim metal <capture-dir> [--warmup n] [--repeat n] [--out file] [--variant index|dense|lean|wide|packed]
 // --repeat 0 loads and indexes (and sets Metal up) only, for the footprint before any trim.
 import Foundation
 
@@ -16,7 +16,7 @@ let warmup = Int(option("--warmup") ?? "") ?? 0
 let outPath = option("--out")
 let variant = option("--variant") ?? "index"
 guard args.count == 2 else {
-  print("usage: trim cpu|metal <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file] [--variant index|dense]")
+  print("usage: trim cpu|metal <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file] [--variant index|dense|lean|wide|packed]")
   exit(2)
 }
 let mode = args[0], dir = args[1]

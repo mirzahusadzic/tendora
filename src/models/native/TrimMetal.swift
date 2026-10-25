@@ -25,8 +25,9 @@ constant uint VAR = 0x80000000u;
 constant uint NONE = 0xffffffffu;
 constant uint PMAX = 16, VMAX = 8, W = 32, SIMDS = 8;
 
+// level: 0 index (and dense), 1 lean, 2 wide, 3 packed (see materialize).
 struct Params {
-  uint rules, words, facts, terms, poolCapacity, dense, vmax;
+  uint rules, words, facts, terms, poolCapacity, dense, vmax, level;
 };
 struct Control {
   atomic_uint next;      // the next rule to take
@@ -49,6 +50,7 @@ struct Rule {
   atomic_uint counter;
 };
 struct Ctx {
+  device const uint4 *packed;
   device const uint *col[3];
   device const uint *off[3];
   device const uint *ord[3];
@@ -85,6 +87,33 @@ inline bool accept(thread const Ctx &c, threadgroup Rule &r, uint k, uint f) {
   }
   return true;
 }
+// The lean, wide and packed variants read a fact once: its three terms from
+// the columns, or from its 16-byte record (packed), then test it.
+inline uint3 loadFact(thread const Ctx &c, uint f) {
+  if (c.prm->level >= 3) return c.packed[f].xyz;
+  return uint3(c.col[0][f], c.col[1][f], c.col[2][f]);
+}
+inline bool fitsFact(uint3 v, threadgroup const uint *p) {
+  uint a = p[0], b = p[1], d = p[2];
+  if (!(a & VAR)) { if (v.x != a) return false; }
+  else { if (b == a && v.y != v.x) return false; if (d == a && v.z != v.x) return false; }
+  if (!(b & VAR)) { if (v.y != b) return false; }
+  else if (d == b && v.z != v.y) return false;
+  if (!(d & VAR)) { if (v.z != d) return false; }
+  return true;
+}
+inline bool acceptFact(thread const Ctx &c, threadgroup Rule &r, uint k, uint3 v) {
+  if (!fitsFact(v, r.pat[k])) return false;
+  for (uint j = 0; j < r.slots[k]; j++) {
+    uint w = r.slotV[k][j];
+    if (r.valKnown[w] && !member(bitsOf(c, w), v[r.slotI[k][j]])) return false;
+  }
+  return true;
+}
+inline bool acceptAt(thread const Ctx &c, threadgroup Rule &r, uint k, uint f) {
+  return c.prm->level >= 3 ? acceptFact(c, r, k, loadFact(c, f)) : accept(c, r, k, f);
+}
+
 // One step of an order-preserving compaction over 32 candidates: where this
 // lane writes when it keeps; r.base advances by the step's total.
 inline uint compactSlot(bool keep, threadgroup Rule &r, thread const Ctx &c) {
@@ -134,7 +163,7 @@ inline void expand(thread const Ctx &c, uint from, uint count, device const uint
 struct Writing {
   thread const Ctx &c; threadgroup Rule &r; uint k;
   void operator()(uint f) {
-    if (accept(c, r, k, f)) c.pool[r.start + atomic_fetch_add_explicit(&r.counter, 1u, memory_order_relaxed)] = f;
+    if (acceptAt(c, r, k, f)) c.pool[r.start + atomic_fetch_add_explicit(&r.counter, 1u, memory_order_relaxed)] = f;
   }
 };
 
@@ -177,7 +206,7 @@ void materialize(thread const Ctx &c, threadgroup Rule &r, uint k, uint slot, ui
   }
   sync();
   if (r.start == NONE) { if (c.lane == 0) r.empty = 1; sync(); return; }
-  if (slot == NONE) {
+  if (slot == NONE && c.prm->level == 0) {
     for (uint chunk = lo; chunk < hi; chunk += W) {
       uint j = chunk + c.lane;
       uint f = j < hi ? (col == 3 ? j : c.ord[col][j]) : 0;
@@ -185,6 +214,41 @@ void materialize(thread const Ctx &c, threadgroup Rule &r, uint k, uint slot, ui
       uint at = compactSlot(keep, r, c);
       if (keep) c.pool[r.start + at] = f;
     }
+  } else if (slot == NONE) {
+    // Lean: the write position is the same in every lane (a SIMD sum), so it
+    // stays in a register: no threadgroup write and no barrier a step. A
+    // candidate from the run already holds the run's constant; the first other
+    // constant column rejects almost all (99.8% at these sizes), so only that
+    // one is read before the full test, which survivors alone reach. Wide:
+    // four candidates a lane a step, at chunk + u * 32 + lane, their reads
+    // issued before any is tested; compacted u by u, so the run's order holds.
+    // Packed: one 16-byte read brings a fact's three terms.
+    uint base = 0;
+    uint U = c.prm->level >= 2 ? 4u : 1u;
+    uint d = NONE;
+    for (uint i = 0; i < 3; i++) if (!(p[i] & VAR) && i != col && d == NONE) d = i;
+    for (uint chunk = lo; chunk < hi; chunk += W * U) {
+      uint f[4], t[4];
+      uint3 v[4];
+      for (uint u = 0; u < U; u++) {
+        uint j = chunk + u * W + c.lane;
+        f[u] = j < hi ? (col == 3 ? j : c.ord[col][j]) : NONE;
+      }
+      if (c.prm->level >= 3)
+        for (uint u = 0; u < U; u++) v[u] = f[u] != NONE ? c.packed[f[u]].xyz : uint3(0);
+      else if (d != NONE)
+        for (uint u = 0; u < U; u++) t[u] = f[u] != NONE ? c.col[d][f[u]] : 0;
+      for (uint u = 0; u < U; u++) {
+        bool keep = f[u] != NONE &&
+          (c.prm->level >= 3 ? acceptFact(c, r, k, v[u])
+                             : (d == NONE || t[u] == p[d]) && accept(c, r, k, f[u]));
+        uint flag = keep ? 1u : 0u;
+        uint at = base + simd_prefix_exclusive_sum(flag);
+        base += simd_sum(flag);
+        if (keep) c.pool[r.start + at] = f[u];
+      }
+    }
+    if (c.lane == 0) r.base = base;
   } else {
     uint v = p[slot] & ~VAR;
     Writing writing{c, r, k};
@@ -348,12 +412,14 @@ kernel void trimRules(
   device const uint *ord0 [[buffer(6)]], device const uint *ord1 [[buffer(7)]], device const uint *ord2 [[buffer(8)]],
   device const uint *plan [[buffer(9)]], device atomic_uint *bitsAll [[buffer(10)]], device uint *pool [[buffer(11)]],
   device Control *ctl [[buffer(12)]], device uint *outputs [[buffer(13)]], constant Params *prm [[buffer(14)]],
+  device const uint4 *packed [[buffer(15)]],
   uint tgid [[threadgroup_position_in_grid]],
   uint lane [[thread_index_in_simdgroup]], uint simd [[simdgroup_index_in_threadgroup]])
 {
   threadgroup Rule rules[SIMDS];
   threadgroup Rule &r = rules[simd];
   Ctx c;
+  c.packed = packed;
   c.col[0] = s; c.col[1] = rr; c.col[2] = o;
   c.off[0] = off0; c.off[1] = off1; c.off[2] = off2;
   c.ord[0] = ord0; c.ord[1] = ord1; c.ord[2] = ord2;
@@ -552,6 +618,18 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   let offsetBuffers = (0..<3).map { device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(index.offsets[$0]), length: alignedBytes(c.terms + 1), options: shared, deallocator: nil)! }
   let orderBuffers = (0..<3).map { device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(index.order[$0]), length: alignedBytes(c.facts), options: shared, deallocator: nil)! }
   let planBuffer = plan.withUnsafeBytes { device.makeBuffer(bytes: $0.baseAddress!, length: $0.count, options: shared)! }
+  // The variant's level (Params.level): index and dense 0, lean 1, wide 2, packed 3.
+  let level: UInt32 = ["lean": 1, "wide": 2, "packed": 3][variant] ?? 0
+  // Packed: each fact's three terms in one 16-byte record, made in setup.
+  var packedBuffer = columnsBuffer
+  if level >= 3 {
+    let records = alignedAlloc(c.facts * 4)
+    for f in 0..<c.facts {
+      records[f * 4] = c.columns[0][f]; records[f * 4 + 1] = c.columns[1][f]
+      records[f * 4 + 2] = c.columns[2][f]; records[f * 4 + 3] = 0
+    }
+    packedBuffer = device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(records), length: alignedBytes(c.facts * 4), options: shared, deallocator: nil)!
+  }
   let words = (c.terms + 31) / 32
   // Persistent threadgroups: enough to fill the GPU, each with its own bitsets.
   let groups = Int(ProcessInfo.processInfo.environment["TRIM_GROUPS"] ?? "") ?? 64
@@ -561,20 +639,21 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   let poolBuffer = device.makeBuffer(length: poolCapacity * 4, options: shared)!
   let controlBuffer = device.makeBuffer(length: 16, options: shared)!
   let outputBuffer = device.makeBuffer(length: max(8, patterns * 8), options: shared)!
-  var params: [UInt32] = [UInt32(c.rules.count), UInt32(words), UInt32(c.facts), UInt32(c.terms), UInt32(poolCapacity), variant == "dense" ? 1 : 0, UInt32(maxVars)]
+  var params: [UInt32] = [UInt32(c.rules.count), UInt32(words), UInt32(c.facts), UInt32(c.terms), UInt32(poolCapacity), variant == "dense" ? 1 : 0, UInt32(maxVars), level]
   let paramsBuffer = device.makeBuffer(bytes: &params, length: params.count * 4, options: shared)!
 
   let residencyDescriptor = MTLResidencySetDescriptor()
   residencyDescriptor.initialCapacity = 16
   let residency = try! device.makeResidencySet(descriptor: residencyDescriptor)
   for b in [columnsBuffer, planBuffer, bitsBuffer, poolBuffer, controlBuffer, outputBuffer, paramsBuffer] + offsetBuffers + orderBuffers { residency.addAllocation(b) }
+  if level >= 3 { residency.addAllocation(packedBuffer) }
   residency.commit()
   residency.requestResidency()
   let queue = device.makeMTL4CommandQueue()!
   queue.addResidencySet(residency)
   let allocator = device.makeCommandAllocator()!
   let tableDescriptor = MTL4ArgumentTableDescriptor()
-  tableDescriptor.maxBufferBindCount = 15
+  tableDescriptor.maxBufferBindCount = 16
   let table = try! device.makeArgumentTable(descriptor: tableDescriptor)
   for i in 0..<3 { table.setAddress(columnsBuffer.gpuAddress + UInt64(i * c.columnBytes), index: i) }
   for i in 0..<3 { table.setAddress(offsetBuffers[i].gpuAddress, index: 3 + i); table.setAddress(orderBuffers[i].gpuAddress, index: 6 + i) }
@@ -584,6 +663,7 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   table.setAddress(controlBuffer.gpuAddress, index: 12)
   table.setAddress(outputBuffer.gpuAddress, index: 13)
   table.setAddress(paramsBuffer.gpuAddress, index: 14)
+  table.setAddress(packedBuffer.gpuAddress, index: 15)
 
   // The bitsets start empty once; every rule leaves them empty.
   do {
