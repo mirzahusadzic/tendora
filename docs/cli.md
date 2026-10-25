@@ -12,7 +12,8 @@ npm run --silent engine -- --help  # the same CLI through npm
 
 Every command but `backends` takes `--project <directory>`; all take `--json`
 and `-h, --help`, and each help ends with an example. `--version` is taken by
-`tendora` itself, not by a command.
+`tendora` itself, not by a command; with `--json` it prints the name and
+version as JSON. Help is text, with or without `--json`.
 
 ## Commands
 
@@ -85,6 +86,12 @@ checks than `runs` lists. A question whose checks compaction released is left
 out, and they say how many. `show` reads a released check back as what it
 kept: its last answer, its candidates and what they rest on, not its
 evidence.
+
+`delete --run` removes one check and keeps its question's reading, so the
+question still reads offline; `--all` also clears saved cases and the readings
+no statement owns. A saved check whose bytes no longer match their digest is
+left out of `runs`, named on stderr, and kept as it is; reading it, `compact`
+and `delete` refuse until it is restored.
 
 All six are offline by construction: they acquire nothing and save nothing.
 `probe` and `fidelity` evaluate the retained readings in memory, so they can

@@ -153,8 +153,8 @@ export const engineCommands = {
     example: '--all --dry-run',
     notes: [
       'On a terminal it asks before deleting, unless --yes; a script (no terminal)',
-      'deletes at once. --dry-run lists what would go. --all also clears saved cases',
-      'and rebuildable acquisitions not owned by authored corpus material.',
+      "deletes at once. --dry-run lists what would go. --run keeps the question's",
+      'reading; --all also clears saved cases and readings no statement owns.',
     ],
   },
   storage: {
@@ -302,7 +302,8 @@ export function parseEngineArguments(args) {
   }
   if (!action) {
     if (values.version) return { version: true, values };
-    if (Object.keys(values).some((name) => name !== 'help'))
+    // Help is text, with or without --json, as a command's help is.
+    if (Object.keys(values).some((name) => !['help', 'json'].includes(name)))
       throw new EngineUsageError('Choose a command.');
     return { help: engineHelp(), values };
   }
@@ -338,6 +339,7 @@ export function parseEngineArguments(args) {
   if (values.backend && !trimBackends.includes(values.backend))
     throw new EngineUsageError(
       `Unknown trim backend: ${values.backend}. Choose ${trimBackends.join(', ')}.`,
+      { syntax: false, hint: `See what this machine offers with: ${program} backends` },
     );
   if (['ask', 'run'].includes(action)) {
     requireOption('question');

@@ -4,10 +4,13 @@
  * before it keeps provenance exports none, never one read later; compaction
  * keeps a released check's candidates and the statements they rest on, show
  * reads them back as a summary, the inspections say what they leave out, and
- * the latest check at the root role stays whole for probes. Nothing is
- * acquired. The copy is left in tmp/. */
+ * the latest check at the root role stays whole for probes; deleting one
+ * check keeps its question's reading; a damaged check is left out of a
+ * listing, never rewritten. Nothing is acquired. The copy is left
+ * in tmp/. */
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { DatabaseSync } from 'node:sqlite';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { openProject } from '../../src/project/authoring/project.mjs';
@@ -134,6 +137,46 @@ assert.match(tensions.stdout, /released by compaction .* not read; ask them agai
 const probe = tendora('probe', '--project', copy, '--role', 'Security Engineer');
 assert.equal(probe.status, 0, probe.stderr);
 assert.equal(JSON.parse(await readFile(provenancePath, 'utf8')).statements.length, 0);
+
+// Deleting one check keeps its question's reading (review #7): asked again
+// offline, the question is still read, not missing a reading.
+const invoice = 'Where does the database administrator keep break-glass credentials?';
+const only = runs.filter((run) => run.questions[0].text === invoice);
+assert.equal(only.length, 1, 'the demo checked it once');
+const deleted = tendora('delete', '--project', copy, '--run', only[0].id, '--yes');
+assert.equal(deleted.status, 0, deleted.stderr);
+assert.equal(
+  json('ask', '--project', copy, '--question', invoice, '--offline').value.status,
+  'supported',
+);
+// One damaged saved check is left out of a listing, named, and kept as it is
+// (review #8); reading it fails, and so does maintenance that would rewrite it.
+const damagedId = (await listEngineRuns(project)).find((run) => run.cache === 'recheck').id;
+const store = new DatabaseSync(join(copy, 'engine/artifacts.sqlite'));
+store.prepare("UPDATE runs SET checksum = 'damaged' WHERE id = ?").run(damagedId);
+store.close();
+const listed = tendora('runs', '--project', copy);
+assert.equal(listed.status, 0, listed.stderr);
+assert.doesNotMatch(listed.stdout, new RegExp(damagedId.slice(0, 8), 'u'));
+assert.match(listed.stdout, /saved checks/u);
+assert.match(
+  listed.stderr,
+  new RegExp(
+    `^Warning: saved check ${damagedId.slice(0, 8)} is damaged .* left out and kept as it is`,
+    'mu',
+  ),
+);
+assert.equal(tendora('show', '--project', copy, '--run', damagedId).status, 1);
+const compacted = tendora('compact', '--project', copy);
+assert.equal(compacted.status, 1);
+assert.match(compacted.stderr, new RegExp(damagedId, 'u'));
+const after = new DatabaseSync(join(copy, 'engine/artifacts.sqlite'), { readOnly: true });
+assert.equal(
+  after.prepare('SELECT checksum FROM runs WHERE id = ?').get(damagedId).checksum,
+  'damaged',
+);
+after.close();
+
 console.log(
   `ok released checks: candidates keep provenance; a failed check none; ${releasedCount} released checks read back as summaries, the root check kept (${directory})`,
 );

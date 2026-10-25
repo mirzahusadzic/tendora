@@ -54,15 +54,24 @@ export function storeRun(db, run) {
   );
 }
 
-export function storedRuns(db, id) {
+/** Saved runs, each checked against its digest. A damaged one fails the read;
+ * a listing given `damaged` leaves it out instead and names it there. It is
+ * never rewritten. */
+export function storedRuns(db, id, damaged) {
   const rows = id
-    ? db.prepare('SELECT payload, checksum FROM runs WHERE id = ?').all(id)
-    : db.prepare('SELECT payload, checksum FROM runs').all();
-  return rows.map(({ payload, checksum }) => {
-    const bytes = decompress(payload, 'A stored engine run');
-    if (digest(bytes) !== checksum) throw new Error('Stored engine run changed');
-    return JSON.parse(bytes);
-  });
+    ? db.prepare('SELECT id, payload, checksum FROM runs WHERE id = ?').all(id)
+    : db.prepare('SELECT id, payload, checksum FROM runs').all();
+  const runs = [];
+  for (const row of rows)
+    try {
+      const bytes = decompress(row.payload, 'A stored engine run');
+      if (digest(bytes) !== row.checksum) throw new Error(`Stored engine run changed: ${row.id}`);
+      runs.push(JSON.parse(bytes));
+    } catch (error) {
+      if (!damaged) throw Object.assign(error, { runId: row.id });
+      damaged.push({ id: row.id, reason: error.message });
+    }
+  return runs;
 }
 
 // A fragment is named by the digest of its own bytes: its value, with each

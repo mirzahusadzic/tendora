@@ -20,6 +20,9 @@ assert(notices.includes(`\`${pkg.license}\``), 'The licensing page gives the SPD
 assert.match(readme, /badge\/code-Apache--2\.0/u);
 assert.match(readme, /\[Apache License 2\.0\]\(LICENSE\)/u);
 
+// Python components setup installs name their terms too (review of v0.2.0, #12).
+assert.match(notices, /\| PENMAN[^|\n]*\| MIT, Copyright \(c\) 2016-2019 Michael Wayne Goodman/u);
+
 // A precise SPDX expression of known identifiers, or the package is named.
 const known =
   /^(MIT|ISC|Apache-2\.0|BSD-2-Clause|BSD-3-Clause|0BSD|BlueOak-1\.0\.0|Python-2\.0|CC0-1\.0|Unlicense)$/u;

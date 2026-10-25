@@ -26,6 +26,7 @@ v0.1.0, the first release, and the commits before the switch were MIT.
 | Component                                                           | License                                                                                         | Notices                                                                                                                     |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | SEMCAT runtime, into `.venv/` by `npm run setup:python`             | GPL-3.0-only AND MIT                                                                            | [Fork licensing](https://github.com/mirzahusadzic/semcat/blob/e00a02b954e8d6baf3e362844da4e9ae6509efc9/LICENSING.md)        |
+| PENMAN, into `.venv/` with the SEMCAT runtime                       | MIT, Copyright (c) 2016-2019 Michael Wayne Goodman                                              | [Its license](https://github.com/goodmami/penman/blob/main/LICENSE)                                                         |
 | Optional Bolinas checkout, into `.deps/` by `npm run setup:bolinas` | MIT core; bundled utilities under Apache-2.0, MIT and LGPL-3.0-or-later, plus ColorBrewer terms | [Fork component notices](https://github.com/mirzahusadzic/bolinas/blob/70fbac4afe7177d28f9658df4c88b2e1b4bcbfbb/NOTICES.md) |
 | npm and Python dependencies                                         | As supplied with each installed distribution                                                    | Their package metadata                                                                                                      |
 | `node-bitmap` 0.0.1, through terminal-kit                           | MIT, Copyright (c) 2012 Yusuke Hata; its package metadata names no license                      | [Its README](https://github.com/nowelium/node-bitmap)                                                                       |
@@ -72,7 +73,8 @@ xdot and ColorBrewer notices and license texts.
 [The dependency pin](tools/bolinas.json) records the exact revision.
 
 **PENMAN**, by Michael Wayne Goodman, reads and normalizes the AMR graphs
-([goodmami/penman](https://github.com/goodmami/penman), installed by setup).
+([goodmami/penman](https://github.com/goodmami/penman), MIT, installed by setup
+with the SEMCAT runtime).
 
 Other npm and Python dependencies retain the licenses supplied with their
 installed distributions. eGemma runs separately under its own code and model

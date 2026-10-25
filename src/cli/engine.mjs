@@ -33,7 +33,7 @@ import {
   tensionReport,
 } from '../project/inquiries/inspection.mjs';
 import { fidelityReport, formatFidelity } from '../project/inquiries/fidelity.mjs';
-import { describeBackends, useTrimBackend } from '../engine/trim-backend.mjs';
+import { describeBackends, trimBackends, useTrimBackend } from '../engine/trim-backend.mjs';
 import {
   listEngineRuns,
   readEngineRun,
@@ -356,22 +356,45 @@ try {
   const { action, values, help, version } = parseEngineArguments(process.argv.slice(2));
   if (version) {
     const manifest = JSON.parse(await readFile(new URL('../../package.json', import.meta.url)));
-    console.log(`${program} ${manifest.version}`);
-  } else if (help) console.log(help);
-  else if (action === 'backends') {
-    const backends = describeBackends(),
-      using = process.env.TENDORA_BACKEND || 'js';
     console.log(
       values.json
-        ? JSON.stringify({ using, backends }, null, 2)
+        ? JSON.stringify({ name: program, version: manifest.version })
+        : `${program} ${manifest.version}`,
+    );
+  } else if (help) console.log(help);
+  else if (action === 'backends') {
+    // A TENDORA_BACKEND a check would refuse is named as refused, not in use.
+    const backends = describeBackends(),
+      using = process.env.TENDORA_BACKEND || 'js',
+      entry = backends.find((backend) => backend.name === using);
+    const refused = !entry
+      ? `TENDORA_BACKEND is ${using}, which is not a backend; choose ${trimBackends.join(', ')}.`
+      : !entry.available
+        ? `TENDORA_BACKEND is ${using}, which is not available here: ${entry.detail}.`
+        : null;
+    console.log(
+      values.json
+        ? JSON.stringify(
+            { using: refused ? null : using, ...(refused ? { refused } : {}), backends },
+            null,
+            2,
+          )
         : [
             ...backends.map(
               ({ name, available, detail }) =>
                 `${name.padEnd(6)} ${available ? 'available    ' : 'not available'}  ${detail}`,
             ),
-            `In use: ${using}${process.env.TENDORA_BACKEND ? ' (TENDORA_BACKEND)' : ' (the default)'}`,
+            ...(refused
+              ? []
+              : [
+                  `In use: ${using}${process.env.TENDORA_BACKEND ? ' (TENDORA_BACKEND)' : ' (the default)'}`,
+                ]),
           ].join('\n'),
     );
+    if (refused) {
+      process.stderr.write(`Error: ${refused}\n`);
+      process.exitCode = 2;
+    }
   } else {
     if (values.question === '-') values.question = await standardInput();
     // The trim backend of a check: --backend, else TENDORA_BACKEND, else js;
@@ -400,9 +423,13 @@ try {
             throw error;
           })
         : await openProject(location).catch((error) => {
-            if (error instanceof SyntaxError)
+            // A manifest that does not parse, or is not a project, names the
+            // file and how to recover it.
+            if (error instanceof SyntaxError || /^Invalid project/u.test(error.message))
               throw Object.assign(
-                new Error(`${join(location, 'project.json')} is not valid JSON: ${error.message}`),
+                new Error(
+                  `${join(location, 'project.json')} ${error instanceof SyntaxError ? 'is not valid JSON' : 'is not a valid project'}: ${error.message}`,
+                ),
                 { hint: 'Restore it from version control or from a copy of the project.' },
               );
             if (error.code !== 'ENOENT') throw error;
@@ -415,9 +442,19 @@ try {
     // A saved check by its id, or by a prefix only it has (the 8 characters
     // the output shows).
     const savedRun = async (id) => {
-      const exact = await readEngineRun(project, id).catch(() => null);
+      // A damaged check fails its read; it is never taken for a missing one.
+      const exact = await readEngineRun(project, id).catch((error) => {
+        if (error.runId) throw error;
+        return null;
+      });
       if (exact) return exact;
-      const matches = (await listEngineRuns(project)).filter((run) => run.id.startsWith(id));
+      const damaged = [];
+      const matches = (await listEngineRuns(project, { damaged })).filter((run) =>
+        run.id.startsWith(id),
+      );
+      const broken = damaged.find((item) => item.id.startsWith(id));
+      if (broken && !matches.length)
+        throw Object.assign(new Error(broken.reason), { runId: broken.id });
       if (matches.length === 1) return matches[0];
       throw new EngineUsageError(
         matches.length
@@ -461,7 +498,13 @@ try {
         ? { id: entry.id, name: entry.name }
         : 'Stored authored engine knowledge: ' + entry.name;
     } else if (action === 'runs') {
-      const runs = await listEngineRuns(project);
+      // A damaged check is left out, named, and kept as it is.
+      const damaged = [];
+      const runs = await listEngineRuns(project, { damaged });
+      for (const { id, reason } of damaged)
+        process.stderr.write(
+          `Warning: saved check ${id.slice(0, 8)} is damaged (${reason}); it is left out and kept as it is.\n`,
+        );
       // One line a check; --explain describes each in full.
       const width = Math.max(0, ...runs.map((run) => run.status.length));
       output = values.json
@@ -672,6 +715,9 @@ try {
   }
 } catch (error) {
   clearStatus();
+  if (error.runId && !error.hint)
+    error.hint =
+      'Nothing was changed. Restore engine/artifacts.sqlite from a copy of the project to read or maintain this check.';
   process.stderr.write('Error: ' + error.message + '\n');
   if (error.hint) process.stderr.write(error.hint + '\n');
   if (error instanceof EngineUsageError && error.syntax)

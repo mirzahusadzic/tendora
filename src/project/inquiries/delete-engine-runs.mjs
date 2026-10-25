@@ -316,30 +316,33 @@ async function deleteEngineData(project, { ids = [], all = false, question = nul
         ...keptRecordings.flatMap((record) => engineRefs(record.data.reasoning ?? {})),
       ]),
     );
-    await withAcquisitionIndexLease(project, async () => {
-      const acquisitions = await readAcquisitions(project);
-      if (acquisitions) {
-        const kept = {};
-        for (const [key, ref] of Object.entries(acquisitions.entries)) {
-          if (retainedTexts.has(key) || !deletedTexts.has(key)) kept[key] = ref;
+    // Readings go with --all or a forgotten question; deleting one check keeps
+    // its question's reading, so the question still reads offline.
+    if (all || question)
+      await withAcquisitionIndexLease(project, async () => {
+        const acquisitions = await readAcquisitions(project);
+        if (acquisitions) {
+          const kept = {};
+          for (const [key, ref] of Object.entries(acquisitions.entries)) {
+            if (retainedTexts.has(key) || !deletedTexts.has(key)) kept[key] = ref;
+          }
+          if (Object.keys(kept).length) {
+            await writeIndex(
+              join(directory, 'acquisitions', 'index.json'),
+              {
+                ...acquisitions,
+                entries: kept,
+              },
+              directory,
+            );
+            await pruneObjects(
+              join(directory, 'acquisitions', 'objects'),
+              new Set(Object.values(kept)),
+              directory,
+            );
+          } else await removeDataArea(directory, 'acquisitions');
         }
-        if (Object.keys(kept).length) {
-          await writeIndex(
-            join(directory, 'acquisitions', 'index.json'),
-            {
-              ...acquisitions,
-              entries: kept,
-            },
-            directory,
-          );
-          await pruneObjects(
-            join(directory, 'acquisitions', 'objects'),
-            new Set(Object.values(kept)),
-            directory,
-          );
-        } else await removeDataArea(directory, 'acquisitions');
-      }
-    });
+      });
     for (const area of ['engine/runs', 'engine', 'recordings/.interpretations', 'recordings'])
       await emptyDirectory(join(directory, area));
     return {

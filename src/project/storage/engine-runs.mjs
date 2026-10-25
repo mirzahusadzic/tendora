@@ -85,7 +85,7 @@ export async function saveEngineRun(project, run) {
   }
   return run;
 }
-async function retainedRuns(project, id) {
+async function retainedRuns(project, id, damaged) {
   const path = artifactDatabasePath(project);
   try {
     await access(path);
@@ -95,7 +95,7 @@ async function retainedRuns(project, id) {
   }
   const db = openArtifactDatabase(path);
   try {
-    return storedRuns(db, id);
+    return storedRuns(db, id, damaged);
   } finally {
     db.close();
   }
@@ -136,14 +136,16 @@ function validateRun(project, run, id) {
   }
   return run;
 }
-export async function listEngineRuns(project) {
+/** Every saved run, newest first. A damaged one fails the listing, unless
+ * the caller collects it in `damaged`: a listing to read, never to rewrite. */
+export async function listEngineRuns(project, { damaged } = {}) {
   let names = [];
   try {
     names = await readdir(join(root(project), 'engine', 'runs'));
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
-  const saved = await retainedRuns(project);
+  const saved = await retainedRuns(project, undefined, damaged);
   const ids = new Set(saved.map((run) => run.id));
   const legacy = await Promise.all(
     names

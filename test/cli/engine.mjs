@@ -107,6 +107,16 @@ assert.equal(
   version.stdout.trim(),
   `tendora ${JSON.parse(await readFile('package.json', 'utf8')).version}`,
 );
+// --json is data where there is data (review of v0.2.0, #11): the version as
+// JSON; help is text everywhere, as with a command's help.
+assert.deepEqual(machine(await command(['--version', '--json'])), {
+  name: 'tendora',
+  version: JSON.parse(await readFile('package.json', 'utf8')).version,
+});
+const helpJson = await command(['--help', '--json']);
+successful(helpJson);
+assert.match(helpJson.stdout, /^Usage: tendora <command>/u);
+assert.match((await command(['ask', '--help', '--json'])).stdout, /^Usage: tendora ask/u);
 assert.match((await command(['ask', '-h'])).stdout, /missing AMRs may be acquired/u);
 assert.match((await command(['delete', '--help'])).stdout, /asks before deleting, unless --yes/u);
 
@@ -174,9 +184,13 @@ const invalid = [
     data: true,
   },
   { args: ['ask', '--not-real'], match: /Unknown option/u },
+  // The same mistake by flag or by TENDORA_BACKEND has the same next step
+  // (review of v0.2.0, #10).
   {
     args: ['ask', '--project', absent, '--question', 'Who?', '--backend', 'gpu'],
-    match: /Unknown trim backend: gpu\. Choose js, swift, metal, auto\./u,
+    match:
+      /Unknown trim backend: gpu\. Choose js, swift, metal, auto\.\nSee what this machine offers with: tendora backends\n$/u,
+    data: true,
   },
   { args: ['backends', '--project', absent], match: /--project is not available/u },
   { args: ['ask', '--question'], match: /argument missing/u },
@@ -226,6 +240,15 @@ assert.equal(unreadable.stdout, '');
 assert.match(
   unreadable.stderr,
   /^Error: .*corrupt\/project\.json is not valid JSON: .*\nRestore it from version control or from a copy of the project\.\n$/u,
+);
+// A manifest that parses but is not a project gets the same next step (review
+// of v0.2.0, #9), with what is wrong.
+await writeFile(join(corrupt, 'project.json'), '{}');
+const invalidProject = await command(['runs', '--project', corrupt]);
+assert.equal(invalidProject.code, 1);
+assert.match(
+  invalidProject.stderr,
+  /^Error: .*corrupt\/project\.json is not a valid project: Invalid project: .*\nRestore it from version control or from a copy of the project\.\n$/u,
 );
 assert.equal(await readFile(project.path, 'utf8'), original, 'Existing project was not replaced');
 // Storage left without its manifest belongs to another project (final review
@@ -510,6 +533,20 @@ successful(backends);
 assert.match(backends.stdout, /^js +available +Node v/mu);
 assert.match(backends.stdout, /^auto +available +js below 250,000 facts/mu);
 assert.match(backends.stdout, /In use: js \(the default\)\n$/u);
+// A TENDORA_BACKEND no check would take is not reported as in use (review of
+// v0.2.0, #10): the list still prints, with the refusal and exit status 2.
+const bogus = await command(['backends'], { env: { TENDORA_BACKEND: 'bogus' } });
+assert.equal(bogus.code, 2);
+assert.match(bogus.stdout, /^js +available/mu);
+assert.doesNotMatch(bogus.stdout, /In use/u);
+assert.match(
+  bogus.stderr,
+  /^Error: TENDORA_BACKEND is bogus, which is not a backend; choose js, swift, metal, auto\.\n$/u,
+);
+const bogusJson = await command(['backends', '--json'], { env: { TENDORA_BACKEND: 'bogus' } });
+assert.equal(bogusJson.code, 2);
+assert.equal(JSON.parse(bogusJson.stdout).using, null);
+assert.match(JSON.parse(bogusJson.stdout).refused, /not a backend/u);
 const listed = machine(await command(['backends', '--json']));
 assert.deepEqual(
   listed.backends.map(({ name }) => name),
