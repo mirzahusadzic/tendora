@@ -19,7 +19,7 @@ Run `.venv/bin/python python/semcat/manage.py verify` to check installed sources
 ## Work on a copy
 
 ```sh
-npm run demo
+npm run demo -- --reset
 npm run workbench -- --project .proj/payments-demo
 ```
 

@@ -130,7 +130,7 @@ const invalid = [
   {
     args: ['recoil', '--statement', 'If a certificate expires'],
     match:
-      /--project is required for tendora recoil: the project's directory, such as --project \.proj\/payments-demo after npm run demo\./u,
+      /--project is required for tendora recoil: the project's directory, such as --project \.proj\/payments-demo after npm run demo -- --reset\./u,
   },
   {
     args: ['ask', '--project', absent, '--question', 'Who?', '--case', 'A', '--case-text', 'B'],

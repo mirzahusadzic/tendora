@@ -35,12 +35,27 @@ function examples(markdown, prompted) {
 }
 
 try {
-  // A checkout after `npm run demo`, with `npx tendora` as the checkout runs
-  // it and the network refused.
+  // A checkout that already holds an older copy of the demo (a clone of an
+  // earlier release, pulled), set up with the README's own demo line as it is
+  // written; then `npx tendora` as the checkout runs it, the network refused.
+  const copy = join(directory, '.proj/payments-demo');
+  execFileSync(process.execPath, ['tools/payments-demo.mjs', '--target', copy], { stdio: 'pipe' });
+  const manifest = join(copy, 'project.json'),
+    bundled = await readFile(join(repo, 'demo/payments-on-call/project.json'), 'utf8');
+  await writeFile(manifest, JSON.stringify({ ...JSON.parse(bundled), name: 'Older' }) + '\n');
+  const setup = (await readFile(join(repo, 'README.md'), 'utf8')).match(
+    /^npm run demo(?: -- ([^#\n]*?))?\s*(?:#.*)?$/mu,
+  );
+  assert(setup, 'The README sets the demo up with npm run demo');
   execFileSync(
     process.execPath,
-    ['tools/payments-demo.mjs', '--target', join(directory, '.proj/payments-demo')],
+    ['tools/payments-demo.mjs', ...(setup[1]?.split(/\s+/u) ?? []), '--target', copy],
     { stdio: 'pipe' },
+  );
+  assert.equal(
+    await readFile(manifest, 'utf8'),
+    bundled,
+    "The README's setup renews an older copy of the demo",
   );
   const refuse = join(directory, 'no-network.mjs');
   await writeFile(refuse, 'globalThis.fetch = () => { throw new Error("NETWORK_FORBIDDEN"); };\n');

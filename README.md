@@ -176,7 +176,7 @@ git clone https://github.com/mirzahusadzic/tendora.git
 cd tendora
 npm ci
 npm run setup:python
-npm run demo                                          # a working copy of the demo; -- --reset renews it
+npm run demo -- --reset                               # the demo, in .proj/payments-demo (renews an older copy)
 npm run workbench -- --project .proj/payments-demo
 npx tendora ask --project .proj/payments-demo --offline \
   --question "Who notifies the customers?" --case-text "A certificate expires."

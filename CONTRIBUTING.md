@@ -9,7 +9,7 @@ show.
 ```sh
 npm ci
 npm run setup:python
-npm run demo
+npm run demo -- --reset
 npm run check
 ```
 

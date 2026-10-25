@@ -319,7 +319,7 @@ export function parseEngineArguments(args) {
     if (!values[name])
       throw new EngineUsageError(
         name === 'project'
-          ? `--project is required for ${program} ${action}: the project's directory, such as --project .proj/payments-demo after npm run demo.`
+          ? `--project is required for ${program} ${action}: the project's directory, such as --project .proj/payments-demo after npm run demo -- --reset.`
           : `--${name} is required for ${program} ${action}.`,
       );
   };

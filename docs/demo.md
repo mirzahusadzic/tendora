@@ -7,13 +7,13 @@ saved questions with their answers and evidence, prebuilt: the whole tour
 replays offline, and `test/acceptance/demo-tour.mjs` checks every step.
 
 ```sh
-npm run demo                                         # a working copy in .proj/payments-demo
+npm run demo -- --reset                              # the demo, in .proj/payments-demo
 npm run workbench -- --project .proj/payments-demo   # or the CLI below
 ```
 
-Every command runs as shown from the checkout, after `npm run demo`; outputs
-are trimmed (`…`). A copy made from an older demo says so; `npm run demo --
---reset` replaces it. `npm link` puts `tendora` on your PATH, without `npx`.
+Every command runs as shown from the checkout, after the two lines above;
+outputs are trimmed (`…`). `--reset` renews a copy made from an older demo, and
+replaces nothing that is not a copy of the demo. `npm link` puts `tendora` on your PATH, without `npx`.
 
 ## 1. A question and its answer
 
