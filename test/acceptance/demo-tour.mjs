@@ -204,10 +204,12 @@ try {
   for (const heading of [
     'What the answer rests on',
     'Other questions resting on the same statements',
-    'Brings together',
+    'Juxtaposition: what it brings together',
   ])
     assert(headings(question).includes(heading), heading);
-  const together = question.sections[0].groups.find((group) => group.heading === 'Brings together');
+  const together = question.sections[0].groups.find(
+    (group) => group.heading === 'Juxtaposition: what it brings together',
+  );
   assert.deepEqual(together.rows, [
     ['Support Lead ↔ Security Engineer', 'resolved: one answer composes both'],
   ]);

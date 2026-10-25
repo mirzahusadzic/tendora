@@ -14,21 +14,21 @@ help ends with an example on the bundled demo.
 
 ## Commands
 
-| Command     | Does                                                              | Key options                                         |
-| ----------- | ----------------------------------------------------------------- | --------------------------------------------------- |
-| `ask`       | Checks a question against the statements in scope                 | `--question`, `--scope`, `--case-text`, `--offline` |
-| `runs`      | Lists saved checks                                                | `--explain`                                         |
-| `show`      | Reads one saved check, without checking again                     | `--run`                                             |
-| `recoil`    | What a statement, role or question rests on, what rests on it     | `--statement` \| `--role` \| `--question`           |
-| `tensions`  | Where questions bring the branches of the role tree together      | `--grain`                                           |
-| `probe`     | Asks statements back from their own readings                      | `--statement` \| `--role`                           |
-| `init`      | Creates an empty project where there is no project or its storage | `--name`, `--root`                                  |
-| `delete`    | Removes saved checks; authored statements stay                    | `--run` \| `--all`, `--dry-run`, `--yes`            |
-| `storage`   | Reports storage use                                               |                                                     |
-| `compact`   | Compacts storage and rebuildable caches                           |                                                     |
-| `knowledge` | Imports authored engine knowledge (advanced)                      | `--file`                                            |
+| Command     | Does                                                                   | Key options                                         |
+| ----------- | ---------------------------------------------------------------------- | --------------------------------------------------- |
+| `ask`       | Checks a question against the statements in scope                      | `--question`, `--scope`, `--case-text`, `--offline` |
+| `runs`      | Lists saved checks                                                     | `--explain`                                         |
+| `show`      | Reads one saved check, without checking again                          | `--run`                                             |
+| `recoil`    | What a statement, role or question rests on, what rests on it          | `--statement` \| `--role` \| `--question`           |
+| `tensions`  | Juxtaposition: where questions bring the role tree's branches together | `--grain`                                           |
+| `probe`     | Asks statements back from their own readings                           | `--statement` \| `--role`                           |
+| `init`      | Creates an empty project where there is no project or its storage      | `--name`, `--root`                                  |
+| `delete`    | Removes saved checks; authored statements stay                         | `--run` \| `--all`, `--dry-run`, `--yes`            |
+| `storage`   | Reports storage use                                                    |                                                     |
+| `compact`   | Compacts storage and rebuildable caches                                |                                                     |
+| `knowledge` | Imports authored engine knowledge (advanced)                           | `--file`                                            |
 
-`run` is an alias for `ask`. `--question -` reads the question from standard
+`run` is an alias for `ask`, `juxtaposition` for `tensions`. `--question -` reads the question from standard
 input.
 
 ## ask
@@ -86,7 +86,7 @@ npx tendora probe --project .proj/payments-demo --role "Security Engineer"
   walk cannot see (a check made against earlier statements, a released check, a
   question never checked); it is never absence. A question is the saved one
   asked at `--scope` (the root by default) with its `--case-text`.
-- **tensions**: a line between two branches is _resolved_ when one answer
+- **tensions** (juxtaposition): a line between two branches is _resolved_ when one answer
   composes statements from both, _gathered_ when each branch gives its own
   answer, _open_ when only parts reach one of them. `--grain` is the branch
   depth (1: the roles under the root). An open line is a place to ask or to

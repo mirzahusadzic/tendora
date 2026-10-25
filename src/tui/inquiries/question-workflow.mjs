@@ -87,7 +87,7 @@ export function createQuestionWorkflow({
     const tensions = tensionsNow();
     return (
       pendingGroups('What the answer rests on', recoiled) ??
-      pendingGroups('Brings together', tensions) ??
+      pendingGroups('Juxtaposition: what it brings together', tensions) ??
       questionGroups(recoiled.value, tensions.value, { text, caseText })
     );
   }
@@ -647,7 +647,10 @@ export function createQuestionWorkflow({
         ...(role().children.length
           ? (() => {
               const tensions = tensionsNow();
-              return pendingGroups('Tension lines', tensions) ?? roleTensionGroups(tensions.value);
+              return (
+                pendingGroups('Juxtaposition: tension lines', tensions) ??
+                roleTensionGroups(tensions.value)
+              );
             })()
           : []),
         ...(role().children.length

@@ -71,15 +71,17 @@ export const engineCommands = {
     ],
   },
   tensions: {
-    description: 'Where questions bring the branches of the role tree together.',
+    description: 'Juxtaposition: where questions bring the branches of the role tree together.',
     options: ['grain'],
     example: '',
     notes: [
       'A line between two branches is resolved when one answer composes both, gathered',
       'when each gives its own answer, and open when only parts reach one of them.',
       'Read-only: an open line is a place to ask or to author, never an answer.',
+      'Alias: juxtaposition.',
     ],
   },
+  juxtaposition: { alias: 'tensions' },
   probe: {
     description: 'Ask statements back from their own readings (cloze probes).',
     options: ['statement', 'role'],

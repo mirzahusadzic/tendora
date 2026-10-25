@@ -86,7 +86,7 @@ export function questionGroups(recoil, tensions, { text, caseText }) {
         : { rows: [['', 'None at this revision.', 'muted']] }),
     },
     {
-      heading: 'Brings together',
+      heading: 'Juxtaposition: what it brings together',
       rows: own
         ? own.effect === 'juxtaposition'
           ? own.lines.map((line) => [
@@ -190,7 +190,7 @@ export function statementGroups(recoil, probes, author) {
 export function roleTensionGroups(tensions) {
   return [
     {
-      heading: 'Tension lines',
+      heading: 'Juxtaposition: tension lines',
       rows: [['', effectSummary(tensions.effects), 'muted']],
       ...(tensions.lines.length
         ? {

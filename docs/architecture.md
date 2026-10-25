@@ -59,7 +59,7 @@ Read-only views over the saved checks at the project's revision (CLI `recoil`,
 | View          | Shows                                                                                                                                                                         |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Recoil        | From a statement, role or question: what it rests on (down), what rests on it (up), what shares its place (sideways); the frontier is what the walk cannot see, never absence |
-| Tension lines | Which role branches a question's answer draws on: resolved by one composed answer, gathered by separate ones, or open                                                         |
+| Juxtaposition | Which role branches a question's answer draws on, as tension lines: resolved by one composed answer, gathered by separate ones, or open                                       |
 | Probes        | Each participant of a statement asked back from its own reading, and its truth                                                                                                |
 
 ## Attribution

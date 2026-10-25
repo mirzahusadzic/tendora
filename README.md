@@ -117,7 +117,7 @@ flowchart LR
     CF["<b>Confirmation</b><br/>who and through what, kept"]
     subgraph IN["Inspect the saved checks"]
         RC["<b>Recoil</b><br/>down, up and sideways"]
-        TL["<b>Tension lines</b><br/>what questions bring together"]
+        TL["<b>Juxtaposition</b><br/>what questions bring together"]
         PB["<b>Probes</b><br/>statements asked back"]
         PV["<b>Provenance</b><br/>who wrote what an answer rests on"]
     end

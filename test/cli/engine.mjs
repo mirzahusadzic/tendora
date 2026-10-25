@@ -448,6 +448,11 @@ assert.deepEqual(Object.keys(recoilJson).sort(), [
 ]);
 assert(recoilJson.down.some((row) => row.kind === 'statement' && row.relation === 'answer'));
 const lines = await command(['tensions', '--project', location]);
+assert.equal(
+  (await command(['juxtaposition', '--project', location])).stdout,
+  lines.stdout,
+  'juxtaposition is the same command',
+);
 successful(lines);
 assert.match(lines.stdout, /No question brings two roles together yet/u);
 const probed = machine(

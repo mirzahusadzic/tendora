@@ -121,7 +121,7 @@ and through what. "Who pays the database vendor?" names its closest statements;
 the statement says five; "Who reviews access logs?" has two answers (Alex and
 Priya) and stays ambiguous: the engine does not choose.
 
-## 4. What questions bring together
+## 4. Juxtaposition: what questions bring together
 
 `tensions` reads, over every saved check, which branches of the role tree a
 question's answer draws on:
@@ -417,7 +417,7 @@ keeps this as it stood when it ran. Authorship is declared, not verified.
 
 Open Development (`o`) and select a saved question: below its answer and
 evidence come **What the answer rests on**, **Other questions resting on the
-same statements** and **Brings together**. Select a statement there (`Enter`)
+same statements** and **Juxtaposition: what it brings together**. Select a statement there (`Enter`)
 for **What rests on it**, **Asked back from its reading** and **Written by**. A
-role with children shows its **Tension lines**. A proposal is confirmed with
+role with children shows **Juxtaposition: tension lines**. A proposal is confirmed with
 `d` on the question.
