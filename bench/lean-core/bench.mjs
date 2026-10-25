@@ -1,5 +1,7 @@
 /** Every version of the trim on every capture, interleaved, each output
- * compared byte for byte with the reference (the oracle's, where it was run).
+ * compared byte for byte with the oracle's. A capture without its oracle
+ * (`trim.mjs <capture> --oracle --out <capture>/oracle.bin`) is refused: no
+ * version is compared with another.
  *
  *   node bench/lean-core/bench.mjs [--rounds n] [--out report.json] <capture-dir>...
  *
@@ -24,6 +26,17 @@ const flag = (name) => {
 const rounds = Number(flag('--rounds') ?? 3);
 const outPath = flag('--out');
 const captures = args.map((dir) => resolve(dir));
+const missing = captures.filter((dir) => !existsSync(join(dir, 'oracle.bin')));
+if (missing.length)
+  throw new Error(
+    `No oracle for ${missing.join(', ')}. Make each first:\n` +
+      missing
+        .map(
+          (dir) =>
+            `  node --max-old-space-size=30000 bench/lean-core/trim.mjs ${dir} --oracle --out ${join(dir, 'oracle.bin')}`,
+        )
+        .join('\n'),
+  );
 const binary = join(repo, 'tmp/lean/trim');
 const source = join(repo, 'bench/lean-core');
 const swiftFlags = ['-O', '-enforce-exclusivity=unchecked', '-swift-version 5'];
@@ -90,10 +103,15 @@ const env = {
   TRIM_POOL: '400000000',
   TRIM_ARCHIVE: join(repo, 'tmp/lean/trim.mtl4archive'),
 };
+const stats = (xs) => {
+  const s = [...xs].sort((a, b) => a - b);
+  const q = (p) => s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))];
+  return { median: q(0.5), p10: q(0.1), p90: q(0.9), min: s[0], runs: s.length };
+};
 const results = {};
 for (let round = 0; round < rounds; round++)
   for (const dir of captures) {
-    const reference = existsSync(join(dir, 'oracle.bin')) ? join(dir, 'oracle.bin') : null;
+    const reference = join(dir, 'oracle.bin');
     for (const version of versions) {
       const out = join(dir, `bench-${version.name}.bin`);
       const [command, argv] = version.run(dir, out);
@@ -110,7 +128,7 @@ for (let round = 0; round < rounds; round++)
         gpu: [],
         wall: [],
         equal: true,
-        reference: reference ? 'oracle' : 'js-fast',
+        reference: 'oracle',
       });
       entry.times.push(...(report.trimMs ?? []));
       if (report.gpuMs) entry.gpu.push(...report.gpuMs);
@@ -119,18 +137,14 @@ for (let round = 0; round < rounds; round++)
       if (report.setupMs !== undefined) entry.setupMs = report.setupMs;
       if (report.pipelineFromArchive !== undefined)
         entry.pipelineFromArchive = report.pipelineFromArchive;
-      const against = reference ?? join(dir, 'bench-js-fast.bin');
-      if (!readFileSync(out).equals(readFileSync(against))) entry.equal = false;
+      if (!readFileSync(out).equals(readFileSync(reference))) entry.equal = false;
+      // The JavaScript trim reports its runs, not their median.
+      const median = report.medianMs ?? stats(report.trimMs).median;
       console.error(
-        `round ${round + 1} ${version.name} ${dir.split('/').at(-1)}: ${report.medianMs} ms${report.gpuMedianMs ? `, GPU ${report.gpuMedianMs} ms` : ''}`,
+        `round ${round + 1} ${version.name} ${dir.split('/').at(-1)}: ${median} ms${report.gpuMedianMs ? `, GPU ${report.gpuMedianMs} ms` : ''}`,
       );
     }
   }
-const stats = (xs) => {
-  const s = [...xs].sort((a, b) => a - b);
-  const q = (p) => s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))];
-  return { median: q(0.5), p10: q(0.1), p90: q(0.9), min: s[0], runs: s.length };
-};
 const summary = Object.values(results).map((e) => ({
   capture: e.capture.split('/').at(-1),
   facts: e.facts,

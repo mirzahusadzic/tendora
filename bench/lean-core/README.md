@@ -68,6 +68,19 @@ that.
 Every output is byte-identical to the oracle's at all three sizes (the 9M oracle
 takes 55 s), in every round. Engine cross-check at 1×, 4×, 16× and 64×.
 
+Each capture has its own oracle, `oracle.bin`, written by `trim.mjs --oracle`,
+and `bench.mjs` refuses a capture without one. The report's run had all three.
+The procedure below once listed only the 9M oracle, and `bench.mjs` then
+compared a capture without an oracle against `js-fast`, so `js-fast` was
+checked against itself (found by the 2026-10-25 review). After the review, the
+oracles were made again for every size: they are byte-identical to the ones
+the report used, and one more round of every version matched them (raw output
+below).
+
+At 9M the trim keeps the same 1,792 positions as at 64×: the 16 renumbered
+copies keep nothing, so the two oracles are the same bytes. Exactness at 9M
+therefore shows that nothing more survives, over 16 times the facts.
+
 ## Results
 
 The trim alone, its index and inputs in memory; medians over three interleaved
@@ -123,9 +136,8 @@ it atomically; spreading a domain's runs evenly over the lanes. Not tried:
 decoupled look-back scans (Apple GPUs give no forward-progress guarantee
 between threadgroups), Metal 4 machine-learning encoders (not a fit).
 
-The prototype this replaces (one semijoin on synthetic data, an unordered
-atomic compaction, columns copied, the shader compiled every run) is in the
-history at `6e89809`.
+This replaces a first prototype: one semijoin on synthetic data, an unordered
+atomic compaction, columns copied, the shader compiled every run.
 
 ## Regenerating the captures
 
@@ -140,7 +152,9 @@ the move to `bench/`).
 node bench/lean-core/capture.mjs 16 tmp/lean/k16 --project <copy> --question <text>
 node bench/lean-core/capture.mjs 64 tmp/lean/k64 --project <copy> --question <text>
 node --max-old-space-size=16000 bench/lean-core/capture.mjs 64 tmp/lean/k64x16 --project <copy> --question <text> --replicate 16
-node --max-old-space-size=30000 bench/lean-core/trim.mjs tmp/lean/k64x16 --oracle --out tmp/lean/k64x16/oracle.bin
+for size in k16 k64 k64x16; do
+  node --max-old-space-size=30000 bench/lean-core/trim.mjs tmp/lean/$size --oracle --out tmp/lean/$size/oracle.bin
+done
 node bench/lean-core/check-engine.mjs 16 --project <copy> --question <text>
 node bench/lean-core/bench.mjs --rounds 3 --out bench/lean-core/reports/<name>.json tmp/lean/k16 tmp/lean/k64 tmp/lean/k64x16
 ```
@@ -169,9 +183,10 @@ tmp/lean/gather && tmp/lean/gather`.
 
 ## Raw output
 
-Every line below is copied from the runs that produced the figures above.
-The final benchmark's per-round log was removed when `tmp/` was tidied; the
-report keeps each version's median, p10, p90, minimum and run count.
+Every line below is copied from the runs that produced the figures above,
+except the re-verification after the review, which is marked. The final
+benchmark's per-round log was removed when `tmp/` was tidied; the report keeps
+each version's median, p10, p90, minimum and run count.
 
 Benchmark summary (`bench.mjs --rounds 3`):
 
@@ -191,6 +206,34 @@ k64x16    9021440 swift-cpu-1    median   191.35 ms (p10 187.73, p90 200.64)  eq
 k64x16    9021440 swift-cpu-18   median    26.45 ms (p10 25.65, p90 27.19)  equal to oracle
 k64x16    9021440 metal-index    median    11.87 ms (GPU 11.57, p10 11.54, p90 11.77)  equal to oracle
 k64x16    9021440 metal-dense    median    33.22 ms (GPU 32.91, p10 32.78, p90 33.06)  equal to oracle
+```
+
+Re-verification after the review (2026-10-25): the oracles made again, each
+compared with the one the report used (`cmp`), then `bench.mjs --rounds 1`
+against them. Its timings are one round and are not the figures above.
+
+```
+{"version":"js-oracle","facts":140960,"rules":208,"patterns":1280,"candidates":1685104,"kept":448,"indexMs":2.16,"trimMs":[167.33]}
+k16 fresh oracle == oracle used by the report
+{"version":"js-oracle","facts":563840,"rules":832,"patterns":5120,"candidates":26932672,"kept":1792,"indexMs":5.22,"trimMs":[2814.78]}
+k64 fresh oracle == oracle used by the report
+{"version":"js-oracle","facts":9021440,"rules":832,"patterns":5120,"candidates":430777792,"kept":1792,"indexMs":51.66,"trimMs":[56624.24]}
+k64x16 fresh oracle == oracle used by the report
+k16        140960 js-fast        median     5.70 ms (p10 2.97, p90 8.12)  equal to oracle
+k16        140960 swift-cpu-1    median     0.64 ms (p10 0.61, p90 1.05)  equal to oracle
+k16        140960 swift-cpu-18   median     0.33 ms (p10 0.30, p90 0.52)  equal to oracle
+k16        140960 metal-index    median     0.67 ms (GPU 0.50, p10 0.11, p90 0.51)  equal to oracle
+k16        140960 metal-dense    median     0.86 ms (GPU 0.70, p10 0.36, p90 0.71)  equal to oracle
+k64        563840 js-fast        median    26.80 ms (p10 26.53, p90 29.91)  equal to oracle
+k64        563840 swift-cpu-1    median     6.36 ms (p10 6.19, p90 6.46)  equal to oracle
+k64        563840 swift-cpu-18   median     1.18 ms (p10 1.09, p90 1.22)  equal to oracle
+k64        563840 metal-index    median     0.84 ms (GPU 0.53, p10 0.52, p90 0.79)  equal to oracle
+k64        563840 metal-dense    median     2.12 ms (GPU 1.84, p10 1.82, p90 1.92)  equal to oracle
+k64x16    9021440 js-fast        median   914.32 ms (p10 906.32, p90 926.60)  equal to oracle
+k64x16    9021440 swift-cpu-1    median   201.56 ms (p10 196.11, p90 202.74)  equal to oracle
+k64x16    9021440 swift-cpu-18   median    26.38 ms (p10 25.56, p90 28.32)  equal to oracle
+k64x16    9021440 metal-index    median    11.93 ms (GPU 11.63, p10 11.54, p90 11.98)  equal to oracle
+k64x16    9021440 metal-dense    median    33.40 ms (GPU 33.10, p10 32.99, p90 33.54)  equal to oracle
 ```
 
 The oracle at 9M, and the engine cross-checks (`check-engine.mjs`):
