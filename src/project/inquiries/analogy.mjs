@@ -5,6 +5,7 @@
  * since the rule says only what it says. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
 import {
+  cite,
   consequences,
   corpusView,
   coverage,
@@ -130,7 +131,8 @@ export function formatAnalogy(report) {
         : `${nothing(report, 'no rule applies to one and not the other')}.`
     }`,
   ];
-  for (const finding of report.findings) lines.push('', finding.question, `  ${finding.summary}`);
+  for (const finding of report.findings)
+    lines.push('', finding.question, ...finding.statements.map((item) => `  ${cite(item)}`));
   const notes = coverageLines(report);
   if (notes.length) lines.push('', ...notes);
   return lines.join('\n');

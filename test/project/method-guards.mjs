@@ -14,6 +14,7 @@ import { yesNo } from '../../src/project/inquiries/corpus.mjs';
 import { elenchusReport } from '../../src/project/inquiries/elenchus.mjs';
 import { aporiaReport, formatAporia } from '../../src/project/inquiries/aporia.mjs';
 import { counterexampleReport } from '../../src/project/inquiries/counterexample.mjs';
+import { dialogueReport } from '../../src/project/inquiries/dialogue.mjs';
 import { hypothesisReport } from '../../src/project/inquiries/hypothesis.mjs';
 import { maieuticsReport } from '../../src/project/inquiries/maieutics.mjs';
 import { definitionReport, formatDefinition } from '../../src/project/inquiries/definition.mjs';
@@ -173,10 +174,12 @@ const again = await hypothesisReport(
   }),
   { text: 'Sam notifies the customers if the vault opens.', offline: true },
 );
-assert(
-  again.follows.every((rule) => rule.onlyWith === 0),
-  'nothing follows only with it',
+assert.deepEqual(
+  again.follows.map((rule) => [rule.rule, rule.ofSupposition, rule.onlyWith]),
+  [['Sam notifies the customers if the vault opens.', true, 0]],
+  'its own rule applies, and follows also without it',
 );
+assert.equal(again.nothingFollows, true);
 
 // 10. The same words at two roles are two commitments.
 const twice = {
@@ -259,4 +262,233 @@ stop.abort();
 await assert.rejects(corpus, /Stopped\./u);
 await assert.rejects(fidelity, /Stopped\./u);
 
-console.log('ok method guards: what the review found stays fixed');
+// The second review: what the fixes still let through.
+const cli = (path, ...args) =>
+  spawnSync(process.execPath, ['src/cli/engine.mjs', ...args, '--project', path, '--offline'], {
+    encoding: 'utf8',
+    env: { ...process.env, NODE_NO_WARNINGS: '1' },
+  });
+
+// "Only if" in a dialogue: whoever says the backup runs, or denies it,
+// neither shares nor opposes "only if the alarm sounds, the backup runs".
+const onlyIfVoices = await dialogueReport(
+  await open('guard-dialogue-necessary', {
+    roles: {
+      Ops: ['Only if the alarm sounds, the backup runs.', 'The backup runs.'],
+      Night: ['The backup does not run.'],
+    },
+    extra: onlyIf,
+    authors: {
+      'Only if the alarm sounds, the backup runs.': 'Dana',
+      'The backup runs.': 'Eli',
+      'The backup does not run.': 'Fay',
+    },
+  }),
+);
+assert(
+  !onlyIfVoices.findings.some((finding) =>
+    finding.statements.some((item) => item.statement.startsWith('Only if')),
+  ),
+  'a necessary claim is neither shared nor opposed by its conclusion',
+);
+
+// A necessary thesis is refuted on one occasion only: Alex 123 running the
+// backup and Alex 456 not sounding the alarm are two Alexes; one Alex is one.
+const alexes = (second) => ({
+  'Only if Alex sounds the alarm, Alex runs the backup.':
+    '(r / run-01 :ARG0 (x / person :name (xn / name :op1 "Alex")) :ARG1 (b / backup) :condition (s / sound-01 :ARG0 x :ARG1 (a / alarm) :mod (o / only)))',
+  'Alex with employee ID 123 runs the backup.':
+    '(r / run-01 :ARG0 (x / person :name (xn / name :op1 "Alex") :mod (i / identifier :value 123)) :ARG1 (b / backup))',
+  [`Alex with employee ID ${second} does not sound the alarm.`]: `(s / sound-01 :polarity - :ARG0 (x / person :name (xn / name :op1 "Alex") :mod (i / identifier :value ${second})) :ARG1 (a / alarm))`,
+});
+for (const [second, verdict] of [
+  [456, 'open'],
+  [123, 'refuted'],
+]) {
+  const readings = alexes(second);
+  const report = await elenchusReport(
+    await open(`guard-necessary-${second}`, {
+      roles: { Alarm: Object.keys(readings).slice(1) },
+      extra: readings,
+    }),
+    { text: 'Only if Alex sounds the alarm, Alex runs the backup.', offline: true },
+  );
+  assert.equal(report.verdict, verdict, `IDs 123 and ${second}`);
+}
+
+// A counterexample at the place the rule links: the reviewer is the one who
+// files. Priya reviewing Morgan's log is no occasion for Morgan's note; an
+// unnamed condition ("the vault opens") pairs with its denial.
+const linked = await counterexampleReport(
+  await open('guard-linked', {
+    roles: {
+      Audit: [
+        'If someone reviews logs, they file a note.',
+        "Priya reviews Morgan's log.",
+        'Morgan files no note.',
+      ],
+    },
+    extra: {
+      'If someone reviews logs, they file a note.':
+        audit['If someone reviews logs, they file a note.'],
+      "Priya reviews Morgan's log.": `(r / review-01 :ARG0 ${person('p', 'Priya')} :ARG1 (l / log :poss ${person('m', 'Morgan')}))`,
+      'Morgan files no note.': `(f / file-01 :polarity - :ARG0 ${person('m', 'Morgan')} :ARG1 (n / note))`,
+    },
+  }),
+  { statement: 'If someone reviews logs, they file a note.' },
+);
+assert.deepEqual(linked.findings, [], 'Morgan owns the log; Priya is the one who files');
+const unnamed = await counterexampleReport(
+  await open('guard-unnamed', {
+    roles: {
+      Vault: [
+        'If the vault opens, Sam notifies the customers.',
+        'The vault opens.',
+        'Sam does not notify the customers.',
+      ],
+    },
+    extra: {
+      ...vault,
+      'Sam does not notify the customers.': `(n / notify-01 :polarity - :ARG0 ${person('s', 'Sam')} :ARG1 (c / customer))`,
+    },
+  }),
+  { statement: 'If the vault opens, Sam notifies the customers.' },
+);
+assert.deepEqual(unnamed.findings.map(texts), [
+  ['Sam does not notify the customers.', 'The vault opens.'],
+]);
+
+// A consequence bound to a new participant is new: Priya reviewed and filed,
+// so Robin's note follows only with "Robin reviews logs".
+const robin = await hypothesisReport(
+  await open('guard-new-participant', {
+    roles: {
+      Audit: [
+        'If someone reviews logs, they file a note.',
+        'Priya reviews logs.',
+        'Priya files a note.',
+      ],
+    },
+    extra: {
+      'If someone reviews logs, they file a note.':
+        audit['If someone reviews logs, they file a note.'],
+      'Priya reviews logs.': `(r / review-01 :ARG0 ${person('p', 'Priya')} :ARG1 (l / log))`,
+      'Priya files a note.': `(f / file-01 :ARG0 ${person('p', 'Priya')} :ARG1 (n / note))`,
+      'Robin reviews logs.': audit['Robin reviews logs.'],
+    },
+  }),
+  { text: 'Robin reviews logs.', offline: true },
+);
+assert(
+  robin.follows.some(
+    (rule) => rule.rule === 'If someone reviews logs, they file a note.' && rule.onlyWith > 0,
+  ),
+  'Robin filing a note follows only with the supposition',
+);
+
+// A level is no identifier: Alex 123 at level 5 and at level 6 is one Alex.
+const levels = {
+  'Alex with employee ID 123, at level 5, approves the release.':
+    '(a / approve-01 :ARG0 (x / person :name (xn / name :op1 "Alex") :mod (i / identifier :value 123) :mod (l / level :value 5)) :ARG1 (r / release-01))',
+  'Alex with employee ID 123, at level 6, does not approve the release.':
+    '(a / approve-01 :polarity - :ARG0 (x / person :name (xn / name :op1 "Alex") :mod (i / identifier :value 123) :mod (l / level :value 6)) :ARG1 (r / release-01))',
+};
+const levelled = await aporiaReport(
+  await open('guard-levels', { roles: { People: Object.keys(levels) }, extra: levels }),
+  { role: 'People' },
+);
+assert.equal(levelled.findings.length, 1, 'one Alex, two answers: a contradiction');
+
+// Two roles with one name are two placements: their clashes stay apart.
+const named = await aporiaReport(
+  await open('guard-same-name', {
+    roles: [
+      ['North', Object.keys(twice)],
+      ['North', Object.keys(twice)],
+    ],
+    extra: twice,
+  }),
+);
+const pairs = (report) =>
+  report.findings.filter((finding) => finding.statements.some((item) => item.statement in twice))
+    .length;
+assert.equal(pairs(named), pairs(two), 'as many as two roles with two names');
+
+// Dialogue keeps clashes apart by statement, not by words.
+const voices = await dialogueReport(
+  await open('guard-dialogue-roles', {
+    roles: { North: Object.keys(twice), South: Object.keys(twice) },
+    extra: twice,
+    authors: {
+      'The nightly backup completes.': 'Dana',
+      'The nightly backup does not complete.': 'Eli',
+    },
+  }),
+);
+assert(voices.findings.filter((finding) => finding.kind === 'clash').length > 1);
+
+// Alias and aliases are one term.
+const alias = await definitionReport(
+  await open('guard-alias', {
+    roles: { Names: ['An alias is a name.'] },
+    extra: { 'An alias is a name.': '(n / name :domain (a / alias))' },
+  }),
+  { term: 'aliases' },
+);
+assert.deepEqual(
+  alias.genus.map((row) => row.statement),
+  ['An alias is a name.'],
+);
+
+// Too many type combinations to ask is a bound reached, said in the verdict.
+const six = ['Ann', 'Ben', 'Cara', 'Dana', 'Eve', 'Fay'];
+const crowd = {
+  'Ann, Ben, Cara, Dana, Eve, and Fay approve the release.': `(a / approve-01 :ARG0 (g / and ${six
+    .map((name, i) => `:op${i + 1} (p${i} / person :name (n${i} / name :op1 "${name}"))`)
+    .join(' ')}) :ARG1 (r / release-01))`,
+  ...Object.fromEntries(
+    six.map((name, i) => [
+      `${name} reports.`,
+      `(r / report-01 :ARG0 (c${i} / company :name (m${i} / name :op1 "${name}")))`,
+    ]),
+  ),
+};
+const crowdPath = await methodsDemo('guard-variants', {
+  roles: { Crowd: Object.keys(crowd) },
+  extra: crowd,
+});
+const crowded = await elenchusReport(await openProject(crowdPath), {
+  statement: 'Ann, Ben, Cara, Dana, Eve, and Fay approve the release.',
+  offline: true,
+});
+assert.equal(crowded.limited, true, 'sixty-four combinations: limited');
+const crowdText = cli(crowdPath, 'elenchus', '--statement', 'Ann, Ben, Cara').stdout;
+assert.match(crowdText, /among (?:what was|the statements) read/u);
+assert.match(crowdText, /Limited: a search stopped at its bound/u);
+
+// The CLI: a report's JSON on stdout, a miss on stderr with exit 2, a text
+// without a reading exits 1 with the documented keys.
+const json = cli(plain, 'aporia', '--json');
+assert.equal(json.status, 0);
+assert.deepEqual(Object.keys(JSON.parse(json.stdout)).sort(), [
+  'findings',
+  'limited',
+  'revision',
+  'rules',
+  'statements',
+  'unread',
+]);
+const miss = cli(plain, 'maieutics', '--question', 'Which zebra gallops?');
+assert.deepEqual([miss.status, miss.stdout], [2, '']);
+assert.match(miss.stderr, /No such saved question: Which zebra gallops\?\nAsk it first/u);
+const unreadText = cli(plain, 'elenchus', '--text', 'Zebras gallop at midnight.', '--json');
+assert.equal(unreadText.status, 1);
+assert.deepEqual(Object.keys(JSON.parse(unreadText.stdout)).sort(), [
+  'findings',
+  'limited',
+  'revision',
+  'thesis',
+  'unread',
+]);
+
+console.log('ok method guards: what both reviews found stays fixed');

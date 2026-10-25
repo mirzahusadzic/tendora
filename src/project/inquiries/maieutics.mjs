@@ -16,6 +16,7 @@
  * statement only when saved. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
 import {
+  cite,
   clauseText,
   corpusView,
   coverage,
@@ -206,9 +207,9 @@ export function formatMaieutics(report) {
         : `  unjoined: “${finding.statements[0].statement}” [${finding.statements[0].role}]`,
       `    ask ${who(finding.author)}: ${finding.ask}`,
       ...(finding.kind === 'missing premise'
-        ? finding.statements.map((item) => `    through “${item.statement}” [${item.role}]`)
+        ? finding.statements.map((item) => `    through ${cite(item)}`)
         : []),
-      ...(finding.deniedBy ?? []).map((item) => `    denied by “${item.statement}” [${item.role}]`),
+      ...(finding.deniedBy ?? []).map((item) => `    denied by ${cite(item)}`),
     );
   }
   if (report.released)

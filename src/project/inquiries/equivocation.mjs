@@ -9,6 +9,7 @@
  * person: reword, or confirm two meanings. Read-only and offline. */
 import { propbankAuditor } from '../../models/propbank.mjs';
 import {
+  cite,
   clauseText,
   corpusView,
   coverage,
@@ -165,17 +166,10 @@ export function formatEquivocation(report) {
     for (const item of finding.senses ?? [])
       lines.push(
         `  ${item.concept}${item.gloss ? ` (${item.gloss})` : ''}:`,
-        ...item.statements.map(
-          (entry) => `    “${entry.statement}” [${entry.role}] (${entry.author})`,
-        ),
+        ...item.statements.map((entry) => `    ${cite(entry)}`),
       );
     for (const item of finding.structures ?? [])
-      lines.push(
-        `  ${item.reading}:`,
-        ...item.statements.map(
-          (entry) => `    “${entry.statement}” [${entry.role}] (${entry.author})`,
-        ),
-      );
+      lines.push(`  ${item.reading}:`, ...item.statements.map((entry) => `    ${cite(entry)}`));
     lines.push(`  ${finding.question}`);
   }
   const notes = coverageLines(report);

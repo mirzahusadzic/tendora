@@ -34,8 +34,8 @@ $ npx tendora suppose --project .proj/payments-demo --offline \
 Supposing “A major incident is open, and a payment key leaks.” at Incident Commander; nothing is saved.
 …
 What follows (2 rules)
-  only with it: “If a payment key leaks, Morgan, the release manager, ships a release.” [Release Manager]
-  only with it: “If a major incident is open, Morgan, the release manager, does not ship a release.” [Release Manager]
+  only with it: “If a payment key leaks, Morgan, the release manager, ships a release.” [Release Manager] (Claude)
+  only with it: “If a major incident is open, Morgan, the release manager, does not ship a release.” [Release Manager] (Claude)
 …
   conflict: Does Morgan ship a release? (case: A major incident is open.)  No → conflict: …
   34 unchanged
@@ -148,8 +148,8 @@ Maieutics over 1 open or conditional question: 3 questions for authors.
 “Who notifies the customers?” at Incident Commander (open)
   missing premise: a certificate expires (then: Sam)
     ask Claude: Is it so that a certificate expires?
-    through “If a certificate expires, Priya, the security engineer, renews the certificate.” [Security Engineer]
-    through “If Priya renews the certificate, Sam, the support lead, notifies the customers.” [Support Lead]
+    through “If a certificate expires, Priya, the security engineer, renews the certificate.” [Security Engineer] (Claude)
+    through “If Priya renews the certificate, Sam, the support lead, notifies the customers.” [Support Lead] (Claude)
   missing premise: a payment key leaks (then: Sam)
     ask Claude: Is it so that a payment key leaks?
 …
@@ -222,8 +222,8 @@ Collection and division over 30 statements in 6 roles: 1 proposal.
 
 collection: Do they say one thing from two roles (the tie between Release Manager and Incident Commander), or does one belong with the other?
   shares: confirm, healthy, close
-  “Morgan, the release manager, confirms that payments are healthy before the incident commander closes a major incident.” [Release Manager]
-  “Maya, the incident commander, must close a major incident after the release manager confirms that payments are healthy.” [Incident Commander]
+  “Morgan, the release manager, confirms that payments are healthy before the incident commander closes a major incident.” [Release Manager] (unrecorded)
+  “Maya, the incident commander, must close a major incident after the release manager confirms that payments are healthy.” [Incident Commander] (unrecorded)
 ```
 
 The release manager confirms before the incident commander closes, and the

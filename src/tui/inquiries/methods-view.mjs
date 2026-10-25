@@ -2,7 +2,7 @@
  * their reports: the corpus-wide methods at the root role, a statement's
  * elenchus and counterexamples, and a saved question's missing premises.
  * Read-only: each finding is a question or a proposal for a person. */
-import { coverageLines, who } from '../../project/inquiries/corpus.mjs';
+import { cite, coverageLines, who } from '../../project/inquiries/corpus.mjs';
 
 /** What a report could not ask (statements without a reading, a search at
  * its bound), as a group of its own; none when it asked everything. */
@@ -14,11 +14,7 @@ const coverageGroups = (heading, report) => {
 /** A finding: what it is and asks, then the statements it rests on. */
 const findingRows = (finding) => [
   [finding.kind, finding.question ?? finding.proposal ?? finding.summary, 'warning'],
-  ...finding.statements.map((item) => [
-    '',
-    `“${item.statement}” [${item.role}]${item.author ? ` (${item.author})` : ''}`,
-    'muted',
-  ]),
+  ...finding.statements.map((item) => ['', cite(item), 'muted']),
 ];
 
 const methods = [
@@ -98,11 +94,7 @@ export function statementMethodsGroups(elenchus, counterexample) {
             finding.via === 'directly' ? 'directly' : `through “${finding.via.rule}”`,
             finding.kind === 'refutes' ? 'warning' : 'plain',
           ],
-          ...finding.statements.map((item) => [
-            '',
-            `“${item.statement}” [${item.role}] (${item.author})`,
-            'muted',
-          ]),
+          ...finding.statements.map((item) => ['', cite(item), 'muted']),
         ]),
       ],
     },
@@ -133,11 +125,7 @@ export function questionMaieuticsGroups(report) {
             ],
             ['', `ask ${who(finding.author)}: ${finding.ask}`],
             ...(finding.kind === 'missing premise'
-              ? finding.statements.map((item) => [
-                  '',
-                  `through “${item.statement}” [${item.role}]`,
-                  'muted',
-                ])
+              ? finding.statements.map((item) => ['', `through ${cite(item)}`, 'muted'])
               : []),
           ])
         : [['', 'No premise or connection found to ask about.', 'muted']],

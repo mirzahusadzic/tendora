@@ -23,6 +23,7 @@ import { clozeProbes, checkProbe } from '../../engine/cloze.mjs';
 import { probeAsks, releasedNote, roleName } from './inspection.mjs';
 import { resolveInquiryPlacement } from './scope.mjs';
 import {
+  cite,
   consequences,
   corpusView,
   coverage,
@@ -53,6 +54,8 @@ export async function hypothesisReport(project, { text, role = null, offline = f
   const root = project.data.placements.find((placement) => placement.parentId === null).id;
   const placementId = role ? resolveInquiryPlacement(project, role) : root;
   const supposition = { text, role: roleName(project.data, placementId) };
+  // The corpus first: every report says what it could not ask, the early ones too.
+  const view = await corpusView(project);
   // Said again, a statement would only stand beside itself, its participants
   // twice over: it is already said, and nothing follows from supposing it.
   const already = (knowledgeSnapshot(project.data).sourceCatalog ?? []).find(
@@ -72,6 +75,7 @@ export async function hypothesisReport(project, { text, role = null, offline = f
         items: [],
       },
       nothingFollows: true,
+      ...coverage(view),
     };
   const reading = await readText(project, text, {
     offline,
@@ -87,9 +91,9 @@ export async function hypothesisReport(project, { text, role = null, offline = f
         ...(reading.reason ? { reason: reading.reason } : {}),
       },
       saved: false,
+      ...coverage(view),
     };
   const supposed = supposedSource(project, { text, reading, placementId });
-  const view = await corpusView(project);
   const { knowledge, named } = view;
   // The engine reads only the project's statements; in the overlay the
   // supposition is one of them.
@@ -124,7 +128,11 @@ export async function hypothesisReport(project, { text, role = null, offline = f
       ...(entry.own
         ? { rule: text, role: supposition.role, ofSupposition: true }
         : entry.statementId
-          ? { rule: view.byId.get(entry.statementId).text, role: view.role(entry.statementId) }
+          ? {
+              rule: view.byId.get(entry.statementId).text,
+              role: view.role(entry.statementId),
+              author: view.author(entry.statementId),
+            }
           : { rule: entry.knowledge, knowledge: true }),
       facts: entry.facts,
       onlyWith: entry.onlyWith,
@@ -234,7 +242,7 @@ export function formatHypothesis(report) {
       : `${head}\nIt was not read: ${supposed.reason}`;
   if (supposed.reading === 'invalid-amr')
     return `${head}\nIts reading could not be normalized: ${supposed.reason}`;
-  const quoted = (items) => items.map((item) => `“${item.statement}” [${item.role}]`).join(', ');
+  const quoted = (items) => items.map(cite).join(', ');
   const lines = [head];
   if (supposed.alreadyStated)
     return `${head}\nIt is already a statement at ${supposed.alreadyStated}: nothing follows from supposing it.`;
@@ -255,7 +263,11 @@ export function formatHypothesis(report) {
   for (const rule of report.follows)
     lines.push(
       `  ${rule.onlyWith ? 'only with it' : 'also without it'}: ` +
-        (rule.knowledge ? `engine knowledge ${rule.rule}` : `“${rule.rule}” [${rule.role}]`) +
+        (rule.knowledge
+          ? `engine knowledge ${rule.rule}`
+          : rule.ofSupposition
+            ? `“${rule.rule}” [${rule.role}]`
+            : cite({ statement: rule.rule, role: rule.role, author: rule.author })) +
         (rule.ofSupposition ? ' (its own rule, applied)' : '') +
         (rule.restsOn.length ? `, with ${quoted(rule.restsOn)}` : ''),
     );

@@ -13,10 +13,12 @@
 import { findStatement } from './inspection.mjs';
 import { ruleParts } from '../../engine/cloze.mjs';
 import {
+  cite,
   consequences,
   corpusView,
   coverage,
   coverageLines,
+  oneOccasion,
   readText,
   smallest,
   supposedId,
@@ -62,11 +64,17 @@ export async function elenchusReport(project, { text = null, statement = null, o
         revision: project.digest,
         thesis: { ...thesis, reading: reading.status, reason: reading.reason },
         findings: [],
+        ...coverage(view),
       };
     graph = reading.graph;
   }
   if (!graph)
-    return { revision: project.digest, thesis: { ...thesis, reading: 'none' }, findings: [] };
+    return {
+      revision: project.digest,
+      thesis: { ...thesis, reading: 'none' },
+      findings: [],
+      ...coverage(view),
+    };
   const withhold = own ? [own.id] : [];
   const supposed = supposedSource(project, {
     text: thesis.text,
@@ -91,8 +99,13 @@ export async function elenchusReport(project, { text = null, statement = null, o
     const condition = view.truth(necessary.condition, { withhold });
     const given = holds.expected === 'Yes' ? holds.yes : holds.no;
     const denied = condition.expected === 'Yes' ? condition.no : condition.yes;
+    // On one occasion: whoever the statements say does Q is whoever they say
+    // fails C, at every place the thesis links (two Alexes are two).
+    const ids = (binding) => binding.sourceIds.filter((id) => view.byId.has(id));
     for (const one of given)
-      for (const other of denied)
+      for (const other of denied.filter((binding) =>
+        oneOccasion(view, necessary, ids(binding), ids(one)),
+      ))
         findings.push({
           method: 'elenchus',
           kind: 'refutes',
@@ -187,8 +200,14 @@ const verdicts = {
   supported: 'supported, and nothing refutes it',
   open: 'open: nothing in the statements refutes or supports it',
 };
-// Open, when the reading was not whole: nothing among what was read.
-const openPartly = 'open: nothing among the statements read refutes or supports it';
+// The same, when not everything could be asked: an absence only among what
+// was read (a refutation found stands as found).
+const partly = {
+  refuted: 'refuted',
+  contested: 'contested: the statements read support it and refute it',
+  supported: 'supported, and nothing among what was read refutes it',
+  open: 'open: nothing among the statements read refutes or supports it',
+};
 
 /** The report as plain text, for the CLI. */
 export function formatElenchus(report) {
@@ -199,10 +218,7 @@ export function formatElenchus(report) {
       ? `${head}\nIt has no retained reading. Without --offline it is read through eGemma.`
       : `${head}\nIt was not read: ${thesis.reason}`;
   if (thesis.reading !== 'read') return `${head}\nIt has no usable reading.`;
-  const verdict =
-    report.verdict === 'open' && (report.unread?.length || report.limited)
-      ? openPartly
-      : verdicts[report.verdict];
+  const verdict = (report.unread?.length || report.limited ? partly : verdicts)[report.verdict];
   const lines = [`${head}: ${verdict}.`];
   for (const finding of report.findings) {
     const by = `${finding.statements.length} ${finding.statements.length === 1 ? 'statement' : 'statements'}`;
@@ -213,7 +229,7 @@ export function formatElenchus(report) {
           ? `Refuted directly, by ${by}:`
           : `Refuted through “${finding.via.rule}” [${finding.via.role}], by ${by}:`
         : `Supported by ${by}:`,
-      ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
+      ...finding.statements.map((item) => `  ${cite(item)}`),
       ...(finding.question ? [`  ${finding.question}`] : []),
     );
   }

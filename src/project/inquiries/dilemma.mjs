@@ -6,7 +6,15 @@
  * depends on which alternative holds, which is a question for its author.
  * Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { clauseText, commitment, corpusView, coverage, coverageLines, nothing } from './corpus.mjs';
+import {
+  cite,
+  clauseText,
+  commitment,
+  corpusView,
+  coverage,
+  coverageLines,
+  nothing,
+} from './corpus.mjs';
 
 /** What an edge leads to, cut from the rest: [node ids]. */
 function part(graph, edge) {
@@ -147,7 +155,7 @@ export function formatDilemma(report) {
       '',
       `${finding.kind}: ${finding.summary}`,
       ...(finding.question ? [`  ${finding.question}`] : []),
-      ...finding.statements.map((item) => `  “${item.statement}” [${item.role}]`),
+      ...finding.statements.map((item) => `  ${cite(item)}`),
     );
   const notes = coverageLines(report);
   if (notes.length) lines.push('', ...notes);

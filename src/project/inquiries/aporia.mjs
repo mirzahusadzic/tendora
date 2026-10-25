@@ -13,6 +13,7 @@ import { projectTree } from '../authoring/project.mjs';
 import { ruleParts } from '../../engine/cloze.mjs';
 import { resolveInquiryPlacement } from './scope.mjs';
 import {
+  cite,
   clauseText,
   commitment,
   corpusView,
@@ -158,7 +159,7 @@ export function formatAporia(report) {
     lines.push(
       '',
       `${finding.kind}: ${finding.question}`,
-      ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
+      ...finding.statements.map((item) => `  ${cite(item)}`),
     );
   const notes = coverageLines(report);
   if (notes.length) lines.push('', ...notes);

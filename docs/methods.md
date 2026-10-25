@@ -149,6 +149,9 @@ output says the same, one finding at a time.
 - **Few rules, little to oppose.** A corpus of plain statements gives the
   methods of opposition little to search. The methods of words and structure
   find the most there.
+- **An "only if" is tested by elenchus alone.** "Only if the alarm sounds, the
+  backup runs" commits to the backup needing the alarm, not to the backup
+  running: dialogue leaves such a claim out rather than compare its conclusion.
 - **A name told apart by role words alone is one participant.** "Alex, the
   engineer" and "Alex, the manager" are asked as one Alex; give one of them a
   value (an ID) and they are two.

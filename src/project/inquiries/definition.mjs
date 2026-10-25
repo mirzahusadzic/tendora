@@ -9,14 +9,20 @@ import { kindReading } from '../../amr/kinds.mjs';
 import { propbankAuditor } from '../../models/propbank.mjs';
 import { corpusView, coverage, coverageLines } from './corpus.mjs';
 
-// A light, symmetric plural rule: changes is change, policies is policy,
-// boxes is box; a word not plural stays as it is.
-const stem = (word) => {
+// Plural or singular, a word is one term: its singular forms (aliases may be
+// alias or aliase, changes change or chang) are compared, not one guessed
+// stem, so alias and aliases, gas and gases, policy and policies meet.
+const forms = (word) => {
   const w = String(word).toLowerCase().replace(/-\d+$/u, '');
-  if (/ies$/u.test(w) && w.length > 4) return w.replace(/ies$/u, 'y');
-  if (/(?:ches|shes|sses|xes|zes)$/u.test(w)) return w.slice(0, -2);
-  if (/s$/u.test(w) && !/ss$/u.test(w) && w.length > 3) return w.slice(0, -1);
-  return w;
+  return new Set(
+    [w, w.replace(/ies$/u, 'y'), w.replace(/es$/u, ''), w.replace(/s$/u, '')].filter(
+      (form) => form.length >= 3,
+    ),
+  );
+};
+const alike = (a, b) => {
+  const theirs = forms(b);
+  return [...forms(a)].some((form) => theirs.has(form));
 };
 
 /** A kind statement's subject and predicate heads: what is said to be what. */
@@ -36,14 +42,14 @@ export async function definitionReport(project, { term }) {
   const words = term.trim().split(/\s+/u);
   const asked = term.trim();
   term = words.at(-1);
-  const wanted = stem(term);
+
   // A term names a concept by its own word, or by a word PropBank gives its
   // frame ("deployment" is deploy-01).
   const { frames } = await propbankAuditor();
   const matches = (concept) =>
-    stem(concept ?? '') === wanted ||
-    [...(frames[concept]?.[1] ?? []), ...(frames[concept]?.[2] ?? [])].some(
-      (word) => stem(word) === wanted,
+    alike(concept ?? '', term) ||
+    [...(frames[concept]?.[1] ?? []), ...(frames[concept]?.[2] ?? [])].some((word) =>
+      alike(word, term),
     );
   const kinds = view.statements
     .filter((item) => item.graph)
@@ -52,9 +58,11 @@ export async function definitionReport(project, { term }) {
     .filter(({ heads }) => heads);
   const genus = kinds.filter(({ heads }) => matches(heads.subject) && !matches(heads.predicate));
   const species = kinds.filter(({ heads }) => matches(heads.predicate) && !matches(heads.subject));
-  const genera = new Set(genus.map(({ heads }) => stem(heads.predicate)));
+  const genera = genus.map(({ heads }) => heads.predicate);
   const siblings = kinds.filter(
-    ({ heads }) => genera.has(stem(heads.predicate)) && !matches(heads.subject),
+    ({ heads }) =>
+      genera.some((genusConcept) => alike(genusConcept, heads.predicate)) &&
+      !matches(heads.subject),
   );
   const kindIds = new Set(kinds.map(({ item }) => item.id));
   // What is said of an instance of a concept: the relations its nodes are in.
@@ -80,10 +88,9 @@ export async function definitionReport(project, { term }) {
   };
   const own = said(matches);
   const siblingSaid = new Map(
-    [...new Set(siblings.map(({ heads }) => stem(heads.subject)))].map((sibling) => [
-      sibling,
-      said((concept) => stem(concept ?? '') === sibling),
-    ]),
+    [...new Set(siblings.map(({ heads }) => heads.subject.replace(/-\d+$/u, '')))].map(
+      (sibling) => [sibling, said((concept) => alike(concept ?? '', sibling))],
+    ),
   );
   const shared = new Set([...siblingSaid.values()].flatMap((relations) => [...relations.keys()]));
   const differentia = [...own].filter(([relation]) => !shared.has(relation));

@@ -47,32 +47,47 @@ const noNetwork =
 
 /** A demo copy under tmp/ with `statements` placed in a new role (by default
  * the first three above), or `roles` ({ name: [texts] }) placed in new roles,
- * read as `extra` gives ({ text: penman }) when the module's readings do not;
- * a text with no reading anywhere stays unread. Declared as written by
- * `author` when one is given, checked at the root; returns its directory. */
+ * or as [name, texts] pairs when two roles share a name; read as `extra`
+ * gives ({ text: penman }) when the module's readings do not; a text with no
+ * reading anywhere stays unread. Declared as written by `author`, or by
+ * `authors` ({ text: author }); checked at the root; returns its directory. */
 export async function methodsDemo(
   prefix,
-  { role = 'Release Policy', statements, roles = null, extra = {}, author = null } = {},
+  {
+    role = 'Release Policy',
+    statements,
+    roles = null,
+    extra = {},
+    author = null,
+    authors = {},
+  } = {},
 ) {
   await mkdir('tmp', { recursive: true });
   const directory = await mkdtemp(resolve(`tmp/${prefix}-`));
   const path = join(directory, 'payments-demo');
   await cp(resolve('demo/payments-on-call'), path, { recursive: true });
-  const placed = roles ?? { [role]: statements ?? Object.keys(readings).slice(0, 3) };
-  const texts = Object.values(placed).flat();
+  // Roles as { name: texts }, or as [name, texts] pairs when two share a name.
+  const placed = Array.isArray(roles)
+    ? roles
+    : Object.entries(roles ?? { [role]: statements ?? Object.keys(readings).slice(0, 3) });
+  const texts = placed.flatMap(([, own]) => own);
   let project = await openProject(path);
   let data = project.data;
-  for (const [name, own] of Object.entries(placed)) {
+  for (const [name, own] of placed) {
     const added = addConcept(data, data.placements.find((p) => p.parentId === null).id, name);
     const placement = added.data.placements.find((p) => p.id === added.placementId);
     data = editConcept(added.data, placement.conceptId, name, own);
   }
   await saveProject(project, data);
   project = await openProject(path);
-  if (author)
+  // Authors declared by text: one for all (`author`), or one each (`authors`).
+  const declared = [...new Set(texts)]
+    .map((text) => ({ text, author: authors[text] ?? author }))
+    .filter((entry) => entry.author);
+  if (declared.length)
     await writeFile(
       join(path, 'provenance.json'),
-      JSON.stringify({ version: 1, statements: texts.map((text) => ({ text, author })) }, null, 2),
+      JSON.stringify({ version: 1, statements: declared }, null, 2),
     );
   // A text the demo already reads (a case's) keeps its reading.
   const all = { ...readings, ...theses, ...extra };

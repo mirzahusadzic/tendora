@@ -8,7 +8,16 @@
  * offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
 import { findStatement } from './inspection.mjs';
-import { clauseText, corpusView, coverage, coverageLines, nothing, smallest } from './corpus.mjs';
+import {
+  cite,
+  clauseText,
+  corpusView,
+  coverage,
+  coverageLines,
+  nothing,
+  oneOccasion,
+  smallest,
+} from './corpus.mjs';
 
 export async function counterexampleReport(project, { statement, signal } = {}) {
   const view = await corpusView(project);
@@ -40,19 +49,18 @@ export async function counterexampleReport(project, { statement, signal } = {}) 
         item,
         parts.condition.nodes.map((node) => node.id),
       ) ?? 'its condition';
-    // One counterexample is one occasion: the denial must share a statement
-    // with what met the condition, or name someone those statements name.
-    // Otherwise the two may be about different occasions, and are not paired.
-    const occasion = (application) =>
-      application.sourceIds.filter((id) => id !== item.id && view.byId.has(id));
-    const namesOf = (ids) => new Set(ids.flatMap((id) => [...view.names(id)]));
-    const sameOccasion = (application, denial) => {
-      const met = occasion(application),
-        denying = cited([denial]).filter((id) => id !== item.id);
-      if (met.some((id) => denying.includes(id))) return true;
-      const names = namesOf(met);
-      return [...namesOf(denying)].some((name) => names.has(name));
-    };
+    // One counterexample is one occasion: at every place the rule links from
+    // its condition to its conclusion (the reviewer is the one who files),
+    // what met the condition and what denies the conclusion must name
+    // participants that may be the same. Different names or identifiers
+    // there are two occasions; no names at all is no evidence against.
+    const sameOccasion = (application, denial) =>
+      oneOccasion(
+        view,
+        parts,
+        application.sourceIds.filter((id) => id !== item.id && view.byId.has(id)),
+        cited([denial]).filter((id) => id !== item.id),
+      );
     for (const application of applies)
       for (const denial of against.filter(
         (binding) =>
@@ -119,11 +127,7 @@ export function formatCounterexample(report) {
         : 'Nothing the other statements say opposes it.',
     );
   for (const finding of report.findings)
-    lines.push(
-      '',
-      finding.summary,
-      ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
-    );
+    lines.push('', finding.summary, ...finding.statements.map((item) => `  ${cite(item)}`));
   const notes = coverageLines(report);
   if (notes.length) lines.push('', ...notes);
   return lines.join('\n');

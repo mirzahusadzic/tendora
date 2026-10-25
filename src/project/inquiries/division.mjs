@@ -9,7 +9,7 @@
  *                than with any of its own role's: does it belong there?
  * Proposals for a person to make in the role tree, never made here.
  * Read-only and offline. */
-import { corpusView, coverage, coverageLines, nothing } from './corpus.mjs';
+import { cite, corpusView, coverage, coverageLines, nothing } from './corpus.mjs';
 
 const generic = new Set([
   'person',
@@ -202,7 +202,7 @@ export function formatDivision(report) {
     else
       lines.push(
         `  shares: ${finding.shares.join(', ')}`,
-        ...finding.statements.map((item) => `  “${item.statement}” [${item.role}]`),
+        ...finding.statements.map((item) => `  ${cite(item)}`),
       );
   }
   const notes = coverageLines(report);

@@ -6,7 +6,7 @@
  * Authors are as recorded or declared (provenance.json); "unrecorded" is
  * named as such, not as a person. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { corpusView, coverage, coverageLines, smallest, who } from './corpus.mjs';
+import { cite, commitment, corpusView, coverage, coverageLines, smallest, who } from './corpus.mjs';
 const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export async function dialogueReport(project, { signal } = {}) {
@@ -18,6 +18,9 @@ export async function dialogueReport(project, { signal } = {}) {
     signal?.throwIfAborted();
     const author = view.author(item.id);
     const parts = ruleParts(item.graph);
+    // "Only if C, Q" commits to Q requiring C, not to Q: whoever says Q, or
+    // denies it, neither shares nor opposes it. Elenchus tests such a claim.
+    if (parts?.necessary) continue;
     const truth = view.truth(parts ? parts.conclusion : item.graph, {
       cases: parts && !parts.necessary ? [parts.condition] : [],
       withhold: [item.id],
@@ -38,7 +41,7 @@ export async function dialogueReport(project, { signal } = {}) {
           const key = JSON.stringify([
             kind,
             [author, with_].sort(),
-            statements.map((entry) => entry.statement).sort(),
+            statements.map(commitment).sort(),
           ]);
           if (seen.has(key)) continue;
           seen.add(key);
@@ -82,7 +85,7 @@ export function formatDialogue(report) {
       '',
       `${finding.kind}: ${finding.summary}`,
       ...(finding.question ? [`  ${finding.question}`] : []),
-      ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
+      ...finding.statements.map((item) => `  ${cite(item)}`),
     );
   const notes = coverageLines(report);
   if (notes.length) lines.push('', ...notes);

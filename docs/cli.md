@@ -240,7 +240,7 @@ uses color.
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `0`   | Completed, including an open answer; `show` and `runs` exit 0 whatever status the checks they read have                                                                                 |
 | `1`   | A failure: `ask` whose check ended in a status marked 1 below, a method whose new text or a statement in its scope has no reading, an error reading the project, or a declined deletion |
-| `2`   | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing                                                                              |
+| `2`   | Invalid arguments: an unknown command or option, or a project, run, role, statement or saved question that matches nothing                                                              |
 | `130` | Interrupted: the first `Ctrl+C` cancels, the second exits                                                                                                                               |
 
 A syntax error points to the help. A name that matches nothing gives its own
