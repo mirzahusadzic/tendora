@@ -102,5 +102,6 @@ try {
   console.log(`Saved ${runs.length} offline results with their evidence.`);
 } finally {
   globalThis.fetch = originalFetch;
-  await rm(directory, { recursive: true, force: true });
+  // The working copy stays in tmp/ (nothing here deletes a directory).
+  console.log(`Work left in ${directory}`);
 }

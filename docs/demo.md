@@ -2,7 +2,7 @@
 
 **Payments On-Call** is an incident-response team in six roles: an Incident
 Commander over an on-call engineer, a release manager, a support lead, a
-database administrator and a security engineer. It holds 25 statements and 36
+database administrator and a security engineer. It holds 30 statements and 37
 saved questions with their answers and evidence, prebuilt: the whole tour
 replays offline, and `test/acceptance/demo-tour.mjs` checks every step.
 
@@ -137,7 +137,7 @@ which branches of the role tree a question's answer draws on:
 
 ```
 $ npx tendora tensions --project .proj/payments-demo
-Of 36 checked questions, 3 bring roles together, 28 stay in one role and 5 cite no statement.
+Of 37 checked questions, 3 bring roles together, 29 stay in one role and 5 cite no statement.
 
 On-call Engineer ↔ Security Engineer
   gathered (each gives its own answer): Are access logs reviewed?
@@ -339,7 +339,7 @@ flowchart LR
     S["<b>Statement at Security Engineer</b><br/>If a certificate expires,<br/>Priya, the security engineer,<br/>renews the certificate."]
     U0["<b>Question</b><br/>Who renews the certificate? /<br/>Case: A certificate expires."]
     U1["<b>Question</b><br/>Who notifies the customers? /<br/>Case: A certificate expires."]
-    N["<b>Unaffected</b><br/>32 other checked questions"]
+    N["<b>Unaffected</b><br/>33 other checked questions"]
 
     S -->|"rests on; rests on a rule read from"| U0
     S -->|"rests on; rests on a rule read from"| U1
@@ -441,15 +441,17 @@ circumstances, truth), and every checked question classed by what it rests on:
 $ npx tendora fidelity --project .proj/payments-demo
 Corpus fidelity at revision …
 
-25 statements (25 read), 85 variables asked back
-  answerable 81 (95%): own 81, shared 0, carried 0
-  silent 3, possible 0, otherwise 0, owed 1, conflict 0
-  settled 24 of 25; questions rest on 18 of 25
+30 statements (30 read), 96 variables asked back
+  answerable 87 (91%): own 87, shared 0, carried 0
+  silent 3, possible 4, otherwise 0, owed 1, conflict 1
+  settled 27 of 30; questions rest on 18 of 30
 
-36 checked questions: one statement 14, composed 3 (across roles 2),
-  conditional 11, possible 1, composition met 0, open 7
+37 checked questions: one statement 14, composed 3 (across roles 2),
+  conditional 11, possible 1, conflict 1, composition met 0, open 7
 …
 To review:
+  Maya, the incident commander, declares a major incident when payment failures last more than ten minutes.  [Incident Commander]
+    conflict: is it so (Yes)
   Sam, the support lead, must not promise a recovery time before the on-call engineer identifies the cause.  [Support Lead]
     owed: must do what
 ```
@@ -461,7 +463,7 @@ To review:
 | possible, otherwise, owed, conflict | to review: one of several answers, a different answer, no answer, or both ways      |
 
 `--withhold` asks each answerable variable again without its statement: here
-all 81 are borne alone, so no statement's content is carried twice (the
+all 87 are borne alone, so no statement's content is carried twice (the
 [load-bearing](load-bearing.md) test, per variable). The workbench shows the
 same at the root role, by itself up to 300 statements.
 
@@ -476,8 +478,9 @@ $ npx tendora ask --project .proj/payments-demo --offline --actor Dana --json \
 ["case","Dana","cli"]
 ```
 
-The six statements written for this tour record their author (through the
-library); the original nineteen predate recorded authorship and say
+The eleven statements written for the tours (six for this one, five for the
+methods) record their author (through the library); the
+original nineteen predate recorded authorship and say
 `unrecorded`. A case is the check's, so it names who made the check. Each check
 keeps this as it stood when it ran. Authorship is declared, not verified.
 
@@ -493,7 +496,7 @@ What follows (2 rules)
 …
   changed: Who renews the certificate? (case: A certificate expires.)  Priya → ambiguous: …
   answered: Who notifies the customers?  open → Sam; rests on the supposition and 2 statements
-  31 unchanged
+  32 unchanged
 ```
 
 The statement stands beside the others in an overlay, as if said at the root

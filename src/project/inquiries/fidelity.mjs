@@ -20,7 +20,7 @@
  *
  * Questions. The latest saved check of each question at this revision is
  * answered by one statement, composed from two or more (and across top-level
- * roles), conditional, possible or open; an open question whose supported
+ * roles), conditional, possible, in conflict or open; an open question whose supported
  * parts reach two or more statements is a composition met, not closed.
  */
 import { Worker } from 'node:worker_threads';
@@ -41,7 +41,15 @@ export const variableKinds = [
   'owed',
   'conflict',
 ];
-export const questionKinds = ['one', 'composed', 'conditional', 'possible', 'met', 'open'];
+export const questionKinds = [
+  'one',
+  'composed',
+  'conditional',
+  'possible',
+  'conflict',
+  'met',
+  'open',
+];
 const answerable = ['own', 'shared', 'carried'];
 const toReview = ['otherwise', 'owed', 'conflict'];
 
@@ -176,11 +184,13 @@ export async function fidelityReport(project, { withhold = false } = {}) {
           : 'one'
         : answer.status === 'conditional'
           ? 'conditional'
-          : answer.status === 'ambiguous' || (answer.candidates ?? []).length
-            ? 'possible'
-            : parts.size > 1
-              ? 'met'
-              : 'open';
+          : answer.status === 'conflict'
+            ? 'conflict'
+            : answer.status === 'ambiguous' || (answer.candidates ?? []).length
+              ? 'possible'
+              : parts.size > 1
+                ? 'met'
+                : 'open';
     const ids = kind === 'met' ? parts : widest;
     return {
       question: run.questions[0].text,
@@ -270,7 +280,7 @@ export function formatFidelity(report) {
     `  settled ${t.settled} of ${t.statements}; questions rest on ${t.restedOn} of ${t.statements}`,
     '',
     `${q.total} checked questions: one statement ${q.one}, composed ${q.composed} (across roles ${q.composedAcrossRoles}),`,
-    `  conditional ${q.conditional}, possible ${q.possible}, composition met ${q.met}, open ${q.open}`,
+    `  conditional ${q.conditional}, possible ${q.possible}, conflict ${q.conflict}, composition met ${q.met}, open ${q.open}`,
     ...(releasedNote(q.released) ? [`  ${releasedNote(q.released)}`] : []),
     '',
   ];

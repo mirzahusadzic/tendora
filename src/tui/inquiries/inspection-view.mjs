@@ -240,7 +240,7 @@ export function fidelityGroups(report) {
         ['Settled', `${t.settled} of ${t.statements} statements`],
         [
           'Questions',
-          `${q.total} checked: one statement ${q.one}, composed ${q.composed} (across roles ${q.composedAcrossRoles}), conditional ${q.conditional}, possible ${q.possible}, composition met ${q.met}, open ${q.open}`,
+          `${q.total} checked: one statement ${q.one}, composed ${q.composed} (across roles ${q.composedAcrossRoles}), conditional ${q.conditional}, possible ${q.possible}, conflict ${q.conflict}, composition met ${q.met}, open ${q.open}`,
         ],
       ],
       table: table(

@@ -33,7 +33,7 @@ const copySource = async (name) => {
 const payments = await copySource('payments-on-call');
 assert.equal(payments.data.name, 'Payments On-Call');
 assert.equal(payments.data.placements.length, 6);
-assert.equal(sourceCatalog(payments.data).length, 25);
+assert.equal(sourceCatalog(payments.data).length, 30);
 const root = payments.data.placements[0].id;
 const placement = (label) =>
   label
@@ -88,6 +88,8 @@ const demo = [
   ['Who reviews access logs?'],
   ['Who freezes deployments during a major incident?', 'Release Manager'],
   ['Who approves the database vendor invoice?', 'Release Manager'],
+  // Drafted for the methods tour: aporia's joint case asked.
+  ['Does Morgan ship a release?', null, 'A major incident is open, and a payment key leaks.'],
 ].map(([text, scope = null, caseText = null]) => key(text, placement(scope), caseText));
 assert.deepEqual(
   (await listInvestigations(payments))
@@ -97,9 +99,11 @@ assert.deepEqual(
     .sort(),
   [...demo].sort(),
 );
-// No statement settles these: they stay open (or, with two answers, ambiguous).
+// No statement settles these: they stay open (or, with two answers, ambiguous;
+// answered both ways, in conflict).
 const unanswered = new Set(
   [
+    ['Does Morgan ship a release?', null, 'A major incident is open, and a payment key leaks.'],
     ['Why does Sam collects customer reports?'],
     ['Why Sam collects customer reports?'],
     ['Who notifies the customers?'],
@@ -108,7 +112,7 @@ const unanswered = new Set(
     ['Which engineer acknowledges every page within ten minutes?'],
     ['Who reviews access logs?'],
     ['Who approves the database vendor invoice?', 'Release Manager'],
-  ].map(([text, scope]) => key(text, placement(scope))),
+  ].map(([text, scope, caseText = null]) => key(text, placement(scope), caseText)),
 );
 const runs = await listEngineRuns(payments);
 assert.equal(runs.length, demo.length, 'Every demo question has a computed result');
@@ -256,5 +260,5 @@ for (const question of [
 await rm(scratch, { recursive: true, force: true });
 
 console.log(
-  'ok all 36 bundled answers and evidence survive relocation and agree with fresh offline checks',
+  `ok all ${demo.length} bundled answers and evidence survive relocation and agree with fresh offline checks`,
 );

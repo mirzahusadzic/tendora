@@ -96,11 +96,13 @@ assert.equal(
   'supported',
 );
 
-// Compaction to a small budget releases most checks. A released ambiguous
+// Compaction to a small budget releases most checks: one that holds the root
+// check (with 30 statements, more than 300 KB; its recorded timings vary its
+// size a little) and little else, mid-way between the two. A released ambiguous
 // check keeps its candidates and the statements they rest on; show reads them
 // back as a summary, never as a full check.
 const project = await openProject(copy);
-await compactEngineStorage(project, { force: true, budget: 256 * 1024 });
+await compactEngineStorage(project, { force: true, budget: 344 * 1024 });
 const runs = await listEngineRuns(project);
 const released = runs.find((run) => run.id === ambiguous.id);
 assert.equal(released.cache, 'recheck');

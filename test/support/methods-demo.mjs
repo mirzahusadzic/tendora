@@ -37,6 +37,8 @@ export const theses = {
     '(z0 / and :op1 (z1 / open-01 :ARG1 (z2 / incident :ARG1-of (z3 / major-02))) :op2 (z4 / ship-01 :ARG0 (z5 / company :wiki "Morgan Stanley" :name (z6 / name :op1 "Morgan")) :ARG1 (z7 / release-01)))',
   'Sam is on holiday.':
     '(z0 / holiday-01 :ARG0 (z1 / person :wiki "Kim Dae-jung" :name (z2 / name :op1 "Sam")))',
+  'If a major incident is open, Morgan ships a release.':
+    '(z0 / ship-01 :ARG0 (z1 / company :wiki "Morgan Stanley" :name (z2 / name :op1 "Morgan")) :ARG1 (z3 / release-01) :condition (z4 / open-01 :ARG1 (z5 / incident :ARG1-of (z6 / major-02))))',
 };
 
 const noNetwork =

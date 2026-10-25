@@ -5,7 +5,7 @@
  *
  *   node tools/extend-payments-demo.mjs [--target <project directory>]
  */
-import { cp, mkdir, mkdtemp, rename, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, rename } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -55,6 +55,26 @@ const statements = [
     'Database Administrator',
     'Jordan, the database administrator, tests a backup before restoring it.',
   ],
+  // The Socratic methods (docs/methods-tour.md). A security rule that opposes
+  // the freeze rule when a key leaks during a major incident: aporia's joint
+  // case, and a thesis elenchus finds neither refuted nor supported alone.
+  ['Release Manager', 'If a payment key leaks, Morgan, the release manager, ships a release.'],
+  // A second way into the certificate chain, and a statement of alternatives:
+  // whichever holds, Priya renews the certificate and Sam notifies (dilemma).
+  [
+    'Security Engineer',
+    'If a payment key leaks, Priya, the security engineer, renews the certificate.',
+  ],
+  ['Security Engineer', 'Either a certificate expires or a payment key leaks.'],
+  // A rule worded for one person: Alex reviews access logs too (analogy). Its
+  // condition names Priya alone, within the 16 patterns a Metal rule holds.
+  ['Security Engineer', 'If Priya reviews access logs, she files an audit note.'],
+  // An occasion that meets Maya's rule and denies it: a counterexample, an
+  // aporia, and a clash between Claude and an unrecorded author (dialogue).
+  [
+    'Incident Commander',
+    'On Friday payment failures lasted more than ten minutes, and Maya, the incident commander, did not declare a major incident.',
+  ],
 ];
 // Each question: [role asked at, question, case]. What each shows is in docs/demo.md.
 const questions = [
@@ -73,6 +93,12 @@ const questions = [
   ['Incident Commander', 'Who reviews access logs?'],
   ['Release Manager', 'Who freezes deployments during a major incident?'],
   ['Release Manager', 'Who approves the database vendor invoice?'],
+  // Aporia's joint case asked: the key rule says Yes, the freeze rule No.
+  [
+    'Incident Commander',
+    'Does Morgan ship a release?',
+    'A major incident is open, and a payment key leaks.',
+  ],
 ];
 
 // Work on a copy: only the manifest and the packed material come back, as
@@ -126,5 +152,5 @@ for (const name of ['project.json', 'material.sqlite']) {
   await cp(join(directory, name), join(target, name + '.tmp'));
   await rename(join(target, name + '.tmp'), join(target, name));
 }
-await rm(directory, { recursive: true, force: true });
-console.log('Extended; now run node tools/refresh-payments-demo.mjs');
+// The working copy stays in tmp/ (nothing here deletes a directory).
+console.log(`Extended (work left in ${directory}); now run node tools/refresh-payments-demo.mjs`);

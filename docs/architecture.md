@@ -123,7 +123,7 @@ a fresh check; a purpose-only change keeps the assessment.
 Authored records, readings, questions and role vectors live in
 `material.sqlite`, saved checks in `engine/artifacts.sqlite`: content-addressed,
 hash-checked and bounded when read ([storage, schemas and embeddings](storage.md)).
-The demo bundles its 36 answers with their evidence.
+The demo bundles its 37 answers with their evidence.
 
 | Location               | Responsibility                                                    |
 | ---------------------- | ----------------------------------------------------------------- |

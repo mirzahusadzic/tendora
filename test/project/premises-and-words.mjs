@@ -29,16 +29,17 @@ const texts = (finding) => finding.statements.map((item) => item.statement);
 
 // Maieutics: "Who notifies the customers?" is open; the support lead's rule
 // would answer it if Priya renewed the certificate, and the security
-// engineer's rule would bring that about if a certificate expired.
+// engineer's two rules would bring that about if a certificate expired or a
+// payment key leaked: the deepest premises first, each tried as the case.
 const notified = await maieuticsReport(project, { question: 'Who notifies the customers?' });
 const premises = notified.findings.filter((finding) => finding.kind === 'missing premise');
 assert.deepEqual(
   premises.map((finding) => [finding.premise, finding.answers, finding.statements.length]),
   [
     ['a certificate expires', ['Sam'], 2],
+    ['a payment key leaks', ['Sam'], 2],
     ['Priya renews the certificate', ['Sam'], 1],
   ],
-  'the deepest premise first, each tried as the question’s case',
 );
 assert.equal(premises[0].ask, 'Is it so that a certificate expires?');
 assert.equal(premises[0].author, 'Claude', 'asked of the author of the rule');

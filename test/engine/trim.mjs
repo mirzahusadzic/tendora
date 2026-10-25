@@ -57,7 +57,7 @@ for (const run of await listEngineRuns(project)) {
   store = trimmed.inference.store;
   checks++;
 }
-assert.equal(checks, 36);
+assert.equal(checks, 37);
 assert(trimmedRounds >= checks, 'every check trims its rounds');
 
 // A constant the store does not hold leaves its rule nothing to keep.

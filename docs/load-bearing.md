@@ -61,7 +61,7 @@ which `test/recording/withheld.mjs` checks.
 **Candidacy, per variable.** `tendora fidelity --withhold` asks each variable a
 statement answers again without that statement: _borne alone_ when no other
 statement then gives the same answer unconditionally (a candidate), _shared_
-when another does. On the demo all 81 answerable variables are borne alone.
+when another does. On the demo all 87 answerable variables are borne alone.
 
 **The five checks.** The engine runs none of them as a gate; this is where each
 stands:

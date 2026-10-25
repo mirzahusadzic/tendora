@@ -163,7 +163,7 @@ try {
   const fidelity = await json('fidelity');
   assert.deepEqual(
     [fidelity.totals.variables, fidelity.totals.answerable, fidelity.totals.settled],
-    [85, 81, 24],
+    [96, 87, 27],
   );
   assert.equal(fidelity.questions.composedAcrossRoles, 2);
   // Tension lines: resolved, gathered and open.
@@ -248,7 +248,7 @@ try {
   const fidelityGroup = rootView.sections
     .flatMap((section) => section.groups ?? [])
     .find((group) => group.heading === 'Corpus fidelity');
-  assert.match(fidelityGroup.rows[0][1], /85 variables of 25 statements; answerable 81 \(95%\)/u);
+  assert.match(fidelityGroup.rows[0][1], /96 variables of 30 statements; answerable 87 \(91%\)/u);
   assert.equal(fidelityGroup.table.entries.length, 6, 'one row a top-level role');
   console.log(
     `ok demo tour: every capability replays offline in the CLI and the workbench (${directory})`,

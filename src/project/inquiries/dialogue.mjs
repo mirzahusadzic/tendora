@@ -8,6 +8,10 @@
 import { ruleParts } from '../../engine/cloze.mjs';
 import { corpusView, smallest } from './corpus.mjs';
 
+/** An author as findings name them: "unrecorded" is no one's name. */
+const who = (author) => (author === 'unrecorded' ? 'an unrecorded author' : author);
+const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+
 export async function dialogueReport(project, { signal } = {}) {
   const view = await corpusView(project);
   const authors = [...new Set(view.statements.map((item) => view.author(item.id)))];
@@ -48,11 +52,15 @@ export async function dialogueReport(project, { signal } = {}) {
             via: `${item.id} ${with_}`,
             summary:
               kind === 'clash'
-                ? `${author} and ${with_} answer it the other way: “${item.text}”.`
-                : `${author} and ${with_} both commit to it: “${item.text}”.`,
+                ? `${who(author)} and ${who(with_)} answer it the other way: “${item.text}”`
+                : `${who(author)} and ${who(with_)} both commit to it: “${item.text}”`,
             statements,
             ...(kind === 'clash'
-              ? { question: `${author} and ${with_} disagree here: which is meant?` }
+              ? {
+                  question: capital(
+                    `${who(author)} and ${who(with_)} disagree here: which is meant?`,
+                  ),
+                }
               : {}),
           });
         }

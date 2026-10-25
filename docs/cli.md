@@ -87,10 +87,10 @@ What it says (2)
   what: new
   is it so (Yes): new
 …
-Questions (34 in its scope, checked with and without it)
+Questions (35 in its scope, checked with and without it)
 …
   answered: Who notifies the customers?  open → Sam; rests on the supposition and 2 statements
-  31 unchanged
+  32 unchanged
 ```
 
 The statement stands at `--role` (the root by default) beside the latest check

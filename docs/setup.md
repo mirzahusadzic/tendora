@@ -75,7 +75,7 @@ Defaults are `http://127.0.0.1:8000` and `dummy-key`. A key file stays out of
 the environment that child processes and logs inherit. Tendora does not start the
 server or bundle model weights. Ordinary interactive use and CLI checks without
 `--offline` can send source, case and question text to the configured service
-when readings are missing. The demo's 36 questions and their cases replay
+when readings are missing. The demo's 37 questions and their cases replay
 offline; new wording needs a reading.
 
 The service must support `POST /amr/parse-batch` and `POST /embed/texts`.

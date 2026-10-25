@@ -101,8 +101,8 @@ assert.deepEqual(
     ['Priya', true, false],
   ],
 );
-assert.equal(expires.questions.checked, 34, 'Every saved question in its scope');
-assert.equal(expires.questions.unchanged, 31);
+assert.equal(expires.questions.checked, 35, 'Every saved question in its scope');
+assert.equal(expires.questions.unchanged, 32);
 assert.equal(expires.nothingFollows, false);
 
 // A supposition the corpus denies: the release manager's rule says Morgan does

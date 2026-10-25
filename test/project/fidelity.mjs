@@ -49,31 +49,32 @@ try {
   assert.deepEqual(
     { ...t },
     {
-      statements: 25,
-      read: 25,
-      variables: 85,
-      own: 81,
+      statements: 30,
+      read: 30,
+      variables: 96,
+      own: 87,
       shared: 0,
       carried: 0,
-      possible: 0,
+      possible: 4,
       silent: 3,
       otherwise: 0,
       owed: 1,
-      conflict: 0,
-      answerable: 81,
-      borneAlone: 81,
+      conflict: 1,
+      answerable: 87,
+      borneAlone: 87,
       borneShared: 0,
-      settled: 24,
+      settled: 27,
       restedOn: 18,
     },
   );
   assert.deepEqual(report.questions, {
-    total: 36,
+    total: 37,
     released: 0,
     one: 14,
     composed: 3,
     conditional: 11,
     possible: 1,
+    conflict: 1,
     met: 0,
     open: 7,
     composedAcrossRoles: 2,
@@ -99,15 +100,17 @@ try {
     report.roles.reduce((sum, role) => sum + role.statements, 0),
     t.statements,
   );
-  // What to review is the one owed obligation.
+  // To review: Maya's rule, which Friday's failures meet while she did not
+  // declare (answered both ways), and the one owed obligation.
   assert.deepEqual(
     report.statements.filter((item) => item.review.length).map((item) => item.review),
-    [[{ kind: 'owed', asks: 'must do what' }]],
+    [[{ kind: 'conflict', asks: 'is it so (Yes)' }], [{ kind: 'owed', asks: 'must do what' }]],
   );
   const text = formatFidelity(report);
-  assert.match(text, /answerable 81 \(95%\): own 81, shared 0, carried 0/u);
-  assert.match(text, /withheld: borne alone 81, shared with another statement 0/u);
-  assert.match(text, /To review:\n {2}Sam, the support lead, must not promise/u);
+  assert.match(text, /answerable 87 \(91%\): own 87, shared 0, carried 0/u);
+  assert.match(text, /withheld: borne alone 87, shared with another statement 0/u);
+  assert.match(text, /To review:\n {2}Maya, the incident commander, declares a major incident/u);
+  assert.match(text, /\n {2}Sam, the support lead, must not promise/u);
   // A worker thread gives the same report.
   assert.deepEqual(await fidelityInWorker(project), await fidelityReport(project));
   // Without a check at the root role there is nothing to read.
