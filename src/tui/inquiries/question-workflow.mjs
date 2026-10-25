@@ -215,6 +215,9 @@ export function createQuestionWorkflow({
   let settle = null;
   function glance(id) {
     clearTimeout(settle?.timer);
+    // A saved check still loading for an earlier selection is dropped
+    // (review 2026-10-25, #13).
+    showing = null;
     state.projectEntryId = id;
     state.projectReadingOrigin = 'development';
     settle = { id, timer: setTimeout(() => settleNow(), config.settleMs ?? 350) };

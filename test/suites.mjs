@@ -82,6 +82,7 @@ export const suites = {
     'tui/inquiries/question-explanation.mjs',
     'tui/inquiries/question-lineage.mjs',
     'tui/inquiries/development-height.mjs',
+    'tui/inquiries/development-glance.mjs',
     'tui/inquiries/tendora.mjs',
     'tui/inquiries/interaction-matrix.mjs',
     'tui/inquiries/keyboard-workflow.mjs',
