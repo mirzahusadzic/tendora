@@ -149,9 +149,16 @@ const invalid = [
     args: ['recoil', '--project', absent, '--role', 'A', '--statement', 'B'],
     match: /Choose one of/u,
   },
+  // Advice that can be followed (final review #13): --question would be a
+  // second locus.
   {
     args: ['recoil', '--project', absent, '--role', 'A', '--scope', 'B'],
-    match: /add --question/u,
+    match:
+      /--scope and --case-text qualify a question; drop them, or recoil from the question with --question instead of --role\./u,
+  },
+  {
+    args: ['recoil', '--project', absent, '--statement', 'A', '--case-text', 'B'],
+    match: /instead of --statement\./u,
   },
   { args: ['probe', '--project', absent], match: /Choose one of --statement, --role/u },
   { args: ['tensions', '--project', absent, '--grain', '0'], match: /whole number/u },

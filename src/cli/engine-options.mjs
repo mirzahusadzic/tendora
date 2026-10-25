@@ -271,7 +271,9 @@ export function parseEngineArguments(args) {
   if (action === 'recoil') {
     exactlyOne(['statement', 'role', 'question']);
     if (!values.question && (values.scope || values['case-text']))
-      throw new EngineUsageError('--scope and --case-text name a question: add --question.');
+      throw new EngineUsageError(
+        `--scope and --case-text qualify a question; drop them, or recoil from the question with --question instead of --${values.statement ? 'statement' : 'role'}.`,
+      );
   }
   if (action === 'probe') exactlyOne(['statement', 'role']);
   if (action === 'tensions' && values.grain !== undefined && !/^[1-9]\d*$/u.test(values.grain))
