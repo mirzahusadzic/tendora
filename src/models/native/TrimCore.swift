@@ -27,6 +27,15 @@ func alignedAlloc(_ count: Int) -> UnsafeMutablePointer<UInt32> {
   }
   return raw.bindMemory(to: UInt32.self, capacity: bytes / 4)
 }
+/// Heap memory for `count` values, or a refusal: never a trap when the
+/// machine has none to give. Given back with `release`.
+func heap<T>(_ type: T.Type, _ count: Int) -> UnsafeMutablePointer<T> {
+  guard let raw = malloc(max(1, count) * MemoryLayout<T>.stride) else {
+    refuse("could not allocate \(count * MemoryLayout<T>.stride) bytes")
+  }
+  return raw.bindMemory(to: T.self, capacity: max(1, count))
+}
+func release<T>(_ pointer: UnsafeMutablePointer<T>) { free(pointer) }
 func alignedBytes(_ count: Int) -> Int { max(pageSize, (count * 4 + pageSize - 1) / pageSize * pageSize) }
 
 struct Rule {
@@ -107,6 +116,9 @@ final class Capture {
       let count = Int(words[at]), vars = Int(words[at + 1])
       at += 2
       guard count <= (words.count - at) / 3 else { refuse("rules.bin ends inside rule \(r)", 2) }
+      // A rule names at most three variables a pattern; more declared would
+      // only cost memory, a bitset each (as checkCapture).
+      guard vars <= 3 * count else { refuse("rules.bin: rule \(r) declares \(vars) variables for \(count) patterns", 2) }
       var patterns: [[UInt32]] = []
       for _ in 0..<count {
         let pattern = [words[at], words[at + 1], words[at + 2]]
@@ -145,14 +157,14 @@ final class Index {
       }
       for t in 0..<c.terms { off[t + 1] &+= off[t] }
       let ord = alignedAlloc(c.facts)
-      let fill = UnsafeMutablePointer<UInt32>.allocate(capacity: c.terms)
+      let fill = heap(UInt32.self, c.terms)
       fill.update(from: off, count: c.terms)
       for f in 0..<c.facts {
         let t = Int(column[f])
         ord[Int(fill[t])] = UInt32(f)
         fill[t] &+= 1
       }
-      fill.deallocate()
+      release(fill)
       offsets.append(off)
       order.append(ord)
     }
@@ -197,7 +209,7 @@ final class Scratch {
   init(vars: Int, terms: Int) {
     let words = (terms + 63) / 64
     func make() -> UnsafeMutablePointer<UInt64> {
-      let b = UnsafeMutablePointer<UInt64>.allocate(capacity: words)
+      let b = heap(UInt64.self, words)
       b.initialize(repeating: 0, count: words)
       return b
     }
@@ -384,7 +396,7 @@ func trimRule(_ rule: Rule, _ c: Capture, _ index: Index, _ s: Scratch) -> [[UIn
 func trimCPU(_ c: Capture, _ index: Index, threads: Int) -> [[UInt32]] {
   let maxVars = c.rules.map { $0.vars }.max() ?? 1
   var results = Array(repeating: [[UInt32]](), count: c.rules.count)
-  let next = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+  let next = heap(Int.self, 1)
   next.initialize(to: 0)
   let lock = NSLock()
   results.withUnsafeMutableBufferPointer { out in
@@ -399,11 +411,11 @@ func trimCPU(_ c: Capture, _ index: Index, threads: Int) -> [[UInt32]] {
         if r >= c.rules.count { break }
         out[r] = trimRule(c.rules[r], c, index, scratch)
       }
-      for b in scratch.bits { b.deallocate() }
-      scratch.spare.deallocate()
+      for b in scratch.bits { release(b) }
+      release(scratch.spare)
     }
   }
-  next.deallocate()
+  release(next)
   return results.flatMap { $0 }
 }
 

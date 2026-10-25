@@ -42,9 +42,15 @@ export function checkCapture(capture) {
     }
   });
   if (!Array.isArray(rules)) refuse('it has rules');
+  let maxVars = 0;
   rules.forEach((rule, r) => {
     if (!count(rule?.vars) || !Array.isArray(rule.patterns))
       refuse(`rule ${r} has vars and patterns`);
+    // A rule names at most three variables a pattern: more declared would
+    // only cost memory, a mark array each (GPU recheck, #2).
+    if (rule.vars > 3 * rule.patterns.length)
+      refuse(`rule ${r} declares ${rule.vars} variables for ${rule.patterns.length} patterns`);
+    maxVars = Math.max(maxVars, rule.vars);
     for (const pattern of rule.patterns) {
       if (pattern?.length !== 3) refuse(`rule ${r}: a pattern is three words`);
       for (const word of pattern) {
@@ -55,8 +61,15 @@ export function checkCapture(capture) {
       }
     }
   });
+  // What the trim will hold: an index of three columns over the terms, the
+  // facts' order, and a mark array a variable. A capture that needs more than
+  // a working budget is refused before any of it is allocated.
+  const bytes = 4 * (3 * (terms + 1) + 3 * facts + (maxVars + 1) * terms);
+  if (bytes > memoryBound)
+    refuse(`it would need ${Math.ceil(bytes / 2 ** 30)} GiB, more than ${memoryBound / 2 ** 30}`);
   return capture;
 }
+export const memoryBound = 4 * 2 ** 30;
 
 /** Per column, the facts with each term as one run in fact order (CSR). */
 export function buildIndex({ columns, terms, facts }) {

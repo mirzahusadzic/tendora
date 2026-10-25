@@ -616,6 +616,9 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   guard maxVars <= 8 && maxPatterns <= 16 else {
     refuse("a rule has \(maxVars) variables and \(maxPatterns) patterns; the kernel holds at most 8 and 16", 2)
   }
+  // Settings are read first, so a wrong one is refused with or without work.
+  let groups = setting("TRIM_GROUPS", 64, 1...4096)
+  let poolCapacity = setting("TRIM_POOL", 96_000_000, 1...Int(UInt32.max))
   // No rules is no lists: the empty result, with nothing to set up.
   if c.rules.isEmpty {
     report("metal-\(variant)", [], [Double](repeating: 0, count: repeatCount), ["device": device.name])
@@ -665,11 +668,9 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   }
   let words = (c.terms + 31) / 32
   // Persistent threadgroups: enough to fill the GPU, each with its own bitsets.
-  let groups = setting("TRIM_GROUPS", 64, 1...4096)
   let bitsBytes = groups * 8 * (maxVars + 1) * words * 4
   // No terms is no bits: a buffer is still one page, never zero bytes.
   let bitsBuffer = allocated(device.makeBuffer(length: max(pageSize, bitsBytes), options: [.storageModePrivate, .hazardTrackingModeUntracked]), "\(bitsBytes) bytes of bitsets")
-  let poolCapacity = setting("TRIM_POOL", 96_000_000, 1...Int(UInt32.max))
   let poolBuffer = allocated(device.makeBuffer(length: poolCapacity * 4, options: shared), "a pool of \(poolCapacity * 4) bytes")
   let controlBuffer = allocated(device.makeBuffer(length: 16, options: shared), "the control words")
   let outputBuffer = allocated(device.makeBuffer(length: max(8, patterns * 8), options: shared), "\(patterns * 8) bytes of output")

@@ -169,6 +169,10 @@ const malformed = {
   'a pattern of two words': { ...mixed, rules: [{ vars: 1, patterns: [[VAR, 1]] }] },
   'negative facts': { ...mixed, facts: -1 },
   'terms past the bound': { ...mixed, terms: 2 ** 28 + 1 },
+  // A rule declaring far more variables than its patterns name, and a store
+  // whose index alone would need gigabytes (GPU recheck, #2).
+  'variables past its patterns': { ...mixed, rules: [{ ...rule(2, 1), vars: 1_000_000 }] },
+  'more memory than the bound': { ...mixed, terms: 2 ** 28 },
 };
 for (const name of ['js', ...native.map((backend) => backend.name)])
   for (const [what, capture] of Object.entries(malformed))
@@ -255,6 +259,7 @@ for (const { name: kind } of native) {
   for (const [what, capture] of Object.entries({
     'a term past terms': { ...valid, columns: [term(9), ...valid.columns.slice(1)] },
     'a variable the rule lacks': { ...valid, rules: [{ vars: 1, patterns: [[VAR | 3, 1, 2]] }] },
+    'variables past its patterns': { ...valid, rules: [{ ...rule(2, 1), vars: 1_000_000 }] },
   })) {
     const ran = runNative(kind, await writeNative(capture));
     assert.deepEqual([ran.status, ran.signal], [2, null], `${kind}: ${what}: ${ran.stderr}`);
@@ -284,6 +289,12 @@ for (const { name: kind } of native) {
   if (kind === 'metal') {
     const groups = runNative(kind, validWords, [], { TRIM_GROUPS: '0' });
     assert.deepEqual([groups.status, groups.signal], [2, null], 'TRIM_GROUPS=0');
+    // With no rules too: a wrong setting is refused with or without work
+    // (GPU recheck, #6).
+    const idle = runNative(kind, await writeNative({ ...valid, rules: [] }), [], {
+      TRIM_GROUPS: '0',
+    });
+    assert.deepEqual([idle.status, idle.signal], [2, null], 'TRIM_GROUPS=0 with no rules');
     const pool = runNative(kind, validWords, [], { TRIM_POOL: '1' });
     assert.equal(pool.status, 3, pool.stderr);
     assert.match(pool.stderr, /the pool of 1 words ran out; set TRIM_POOL/u);

@@ -198,7 +198,11 @@ function nativeTrim(kind) {
         try {
           trim.report = JSON.parse(ran.stdout.trim().split('\n').at(-1));
         } catch {
-          throw unavailable(kind, 'its report was not JSON');
+          // A report that does not parse is the program's fault, like output
+          // that does not fit: never retried elsewhere (GPU recheck, #4).
+          throw Object.assign(unavailable(kind, 'its report was not JSON'), {
+            invalidOutput: true,
+          });
         }
         // Output that does not fit the capture fails the check; it is never
         // read as a trim that kept nothing, nor retried elsewhere.
