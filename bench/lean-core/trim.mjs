@@ -3,6 +3,8 @@
  *
  *   node bench/lean-core/trim.mjs <capture-dir> [--oracle] [--out <file>] [--warmup <n>] [--repeat <n>]
  *
+ * `--repeat 0` loads and indexes only, for the footprint before any trim.
+ *
  * For every rule, each pattern keeps the facts that can still take part in a
  * match of the whole rule by arc consistency: a fact survives when it fits the
  * pattern's constants and repeated variables, and every value it gives a
@@ -340,8 +342,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       ),
     0,
   );
-  const kept = lists.reduce((n, list) => n + list.length, 0);
-  if (outPath) {
+  const kept = lists?.reduce((n, list) => n + list.length, 0) ?? 0;
+  if (outPath && lists) {
     const file = await open(outPath, 'w');
     await file.write(new Uint8Array(encodeTrim(lists).buffer));
     await file.close();
@@ -351,7 +353,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       version: oracle ? 'js-oracle' : 'js-fast',
       facts: capture.facts,
       rules: capture.rules.length,
-      patterns: lists.length,
+      patterns: lists?.length ?? 0,
       candidates: before,
       kept,
       indexMs: +indexMs.toFixed(2),

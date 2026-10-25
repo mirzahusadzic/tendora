@@ -163,7 +163,9 @@ In the workbench, choose a role; `n` adds statements, `a` asks, `o` opens Develo
 
 ## Performance
 
-Trimming, the step that keeps only the facts a rule can still use before the engine joins, in JavaScript, Swift and Metal, each output byte-identical to a JavaScript oracle; captured from the bundled demo, so anyone can reproduce it ([bench/lean-core](bench/lean-core/README.md), Apple M5 Pro):
+Trimming keeps only the facts a rule can still use, before the engine joins. In JavaScript, Swift and Metal, every output byte-identical to a JavaScript oracle, on captures of the bundled demo that anyone can reproduce ([bench/lean-core](bench/lean-core/README.md), Apple M5 Pro).
+
+Time, the median of three interleaved rounds (Metal: the faster of its two variants, GPU time):
 
 | Facts     | JavaScript | Swift, 1 thread | Swift, 18 threads | Metal (GPU) |
 | --------- | ---------- | --------------- | ----------------- | ----------- |
@@ -171,7 +173,17 @@ Trimming, the step that keeps only the facts a rule can still use before the eng
 | 567,072   | 292 ms     | 65.9 ms         | 6.27 ms           | 2.36 ms     |
 | 9,073,152 | 13.8 s     | 3.14 s          | 394 ms            | 80.2 ms     |
 
-Medians of three interleaved rounds; Metal is the faster of its two variants, GPU time. Native code is about 4× JavaScript on one thread; the GPU is about 5× all eighteen CPU threads at nine million facts here, and 2.2× on a corpus where far less survives the trim. The trim itself is the lever: the engine's join then sees only the facts its matches use.
+Peak memory, the process's physical footprint as macOS counts it (runtime, inputs, index and working memory):
+
+| Facts     | JavaScript | Swift, 1 thread | Swift, 18 threads | Metal (GPU) |
+| --------- | ---------- | --------------- | ----------------- | ----------- |
+| 141,768   | 46 MB      | 5.1 MB          | 6.2 MB            | 106 MB      |
+| 567,072   | 99 MB      | 14 MB           | 18 MB             | 211 MB      |
+| 9,073,152 | 570 MB     | 171 MB          | 217 MB            | 2.0 GB      |
+
+- Native code is about 4× JavaScript on one thread. The GPU is about 5× all eighteen CPU threads at nine million facts, and 2.2× on a corpus where far less survives the trim.
+- The GPU pays in memory: about 100 MB of Metal runtime, a domain bitset over every term for each rule in flight, and a pool for the kept lists (0.84 and 0.93 GB at nine million facts). JavaScript reads the store's columns into its heap; Swift maps them from the capture.
+- The trim itself is the lever: the engine's join then sees only the facts its matches use.
 
 ## The name
 

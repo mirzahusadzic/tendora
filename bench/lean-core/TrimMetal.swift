@@ -633,10 +633,13 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
     }
   }
   let used = controlBuffer.contents().bindMemory(to: UInt32.self, capacity: 4)[1]
-  report("metal-\(variant)", lists, walls, [
-    "gpuMs": gpus.map { ($0 * 1000).rounded() / 1000 }, "gpuMedianMs": (median(gpus) * 1000).rounded() / 1000,
+  var extra: [String: Any] = [
+    "gpuMs": gpus.map { ($0 * 1000).rounded() / 1000 },
     "pipelineMs": (pipelineMs * 100).rounded() / 100, "pipelineFromArchive": fromArchive,
     "setupMs": (setupMs * 100).rounded() / 100,
-    "groups": groups, "poolWordsUsed": Int(used), "bitsetBytes": bitsBytes, "device": device.name,
-  ])
+    "groups": groups, "poolWords": poolCapacity, "poolWordsUsed": Int(used), "bitsetBytes": bitsBytes,
+    "device": device.name,
+  ]
+  if !gpus.isEmpty { extra["gpuMedianMs"] = (median(gpus) * 1000).rounded() / 1000 }
+  report("metal-\(variant)", lists, walls, extra)
 }

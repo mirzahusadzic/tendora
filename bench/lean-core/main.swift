@@ -1,5 +1,6 @@
 // trim cpu <capture-dir> [--threads n] [--warmup n] [--repeat n] [--out file]
 // trim metal <capture-dir> [--warmup n] [--repeat n] [--out file] [--variant index|dense]
+// --repeat 0 loads and indexes (and sets Metal up) only, for the footprint before any trim.
 import Foundation
 
 var args = Array(CommandLine.arguments.dropFirst())
@@ -28,13 +29,13 @@ let index = Index(capture)
 let indexMs = now() - t
 
 func report(_ version: String, _ lists: [[UInt32]], _ times: [Double], _ extra: [String: Any] = [:]) {
-  if let outPath { write(encode(lists), to: outPath) }
+  if let outPath, !times.isEmpty { write(encode(lists), to: outPath) }
   var fields: [String: Any] = [
     "version": version, "facts": capture.facts, "rules": capture.rules.count, "patterns": lists.count,
     "kept": lists.reduce(0) { $0 + $1.count }, "loadMs": (loadMs * 100).rounded() / 100,
     "indexMs": (indexMs * 100).rounded() / 100, "trimMs": times.map { ($0 * 100).rounded() / 100 },
-    "medianMs": (median(times) * 100).rounded() / 100,
   ]
+  if !times.isEmpty { fields["medianMs"] = (median(times) * 100).rounded() / 100 }
   for (k, v) in extra { fields[k] = v }
   let data = try! JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys])
   print(String(data: data, encoding: .utf8)!)

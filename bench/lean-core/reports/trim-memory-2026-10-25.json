@@ -1,0 +1,426 @@
+{
+  "profile": "lean-core-trim-memory-v1",
+  "at": "2026-10-25T08:27:39.267Z",
+  "machine": {
+    "cpu": "Apple M5 Pro",
+    "threads": 18,
+    "os": "25.6.0"
+  },
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)",
+  "swiftFlags": [
+    "-O",
+    "-enforce-exclusivity=unchecked",
+    "-swift-version 5"
+  ],
+  "node": "v25.9.0",
+  "rounds": 3,
+  "captures": [
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 16,
+      "replicas": 1,
+      "facts": 140960,
+      "engineFacts": 140960,
+      "terms": 35323,
+      "engineTerms": 35323,
+      "occurrenceTerms": 30352,
+      "rules": 208,
+      "patterns": 1280,
+      "columnBytes": 573440,
+      "page": 16384,
+      "baseMs": 932,
+      "rounds": 2
+    },
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 64,
+      "replicas": 1,
+      "facts": 563840,
+      "engineFacts": 563840,
+      "terms": 138427,
+      "engineTerms": 138427,
+      "occurrenceTerms": 121408,
+      "rules": 832,
+      "patterns": 5120,
+      "columnBytes": 2260992,
+      "page": 16384,
+      "baseMs": 5743,
+      "rounds": 2
+    },
+    {
+      "profile": "lean-core-capture-v1",
+      "copies": 64,
+      "replicas": 16,
+      "facts": 9021440,
+      "engineFacts": 563840,
+      "terms": 1959547,
+      "engineTerms": 138427,
+      "occurrenceTerms": 121408,
+      "rules": 832,
+      "patterns": 5120,
+      "columnBytes": 36093952,
+      "page": 16384,
+      "baseMs": 5748,
+      "rounds": 2
+    }
+  ],
+  "summary": [
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "js-fast",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 22562904,
+        "p10": 22562904,
+        "p90": 22562904,
+        "min": 22562904,
+        "max": 22972456,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 32868728,
+        "p10": 31853040,
+        "p90": 32868728,
+        "min": 31853040,
+        "max": 32967032,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "swift-cpu-1",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 4915632,
+        "p10": 4915632,
+        "p90": 4915632,
+        "min": 4915632,
+        "max": 4915632,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 5210544,
+        "p10": 5210544,
+        "p90": 5210544,
+        "min": 5210544,
+        "max": 5210544,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "swift-cpu-18",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 4915632,
+        "p10": 4915632,
+        "p90": 4915632,
+        "min": 4915632,
+        "max": 4915632,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 6193608,
+        "p10": 6193584,
+        "p90": 6193608,
+        "min": 6193584,
+        "max": 6209992,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "metal-index",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 110166544,
+        "p10": 110101008,
+        "p90": 110166544,
+        "min": 110101008,
+        "max": 110166544,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 110248464,
+        "p10": 110232104,
+        "p90": 110248464,
+        "min": 110232104,
+        "max": 110264872,
+        "runs": 3
+      },
+      "poolWords": 1048576,
+      "bitsetBytes": 13565952
+    },
+    {
+      "capture": "k16",
+      "facts": 140960,
+      "version": "metal-dense",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 110166544,
+        "p10": 110150184,
+        "p90": 110166544,
+        "min": 110150184,
+        "max": 110166568,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 110232080,
+        "p10": 110232080,
+        "p90": 110232080,
+        "min": 110232080,
+        "max": 110264872,
+        "runs": 3
+      },
+      "poolWords": 1048576,
+      "bitsetBytes": 13565952
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "js-fast",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 37194056,
+        "p10": 37177720,
+        "p90": 37194056,
+        "min": 37177720,
+        "max": 37210416,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 59559128,
+        "p10": 59362544,
+        "p90": 59559128,
+        "min": 59362544,
+        "max": 60067104,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "swift-cpu-1",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 11928008,
+        "p10": 11928008,
+        "p90": 11928008,
+        "min": 11928008,
+        "max": 11928008,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 12566984,
+        "p10": 12566984,
+        "p90": 12566984,
+        "min": 12566984,
+        "max": 12566984,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "swift-cpu-18",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 11928008,
+        "p10": 11911624,
+        "p90": 11928008,
+        "min": 11911624,
+        "max": 11928008,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 15450568,
+        "p10": 15417824,
+        "p90": 15450568,
+        "min": 15417824,
+        "max": 15483360,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "metal-index",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 161022504,
+        "p10": 161006096,
+        "p90": 161022504,
+        "min": 161006096,
+        "max": 161038888,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 161202728,
+        "p10": 161186320,
+        "p90": 161202728,
+        "min": 161186320,
+        "max": 161235472,
+        "runs": 3
+      },
+      "poolWords": 2097152,
+      "bitsetBytes": 53157888
+    },
+    {
+      "capture": "k64",
+      "facts": 563840,
+      "version": "metal-dense",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 207159848,
+        "p10": 207143440,
+        "p90": 207159848,
+        "min": 207143440,
+        "max": 207192616,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 207340072,
+        "p10": 207340048,
+        "p90": 207340072,
+        "min": 207340048,
+        "max": 207356456,
+        "runs": 3
+      },
+      "poolWords": 13631488,
+      "bitsetBytes": 53157888
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "js-fast",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 281249880,
+        "p10": 281233544,
+        "p90": 281249880,
+        "min": 281233544,
+        "max": 281348232,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 420197648,
+        "p10": 417658512,
+        "p90": 420197648,
+        "min": 417658512,
+        "max": 420214656,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "swift-cpu-1",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 142934640,
+        "p10": 142934640,
+        "p90": 142934640,
+        "min": 142934640,
+        "max": 142934640,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 145326704,
+        "p10": 145326704,
+        "p90": 145326704,
+        "min": 145326704,
+        "max": 145326704,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "swift-cpu-18",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 142934640,
+        "p10": 142934640,
+        "p90": 142934640,
+        "min": 142934640,
+        "max": 142934640,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 177586824,
+        "p10": 177324680,
+        "p90": 177586824,
+        "min": 177324680,
+        "max": 177865376,
+        "runs": 3
+      }
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "metal-index",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 1092059832,
+        "p10": 1092043472,
+        "p90": 1092059832,
+        "min": 1092043472,
+        "max": 1092076240,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 1092272848,
+        "p10": 1092240080,
+        "p90": 1092272848,
+        "min": 1092240080,
+        "max": 1092272848,
+        "runs": 3
+      },
+      "poolWords": 27262976,
+      "bitsetBytes": 752467968
+    },
+    {
+      "capture": "k64x16",
+      "facts": 9021440,
+      "version": "metal-dense",
+      "equalToReference": true,
+      "reference": "oracle",
+      "loadedBytes": {
+        "median": 1788330704,
+        "p10": 1788297936,
+        "p90": 1788330704,
+        "min": 1788297936,
+        "max": 1788330704,
+        "runs": 3
+      },
+      "peakBytes": {
+        "median": 1788510928,
+        "p10": 1788494544,
+        "p90": 1788510928,
+        "min": 1788494544,
+        "max": 1788543720,
+        "runs": 3
+      },
+      "poolWords": 201326592,
+      "bitsetBytes": 752467968
+    }
+  ]
+}
