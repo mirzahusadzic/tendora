@@ -120,7 +120,7 @@ export function closestStatements(recording, limit = 5) {
   if (!question) return [];
   const wanted = contentConcepts(question);
   const statements = recording.sources
-    .filter((source) => source.graphId && !source.development)
+    .filter((source) => source.graphId && source.development?.asserted !== false)
     .map((source) => {
       const graph = recording.graphs.find((item) => item.id === source.graphId);
       return graph && { source, graph, concepts: contentConcepts(graph) };

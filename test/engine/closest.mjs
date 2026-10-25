@@ -43,8 +43,11 @@ assert.deepEqual(related[0].shares, ['archive', 'audit', 'ledger']);
 assert.deepEqual(related[1].shares, ['ledger'], 'person is generic and does not count');
 assert(related[0].score > related[1].score);
 assert.equal(closestStatements(recording, 1).length, 1);
-// A development response is the author's own contribution, not a statement to point to.
-recording.sources[0].development = { contributionId: 'c1' };
+// A statement written in the workbench is a contribution and is pointed to like
+// any other; only its unasserted parts (a question's text, a wording) are not.
+recording.sources[0].development = { contributionId: 'c1', asserted: true };
+assert.equal(closestStatements(recording)[0].sourceId, 's1', 'An asserted contribution is named');
+recording.sources[0].development = { contributionId: 'c1', asserted: false };
 assert(!closestStatements(recording).some((item) => item.sourceId === 's1'));
 console.log(
   'ok closest statements: shared content concepts, rarer first, generic concepts ignored',
