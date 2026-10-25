@@ -1,7 +1,10 @@
-/** Recompute the bundled demo's answers offline and publish compact, portable stores. */
+/** Recompute the bundled demo's answers offline and publish compact, portable stores.
+ *
+ *   node tools/refresh-payments-demo.mjs [--project <copy of the demo>]
+ */
 import assert from 'node:assert/strict';
 import { cp, mkdir, mkdtemp, readFile, rename, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openProject } from '../src/project/authoring/project.mjs';
 import { listInvestigations } from '../src/project/inquiries/investigation.mjs';
@@ -21,7 +24,9 @@ import { discardRoleVectorIndex } from '../src/project/storage/role-vectors.mjs'
 import { openArtifactDatabase, loadArtifact } from '../src/project/storage/engine-artifacts.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const bundled = join(root, '.proj/payments-on-call');
+// --project refreshes another copy of the demo in place, for a trial.
+const at = process.argv.indexOf('--project');
+const bundled = at > 0 ? resolve(process.argv[at + 1]) : join(root, '.proj/payments-on-call');
 await mkdir(join(root, 'tmp'), { recursive: true });
 const directory = await mkdtemp(join(root, 'tmp/payments-refresh-'));
 const before = new Map();
