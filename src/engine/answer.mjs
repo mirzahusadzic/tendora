@@ -285,9 +285,26 @@ export function settleModalWord(recording, knowledge, options, answer) {
         options,
       );
       if (!['supported', 'conditional'].includes(settled.status)) continue;
+      // The source says the word for the relation asked about: "may" just
+      // before "leave", not in another clause ("although it may eat").
+      const framedConcept = query.nodes.find(
+        (node) =>
+          node.id ===
+          query.edges.find((edge) => edge.from === modal.id && edge.role === ':ARG1')?.to,
+      )?.concept;
+      const verb = framedConcept?.replace(/-\d+$/u, '').split('-')[0] ?? '';
+      const framing = (text) => {
+        const words = tokens(text);
+        return words.some(
+          (token, i) =>
+            token === word &&
+            verb.length >= 3 &&
+            words.slice(i + 1, i + 4).some((next) => next.startsWith(verb.slice(0, 4))),
+        );
+      };
       const sayIt = (binding) =>
         binding.sourceIds.some((id) =>
-          tokens(recording.sources.find((source) => source.id === id)?.text ?? '').includes(word),
+          framing(recording.sources.find((source) => source.id === id)?.text ?? ''),
         );
       const answers = settled.answers.filter(sayIt);
       if (!answers.length) continue;

@@ -82,6 +82,18 @@ assert.equal(
   null,
   '“Can” never answers “may”',
 );
+// The word must frame the relation asked about: in "A crew can leave the hall,
+// although it may eat." the source's "may" is about eating (final review, #4).
+assert.equal(
+  settle(
+    settleModalWord,
+    recording(asked('permit-01'), 'May a crew leave the hall?', [
+      [leaving('s', 'possible-01'), 'A crew can leave the hall, although it may eat.'],
+    ]),
+  ),
+  null,
+  'A modal word elsewhere in the sentence settles nothing',
+);
 // Two modal words: which modal the source's reading settles is not known, so
 // none is rewritten. “May a crew that can swim leave the hall?”
 const swimming = (id, modal) => {
