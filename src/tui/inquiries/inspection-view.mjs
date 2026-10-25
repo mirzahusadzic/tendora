@@ -18,7 +18,7 @@ const kinds = {
 };
 const named = (row) => `${kinds[row.kind] ?? row.kind}: ${row.label}`;
 
-/** While a report loads, or when it cannot be read. */
+/** While a report loads, when it is left to be asked for, or when it cannot be read. */
 export function pendingGroups(heading, entry) {
   if (entry.status === 'ready') return null;
   return [
@@ -27,8 +27,12 @@ export function pendingGroups(heading, entry) {
       rows: [
         [
           '',
-          entry.status === 'loading' ? 'Reading the saved checks.' : entry.error,
-          entry.status === 'loading' ? 'muted' : 'warning',
+          entry.status === 'loading'
+            ? 'Reading the saved checks.'
+            : entry.status === 'deferred'
+              ? entry.note
+              : entry.error,
+          entry.status === 'error' ? 'warning' : 'muted',
         ],
       ],
     },
@@ -208,5 +212,60 @@ export function roleTensionGroups(tensions) {
           }
         : {}),
     },
+  ];
+}
+
+/** The root role: corpus fidelity, what the statements can be asked back for
+ * and what the checked questions rest on. */
+export function fidelityGroups(report) {
+  const t = report.totals,
+    q = report.questions;
+  const share = (part, whole) => (whole ? ` (${Math.round((100 * part) / whole)}%)` : '');
+  const review = report.statements.filter((item) => item.review.length || !item.read);
+  const reviewing = t.possible + t.otherwise + t.owed + t.conflict;
+  return [
+    {
+      heading: 'Corpus fidelity',
+      rows: [
+        [
+          'Asked back',
+          `${t.variables} variables of ${t.statements} statements; answerable ${t.answerable}${share(t.answerable, t.variables)}: own ${t.own}, shared ${t.shared}, carried ${t.carried}`,
+        ],
+        ['Silent', `${t.silent}: a condition not given, or a necessary condition`, 'muted'],
+        [
+          'To review',
+          `possible ${t.possible}, otherwise ${t.otherwise}, owed ${t.owed}, conflict ${t.conflict}`,
+          reviewing ? 'warning' : 'muted',
+        ],
+        ['Settled', `${t.settled} of ${t.statements} statements`],
+        [
+          'Questions',
+          `${q.total} checked: one statement ${q.one}, composed ${q.composed} (across roles ${q.composedAcrossRoles}), conditional ${q.conditional}, possible ${q.possible}, composition met ${q.met}, open ${q.open}`,
+        ],
+      ],
+      table: table(
+        ['Role', 'Statements', 'Variables', 'Answerable', 'Settled', 'Rested on'],
+        report.roles.map((role) => ({
+          cells: [
+            role.role ?? '',
+            ...[role.statements, role.variables, role.answerable, role.settled, role.restedOn].map(
+              String,
+            ),
+          ],
+        })),
+      ),
+    },
+    ...(review.length
+      ? [
+          {
+            heading: 'Corpus fidelity: to review',
+            rows: review.flatMap((item) => [
+              [item.role, item.statement],
+              ...(item.read ? [] : [['', 'no reading: nothing can be asked back', 'warning']]),
+              ...item.review.map((slot) => ['', `${slot.kind}: ${slot.asks}`, 'warning']),
+            ]),
+          },
+        ]
+      : []),
   ];
 }

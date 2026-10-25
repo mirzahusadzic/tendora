@@ -6,6 +6,7 @@ import {
 } from '../../project/inquiries/investigation.mjs';
 import { readFile } from 'node:fs/promises';
 import { projectTree } from '../../project/authoring/project.mjs';
+import { dirname } from 'node:path';
 import { sourceCatalog } from '../../project/authoring/sources.mjs';
 import { contributionRevision } from '../../project/authoring/development.mjs';
 import { readEngineRun, readEngineArtifact } from '../../project/storage/engine-runs.mjs';
@@ -33,11 +34,13 @@ import {
   recoilReport,
   tensionReport,
 } from '../../project/inquiries/inspection.mjs';
+import { fidelityInWorker } from '../../project/inquiries/fidelity.mjs';
 import { readProvenance, recordedAuthors } from '../../project/authoring/provenance.mjs';
 import {
   pendingGroups,
   questionGroups,
   roleTensionGroups,
+  fidelityGroups,
   statementGroups,
 } from './inspection-view.mjs';
 import { backgroundEngineStorage } from '../../project/inquiries/background.mjs';
@@ -72,6 +75,20 @@ export function createQuestionWorkflow({
     return entry;
   }
   const tensionsNow = () => insight(['tensions'], () => tensionReport(state.project));
+  // Corpus fidelity probes every statement: in a worker, stopped on dispose,
+  // and by itself only for a corpus it reads in seconds; a larger one names
+  // the CLI command instead.
+  const fidelityStop = new AbortController();
+  const fidelityLimit = 300;
+  const fidelityNow = () =>
+    sourceCatalog(state.project.data).length > fidelityLimit
+      ? {
+          status: 'deferred',
+          note: `${sourceCatalog(state.project.data).length} statements: measure with tendora fidelity --project ${dirname(state.project.path)}`,
+        }
+      : insight(['fidelity'], () =>
+          fidelityInWorker(state.project, { signal: fidelityStop.signal }),
+        );
   function questionInsights(run) {
     const project = state.project;
     const caseText = run.caseSelection?.sources?.map((source) => source.text).join(' ') ?? null;
@@ -651,6 +668,12 @@ export function createQuestionWorkflow({
                 pendingGroups('Juxtaposition: tension lines', tensions) ??
                 roleTensionGroups(tensions.value)
               );
+            })()
+          : []),
+        ...(role().parentId == null
+          ? (() => {
+              const fidelity = fidelityNow();
+              return pendingGroups('Corpus fidelity', fidelity) ?? fidelityGroups(fidelity.value);
             })()
           : []),
         ...(role().children.length
@@ -1487,6 +1510,7 @@ export function createQuestionWorkflow({
     cancel,
     dispose: () => {
       disposed = true;
+      fidelityStop.abort();
       settleNow(false);
       cancel();
       inspectionWork?.controller.abort();

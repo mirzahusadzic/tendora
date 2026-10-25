@@ -70,6 +70,7 @@ export const suites = {
     'project/engine-storage.mjs',
     'project/recoil.mjs',
     'project/provenance.mjs',
+    'project/fidelity.mjs',
     'project/authorship.mjs',
     'project/juxtaposition.mjs',
     'project/contribution-statements.mjs',

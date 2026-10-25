@@ -1,5 +1,5 @@
 /** Create the ignored working copy of the payments demo; --reset starts it over from the snapshot. */
-import { cp, rename, rm, stat } from 'node:fs/promises';
+import { cp, readFile, rename, rm, stat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,9 +25,17 @@ const exists = await stat(target).then(
     throw error;
   },
 );
+const same = async () => {
+  const [copy, bundled] = await Promise.all(
+    [target, source].map((at) => readFile(join(at, 'project.json'), 'utf8').catch(() => null)),
+  );
+  return copy !== null && copy === bundled;
+};
 if (exists && !values.reset) {
   console.log(
-    `${shown} already exists and was left unchanged. Run \`npm run demo -- --reset\` to discard it and start again.`,
+    (await same())
+      ? `${shown} already exists, the same as the bundled demo.`
+      : `${shown} differs from the bundled demo (edited, or made from an older one) and was left unchanged. The tour expects the bundled demo: run \`npm run demo -- --reset\` to replace it (its changes are discarded).`,
   );
 } else {
   // Copy beside the target first, so an interrupted reset never leaves half a project.

@@ -92,6 +92,7 @@ for (const action of [
   'recoil',
   'tensions',
   'probe',
+  'fidelity',
 ]) {
   const result = await command([action, '--help']);
   successful(result);
@@ -166,19 +167,22 @@ const invalid = [
   },
   { args: ['probe', '--project', absent], match: /Choose one of --statement, --role/u },
   { args: ['tensions', '--project', absent, '--grain', '0'], match: /whole number/u },
+  // A name that matches nothing gives its own next step, not the help.
   {
     args: ['ask', '--project', absent, '--question', 'Who?', '--offline'],
-    match: /No project at/u,
+    match: /No project at .*Create one with: tendora init --project/u,
+    data: true,
   },
   { args: ['ask', '--not-real'], match: /Unknown option/u },
   { args: ['ask', '--question'], match: /argument missing/u },
 ];
-for (const { args, match } of invalid) {
+for (const { args, match, data } of invalid) {
   const result = await command(args);
   assert.equal(result.code, 2);
   assert.equal(result.stdout, '', 'Argument errors do not pollute stdout');
   assert.match(result.stderr, match);
-  assert.match(result.stderr, /--help/u);
+  if (data) assert.doesNotMatch(result.stderr, /--help/u);
+  else assert.match(result.stderr, /--help/u);
   assert(!result.stderr.includes('\n    at '), 'Ordinary usage errors do not dump a stack');
 }
 await assert.rejects(access(absent), { code: 'ENOENT' });
@@ -465,6 +469,30 @@ assert.deepEqual(
     ['what', 'Sam repairs ___.', 'recovered'],
     ['is it so (Yes)', 'Sam repairs bicycles.', 'recovered'],
   ],
+);
+// Corpus fidelity: the one statement asked back for each of its variables.
+const fidelity = machine(await command(['fidelity', '--project', location, '--json']));
+assert.deepEqual(
+  [fidelity.totals.statements, fidelity.totals.variables, fidelity.totals.own],
+  [1, 3, 3],
+);
+assert.equal(fidelity.statements[0].statement, 'Sam repairs bicycles.');
+const borne = await command(['fidelity', '--project', location, '--withhold']);
+successful(borne);
+assert.match(borne.stdout, /^Corpus fidelity at revision [0-9a-f]{12}\n/u);
+assert.match(borne.stdout, /withheld: borne alone 3, shared with another statement 0/u);
+// A statement that matches nothing names the closest, not the help.
+const missingStatement = await command([
+  'recoil',
+  '--project',
+  location,
+  '--statement',
+  'Sam fixes bicycles',
+]);
+assert.equal(missingStatement.code, 2);
+assert.equal(
+  missingStatement.stderr,
+  'Error: No statement contains “Sam fixes bicycles”.\nClosest:\n  “Sam repairs bicycles.”\n',
 );
 const sizes = await command(['storage', '--project', location]);
 successful(sizes);

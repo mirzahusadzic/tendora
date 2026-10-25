@@ -12,7 +12,8 @@ npm run workbench -- --project .proj/payments-demo   # or the CLI below
 ```
 
 Every command runs as shown from the checkout, after `npm run demo`; outputs
-are trimmed (`…`). `npm link` puts `tendora` on your PATH, without `npx`.
+are trimmed (`…`). A copy made from an older demo says so; `npm run demo --
+--reset` replaces it. `npm link` puts `tendora` on your PATH, without `npx`.
 
 ## 1. A question and its answer
 
@@ -397,7 +398,40 @@ If a certificate expires, Priya, the security engineer, renews the certificate. 
 A probe leaves one participant blank and asks the statement back from its
 reading; one the engine cannot recover is a reading to reword.
 
-## 7. Who wrote what
+## 7. Corpus fidelity
+
+Every statement asked back for each of its variables (participants,
+circumstances, truth), and every checked question classed by what it rests on:
+
+```
+$ npx tendora fidelity --project .proj/payments-demo
+Corpus fidelity at revision …
+
+25 statements (25 read), 85 variables asked back
+  answerable 81 (95%): own 81, shared 0, carried 0
+  silent 3, possible 0, otherwise 0, owed 1, conflict 0
+  settled 24 of 25; questions rest on 18 of 25
+
+36 checked questions: one statement 14, composed 3 (across roles 2),
+  conditional 11, possible 1, composition met 0, open 7
+…
+To review:
+  Sam, the support lead, must not promise a recovery time before the on-call engineer identifies the cause.  [Support Lead]
+    owed: must do what
+```
+
+| A variable is                       | When                                                                                |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| own, shared, carried (answerable)   | its own statement answers it alone, or others answer it the same, or only others do |
+| silent                              | rightly unanswered: its condition is not given, or it is a necessary condition      |
+| possible, otherwise, owed, conflict | to review: one of several answers, a different answer, no answer, or both ways      |
+
+`--withhold` asks each answerable variable again without its statement: here
+all 81 are borne alone, so no statement's content is carried twice (the
+[load-bearing](load-bearing.md) test, per variable). The workbench shows the
+same at the root role, by itself up to 300 statements.
+
+## 8. Who wrote what
 
 ```
 $ npx tendora ask --project .proj/payments-demo --offline --actor Dana --json \

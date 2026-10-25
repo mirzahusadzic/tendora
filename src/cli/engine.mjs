@@ -30,6 +30,7 @@ import {
   recoilReport,
   tensionReport,
 } from '../project/inquiries/inspection.mjs';
+import { fidelityReport, formatFidelity } from '../project/inquiries/fidelity.mjs';
 import {
   listEngineRuns,
   readEngineRun,
@@ -72,7 +73,7 @@ const named = (run) => {
   try {
     return run();
   } catch (error) {
-    throw new EngineUsageError(error.message);
+    throw new EngineUsageError(error.message, { hint: error.hint, syntax: false });
   }
 };
 
@@ -269,6 +270,7 @@ try {
             if (error.code !== 'ENOENT') throw error;
             throw new EngineUsageError(
               `No project at ${location}: project.json is missing. Create one with: ${program} init --project ${values.project}`,
+              { syntax: false },
             );
           });
     const placement = (selector) => named(() => resolveInquiryPlacement(project, selector));
@@ -276,6 +278,7 @@ try {
       readEngineRun(project, id).catch(() => {
         throw new EngineUsageError(
           `No saved check ${id} in this project. List saved checks with: ${program} runs --project ${values.project}`,
+          { syntax: false },
         );
       });
     let output;
@@ -346,13 +349,17 @@ try {
         }),
       );
       const report = await recoilReport(project, locus).catch((error) => {
-        if (/^No such /u.test(error.message)) throw new EngineUsageError(error.message);
+        if (/^No such /u.test(error.message))
+          throw new EngineUsageError(error.message, { syntax: false });
         throw error;
       });
       output = values.json ? report : formatRecoil(report);
     } else if (action === 'tensions') {
       const report = await tensionReport(project, { grain: Number(values.grain ?? 1) });
       output = values.json ? report : formatTensions(report);
+    } else if (action === 'fidelity') {
+      const report = await fidelityReport(project, { withhold: Boolean(values.withhold) });
+      output = values.json ? report : formatFidelity(report);
     } else if (action === 'probe') {
       if (values.statement) named(() => recoilLocus(project, { statement: values.statement }));
       if (values.role) placement(values.role);
@@ -475,7 +482,8 @@ try {
   }
 } catch (error) {
   process.stderr.write('Error: ' + error.message + '\n');
-  if (error instanceof EngineUsageError)
+  if (error.hint) process.stderr.write(error.hint + '\n');
+  if (error instanceof EngineUsageError && error.syntax)
     process.stderr.write(`Use ${program} --help or ${program} <command> --help.\n`);
   process.exitCode = controller.signal.aborted ? 130 : error instanceof EngineUsageError ? 2 : 1;
 } finally {

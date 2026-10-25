@@ -159,6 +159,13 @@ try {
     ],
   );
   assert.deepEqual(up.frontier, [], 'Every check is current: nothing beyond the walk');
+  // Corpus fidelity: every statement asked back, every question classed.
+  const fidelity = await json('fidelity');
+  assert.deepEqual(
+    [fidelity.totals.variables, fidelity.totals.answerable, fidelity.totals.settled],
+    [85, 81, 24],
+  );
+  assert.equal(fidelity.questions.composedAcrossRoles, 2);
   // Tension lines: resolved, gathered and open.
   const tensions = await json('tensions');
   assert.deepEqual(
@@ -227,6 +234,22 @@ try {
     ['Author', 'Claude'],
     ['Through', 'library'],
   ]);
+  // The root role: juxtaposition between its branches, and corpus fidelity.
+  ui.app.dispose();
+  ui = journeyWorkbench(await openProject(project), directory);
+  await ui.app.idle();
+  const root = ui.state.project.data.placements.find((placement) => !placement.parentId).id;
+  ui.state.workflow.select(root, 'reading');
+  ui.state.workflow.sync();
+  await ui.app.idle();
+  const rootView = ui.state.workflow.readingView();
+  for (const heading of ['Juxtaposition: tension lines', 'Corpus fidelity'])
+    assert(headings(rootView).includes(heading), heading);
+  const fidelityGroup = rootView.sections
+    .flatMap((section) => section.groups ?? [])
+    .find((group) => group.heading === 'Corpus fidelity');
+  assert.match(fidelityGroup.rows[0][1], /85 variables of 25 statements; answerable 81 \(95%\)/u);
+  assert.equal(fidelityGroup.table.entries.length, 6, 'one row a top-level role');
   console.log(
     `ok demo tour: every capability replays offline in the CLI and the workbench (${directory})`,
   );

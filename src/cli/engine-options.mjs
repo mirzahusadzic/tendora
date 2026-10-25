@@ -23,6 +23,11 @@ const options = {
   trace: ['boolean', '', 'Retain detailed local comparison diagnostics.'],
   actor: ['string', '<name>', 'Record the check as made by NAME; otherwise unrecorded.'],
   file: ['string', '<path>', 'Existing authored engine-knowledge JSON to import.'],
+  withhold: [
+    'boolean',
+    '',
+    'Ask each variable again without its statement: borne alone, or shared.',
+  ],
   help: ['boolean', '', 'Show help for this command.'],
   version: ['boolean', '', 'Show the version.'],
 };
@@ -92,6 +97,19 @@ export const engineCommands = {
       'truth. Probes read the latest check at the root role; they answer nothing.',
     ],
   },
+  fidelity: {
+    description:
+      'Corpus fidelity: what the statements can be asked back for, what questions rest on.',
+    options: ['withhold'],
+    example: '',
+    notes: [
+      "Each statement's participants, circumstances and truth are asked back (the probes),",
+      'and each variable is classed: own, shared or carried (answerable); silent (its',
+      'condition not given); possible, otherwise, owed or conflict (to review). Each saved',
+      'question is answered by one statement, composed, conditional, possible or open.',
+      'Reads the latest check at the root role; --withhold doubles the work.',
+    ],
+  },
   init: {
     description: 'Create an empty project, where there is no project or its storage.',
     options: ['name', 'root'],
@@ -129,11 +147,20 @@ export const engineCommands = {
 };
 const sections = [
   ['Check questions', ['ask', 'runs', 'show']],
-  ['Inspect saved checks (read-only, offline)', ['recoil', 'tensions', 'probe']],
+  ['Inspect saved checks (read-only, offline)', ['recoil', 'tensions', 'probe', 'fidelity']],
   ['Manage a project', ['init', 'delete', 'storage', 'compact', 'knowledge']],
 ];
 
-export class EngineUsageError extends Error {}
+/** An invalid invocation (exit status 2). A syntax error points to the help;
+ * a name that matches nothing (a statement, role, run or project) gives its
+ * own next step as `hint` instead. */
+export class EngineUsageError extends Error {
+  constructor(message, { hint = null, syntax = true } = {}) {
+    super(message);
+    this.hint = hint;
+    this.syntax = syntax;
+  }
+}
 
 /** The closest name within two edits, for "did you mean". */
 export function closest(word, names) {

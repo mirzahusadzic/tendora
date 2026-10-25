@@ -18,11 +18,24 @@ export function findStatement(data, text) {
   const exact = catalog.filter((item) => item.text.trim() === wanted);
   const found = exact.length ? exact : catalog.filter((item) => item.text.includes(wanted));
   if (found.length === 1) return found[0];
-  throw new Error(
-    found.length
-      ? `${found.length} statements contain “${wanted}”; give more of the statement.`
-      : `No statement contains “${wanted}”.`,
-  );
+  const quoted = (items) => items.map((item) => `  “${item.text}”`).join('\n');
+  if (found.length)
+    throw Object.assign(
+      new Error(`${found.length} statements contain “${wanted}”; give more of one.`),
+      { hint: quoted(found.slice(0, 5)) },
+    );
+  // The statements sharing most of its words.
+  const words = (value) => new Set(value.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []);
+  const asked = words(wanted);
+  const nearest = catalog
+    .map((item) => [item, [...words(item.text)].filter((word) => asked.has(word)).length])
+    .filter(([, shared]) => shared)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([item]) => item);
+  throw Object.assign(new Error(`No statement contains “${wanted}”.`), {
+    hint: nearest.length ? `Closest:\n${quoted(nearest)}` : 'No statement shares a word with it.',
+  });
 }
 
 /** The recoil locus a person names: a statement, a role, or a saved question
@@ -103,7 +116,7 @@ export async function tensionReport(project, { grain = 1, context } = {}) {
   };
 }
 
-const roleName = (data, placementId) => {
+export const roleName = (data, placementId) => {
   const placement = data.placements.find((item) => item.id === placementId);
   return data.concepts.find((concept) => concept.id === placement?.conceptId)?.name ?? placementId;
 };
@@ -135,7 +148,7 @@ const framedAsks = {
   'permit-01': { ':ARG0': 'who permits', ':ARG1': 'what is permitted', ':ARG2': 'to whom' },
   'possible-01': { ':ARG1': 'what is possible' },
 };
-function probeAsks(probe) {
+export function probeAsks(probe) {
   if (probe.kind === 'truth') return `is it so (${probe.expected})`;
   const relation = probe.graph.edges.find((edge) => edge.id === 'cloze-edge')?.from;
   const concept = probe.graph.nodes.find((node) => node.id === relation)?.concept;
@@ -236,7 +249,9 @@ export function blankedText(source, probe) {
 
 /** The latest full check at the root at this revision: what probes are read
  * against. Probes need one; they do not check anything themselves. */
-async function rootCheck(project) {
+/** The latest check at the root role at this revision, without a case: what
+ * probes and corpus fidelity read. */
+export async function rootCheck(project) {
   const root = project.data.placements.find((placement) => placement.parentId === null).id;
   const run = (await listEngineRuns(project))
     .filter(
@@ -251,7 +266,7 @@ async function rootCheck(project) {
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   if (!run)
     throw new Error(
-      'Probes read the latest check at the root role at this revision; ask a question there first.',
+      'Probes and corpus fidelity read the latest check at the root role at this revision; ask a question there first.',
     );
   const [input, result] = await Promise.all([
     readEngineArtifact(project, run.inputRef),

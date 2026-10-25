@@ -119,6 +119,7 @@ flowchart LR
         RC["<b>Recoil</b><br/>down, up and sideways"]
         TL["<b>Juxtaposition</b><br/>what questions bring together"]
         PB["<b>Probes</b><br/>statements asked back"]
+        CF2["<b>Corpus fidelity</b><br/>what the statements answer"]
         PV["<b>Provenance</b><br/>who wrote what an answer rests on"]
     end
 
@@ -134,7 +135,7 @@ flowchart LR
     classDef group fill:#8a96a814,stroke:#8a96a8,stroke-width:2px,stroke-dasharray:6 4
     class Q,PR,CF person
     class EN,AN engine
-    class RC,TL,PB,PV kept
+    class RC,TL,PB,CF2,PV kept
     class OUT,IN group
 ```
 
@@ -160,7 +161,7 @@ git clone https://github.com/mirzahusadzic/tendora.git
 cd tendora
 npm ci
 npm run setup:python
-npm run demo                                          # a working copy of the demo
+npm run demo                                          # a working copy of the demo; -- --reset renews it
 npm run workbench -- --project .proj/payments-demo
 npx tendora ask --project .proj/payments-demo --offline \
   --question "Who notifies the customers?" --case-text "A certificate expires."

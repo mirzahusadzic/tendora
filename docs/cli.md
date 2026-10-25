@@ -22,6 +22,7 @@ help ends with an example on the bundled demo.
 | `recoil`    | What a statement, role or question rests on, what rests on it          | `--statement` \| `--role` \| `--question`           |
 | `tensions`  | Juxtaposition: where questions bring the role tree's branches together | `--grain`                                           |
 | `probe`     | Asks statements back from their own readings                           | `--statement` \| `--role`                           |
+| `fidelity`  | Corpus fidelity: what the statements answer, what questions rest on    | `--withhold`                                        |
 | `init`      | Creates an empty project where there is no project or its storage      | `--name`, `--root`                                  |
 | `delete`    | Removes saved checks; authored statements stay                         | `--run` \| `--all`, `--dry-run`, `--yes`            |
 | `storage`   | Reports storage use                                                    |                                                     |
@@ -68,7 +69,7 @@ every CLI check records `via: cli`.
 
 `show` reads one saved check and `runs` lists them; each says when the
 statements changed since a check (`statementsChanged` in JSON). `recoil`,
-`tensions` and `probe` read the saved checks at the project's current revision.
+`tensions`, `probe` and `fidelity` read the saved checks at the project's current revision.
 None of them checks again or saves anything.
 
 ```sh
@@ -77,6 +78,7 @@ npx tendora recoil --project .proj/payments-demo \
 npx tendora recoil --project .proj/payments-demo --statement "If a certificate expires"
 npx tendora tensions --project .proj/payments-demo
 npx tendora probe --project .proj/payments-demo --role "Security Engineer"
+npx tendora fidelity --project .proj/payments-demo
 ```
 
 - **recoil**: _down_ is what the locus rests on (statements, rules, the case,
@@ -95,6 +97,13 @@ npx tendora probe --project .proj/payments-demo --role "Security Engineer"
   asked back, then its truth. _Recovered_: the statement answers its own blank;
   _open_: the engine cannot use the reading even for its own content. Probes
   read the latest check at the root role, so one must exist.
+- **fidelity**: every statement's probes at once, each variable classed: _own_,
+  _shared_ or _carried_ (answerable), _silent_ (its condition not given, or a
+  necessary condition), or to review (_possible_, _otherwise_, _owed_,
+  _conflict_); then every checked question: answered by one statement,
+  composed, conditional, possible, a composition met, or open. `--withhold`
+  asks each answerable variable again without its statement: borne alone, or
+  shared.
 
 ## Output and exit status
 

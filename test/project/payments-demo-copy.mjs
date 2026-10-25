@@ -16,9 +16,14 @@ try {
   await copy();
   assert.deepEqual(await readFile(join(target, 'project.json')), bundled);
   const entries = (await readdir(target)).sort();
+  assert.match((await copy()).stdout, /already exists, the same as the bundled demo/u);
+  // A copy edited, or made from an older demo, is kept, and says how to renew it.
   await writeFile(join(target, 'project.json'), '{"edited":true}\n');
   const repeated = await copy();
-  assert.match(repeated.stdout, /left unchanged/u);
+  assert.match(
+    repeated.stdout,
+    /differs from the bundled demo \(edited, or made from an older one\) and was left unchanged\. The tour expects the bundled demo: run `npm run demo -- --reset`/u,
+  );
   assert.deepEqual((await readdir(target)).sort(), entries, 'A repeated copy does not nest');
   assert.equal(await readFile(join(target, 'project.json'), 'utf8'), '{"edited":true}\n');
   await copy('--reset');

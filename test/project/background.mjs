@@ -99,6 +99,16 @@ assert(timing.heartbeatP95Ms < 100, `Terminal responsiveness ${timing.heartbeatP
 const ui = journeyWorkbench(project, directory);
 try {
   await ui.app.idle();
+  // A corpus this large is not probed by itself: the root role names the command.
+  const root = project.data.placements.find((placement) => !placement.parentId).id;
+  ui.state.workflow.select(root, 'reading');
+  ui.state.workflow.sync();
+  await ui.app.idle();
+  const fidelity = ui.state.workflow
+    .readingView()
+    .sections.flatMap((section) => section.groups ?? [])
+    .find((group) => group.heading === 'Corpus fidelity');
+  assert.match(fidelity.rows[0][1], /^\d+ statements: measure with tendora fidelity --project /u);
   const opened = performance.now();
   await ui.state.workflow.show(large.recording.reasoning.runId);
   timing.openResultMs = performance.now() - opened;
