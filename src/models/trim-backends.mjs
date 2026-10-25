@@ -171,7 +171,7 @@ function nativeTrim(kind) {
       const ran = spawnSync(
         built.binary,
         kind === 'metal'
-          ? ['metal', directory, '--variant', 'index', '--repeat', '1', '--out', out]
+          ? ['metal', directory, '--variant', 'packed', '--repeat', '1', '--out', out]
           : ['cpu', directory, '--threads', String(threads), '--repeat', '1', '--out', out],
         {
           encoding: 'utf8',
