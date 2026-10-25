@@ -22,6 +22,28 @@ export const caseIdentity = (selection) =>
  * groups saved questions (review 2026-10-25, #8). */
 export const questionIdentity = (text, scopePlacementId, selection) =>
   JSON.stringify([text.trim(), scopePlacementId, caseIdentity(selection)]);
+/** The newest saved check of each question (its text, scope and case) at a
+ * revision, among `purposes`: `runs`, those whose newest check holds its
+ * answer, and `released`, how many questions have a newest check compaction
+ * released. A released newest check is counted so, never read from an older
+ * full one (review of v0.2.0, recheck #1). A run's case is its text, whatever
+ * placement each asking gave it. */
+export function newestChecks(runs, { digest, purposes }) {
+  const newest = new Map();
+  for (const run of runs) {
+    const text = run.questions?.[0]?.text;
+    if (!text || run.projectDigest !== digest) continue;
+    if (run.purpose && !purposes.includes(run.purpose)) continue;
+    if (!run.answer && run.cache !== 'recheck') continue;
+    const key = questionIdentity(text, run.scopePlacementId, run.case || run.caseSelection);
+    if (!newest.has(key) || newest.get(key).startedAt < run.startedAt) newest.set(key, run);
+  }
+  const all = [...newest.values()];
+  return {
+    runs: all.filter((run) => run.answer),
+    released: all.filter((run) => !run.answer).length,
+  };
+}
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 const identifier = (value) => typeof value === 'string' && /^[\w-]+$/u.test(value);
 export function sourceReference(

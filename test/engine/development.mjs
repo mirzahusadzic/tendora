@@ -162,6 +162,16 @@ try {
     referenceView('missing').table.entries.some((entry) => entry.cells[0].includes(': name →')),
     'A missing reference remains visible even when joined lexical metadata is omitted',
   );
+  // A check whose process died is interrupted, said so as a warning, never
+  // "Loading saved result" (recheck of the v0.2.0 review, #6).
+  const interruptedState = inquirySections(
+    { ...before, status: 'interrupted' },
+    beforeInput,
+    beforeResult,
+  )
+    .find((section) => section.label === 'Result')
+    .rows.find((row) => row[0] === 'State');
+  assert.deepEqual(interruptedState.slice(1), ['Check interrupted', 'warning']);
   const aporia = before.openings.find((o) => o.contributionId === where.id);
   assert(
     aporia?.derivation,

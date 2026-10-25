@@ -25,6 +25,7 @@ import { interpretationRevision } from '../../recording/revisions.mjs';
 import { listGrammarCaches } from '../storage/grammar.mjs';
 import { listDataFiles, readDataFile } from '../storage/data-files.mjs';
 import { recordingHandle } from './recordings.mjs';
+import { caseIdentity } from './investigation.mjs';
 
 // A soft cache bound, not a stop: recomputing a check costs far more than
 // keeping it, so completed checks and grammar caches are kept generously.
@@ -38,11 +39,14 @@ const artifactRefs = (run) =>
     run.errorRef,
     ...(run.calls ?? []).flatMap((call) => [call.requestRef, call.responseRef, call.errorRef]),
   ].filter(Boolean);
+// A question is its texts, its scope and its case, the case by what it
+// states (its text), as every inspection reads it: two askings of one case
+// are one question, whatever placement each gave it.
 const questionKey = (run) =>
   JSON.stringify([
     run.scopePlacementId,
     run.questions?.map((q) => q.text.trim()),
-    run.caseSelection?.placementId ?? run.case ?? null,
+    caseIdentity(run.case || run.caseSelection),
   ]);
 async function files(path) {
   try {
@@ -218,6 +222,7 @@ export async function compactEngineStorage(
     const before = await engineStorageUsage(project);
     const byId = new Map(runs.map((run) => [run.id, run]));
     const latest = new Map(),
+      answered = new Map(),
       protectedRuns = new Set(),
       requiredRecordings = new Set();
     const recordings = [],
@@ -295,8 +300,12 @@ export async function compactEngineStorage(
         run.caseSelection = (await readEngineArtifact(project, run.inputRef)).caseSelection;
       const key = questionKey(run);
       if (!latest.has(key)) latest.set(key, run);
+      if ((run.answer || run.lastAnswer) && !answered.has(key)) answered.set(key, run);
     }
-    const kept = new Map([...latest.values()].map((run) => [run.id, run]));
+    // A question keeps its newest check, and its newest answer when a later
+    // asking failed or was cancelled: an attempt that ended without one never
+    // drops the last answer a question had.
+    const kept = new Map([...latest.values(), ...answered.values()].map((run) => [run.id, run]));
     for (const id of protectedRuns) if (byId.has(id)) kept.set(id, byId.get(id));
     // Reserve space for the small handles too; moving a dump out of engine/ is not a saving.
     const handleBytes = recordings

@@ -66,7 +66,10 @@ export function storedRuns(db, id, damaged) {
     try {
       const bytes = decompress(row.payload, 'A stored engine run');
       if (digest(bytes) !== row.checksum) throw new Error(`Stored engine run changed: ${row.id}`);
-      runs.push(JSON.parse(bytes));
+      const run = JSON.parse(bytes);
+      // A run is read by its key: one holding another id is damaged too.
+      if (run?.id !== row.id) throw new Error(`Stored engine run ${row.id} holds another run`);
+      runs.push(run);
     } catch (error) {
       if (!damaged) throw Object.assign(error, { runId: row.id });
       damaged.push({ id: row.id, reason: error.message });

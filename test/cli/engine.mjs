@@ -250,6 +250,26 @@ assert.match(
   invalidProject.stderr,
   /^Error: .*corrupt\/project\.json is not a valid project: Invalid project: .*\nRestore it from version control or from a copy of the project\.\n$/u,
 );
+// A manifest that names a stored object the project lacks, or a reference
+// that is no object's, is a damaged project, not a missing one: the same next
+// step, never init (recheck of the v0.2.0 review, #5).
+const damagedProject = join(directory, 'damaged-project');
+await cp('demo/payments-on-call', damagedProject, { recursive: true });
+const manifest = JSON.parse(await readFile(join(damagedProject, 'project.json'), 'utf8'));
+for (const reference of ['f'.repeat(64), 'zz']) {
+  await writeFile(
+    join(damagedProject, 'project.json'),
+    JSON.stringify({ ...manifest, corpora: [reference, ...manifest.corpora.slice(1)] }),
+  );
+  const damagedRuns = await command(['runs', '--project', damagedProject]);
+  assert.equal(damagedRuns.code, 1, `${reference}: a damaged project exits 1`);
+  assert.equal(damagedRuns.stdout, '');
+  assert.match(
+    damagedRuns.stderr,
+    /^Error: The project at .*damaged-project is damaged: .*\nRestore it from version control or from a copy of the project\.\n$/u,
+  );
+  assert.doesNotMatch(damagedRuns.stderr, /init/u);
+}
 assert.equal(await readFile(project.path, 'utf8'), original, 'Existing project was not replaced');
 // Storage left without its manifest belongs to another project (final review
 // #11): init refuses it and changes nothing, rather than mixing two projects.

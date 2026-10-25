@@ -148,6 +148,7 @@ export function inquirySections(
           failed: 'The check did not finish',
           limited: 'The check reached a limit',
           cancelled: 'Check cancelled',
+          interrupted: 'Check interrupted',
           stale: 'Corpus changed during this check',
         }[run?.status] ?? 'Loading saved result');
   const actionable = run && !['running', 'supported', 'conditional'].includes(run.status);

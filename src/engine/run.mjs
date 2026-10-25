@@ -476,6 +476,14 @@ async function executeEngineRun(
         ? 'limited'
         : 'failed';
     run.error = error.message;
+    // A check that ended in an error gives no answer, though it reached one
+    // before (its provenance could not be kept): the result stays for
+    // diagnosis, never as an answer beside a failure (recheck of the v0.2.0
+    // review, #4).
+    if (run.answer) {
+      delete run.answer;
+      run.provenance = null;
+    }
     run.errorRef = await putEngineArtifact(project, {
       message: error.message,
       stack: error.stack,

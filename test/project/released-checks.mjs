@@ -11,11 +11,18 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, unlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { openProject } from '../../src/project/authoring/project.mjs';
 import { listEngineRuns, saveEngineRun } from '../../src/project/storage/engine-runs.mjs';
+import { recordedAuthors } from '../../src/project/authoring/provenance.mjs';
 import { compactEngineStorage } from '../../src/project/inquiries/engine-storage.mjs';
+import {
+  artifactDatabasePath,
+  openArtifactDatabase,
+  storeRun,
+} from '../../src/project/storage/engine-artifacts.mjs';
+import { newestChecks } from '../../src/project/inquiries/investigation.mjs';
 
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/released-checks-'));
@@ -27,6 +34,8 @@ const noNetwork =
 const tendora = (...args) =>
   spawnSync(process.execPath, ['--import', noNetwork, 'src/cli/engine.mjs', ...args], {
     encoding: 'utf8',
+    // A listing's JSON holds every check: more than the default megabyte.
+    maxBuffer: 256 * 1024 * 1024,
   });
 const json = (...args) => {
   const ran = tendora(...args, '--json');
@@ -55,10 +64,15 @@ assert.deepEqual(
     .map((id) => ambiguous.answer.sources.find((source) => source.id === id).text)
     .sort(),
 );
-assert(
-  ambiguous.provenance.candidates.every(({ author }) => typeof author === 'string'),
-  'each candidate statement says who wrote it, or that it is unrecorded',
-);
+// Each candidate statement says who wrote it, as recorded, by its own source:
+// swapped or flattened authors fail (recheck of the v0.2.0 review, tests).
+const recorded = recordedAuthors((await openProject(copy)).data);
+const sourceText = new Map(ambiguous.answer.sources.map((source) => [source.id, source.text]));
+for (const entry of ambiguous.provenance.candidates) {
+  assert.equal(entry.text, sourceText.get(entry.sourceId), 'its own statement');
+  assert.equal(entry.author, recorded.get(entry.sourceId)?.author ?? 'unrecorded', entry.text);
+}
+assert(new Set(ambiguous.provenance.candidates.map(({ sourceId }) => sourceId)).size > 1);
 
 // A check that fails before it keeps provenance exports none, with why; it is
 // never given the provenance of a later revision.
@@ -194,6 +208,125 @@ assert.equal(
 );
 after.close();
 
+// Two askings of one case are one question (recheck of the v0.2.0 review,
+// #1): each asking gives the case its own placement, yet compaction, like
+// every inspection, knows the case by what it states. It keeps the newer
+// whole, and the older is no second question.
+const again = join(directory, 'again');
+execFileSync(process.execPath, ['tools/payments-demo.mjs', '--target', again], { stdio: 'pipe' });
+const askCase = () =>
+  json(
+    'ask',
+    '--project',
+    again,
+    '--question',
+    'Who notifies the customers?',
+    '--case-text',
+    'A certificate expires.',
+    '--offline',
+  ).value;
+const older = askCase(),
+  newer = askCase();
+assert.equal(newer.status, 'supported');
+// A later asking that fails keeps no answer, and drops none: the newer
+// answer stays beside it.
+const againProvenance = join(again, 'provenance.json');
+await writeFile(againProvenance, JSON.stringify({ version: 1, statements: [{ text: 1 }] }));
+const broken = askCase();
+await unlink(againProvenance);
+assert.equal(broken.status, 'failed');
+const againProject = await openProject(again);
+await compactEngineStorage(againProject, { force: true });
+const againRuns = await listEngineRuns(againProject);
+assert.notEqual(
+  older.caseSelection.placementId,
+  newer.caseSelection.placementId,
+  'two placements, one case',
+);
+assert(
+  !againRuns.find((run) => run.id === older.id)?.answer,
+  'the older is no second question kept whole',
+);
+assert(againRuns.find((run) => run.id === newer.id).answer, 'the newer kept whole');
+assert(
+  againRuns.some((run) => run.id === broken.id),
+  'the failed asking kept too',
+);
+const purposes = ['inquiry', 'question-refresh'];
+const newest = newestChecks(againRuns, { digest: againProject.digest, purposes });
+assert(newest.runs.some((run) => run.id === newer.id));
+assert(!newest.runs.some((run) => run.id === older.id));
+// A newest check released while an older one is whole: the question counts
+// as released and the older is not read in its place.
+const full = againRuns.find((run) => run.id === newer.id);
+const swapped = [
+  { ...full, id: 'older-full', startedAt: '2026-01-01T00:00:00.000Z' },
+  {
+    ...full,
+    id: 'newer-released',
+    startedAt: '2026-01-02T00:00:00.000Z',
+    answer: undefined,
+    cache: 'recheck',
+    caseSelection: { ...full.caseSelection, placementId: 'case-elsewhere' },
+  },
+];
+assert.deepEqual(newestChecks(swapped, { digest: againProject.digest, purposes }), {
+  runs: [],
+  released: 1,
+});
+
+// A check that fails after reaching its answer gives none: no answer in its
+// JSON, no "Answer:" in words (recheck of the v0.2.0 review, #4).
+assert.equal(broken.answer, undefined, 'a failed check holds no answer');
+const brokenText = tendora('show', '--project', again, '--run', broken.id.slice(0, 8));
+assert.equal(brokenText.status, 0, brokenText.stderr);
+assert.doesNotMatch(brokenText.stdout, /^Answer: /mu);
+// One saved before that, still holding its answer and no provenance field at
+// all: neither shown as answered nor given provenance read from the project
+// as it is now (#3, #4).
+const legacy = { ...againRuns.find((run) => run.id === broken.id) };
+legacy.id = '00000000-0000-4000-8000-0000000000aa';
+legacy.answer = full.answer;
+delete legacy.provenance;
+await saveEngineRun(againProject, legacy);
+await writeFile(againProvenance, JSON.stringify({ version: 1, statements: [] }));
+const legacyJson = json('show', '--project', again, '--run', legacy.id);
+await unlink(againProvenance);
+assert.equal(legacyJson.value.status, 'failed');
+assert.equal(legacyJson.value.answer, undefined, 'no answer exported for a failed check');
+assert.equal(legacyJson.value.provenance, null, 'no provenance read now');
+assert.match(legacyJson.value.provenanceNotKept, /ended failed before it kept/u);
+const legacyText = tendora('show', '--project', again, '--run', legacy.id.slice(0, 8));
+assert.doesNotMatch(legacyText.stdout, /^Answer: /mu);
+
+// A saved check whose bytes are intact but which is no check (no calls), or
+// which holds another check under its key, is left out of a listing too,
+// named, and kept as it is; reading it fails (recheck of the v0.2.0 review,
+// #2).
+const others = (await listEngineRuns(againProject)).filter(
+  (run) => ![newer.id, broken.id, legacy.id].includes(run.id),
+);
+const [callless, moved] = others;
+const movedKey = 'bbbbbbbb-0000-4000-8000-000000000000';
+const againStore = openArtifactDatabase(artifactDatabasePath(againProject));
+storeRun(againStore, { ...callless, calls: undefined });
+againStore.prepare('UPDATE runs SET id = ? WHERE id = ?').run(movedKey, moved.id);
+againStore.close();
+const againListed = tendora('runs', '--project', again);
+assert.equal(againListed.status, 0, againListed.stderr);
+for (const id of [callless.id, movedKey]) {
+  assert.doesNotMatch(againListed.stdout, new RegExp(id.slice(0, 8), 'u'));
+  assert.match(againListed.stderr, new RegExp(`saved check ${id.slice(0, 8)} is damaged`, 'u'));
+}
+assert.match(againListed.stdout, new RegExp(newer.id.slice(0, 8), 'u'));
+const againJson = tendora('runs', '--project', again, '--json');
+assert.equal(againJson.status, 0, againJson.stderr);
+assert.equal(
+  JSON.parse(againJson.stdout).some((run) => [callless.id, movedKey].includes(run.id)),
+  false,
+);
+assert.equal(tendora('show', '--project', again, '--run', callless.id).status, 1);
+
 console.log(
-  `ok released checks: candidates keep provenance; a failed check none; ${releasedCount} released checks read back as summaries, the root check kept (${directory})`,
+  `ok released checks: candidates keep provenance; a failed check none; ${releasedCount} released checks read back as summaries, the root check kept; one case asked twice is one question (${directory})`,
 );

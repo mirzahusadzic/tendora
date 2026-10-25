@@ -18,7 +18,7 @@
  * been answered. Nothing is checked again; an open line is a place to ask or
  * to author, never an answer.
  */
-import { questionIdentity } from './investigation.mjs';
+import { newestChecks } from './investigation.mjs';
 import { recoilContext, ruleOrigins, statementCatalog } from './recoil.mjs';
 
 const questionPurposes = new Set(['inquiry', 'question-refresh']);
@@ -97,26 +97,10 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
   const concepts = new Map(data.concepts.map((concept) => [concept.id, concept]));
   const placements = new Map(data.placements.map((placement) => [placement.id, placement]));
   const name = (id) => concepts.get(placements.get(id)?.conceptId)?.name ?? id;
-  // The latest current check of each question.
-  const latest = new Map();
-  for (const run of runs) {
-    const text = run.questions?.[0]?.text;
-    if (!text || !run.answer || run.projectDigest !== digest) continue;
-    if (run.purpose && !questionPurposes.has(run.purpose)) continue;
-    const key = questionIdentity(text, run.scopePlacementId, run.caseSelection ?? run.case);
-    if (!latest.has(key) || latest.get(key).startedAt < run.startedAt) latest.set(key, run);
-  }
-  // Questions whose latest check was released by compaction are not read;
-  // the report says how many.
-  const released = new Set();
-  for (const run of runs) {
-    const text = run.questions?.[0]?.text;
-    if (!text || run.answer || run.cache !== 'recheck' || run.projectDigest !== digest) continue;
-    if (run.purpose && !questionPurposes.has(run.purpose)) continue;
-    const key = questionIdentity(text, run.scopePlacementId, run.caseSelection ?? run.case);
-    if (!latest.has(key)) released.add(key);
-  }
-  const questions = [...latest.values()].map((run) => ({
+  // The newest current check of each question; one whose newest check
+  // compaction released is not read, and the report says how many.
+  const latest = newestChecks(runs, { digest, purposes: [...questionPurposes] });
+  const questions = latest.runs.map((run) => ({
     question: run.questions[0].text,
     ...(run.caseSelection?.sources?.length
       ? { case: run.caseSelection.sources.map((source) => source.text).join(' ') }
@@ -144,7 +128,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     grain,
     revision: digest,
     effects,
-    released: released.size,
+    released: latest.released,
     tensions: [...lines.values()].sort(
       (a, b) =>
         b.resolved.length +

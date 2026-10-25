@@ -117,8 +117,13 @@ const usage = (result) =>
 const changedSince = (run, digest) =>
   Boolean(digest && run.projectDigest && run.projectDigest !== digest);
 /** A saved check as JSON, marked when the statements changed since it. */
+// A check that ended without its answer: one saved before failures gave up
+// their answer may still hold it, never shown or exported as one.
+const ended = new Set(['failed', 'cancelled', 'interrupted']);
+const answerless = (run) =>
+  ended.has(run.status) && run.answer ? (({ answer: _answer, ...rest }) => rest)(run) : run;
 const saved = (run, digest) => ({
-  ...run,
+  ...answerless(run),
   ...(changedSince(run, digest) ? { statementsChanged: true } : {}),
 });
 
@@ -227,6 +232,7 @@ function describe(
     lines.push(`Check ${short}, made ${run.startedAt.slice(0, 16).replace('T', ' ')} UTC.`);
     return lines.join('\n');
   }
+  run = answerless(run);
   const lines = [header(run)];
   if (changedSince(run, digest))
     lines.push('The statements changed since this check; ask again to check them as they are now.');
@@ -453,20 +459,36 @@ try {
               error.hint = `Open it (${program} runs --project ${values.project}), or choose another directory.`;
             throw error;
           })
-        : await openProject(location).catch((error) => {
-            // A manifest that does not parse, or is not a project, names the
-            // file and how to recover it.
-            if (error instanceof SyntaxError || /^Invalid project/u.test(error.message))
-              throw Object.assign(
-                new Error(
-                  `${join(location, 'project.json')} ${error instanceof SyntaxError ? 'is not valid JSON' : 'is not a valid project'}: ${error.message}`,
-                ),
-                { hint: 'Restore it from version control or from a copy of the project.' },
+        : await openProject(location).catch(async (error) => {
+            // Only a missing manifest is no project. Once it is there, what
+            // stops the project opening (its JSON, its shape, a contribution or
+            // stored object it names) is damage: named, with how to recover it
+            // (recheck of the v0.2.0 review, #5).
+            const manifest = join(location, 'project.json');
+            const text = await readFile(manifest, 'utf8').catch((missing) => {
+              if (missing.code === 'ENOENT') return null;
+              throw error;
+            });
+            if (text === null)
+              throw new EngineUsageError(
+                `No project at ${location}: project.json is missing. Create one with: ${program} init --project ${values.project}`,
+                { syntax: false },
               );
-            if (error.code !== 'ENOENT') throw error;
-            throw new EngineUsageError(
-              `No project at ${location}: project.json is missing. Create one with: ${program} init --project ${values.project}`,
-              { syntax: false },
+            let parses = true;
+            try {
+              JSON.parse(text);
+            } catch {
+              parses = false;
+            }
+            throw Object.assign(
+              new Error(
+                !parses
+                  ? `${manifest} is not valid JSON: ${error.message}`
+                  : /^Invalid project/u.test(error.message)
+                    ? `${manifest} is not a valid project: ${error.message}`
+                    : `The project at ${location} is damaged: ${error.message}`,
+              ),
+              { hint: 'Restore it from version control or from a copy of the project.' },
             );
           });
     const placement = (selector) => named(() => resolveInquiryPlacement(project, selector), demo);
@@ -710,35 +732,39 @@ try {
       output = values.json
         ? {
             ...saved(run, project.digest),
-            // The check's own provenance; one saved before checks kept it is
-            // read now and says so.
+            // The check's own provenance; an answered one saved before checks
+            // kept it is read now and says so. One that ended without its
+            // answer has none, never one read from the project as it is now
+            // (recheck of the v0.2.0 review, #3).
             ...(run.provenance !== undefined
               ? keptProvenance(run)
-              : {
-                  provenance: {
-                    ...answerProvenance(
-                      {
-                        projectId: run.projectId,
-                        projectRevision: run.projectDigest,
-                        checkedBy: { actor: run.actor, via: run.via },
-                      },
-                      await readProvenance(project),
-                      answers,
-                      [
-                        ...(input?.sources ?? []),
-                        ...(input?.cases ?? []),
-                        ...(run.lastAnswer?.sources ?? []),
-                      ],
-                      recordedAuthors(project.data),
-                      run.answer?.candidates ?? run.lastAnswer?.candidates,
-                    ),
-                    computedAtExport: true,
-                    // Released before it kept them: its statements are not known.
-                    ...(answers?.some((answer) => !answer.sourceIds)
-                      ? { statementsUnrecorded: true }
-                      : {}),
-                  },
-                }),
+              : ended.has(run.status) || !answers
+                ? keptProvenance({ ...run, provenance: null })
+                : {
+                    provenance: {
+                      ...answerProvenance(
+                        {
+                          projectId: run.projectId,
+                          projectRevision: run.projectDigest,
+                          checkedBy: { actor: run.actor, via: run.via },
+                        },
+                        await readProvenance(project),
+                        answers,
+                        [
+                          ...(input?.sources ?? []),
+                          ...(input?.cases ?? []),
+                          ...(run.lastAnswer?.sources ?? []),
+                        ],
+                        recordedAuthors(project.data),
+                        run.answer?.candidates ?? run.lastAnswer?.candidates,
+                      ),
+                      computedAtExport: true,
+                      // Released before it kept them: its statements are not known.
+                      ...(answers?.some((answer) => !answer.sourceIds)
+                        ? { statementsUnrecorded: true }
+                        : {}),
+                    },
+                  }),
             ...(values.explain && run.resultRef
               ? { result: await readEngineArtifact(project, run.resultRef) }
               : {}),

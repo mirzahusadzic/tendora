@@ -27,6 +27,7 @@ import { dirname } from 'node:path';
 import { projectTree } from '../authoring/project.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { listEngineRuns } from '../storage/engine-runs.mjs';
+import { newestChecks } from './investigation.mjs';
 import { clozeProbes, checkProbe } from '../../engine/cloze.mjs';
 import { probeAsks, releasedNote, roleName, rootCheck } from './inspection.mjs';
 import { inWorker } from './worker.mjs';
@@ -140,23 +141,13 @@ export async function fidelityReport(project, { withhold = false } = {}) {
     };
   });
 
-  // The latest check of each question, its scope and its case, at this revision.
-  const latest = new Map(),
-    released = new Set();
-  const saved = (await listEngineRuns(project))
-    .filter((run) => run.projectDigest === project.digest)
-    .filter((run) => !run.purpose || ['inquiry', 'question-refresh'].includes(run.purpose))
-    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const key = (run) =>
-    JSON.stringify([run.questions?.[0]?.text, run.scopePlacementId, run.case || null]);
-  for (const run of saved) {
-    if (!run.questions?.[0]?.text) continue;
-    if (run.answer && !latest.has(key(run))) latest.set(key(run), run);
-  }
-  // A question whose checks were all released is not read; the report counts it.
-  for (const run of saved)
-    if (run.questions?.[0]?.text && !run.answer && run.cache === 'recheck' && !latest.has(key(run)))
-      released.add(key(run));
+  // The newest check of each question, its scope and its case, at this
+  // revision; a question whose newest check was released is not read, and
+  // the report counts it.
+  const latest = newestChecks(await listEngineRuns(project), {
+    digest: project.digest,
+    purposes: ['inquiry', 'question-refresh'],
+  });
   const known = new Set(placementOf.keys());
   const cited = (binding) =>
     new Set(
@@ -165,7 +156,7 @@ export async function fidelityReport(project, { withhold = false } = {}) {
         ...(binding.ruleIds ?? []).map((id) => id.split('/clause/')[0]),
       ].filter((id) => known.has(id)),
     );
-  const asked = [...latest.values()].map((run) => {
+  const asked = latest.runs.map((run) => {
     const answer = run.answer;
     const bindings = answer.answers ?? [];
     const widest = bindings.reduce((most, binding) => {
@@ -233,7 +224,7 @@ export async function fidelityReport(project, { withhold = false } = {}) {
     totals: tally(statements),
     questions: {
       total: asked.length,
-      released: released.size,
+      released: latest.released,
       ...Object.fromEntries(
         questionKinds.map((kind) => [kind, asked.filter((q) => q.kind === kind).length]),
       ),

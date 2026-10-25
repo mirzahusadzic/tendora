@@ -113,9 +113,10 @@ function validateRun(project, run, id) {
     run.id !== id ||
     run.projectId !== project.data.id ||
     !Array.isArray(run.calls) ||
-    !Array.isArray(run.stages)
+    !Array.isArray(run.stages) ||
+    typeof run.startedAt !== 'string'
   )
-    throw new Error('Invalid engine run');
+    throw new Error(`Invalid engine run: ${id}`);
   if (run.status === 'running') {
     let alive = false;
     if (Number.isInteger(run.pid) && run.pid > 0) {
@@ -136,7 +137,8 @@ function validateRun(project, run, id) {
   }
   return run;
 }
-/** Every saved run, newest first. A damaged one fails the listing, unless
+/** Every saved run, newest first. A damaged one (changed bytes, or a run
+ * that is not one: another id, no calls, no start) fails the listing, unless
  * the caller collects it in `damaged`: a listing to read, never to rewrite. */
 export async function listEngineRuns(project, { damaged } = {}) {
   let names = [];
@@ -145,20 +147,33 @@ export async function listEngineRuns(project, { damaged } = {}) {
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
+  const valid = (id, read) => {
+    try {
+      return [validateRun(project, read(), id)];
+    } catch (error) {
+      if (!damaged) throw Object.assign(error, { runId: id });
+      damaged.push({ id, reason: error.message });
+      return [];
+    }
+  };
   const saved = await retainedRuns(project, undefined, damaged);
   const ids = new Set(saved.map((run) => run.id));
   const legacy = await Promise.all(
     names
       .filter((id) => /^[a-f0-9-]{36}$/u.test(id) && !ids.has(id))
-      .map(async (id) =>
-        validateRun(
-          project,
-          JSON.parse(await readFile(join(runDirectory(project, id), 'run.json'), 'utf8')),
-          id,
-        ),
-      ),
+      .map(async (id) => {
+        let text;
+        try {
+          text = await readFile(join(runDirectory(project, id), 'run.json'), 'utf8');
+        } catch (error) {
+          if (!damaged) throw error;
+          damaged.push({ id, reason: error.message });
+          return [];
+        }
+        return valid(id, () => JSON.parse(text));
+      }),
   );
-  return [...saved.map((run) => validateRun(project, run, run.id)), ...legacy].sort((a, b) =>
+  return [...saved.flatMap((run) => valid(run.id, () => run)), ...legacy.flat()].sort((a, b) =>
     b.startedAt.localeCompare(a.startedAt),
   );
 }
