@@ -16,7 +16,7 @@ import { sourceCatalog } from '../authoring/sources.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { listEngineRuns } from '../storage/engine-runs.mjs';
 import { readAcquisitions } from '../storage/acquisitions.mjs';
-import { listInvestigations } from './investigation.mjs';
+import { listInvestigations, questionIdentity } from './investigation.mjs';
 
 const questionPurposes = new Set(['inquiry', 'question-refresh']);
 export const recoilFrontier = {
@@ -93,12 +93,7 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
   // The latest check of each saved question; a question saved without one is unchecked.
   // A case is the situation it states: asked again with the same statements, it
   // is the same question, whatever the case's own identifier.
-  const caseIdentity = (selection) =>
-    selection?.sources?.length
-      ? selection.sources.map((source) => source.text).join('\n')
-      : (selection?.placementId ?? null);
-  const questionKey = (text, scope, selection) =>
-    JSON.stringify([text.trim(), scope, caseIdentity(selection)]);
+  const questionKey = questionIdentity;
   const questions = new Map();
   for (const run of runs) {
     const text = run.questions?.[0]?.text;

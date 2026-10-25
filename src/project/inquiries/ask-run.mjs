@@ -6,6 +6,7 @@ import {
   newInvestigation,
   addAsk,
   currentAsk,
+  questionIdentity,
 } from './investigation.mjs';
 import { interpretationRevision } from '../../recording/revisions.mjs';
 
@@ -21,23 +22,14 @@ export async function requestProjectInquiry(
     ...options
   },
 ) {
-  const caseKey = (selection) =>
-    JSON.stringify([selection?.placementId, selection?.sources.map((source) => source.textDigest)]);
-  let saved = (await listInvestigations(project)).find((entry) =>
-    entry.data.asks.some(
-      (ask) =>
-        ask.question === question &&
-        ask.scopePlacementId === scopePlacementId &&
-        caseKey(ask.caseSelection) === caseKey(caseSelection),
-    ),
-  );
+  // The same question about the same situation is the same Ask, whatever the
+  // case's identifier.
+  const identity = questionIdentity(question, scopePlacementId, caseSelection);
+  const same = (ask) =>
+    questionIdentity(ask.question, ask.scopePlacementId, ask.caseSelection) === identity;
+  let saved = (await listInvestigations(project)).find((entry) => entry.data.asks.some(same));
   let data = saved ? structuredClone(saved.data) : newInvestigation(project, question);
-  const existing = data.asks.find(
-    (ask) =>
-      ask.question === question &&
-      ask.scopePlacementId === scopePlacementId &&
-      caseKey(ask.caseSelection) === caseKey(caseSelection),
-  );
+  const existing = data.asks.find(same);
   if (existing) {
     data.activeAskId = existing.id;
     // A question keeps the lineage it was first saved with.

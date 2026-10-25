@@ -18,6 +18,7 @@
  * been answered. Nothing is checked again; an open line is a place to ask or
  * to author, never an answer.
  */
+import { questionIdentity } from './investigation.mjs';
 import { recoilContext, ruleOrigins } from './recoil.mjs';
 
 const questionPurposes = new Set(['inquiry', 'question-refresh']);
@@ -91,11 +92,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     const text = run.questions?.[0]?.text;
     if (!text || !run.answer || run.projectDigest !== digest) continue;
     if (run.purpose && !questionPurposes.has(run.purpose)) continue;
-    const key = JSON.stringify([
-      text,
-      run.scopePlacementId,
-      run.caseSelection?.sources?.map((source) => source.text).join('\n') ?? null,
-    ]);
+    const key = questionIdentity(text, run.scopePlacementId, run.caseSelection ?? run.case);
     if (!latest.has(key) || latest.get(key).startedAt < run.startedAt) latest.set(key, run);
   }
   const questions = [...latest.values()].map((run) => ({

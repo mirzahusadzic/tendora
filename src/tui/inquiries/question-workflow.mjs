@@ -1,5 +1,9 @@
 /** One working question over the authored role hierarchy. No history browser. */
-import { questionLineages, readInvestigation } from '../../project/inquiries/investigation.mjs';
+import {
+  questionIdentity,
+  questionLineages,
+  readInvestigation,
+} from '../../project/inquiries/investigation.mjs';
 import { readFile } from 'node:fs/promises';
 import { projectTree } from '../../project/authoring/project.mjs';
 import { sourceCatalog } from '../../project/authoring/sources.mjs';
@@ -55,8 +59,7 @@ export function createQuestionWorkflow({
     ...(group.groups ?? []).flatMap(choiceRows),
   ];
   const caseInputs = new Map();
-  const questionKey = (text, scope, selectedCase) =>
-    JSON.stringify([text.trim(), scope, selectedCase?.placementId ?? (selectedCase || null)]);
+  const questionKey = questionIdentity;
   const currentKey = () =>
     current &&
     questionKey(

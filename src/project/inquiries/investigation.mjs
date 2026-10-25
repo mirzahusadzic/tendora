@@ -9,6 +9,19 @@ import { withFileLease } from '../storage/locks.mjs';
 import { validateFrameCarry, validateInquiryFrame } from '../../recording/frame.mjs';
 
 export const textDigest = (text) => createHash('sha256').update(text).digest('hex');
+/** A case is the situation it states: its statements' texts, one per line (as
+ * a run's `case` records them). A selection without statements is named by
+ * its placement. */
+export const caseIdentity = (selection) =>
+  typeof selection === 'string'
+    ? selection || null
+    : selection?.sources?.length
+      ? selection.sources.map((source) => source.text).join('\n')
+      : (selection?.placementId ?? null);
+/** A saved question is its text, its scope and its case, on every surface that
+ * groups saved questions (review 2026-10-25, #8). */
+export const questionIdentity = (text, scopePlacementId, selection) =>
+  JSON.stringify([text.trim(), scopePlacementId, caseIdentity(selection)]);
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 const identifier = (value) => typeof value === 'string' && /^[\w-]+$/u.test(value);
 export function sourceReference(
