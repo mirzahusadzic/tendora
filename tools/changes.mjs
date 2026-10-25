@@ -9,7 +9,7 @@
  * suite list reaches the suites it adds.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,15 +23,17 @@ const everything = new Set([
 ]);
 const suiteList = 'test/suites.mjs';
 
-export function changedFiles({ since = 'HEAD' } = {}) {
+// A deleted file is a change, staged or not, and a rename is two: its old path
+// and its new (review 2026-10-25, #5).
+export function changedFiles({ since = 'HEAD', cwd = root } = {}) {
   const git = (...args) =>
-    execFileSync('git', args, { cwd: root, encoding: 'utf8' }).split('\n').filter(Boolean);
+    execFileSync('git', args, { cwd, encoding: 'utf8' }).split('\n').filter(Boolean);
   return [
     ...new Set([
-      ...git('diff', '--name-only', since),
+      ...git('diff', '--name-only', '--no-renames', since),
       ...git('ls-files', '--others', '--exclude-standard'),
     ]),
-  ].filter((path) => existsSync(join(root, path)) || git('ls-files', path).length);
+  ];
 }
 
 const imports = [
@@ -57,17 +59,13 @@ export function dependencies(start, cache = new Map()) {
     }
     if (!cache.has(path)) {
       const here = dirname(join(root, path));
-      // An import is kept even when its module is gone, so deleting or renaming
-      // a module reaches the suites that still import it; a path named in a
-      // string counts only when it exists.
+      // An import or a named path is kept even when it is gone, so deleting
+      // or renaming a module or a fixture reaches the suites that still name it.
       const next = [];
       for (const pattern of imports)
         for (const [, target] of source.matchAll(pattern))
           next.push(relative(root, resolve(here, target)));
-      for (const [, target] of source.matchAll(named)) {
-        const path = target.replace(/\/$/u, '');
-        if (existsSync(join(root, path))) next.push(path);
-      }
+      for (const [, target] of source.matchAll(named)) next.push(target.replace(/\/$/u, ''));
       cache.set(
         path,
         next.filter((target) => !target.startsWith('..')),
@@ -79,11 +77,9 @@ export function dependencies(start, cache = new Map()) {
   return found;
 }
 
+// A path beneath a dependency is in it: the dependency is a directory, or was.
 const reaches = (dependency, changed) =>
-  dependency === changed ||
-  (changed.startsWith(`${dependency}/`) &&
-    existsSync(join(root, dependency)) &&
-    statSync(join(root, dependency)).isDirectory());
+  dependency === changed || changed.startsWith(`${dependency}/`);
 
 /** Suites the suite list names now but did not name at the base revision. */
 export function addedSuites({ since = 'HEAD' } = {}) {

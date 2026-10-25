@@ -25,11 +25,13 @@ npm run check:changed     # suites a change reaches; --since <ref> for a branch
 npm run format:changed    # formatting of changed files only
 ```
 
-A suite is reached when a changed or new file is among its dependencies: the
-modules it imports, the files it names with `new URL(…, import.meta.url)` and
-the repository paths it names in strings, followed through every module it
-reaches. A change to the runner, the suite list, the package or the Prettier
-configuration reaches every suite. Run the full check before a snapshot.
+A suite is reached when a changed, new or deleted file is among its
+dependencies (a rename counts as its old path and its new): the modules it
+imports, the files it names with `new URL(…, import.meta.url)` and the
+repository paths it names in strings, followed through every module it reaches.
+A change to the runner, the package or the Prettier configuration reaches every
+suite; a change to the suite list reaches the suites it adds. Run the full
+check before a snapshot.
 
 Every runnable test belongs to exactly one profile in `test/suites.mjs`.
 Architecture checks enforce module boundaries and complete fixture imports.
