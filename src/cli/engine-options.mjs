@@ -10,6 +10,7 @@ const options = {
   'case-text': ['string', '<text>', 'Use an independent case without adding sources.'],
   question: ['string', '<text>', 'The question to check; - reads it from standard input.'],
   statement: ['string', '<text>', 'A statement, by its text or a part only it has.'],
+  text: ['string', '<text>', 'The statement to suppose; it is never saved.'],
   role: ['string', '<role-or-path>', 'A role: its label, /Root/Child path or placement ID.'],
   grain: ['string', '<depth>', 'Branch depth under the root role; defaults to 1.'],
   run: ['string', '<id>', 'Saved check identity from ask or runs.'],
@@ -66,6 +67,20 @@ export const engineCommands = {
     ],
   },
   run: { alias: 'ask' },
+  suppose: {
+    description: 'Hypothesis: what would follow if a statement were said; nothing is saved.',
+    options: ['text', 'role', 'backend', 'offline'],
+    required: '--text <text>',
+    example: '--text "A certificate expires." --offline',
+    notes: [
+      'The statement stands at --role (the root by default): its own variables asked',
+      'back (new, said, otherwise, conflict), the rules that apply with it (only with it,',
+      'or also without), and each saved question in its scope checked again with and',
+      "without it. Its reading is retained like a question's; no statement, check or",
+      'case is saved. That nothing follows is a result. Also invoked as tendora hypothesis.',
+    ],
+  },
+  hypothesis: { alias: 'suppose' },
   runs: {
     description: 'List saved checks and questions.',
     options: ['explain'],
@@ -176,7 +191,7 @@ export const engineCommands = {
   },
 };
 const sections = [
-  ['Check questions', ['ask', 'runs', 'show']],
+  ['Check questions', ['ask', 'suppose', 'runs', 'show']],
   ['Inspect saved checks (read-only, offline)', ['recoil', 'tensions', 'probe', 'fidelity']],
   ['Manage a project', ['init', 'delete', 'storage', 'compact', 'knowledge']],
   ['This machine', ['backends']],
@@ -346,6 +361,7 @@ export function parseEngineArguments(args) {
     if (values.case && values['case-text'])
       throw new EngineUsageError('Choose --case or --case-text, not both.');
   }
+  if (['suppose', 'hypothesis'].includes(action)) requireOption('text');
   if (action === 'recoil') {
     exactlyOne(['statement', 'role', 'question']);
     if (!values.question && (values.scope || values['case-text']))

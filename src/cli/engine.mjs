@@ -33,6 +33,7 @@ import {
   tensionReport,
 } from '../project/inquiries/inspection.mjs';
 import { fidelityReport, formatFidelity } from '../project/inquiries/fidelity.mjs';
+import { formatHypothesis, hypothesisReport } from '../project/inquiries/hypothesis.mjs';
 import { describeBackends, trimBackends, useTrimBackend } from '../engine/trim-backend.mjs';
 import {
   listEngineRuns,
@@ -399,7 +400,7 @@ try {
     if (values.question === '-') values.question = await standardInput();
     // The trim backend of a check: --backend, else TENDORA_BACKEND, else js;
     // worker threads and processes inherit it through the environment.
-    if (['ask', 'probe', 'fidelity'].includes(action)) {
+    if (['ask', 'suppose', 'probe', 'fidelity'].includes(action)) {
       if (values.backend) process.env.TENDORA_BACKEND = values.backend;
       try {
         useTrimBackend();
@@ -589,6 +590,16 @@ try {
     } else if (action === 'fidelity') {
       const report = await fidelityReport(project, { withhold: Boolean(values.withhold) });
       output = values.json ? report : formatFidelity(report);
+    } else if (action === 'suppose') {
+      if (values.role) placement(values.role);
+      const report = await hypothesisReport(project, {
+        text: values.text,
+        role: values.role,
+        offline: Boolean(values.offline),
+        signal: controller.signal,
+      });
+      output = values.json ? report : formatHypothesis(report);
+      if (['needs-amr', 'invalid-amr'].includes(report.supposed.reading)) process.exitCode = 1;
     } else if (action === 'probe') {
       if (values.statement)
         named(() => recoilLocus(project, { statement: values.statement }), demo);

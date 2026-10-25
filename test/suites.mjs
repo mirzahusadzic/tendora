@@ -80,6 +80,7 @@ export const suites = {
     'project/recoil.mjs',
     'project/provenance.mjs',
     'project/fidelity.mjs',
+    'project/hypothesis.mjs',
     'project/authorship.mjs',
     'project/juxtaposition.mjs',
     'project/contribution-statements.mjs',

@@ -20,6 +20,7 @@ version as JSON. Help is text, with or without `--json`.
 | Command     | Does                                                                   | Key options                                         |
 | ----------- | ---------------------------------------------------------------------- | --------------------------------------------------- |
 | `ask`       | Checks a question against the statements in scope                      | `--question`, `--scope`, `--case-text`, `--offline` |
+| `suppose`   | What would follow if a statement were said; nothing is saved           | `--text`, `--role`, `--offline`                     |
 | `runs`      | Lists saved checks                                                     | `--explain`                                         |
 | `show`      | Reads one saved check, without checking again                          | `--run`                                             |
 | `recoil`    | What a statement, role or question rests on, what rests on it          | `--statement` \| `--role` \| `--question`           |
@@ -33,7 +34,7 @@ version as JSON. Help is text, with or without `--json`.
 | `knowledge` | Imports authored engine knowledge (advanced)                           | `--file`                                            |
 | `backends`  | Lists where the trim can run on this machine (no project)              |                                                     |
 
-`run` is an alias for `ask`, `juxtaposition` for `tensions`. `--question -`
+`run` is an alias for `ask`, `hypothesis` for `suppose`, `juxtaposition` for `tensions`. `--question -`
 reads the question from standard input.
 
 ## ask
@@ -75,6 +76,44 @@ as the case, with whoever made the check.
 Without `--offline`, text without a retained reading is sent to eGemma.
 `--actor` labels the check; without it the check records `unrecorded`, and
 every CLI check records `via: cli`.
+
+## suppose
+
+```console
+$ npx tendora suppose --project .proj/payments-demo --text "A certificate expires." --offline
+Supposing “A certificate expires.” at Incident Commander; nothing is saved.
+
+What it says (2)
+  what: new
+  is it so (Yes): new
+…
+Questions (34 in its scope, checked with and without it)
+…
+  answered: Who notifies the customers?  open → Sam; rests on the supposition and 2 statements
+  31 unchanged
+```
+
+The statement stands at `--role` (the root by default) beside the latest check
+at the root role, in an overlay. Nothing is saved: no statement, check or case.
+Its reading is retained like a question's, so it reads offline the next time;
+with `--offline` a statement without a retained reading is not read, and the
+command exits 1.
+
+- **What it says**: its probes, asked with it in place. _New_: only it says
+  so; _said_: another statement gives the same; _otherwise_: the statements
+  answer differently; _conflict_: answered both ways; _silent_, _limited_ or
+  _unread_ as for `probe`.
+- **What follows**: each rule that applies with it, _only with it_ or _also
+  without it_, and the other statements the application rests on. Its own
+  rule counts only where it applies to the statements.
+- **Questions**: the latest check of each saved question whose scope holds the
+  role, checked again with and without it: _answered_, _changed_ (an undecided
+  answer names which candidate comes from the supposition and which from the
+  case), _conflict_, _also_ (the same answers, now also resting on it) or
+  unchanged. A released check is counted, not checked.
+
+That nothing follows is a result ("Nothing follows from it"). A statement
+already said is reported as said, and nothing is checked again.
 
 ## Inspecting saved checks
 
@@ -166,12 +205,12 @@ Results go to stdout; diagnostics and progress to stderr, progress only on a
 terminal or with `--explain`. With `--json`, stdout is JSON only. No output
 uses color.
 
-| Exit  | Meaning                                                                                                             |
-| ----- | ------------------------------------------------------------------------------------------------------------------- |
-| `0`   | Completed, including an open answer; `show` and `runs` exit 0 whatever status the checks they read have             |
-| `1`   | A failure: `ask` whose check ended in a status marked 1 below, an error reading the project, or a declined deletion |
-| `2`   | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing          |
-| `130` | Interrupted: the first `Ctrl+C` cancels, the second exits                                                           |
+| Exit  | Meaning                                                                                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`   | Completed, including an open answer; `show` and `runs` exit 0 whatever status the checks they read have                                                       |
+| `1`   | A failure: `ask` whose check ended in a status marked 1 below, `suppose` whose statement has no reading, an error reading the project, or a declined deletion |
+| `2`   | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing                                                    |
+| `130` | Interrupted: the first `Ctrl+C` cancels, the second exits                                                                                                     |
 
 A syntax error points to the help. A name that matches nothing gives its own
 next step instead: the closest statements, the roles there are, or the command

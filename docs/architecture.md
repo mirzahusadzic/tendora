@@ -88,6 +88,11 @@ Read-only views over the saved checks at the project's revision (CLI `recoil`,
 | Probes          | Each participant of a statement asked back from its own reading, and its truth                                                                                                |
 | Corpus fidelity | Every statement's probes classed (answerable, silent, to review) and every checked question by what it rests on; with withholding, which answers each statement bears alone   |
 
+A hypothesis (CLI `suppose`) sets one more statement beside the others in an
+overlay that is never saved: its own probes, the rules that apply only with
+it, and the latest check of each saved question in its scope checked again
+with and without it. Its reading is retained like a question's.
+
 ## Attribution
 
 | Record                 | `actor`                                                     | `via`                         |
@@ -137,9 +142,9 @@ The demo bundles its 36 answers with their evidence.
 Readings can be wrong; lexical checks and source inspection help review them.
 Answers rest on shared vocabulary: a question worded differently from its
 sources usually stays open or becomes a proposal. Offline replay uses retained
-wording. The cooperative frame is a first slice: no hypothetical-premise
-overlay, branch merging or neural answer realization; those remain designs,
-as do [suggested premises at openings](consensual-premises.md).
+wording. The cooperative frame is a first slice: no branch merging or neural
+answer realization; those remain designs, as do
+[suggested premises at openings](consensual-premises.md).
 [Load-bearing as situated meaning](load-bearing.md) defines the counterfactual
 test that corpus fidelity's withholding applies per variable, and says which of
 its five checks Tendora meets.

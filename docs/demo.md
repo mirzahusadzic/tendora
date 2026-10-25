@@ -481,6 +481,33 @@ library); the original nineteen predate recorded authorship and say
 `unrecorded`. A case is the check's, so it names who made the check. Each check
 keeps this as it stood when it ran. Authorship is declared, not verified.
 
+## 9. Supposing: what would follow
+
+```
+$ npx tendora suppose --project .proj/payments-demo --text "A certificate expires." --offline
+Supposing “A certificate expires.” at Incident Commander; nothing is saved.
+…
+What follows (2 rules)
+  only with it: “If a certificate expires, Priya, the security engineer, renews the certificate.” [Security Engineer]
+  only with it: “If Priya renews the certificate, Sam, the support lead, notifies the customers.” [Support Lead], with …
+…
+  changed: Who renews the certificate? (case: A certificate expires.)  Priya → ambiguous: …
+  answered: Who notifies the customers?  open → Sam; rests on the supposition and 2 statements
+  31 unchanged
+```
+
+The statement stands beside the others in an overlay, as if said at the root
+role, and nothing is saved. What it says is asked back first (_new_ when no
+other statement says it). Then the rules that apply with it: _only with it_
+when they would not apply without it. Then every saved question in its scope
+is checked again, with it and without it. "Who notifies the customers?",
+open since step 3, would be answered.
+
+The two checks whose case has the same words become ambiguous. The supposed
+certificate stands beside the case's certificate, and the engine does not
+decide they are one. A supposition from which nothing follows says so, and
+that is a result. One already said is reported as said.
+
 ## In the workbench
 
 Open Development (`o`) and select a saved question: below its answer and

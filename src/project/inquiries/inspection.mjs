@@ -249,7 +249,7 @@ export function blankedText(source, probe) {
 }
 
 /** The latest whole check at the root role at this revision, without a case:
- * what probes and corpus fidelity read; they check nothing themselves. */
+ * what probes, corpus fidelity and suppositions read. */
 export async function rootCheck(project) {
   const root = project.data.placements.find((placement) => placement.parentId === null).id;
   const runs = await listEngineRuns(project);
@@ -266,7 +266,7 @@ export async function rootCheck(project) {
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   if (!run)
     throw new Error(
-      'Probes and corpus fidelity read the latest check at the root role at this revision; ask a question there first.' +
+      'Probes, corpus fidelity and suppositions read the latest check at the root role at this revision; ask a question there first.' +
         (runs.some(
           (item) => item.scopePlacementId === root && item.cache === 'recheck' && !item.answer,
         )
