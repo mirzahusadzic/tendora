@@ -14,19 +14,19 @@ help ends with an example on the bundled demo.
 
 ## Commands
 
-| Command     | Does                                                          | Key options                                         |
-| ----------- | ------------------------------------------------------------- | --------------------------------------------------- |
-| `ask`       | Checks a question against the statements in scope             | `--question`, `--scope`, `--case-text`, `--offline` |
-| `runs`      | Lists saved checks                                            | `--explain`                                         |
-| `show`      | Reads one saved check, without checking again                 | `--run`                                             |
-| `recoil`    | What a statement, role or question rests on, what rests on it | `--statement` \| `--role` \| `--question`           |
-| `tensions`  | Where questions bring the branches of the role tree together  | `--grain`                                           |
-| `probe`     | Asks statements back from their own readings                  | `--statement` \| `--role`                           |
-| `init`      | Creates an empty project                                      | `--name`, `--root`                                  |
-| `delete`    | Removes saved checks; authored statements stay                | `--run` \| `--all`, `--dry-run`, `--yes`            |
-| `storage`   | Reports storage use                                           |                                                     |
-| `compact`   | Compacts storage and rebuildable caches                       |                                                     |
-| `knowledge` | Imports authored engine knowledge (advanced)                  | `--file`                                            |
+| Command     | Does                                                              | Key options                                         |
+| ----------- | ----------------------------------------------------------------- | --------------------------------------------------- |
+| `ask`       | Checks a question against the statements in scope                 | `--question`, `--scope`, `--case-text`, `--offline` |
+| `runs`      | Lists saved checks                                                | `--explain`                                         |
+| `show`      | Reads one saved check, without checking again                     | `--run`                                             |
+| `recoil`    | What a statement, role or question rests on, what rests on it     | `--statement` \| `--role` \| `--question`           |
+| `tensions`  | Where questions bring the branches of the role tree together      | `--grain`                                           |
+| `probe`     | Asks statements back from their own readings                      | `--statement` \| `--role`                           |
+| `init`      | Creates an empty project where there is no project or its storage | `--name`, `--root`                                  |
+| `delete`    | Removes saved checks; authored statements stay                    | `--run` \| `--all`, `--dry-run`, `--yes`            |
+| `storage`   | Reports storage use                                               |                                                     |
+| `compact`   | Compacts storage and rebuildable caches                           |                                                     |
+| `knowledge` | Imports authored engine knowledge (advanced)                      | `--file`                                            |
 
 `run` is an alias for `ask`. `--question -` reads the question from standard
 input.

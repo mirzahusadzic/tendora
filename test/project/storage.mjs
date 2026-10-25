@@ -116,6 +116,14 @@ try {
   assert.deepEqual(await readObject(directory, 'records', refs[0]), shared);
 
   const concurrent = await createProject(join(directory, 'concurrent'), 'Concurrent project');
+  // Creating where a project exists stops before writing into its store
+  // (final review #11).
+  const store = await readFile(join(directory, 'concurrent', 'material.sqlite'));
+  await assert.rejects(createProject(join(directory, 'concurrent'), 'Again'), {
+    code: 'EEXIST',
+    message: /A project already exists/u,
+  });
+  assert.deepEqual(await readFile(join(directory, 'concurrent', 'material.sqlite')), store);
   await Promise.all(
     ['first retained text', 'second retained text'].map((text) =>
       retainAcquisitions(concurrent, [

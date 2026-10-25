@@ -91,7 +91,7 @@ export const engineCommands = {
     ],
   },
   init: {
-    description: 'Create an empty project.',
+    description: 'Create an empty project, where there is no project or its storage.',
     options: ['name', 'root'],
     example: '--name "Payments" --root "Incident Commander"',
     project: 'tmp/my-project',

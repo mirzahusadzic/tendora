@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, writeFile, access } from 'node:fs/promises';
+import { access, cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { editConcept, openProject, saveProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
@@ -193,6 +193,17 @@ const repeated = await command(['init', '--project', location]);
 assert.equal(repeated.code, 1);
 assert.equal(repeated.stdout, '');
 assert.equal(await readFile(project.path, 'utf8'), original, 'Existing project was not replaced');
+// Storage left without its manifest belongs to another project (final review
+// #11): init refuses it and changes nothing, rather than mixing two projects.
+const orphaned = join(directory, 'orphaned');
+await mkdir(orphaned);
+await cp(join(location, 'material.sqlite'), join(orphaned, 'material.sqlite'));
+const orphanedStore = await readFile(join(orphaned, 'material.sqlite'));
+const reinit = await command(['init', '--project', orphaned]);
+assert.equal(reinit.code, 1);
+assert.match(reinit.stderr, /material\.sqlite without a project\.json/u);
+await assert.rejects(access(join(orphaned, 'project.json')), { code: 'ENOENT' });
+assert.deepEqual(await readFile(join(orphaned, 'material.sqlite')), orphanedStore);
 assert.equal((await command(['runs', '--project', location])).stdout.trim(), 'No engine runs');
 assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), []);
 

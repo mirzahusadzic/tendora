@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Execute the deterministic engine on ordinary authored projects. */
 import { basename, join, resolve } from 'node:path';
-import { access, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { EngineUsageError, parseEngineArguments, program } from './engine-options.mjs';
 import { createProject, openProject, saveProject } from '../project/authoring/project.mjs';
 import { authorEngineKnowledge } from '../project/authoring/knowledge.mjs';
@@ -251,14 +251,6 @@ try {
   else {
     if (values.question === '-') values.question = await standardInput();
     const location = resolve(values.project);
-    if (action === 'init') {
-      try {
-        await access(join(location, 'project.json'));
-        throw new Error('A project already exists at ' + location);
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-      }
-    }
     const project =
       action === 'init'
         ? await createProject(location, values.name ?? basename(location), values.root ?? 'Root')

@@ -1,5 +1,5 @@
 /** Local authored material. Placements are context, not crossings or evidence. */
-import { readFile, readdir, writeFile, mkdir, rename, unlink } from 'node:fs/promises';
+import { lstat, readFile, readdir, writeFile, mkdir, rename, unlink } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 
@@ -108,6 +108,33 @@ export async function openProject(directory) {
     storage,
   };
 }
+/** A project is created only in a directory without one: an existing
+ * manifest, or storage whose manifest is gone (another project's), stops it
+ * before anything is written. */
+async function refuseExisting(directory) {
+  const exists = (name) =>
+    lstat(join(directory, name)).then(
+      () => true,
+      (error) => {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+      },
+    );
+  if (await exists('project.json'))
+    throw Object.assign(new Error(`A project already exists at ${directory}`), {
+      code: 'EEXIST',
+    });
+  const names = ['material.sqlite', 'engine', 'investigations', 'recordings'];
+  const found = await Promise.all(names.map(exists));
+  const present = names.filter((_, i) => found[i]);
+  if (present.length)
+    throw Object.assign(
+      new Error(
+        `${directory} holds ${present.join(', ')} without a project.json: storage of another project. Restore its project.json, or move the storage away, then create the project again.`,
+      ),
+      { code: 'ORPHANED_STORAGE' },
+    );
+}
 export async function createProject(directory, name, rootName) {
   const concept = {
     id: id(),
@@ -123,6 +150,7 @@ export async function createProject(directory, name, rootName) {
     placements: [{ id: id(), conceptId: concept.id, parentId: null }],
   });
   await mkdir(resolve(directory), { recursive: true });
+  await refuseExisting(resolve(directory));
   const path = join(resolve(directory), 'project.json'),
     storage = await storeProject(resolve(directory), data),
     text = encode(storage);
