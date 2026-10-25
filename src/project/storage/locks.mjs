@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { link, mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { refuseLinks } from './links.mjs';
 
 const ignoreMissing = (error) => {
   if (error.code !== 'ENOENT') throw error;
@@ -18,6 +19,8 @@ async function removeIfUnchanged(path, text) {
 }
 
 export async function fileLeaseActive(path, { staleMs = malformedLeaseStaleMs } = {}) {
+  // Only a regular file the project owns can be a lease.
+  refuseLinks([path]);
   let text, owner;
   try {
     text = await readFile(path, 'utf8');
@@ -84,6 +87,7 @@ export async function acquireFileLease(
     owner = {},
   } = {},
 ) {
+  refuseLinks([path]);
   await mkdir(dirname(path), { recursive: true });
   const text = `${JSON.stringify({ ...owner, pid: process.pid, token: randomUUID(), at: new Date().toISOString() })}\n`;
   const started = performance.now();

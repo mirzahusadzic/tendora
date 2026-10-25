@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { brotliCompressSync, brotliDecompressSync, constants } from 'node:zlib';
 import { readObject } from './objects.mjs';
+import { refuseLinks, sqliteFiles } from './links.mjs';
 
 const encode = (value) => Buffer.from(JSON.stringify(value) + '\n');
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -12,7 +13,11 @@ const validRef = (ref) => typeof ref === 'string' && /^[a-f0-9]{64}$/u.test(ref)
 export const artifactDatabasePath = (project) =>
   join(dirname(project.path), 'engine', 'artifacts.sqlite');
 
+// The store and its engine directory stay inside the project.
+const storeFiles = (path) => [dirname(path), ...sqliteFiles(path)];
+
 export function openArtifactDatabase(path) {
+  refuseLinks(storeFiles(path));
   const db = new DatabaseSync(path);
   db.exec(`
     PRAGMA busy_timeout = 10000;
@@ -290,6 +295,7 @@ export async function openStoredArtifacts(project) {
     if (error.code === 'ENOENT') return null;
     throw error;
   }
+  refuseLinks(storeFiles(path));
   return new DatabaseSync(path, { readOnly: true });
 }
 
@@ -299,6 +305,7 @@ export async function readStoredArtifact(project, hash) {
   let db;
   try {
     await access(path);
+    refuseLinks(storeFiles(path));
     db = new DatabaseSync(path, { readOnly: true });
     const value = loadArtifact(db, hash);
     if (value !== undefined) return value;

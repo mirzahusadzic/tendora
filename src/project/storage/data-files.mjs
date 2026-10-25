@@ -7,6 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { brotliCompressSync, brotliDecompressSync, constants } from 'node:zlib';
 import { withFileLease } from './locks.mjs';
 import { loadSqliteVec } from './sqlite-vec.mjs';
+import { refuseLinks, sqliteFiles } from './links.mjs';
 
 export const dataAreas = ['corpora', 'records', 'acquisitions', 'role-matching', 'investigations'];
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -40,6 +41,8 @@ function database(directory, create = false) {
     entry = null;
   }
   if (!entry) {
+    // Checked as a connection opens; a replaced store reopens (its inode changes).
+    refuseLinks(sqliteFiles(path));
     const db = new DatabaseSync(path, { allowExtension: true });
     // Even schema inspection can race with another process compacting the store.
     db.exec('PRAGMA busy_timeout = 10000');

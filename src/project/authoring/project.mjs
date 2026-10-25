@@ -7,6 +7,7 @@ import { reconcileSources } from './sources.mjs';
 import { loadProject, storeProject } from '../storage/objects.mjs';
 import { validateContributions } from './development.mjs';
 import { withFileLease } from '../storage/locks.mjs';
+import { projectStorage, refuseLinks } from '../storage/links.mjs';
 
 const digest = (text) => createHash('sha256').update(text).digest('hex');
 const encode = (data) => JSON.stringify(data, null, 2) + '\n';
@@ -96,6 +97,7 @@ export function validateProject(data) {
   return validateContributions(data);
 }
 export async function openProject(directory) {
+  refuseLinks(projectStorage(resolve(directory)));
   const path = join(resolve(directory), 'project.json');
   const text = await readFile(path, 'utf8');
   const storage = JSON.parse(text);

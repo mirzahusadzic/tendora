@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { sourceCatalog } from './sources.mjs';
+import { refuseLinks } from '../storage/links.mjs';
 
 export const provenanceFile = 'provenance.json';
 const unrecorded = 'unrecorded';
@@ -36,9 +37,11 @@ export function validateProvenance(data) {
 /** The project's statement provenance by text, or an empty one, and the
  * digest of the file it was read from (null without one). */
 export async function declaredProvenance(project) {
+  const path = join(dirname(project.path), provenanceFile);
+  refuseLinks([path]);
   let text;
   try {
-    text = await readFile(join(dirname(project.path), provenanceFile), 'utf8');
+    text = await readFile(path, 'utf8');
   } catch (error) {
     if (error.code === 'ENOENT') return { entries: new Map(), digest: null };
     throw error;
