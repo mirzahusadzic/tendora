@@ -1,7 +1,7 @@
 /** The documented demo copy is repeatable, never nests, and a reset replaces
  * only a copy of the demo: never the snapshot, a folder holding the
  * repository, or a directory of anything else (on 2026-10-25 a reset given
- * `.proj` replaced the lab's corpus projects). Resets run only inside this
+ * `.proj` replaced a checkout's projects). Resets run only inside this
  * test's temporary directory; the repository's own paths are checked through
  * the guard, never by running a reset on them. */
 import assert from 'node:assert/strict';
@@ -69,7 +69,7 @@ try {
     /a folder holding the repository/u,
   );
   assert.match(
-    guard('.proj', { exists: true, entries: ['corpus-p'], manifest: null }),
+    guard('.proj', { exists: true, entries: ['my-project'], manifest: null }),
     /not a copy of the demo/u,
     'A reset of .proj itself is refused',
   );
