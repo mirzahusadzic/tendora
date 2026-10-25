@@ -3,7 +3,7 @@ import { claimRoot } from './patterns.mjs';
 import { sourceSemanticTypes } from './semantic-types.mjs';
 
 /** `have-condition-91` is AMR's reified `:condition`: read its :ARG1 under its :ARG2. */
-function dereifiedCondition(graph) {
+export function dereifiedCondition(graph) {
   const top = claimRoot(graph),
     node = graph.nodes.find((n) => n.id === top);
   if (node?.concept !== 'have-condition-91') return graph;

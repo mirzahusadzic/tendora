@@ -177,6 +177,37 @@ try {
     'Asked with its condition as the case, the rule read from the statement answers',
   );
   assert.equal(check(crew, [conditional.id]), 'conditional');
+  // A reified condition (have-condition-91) is probed as its :condition form:
+  // the consequent, with the condition as the case (review 2026-10-25, #9).
+  const reified = {
+    ...conditional,
+    graph: graph(
+      'r',
+      { r: 'have-condition-91', l: 'leave-11', c: 'crew', h: 'hall', s: 'sound-01', a: 'alarm' },
+      [
+        ['r', ':ARG1', 'l'],
+        ['r', ':ARG2', 's'],
+        ['l', ':ARG0', 'c'],
+        ['l', ':ARG1', 'h'],
+        ['s', ':ARG1', 'a'],
+      ],
+    ),
+  };
+  const shape = (probes) =>
+    probes.map((probe) => [
+      probe.kind,
+      probe.role ?? probe.expected,
+      probe.conditional ?? false,
+      probe.case?.top ?? null,
+      probe.derived ?? null,
+    ]);
+  assert.deepEqual(shape(clozeProbes(reified)), shape(clozeProbes(conditional)));
+  assert(
+    clozeProbes(reified).every(
+      (probe) => !probe.graph.nodes.some((node) => node.concept === 'have-condition-91'),
+    ),
+    'No probe asks about the reifier itself',
+  );
   // Only when the alarm sounds: necessary, so nothing is expected back from it.
   const onlyWhen = structuredClone(conditional);
   onlyWhen.graph.nodes.push({ id: 'o', concept: 'only' });

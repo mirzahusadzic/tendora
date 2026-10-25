@@ -13,7 +13,7 @@
 import { answerBase, evaluateAnswer, withheldBase } from '../recording/answers.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { answerRecording } from './answer.mjs';
-import { onlyClause, onlyTimeCondition } from '../amr/conditions.mjs';
+import { dereifiedCondition, onlyClause, onlyTimeCondition } from '../amr/conditions.mjs';
 
 const argument = /^:ARG\d$/u;
 // The circumstances of a relation are variables too: when, where, how, why,
@@ -45,14 +45,17 @@ const modal = new Set(['possible-01', 'obligate-01', 'recommend-01', 'permit-01'
  * consequent with the condition as their case. */
 export function clozeProbes(source) {
   if (!source.graph) return [];
-  const top = source.graph.assertionTop ?? source.graph.top;
+  // A reified condition (have-condition-91) is read as its :condition form, as
+  // the rule read from the statement is; one with other roles is not probed.
+  const reading = dereifiedCondition(source.graph);
+  if (reading.reason) return [];
+  const top = reading.assertionTop ?? reading.top;
   // A necessary condition read as a time (“only when”) is a condition too.
-  const condition = source.graph.edges.find(
+  const condition = reading.edges.find(
     (edge) =>
-      edge.from === top &&
-      (edge.role === ':condition' || onlyTimeCondition(source.graph, top, edge)),
+      edge.from === top && (edge.role === ':condition' || onlyTimeCondition(reading, top, edge)),
   );
-  const graph = condition ? consequent(source.graph, top, condition) : source.graph;
+  const graph = condition ? consequent(reading, top, condition) : reading;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   let relation = top;
   for (let frame; modal.has(nodes.get(relation)?.concept); relation = frame) {
@@ -60,9 +63,9 @@ export function clozeProbes(source) {
     if (!/-\d+$/u.test(nodes.get(frame)?.concept ?? '')) break;
   }
   // “Only when X, Y” is necessary, not sufficient: nothing follows from X alone.
-  const necessary = condition && onlyClause(source.graph, condition.to);
+  const necessary = condition && onlyClause(reading, condition.to);
   const conditional = condition
-    ? { case: conditionGraph(source.graph, top, condition), ...(necessary ? { necessary } : {}) }
+    ? { case: conditionGraph(reading, top, condition), ...(necessary ? { necessary } : {}) }
     : null;
   const probes = [];
   for (const edge of graph.edges) {
@@ -92,7 +95,7 @@ export function clozeProbes(source) {
             ...(conditional.necessary ? { necessary: true } : {}),
             // A rule read from the statement names its nodes by position
             // (amr/conditions.mjs); a conclusion binds that name.
-            derived: `$c${source.graph.nodes.findIndex((node) => node.id === edge.to)}`,
+            derived: `$c${reading.nodes.findIndex((node) => node.id === edge.to)}`,
           }
         : {}),
       graph: {
