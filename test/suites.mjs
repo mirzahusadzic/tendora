@@ -7,6 +7,7 @@ export const suites = {
   check: [
     'acceptance/payments.mjs',
     'acceptance/demo-tour.mjs',
+    'acceptance/doc-examples.mjs',
     'acceptance/blind-holdout.mjs',
     'acceptance/independent-domain.mjs',
     'acceptance/load-bearing.mjs',

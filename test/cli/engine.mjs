@@ -126,7 +126,11 @@ const invalid = [
   },
   { args: ['ask', '--project', absent], match: /--question is required/u },
   { args: ['ask', '--project', absent, '--question', '   '], match: /non-empty/u },
-  { args: ['ask', '--question', 'Who?'], match: /--project is required/u },
+  {
+    args: ['recoil', '--statement', 'If a certificate expires'],
+    match:
+      /--project is required for tendora recoil: the project's directory, such as --project \.proj\/payments-demo after npm run demo\./u,
+  },
   {
     args: ['ask', '--project', absent, '--question', 'Who?', '--case', 'A', '--case-text', 'B'],
     match: /Choose --case or --case-text/u,

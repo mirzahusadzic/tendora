@@ -254,7 +254,11 @@ export function parseEngineArguments(args) {
       throw new EngineUsageError(`--${name} needs a non-empty value.`);
   const requireOption = (name) => {
     if (!values[name])
-      throw new EngineUsageError(`--${name} is required for ${program} ${action}.`);
+      throw new EngineUsageError(
+        name === 'project'
+          ? `--project is required for ${program} ${action}: the project's directory, such as --project .proj/payments-demo after npm run demo.`
+          : `--${name} is required for ${program} ${action}.`,
+      );
   };
   const exactlyOne = (names) => {
     if (names.filter((name) => values[name]).length !== 1)

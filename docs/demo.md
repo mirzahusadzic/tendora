@@ -11,8 +11,8 @@ npm run demo                                         # a working copy in .proj/p
 npm run workbench -- --project .proj/payments-demo   # or the CLI below
 ```
 
-Commands run in a checkout as `npx tendora …` (or `npm run --silent engine --
-…`), each with `--project .proj/payments-demo --offline`; outputs are trimmed.
+Every command runs as shown from the checkout, after `npm run demo`; outputs
+are trimmed (`…`). `npm link` puts `tendora` on your PATH, without `npx`.
 
 ## 1. A question and its answer
 
@@ -21,7 +21,8 @@ circumstances of one check: rules apply to it and an answer may rest on it,
 saying so, but it never becomes a statement. Here two rules in two roles chain:
 
 ```
-$ tendora ask --question "Who notifies the customers?" --case-text "A certificate expires."
+$ npx tendora ask --project .proj/payments-demo --offline \
+    --question "Who notifies the customers?" --case-text "A certificate expires."
 supported: Who notifies the customers?
 Answer: Sam
   Rests on the case and 2 statements.
@@ -104,7 +105,8 @@ deployment. Each step that read the question says how.
 ## 3. Open, and why
 
 ```
-$ tendora ask --question "Who may approve a rollback of the payments service?"
+$ npx tendora ask --project .proj/payments-demo --offline \
+    --question "Who may approve a rollback of the payments service?"
 open: Who may approve a rollback of the payments service?
 Why it stays open:
   …: A source says “rollback of the payments service” too, but each was read differently. Confirm the connection to use it.
@@ -121,10 +123,11 @@ Priya) and stays ambiguous: the engine does not choose.
 
 ## 4. What questions bring together
 
-`tendora tensions` reads, over every saved check, which branches of the role
-tree a question's answer draws on:
+`tensions` reads, over every saved check, which branches of the role tree a
+question's answer draws on:
 
 ```
+$ npx tendora tensions --project .proj/payments-demo
 Of 36 checked questions, 3 bring roles together, 28 stay in one role and 5 cite no statement.
 
 On-call Engineer ↔ Security Engineer
@@ -200,7 +203,11 @@ Recoil walks the saved checks from a question, a statement or a role, and
 checks nothing again.
 
 **Down**, what an answer rests on:
-`tendora recoil --question "Who notifies the customers?" --case-text "A certificate expires."`
+
+```
+$ npx tendora recoil --project .proj/payments-demo \
+    --question "Who notifies the customers?" --case-text "A certificate expires."
+```
 
 <!-- graph: recoil-down -->
 
@@ -263,7 +270,10 @@ flowchart LR
 ```
 
 **Up**, what rests on a statement:
-`tendora recoil --statement "If a certificate expires"`
+
+```
+$ npx tendora recoil --project .proj/payments-demo --statement "If a certificate expires"
+```
 
 <!-- graph: recoil-up -->
 
@@ -376,7 +386,7 @@ check is current, so there is none.
 ## 6. Asked back from its own reading
 
 ```
-$ tendora probe --statement "If a certificate expires"
+$ npx tendora probe --project .proj/payments-demo --statement "If a certificate expires"
 If a certificate expires, Priya, the security engineer, renews the certificate.  [Security Engineer]
   who or what: If a certificate expires, ___ renews the certificate.
     recovered → Priya: the statement answers its own blank
@@ -390,7 +400,8 @@ reading; one the engine cannot recover is a reading to reword.
 ## 7. Who wrote what
 
 ```
-$ tendora ask --question "Who notifies the customers?" --case-text "A certificate expires." --actor Dana --json \
+$ npx tendora ask --project .proj/payments-demo --offline --actor Dana --json \
+    --question "Who notifies the customers?" --case-text "A certificate expires." \
     | jq -c '.provenance.statements[] | [.kind // "statement", .author, .via]'
 ["statement","Claude","library"]
 ["statement","Claude","library"]
