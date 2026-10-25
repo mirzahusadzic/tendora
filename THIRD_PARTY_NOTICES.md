@@ -28,6 +28,8 @@ the switch were MIT.
 | SEMCAT runtime, into `.venv/` by `npm run setup:python`             | GPL-3.0-only AND MIT                                                                            | [Fork licensing](https://github.com/mirzahusadzic/semcat/blob/e00a02b954e8d6baf3e362844da4e9ae6509efc9/LICENSING.md)        |
 | Optional Bolinas checkout, into `.deps/` by `npm run setup:bolinas` | MIT core; bundled utilities under Apache-2.0, MIT and LGPL-3.0-or-later, plus ColorBrewer terms | [Fork component notices](https://github.com/mirzahusadzic/bolinas/blob/70fbac4afe7177d28f9658df4c88b2e1b4bcbfbb/NOTICES.md) |
 | npm and Python dependencies                                         | As supplied with each installed distribution                                                    | Their package metadata                                                                                                      |
+| `node-bitmap` 0.0.1, through terminal-kit                           | MIT, Copyright (c) 2012 Yusuke Hata; its package metadata names no license                      | [Its README](https://github.com/nowelium/node-bitmap)                                                                       |
+| `sqlite-vec` 0.1.9 and its platform builds, by Alex Garcia          | MIT OR Apache-2.0; its metadata reads "MIT OR Apache"                                           | [Upstream licenses](https://github.com/asg017/sqlite-vec)                                                                   |
 
 ## What this means in practice
 

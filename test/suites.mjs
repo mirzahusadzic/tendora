@@ -63,6 +63,7 @@ export const suites = {
     'architecture/source-boundaries.mjs',
     'architecture/test-layout.mjs',
     'architecture/doc-links.mjs',
+    'architecture/licensing.mjs',
     'project/storage.mjs',
     'project/examples.mjs',
     'project/demo-graphs.mjs',
