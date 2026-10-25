@@ -236,6 +236,11 @@ await retainAcquisitions(
       text: 'Who approves the rehearsal?',
       penman: '(a / approve-01 :ARG0 (u / amr-unknown) :ARG1 (r / rehearse-01))',
     },
+    {
+      text: 'Rowan approves the rehearsal.',
+      penman:
+        '(a / approve-01 :ARG0 (p / person :name (n / name :op1 "Rowan")) :ARG1 (r / rehearse-01))',
+    },
   ].map((entry) => ({ ...entry, origin: { kind: 'frozen-cli-test' } })),
 );
 const frozenDigest = project.digest;
@@ -589,6 +594,30 @@ assert.deepEqual(older.provenance.statements, []);
 assert.equal(older.provenance.statementsUnrecorded, true);
 assert.equal(older.provenance.computedAtExport, true, 'and that its provenance is read now');
 assert.equal(released.provenance.statementsUnrecorded, undefined);
+// A case states the circumstances of one check (final review #1): an answer
+// it gives says it rests on the case alone, and its provenance names who made
+// the check, never a statement's author.
+const inCase = [
+  'ask',
+  '--project',
+  location,
+  '--question',
+  'Who approves the rehearsal?',
+  '--case-text',
+  'Rowan approves the rehearsal.',
+  '--actor',
+  'Dana',
+  '--offline',
+];
+const caseAnswer = await command(inCase);
+successful(caseAnswer);
+assert.match(caseAnswer.stdout, /Answer: Rowan\n {2}From the case alone; no statement says it\./u);
+assert.deepEqual(
+  machine(await command([...inCase, '--json'])).provenance.statements.map(
+    ({ kind, author, via }) => [kind, author, via],
+  ),
+  [['case', 'Dana', 'cli']],
+);
 const reset = machine(await command(['delete', '--project', location, '--all', '--json']));
 assert.equal(reset.reset, true);
 assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), []);

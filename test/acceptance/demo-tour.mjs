@@ -60,9 +60,24 @@ try {
   // A rule and its case; two rules in two roles chain under one case.
   const renews = await ask('Who renews the certificate?', '--case-text', 'A certificate expires.');
   assert.deepEqual(texts(renews), ['Priya']);
-  const chain = await ask('Who notifies the customers?', '--case-text', 'A certificate expires.');
+  const chain = await ask(
+    'Who notifies the customers?',
+    '--case-text',
+    'A certificate expires.',
+    '--actor',
+    'Dana',
+  );
   assert.deepEqual([chain.status, texts(chain)], ['supported', ['Sam']]);
   assert.equal(chain.answer.answers[0].ruleIds.length, 2, 'Two rules, read from two statements');
+  const said = await tendora(
+    'ask',
+    '--question',
+    'Who notifies the customers?',
+    '--case-text',
+    'A certificate expires.',
+    '--offline',
+  );
+  assert.match(said.stdout, /Answer: Sam\n {2}Rests on the case and 2 statements\./u);
   const ungrounded = await ask('Who notifies the customers?');
   assert.equal(ungrounded.status, 'open', 'Without its case, a rule answers nothing');
   // A negated conclusion under a condition.
@@ -102,13 +117,13 @@ try {
   assert.equal(reviewers.status, 'ambiguous');
   // Provenance: the statements written for the tour record their author.
   assert.deepEqual(
-    chain.provenance.statements.map(({ author, via }) => [author, via ?? null]),
+    chain.provenance.statements.map(({ kind = 'statement', author, via }) => [kind, author, via]),
     [
-      ['Claude', 'library'],
-      ['Claude', 'library'],
-      ['unrecorded', null],
+      ['statement', 'Claude', 'library'],
+      ['statement', 'Claude', 'library'],
+      ['case', 'Dana', 'cli'],
     ],
-    'Two statements written through the library, and the case',
+    'Two statements written through the library, and the case of the check',
   );
   assert.equal(asked.provenance.statements[0].author, 'unrecorded', 'Written before recording');
 

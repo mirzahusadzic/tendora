@@ -84,9 +84,11 @@ export function recordedAuthors(data) {
  * when the caller read one) and the provenance of every statement its answers
  * rest on, in the order the answers name them. A recorded author comes first;
  * declared provenance adds what was not recorded (a proposer, an acceptance),
- * and a different declared author stays visible as `declaredAuthor`. */
+ * and a different declared author stays visible as `declaredAuthor`. A case
+ * is the check's circumstance, not a statement: it names who made the check
+ * (`checkedBy`). */
 export function answerProvenance(
-  { projectId, projectRevision, declaredDigest },
+  { projectId, projectRevision, declaredDigest, checkedBy = {} },
   provenance,
   answers,
   sources,
@@ -99,7 +101,18 @@ export function answerProvenance(
     for (const sourceId of answer.sourceIds ?? []) {
       if (seen.has(sourceId)) continue;
       seen.add(sourceId);
-      const text = byId.get(sourceId)?.text ?? null;
+      const source = byId.get(sourceId),
+        text = source?.text ?? null;
+      if (source?.kind === 'case') {
+        statements.push({
+          sourceId,
+          text,
+          kind: 'case',
+          author: checkedBy.actor ?? unrecorded,
+          ...(checkedBy.via ? { via: checkedBy.via } : {}),
+        });
+        continue;
+      }
       const { text: _text, ...declared } = (text !== null && provenance.get(text)) || {};
       const own = recorded.get(sourceId);
       statements.push({
@@ -131,6 +144,7 @@ export async function checkProvenance(project, run, sources) {
       projectId: run.projectId,
       projectRevision: run.projectDigest,
       declaredDigest: declared.digest,
+      checkedBy: { actor: run.actor, via: run.via },
     },
     declared.entries,
     run.answer?.answers,

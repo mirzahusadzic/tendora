@@ -122,7 +122,7 @@ const lastAnswer = (run) => {
     answers,
     sources: (run.answer.sources ?? [])
       .filter((source) => cited.has(source.id))
-      .map(({ id, text }) => ({ id, text })),
+      .map(({ id, text, kind }) => ({ id, text, ...(kind ? { kind } : {}) })),
   };
 };
 

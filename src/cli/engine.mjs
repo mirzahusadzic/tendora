@@ -107,8 +107,19 @@ function describe(run, { explain = false, offline = false, relations } = {}) {
     lines.push(
       'Not every statement in scope has a reading; the answer below rests on those that do and may change.',
     );
+  const fromCase = new Set(
+    (run.answer?.sources ?? []).filter((s) => s.kind === 'case').map((s) => s.id),
+  );
   for (const answer of [...(run.answer?.answers ?? []), ...(run.answer?.candidates ?? [])]) {
     lines.push((run.answer?.answers.includes(answer) ? 'Answer: ' : 'Candidate: ') + answer.text);
+    const cited = answer.sourceIds ?? [],
+      statements = cited.filter((id) => !fromCase.has(id)).length;
+    if (statements < cited.length)
+      lines.push(
+        statements
+          ? `  Rests on the case and ${statements} statement${statements === 1 ? '' : 's'}.`
+          : '  From the case alone; no statement says it.',
+      );
     if (answer.readAs === 'requirement')
       lines.push('  A source says it must be done; that answers "should".');
     if (answer.readAs === 'reference')
@@ -361,7 +372,11 @@ try {
             // read now and says so.
             provenance: run.provenance ?? {
               ...answerProvenance(
-                { projectId: run.projectId, projectRevision: run.projectDigest },
+                {
+                  projectId: run.projectId,
+                  projectRevision: run.projectDigest,
+                  checkedBy: { actor: run.actor, via: run.via },
+                },
                 await readProvenance(project),
                 answers,
                 [

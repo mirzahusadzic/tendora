@@ -28,6 +28,8 @@ recognition alone is not entailment.
   what holds. An answer that holds under a source's clause is _conditional_ and
   names the clause. A participant the question names is identified; what a
   source adds about it qualifies nothing.
+- **Cases:** a case states one check's circumstances. Rules apply to it and an
+  answer may rest on it, which the answer says; it never becomes a statement.
 - **Rules from statements:** a condition ("If a certificate expires, …") applies
   to whatever meets it, and rules chain; a negated conclusion answers No under
   its condition. A kind statement ("A deployment is a change.") extends every
@@ -67,6 +69,7 @@ Read-only views over the saved checks at the project's revision (CLI `recoil`,
 | A statement            | who wrote or last edited it; `unrecorded` before recording  | `editor`, `library`           |
 | A confirmed connection | who confirmed it                                            | `editor`, `library`           |
 | A check (engine run)   | the workbench's actor, the CLI's `--actor`, or `unrecorded` | `workbench`, `cli`, `library` |
+| A case                 | the check's                                                 | the check's                   |
 
 A project may also declare authorship in `provenance.json` beside its manifest,
 for statements written elsewhere or proposed by a model. A check keeps, for

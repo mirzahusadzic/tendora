@@ -425,13 +425,17 @@ async function executeEngineRun(
         const sourceIds = new Set(
           [...answer.answers, ...answer.candidates].flatMap((binding) => binding.sourceIds),
         );
+        const caseIds = new Set(input.cases.map((entry) => entry.id));
         run.answer = {
           engine: answer.engine,
           status: answer.status,
           complete: answer.complete,
           answers: answer.answers.map(summarize),
           candidates: answer.candidates.map(summarize),
-          sources: answer.sources.filter((source) => sourceIds.has(source.id)),
+          // A case states this check's circumstances; it is not a statement.
+          sources: answer.sources
+            .filter((source) => sourceIds.has(source.id))
+            .map((source) => (caseIds.has(source.id) ? { ...source, kind: 'case' } : source)),
           basis: answer.basis.map(({ id, name, attribution }) => ({ id, name, attribution })),
           openings: answer.openings,
           skipped: answer.skipped,

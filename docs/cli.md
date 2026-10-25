@@ -56,7 +56,10 @@ check saved before checks kept provenance has it read at export, marked
 `computedAtExport`.
 
 `--scope` and `--case` take a role label, a `/Root/Child` path or a placement
-ID. `--case-text` supplies case material that does not become evidence.
+ID. `--case-text` states the circumstances of this check: rules apply to it and
+an answer may rest on it, saying so ("Rests on the case and 2 statements", or
+"From the case alone"); it never becomes a statement, and provenance names it
+as the case, with whoever made the check.
 Without `--offline`, text without a retained reading is sent to eGemma.
 `--actor` labels the check; without it the check records `unrecorded`, and
 every CLI check records `via: cli`.

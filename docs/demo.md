@@ -16,13 +16,15 @@ Commands run in a checkout as `npx tendora …` (or `npm run --silent engine --
 
 ## 1. A question and its answer
 
-A question is checked against the statements in its scope. A case adds
-circumstances that are not evidence. Here two rules in two roles chain:
+A question is checked against the statements in its scope. A case states the
+circumstances of one check: rules apply to it and an answer may rest on it,
+saying so, but it never becomes a statement. Here two rules in two roles chain:
 
 ```
 $ tendora ask --question "Who notifies the customers?" --case-text "A certificate expires."
 supported: Who notifies the customers?
 Answer: Sam
+  Rests on the case and 2 statements.
 ```
 
 <!-- graph: question-and-answer -->
@@ -388,15 +390,17 @@ reading; one the engine cannot recover is a reading to reword.
 ## 7. Who wrote what
 
 ```
-$ tendora ask --question "Who notifies the customers?" --case-text "A certificate expires." --json | jq -c '.provenance.statements[] | {author, via}'
-{"author":"Claude","via":"library"}
-{"author":"Claude","via":"library"}
-{"author":"unrecorded","via":null}
+$ tendora ask --question "Who notifies the customers?" --case-text "A certificate expires." --actor Dana --json \
+    | jq -c '.provenance.statements[] | [.kind // "statement", .author, .via]'
+["statement","Claude","library"]
+["statement","Claude","library"]
+["case","Dana","cli"]
 ```
 
 The six statements written for this tour record their author (through the
 library); the original nineteen predate recorded authorship and say
-`unrecorded`, as does the case. Authorship is declared, not verified.
+`unrecorded`. A case is the check's, so it names who made the check. Each check
+keeps this as it stood when it ran. Authorship is declared, not verified.
 
 ## In the workbench
 

@@ -75,7 +75,28 @@ try {
       { sourceId: 'gone', text: null, author: 'unrecorded' },
     ],
   });
-  console.log('ok statement provenance: validated, read by text, carried by exported answers');
+  // A case is the check's circumstance (final review #1): it names who made
+  // the check, never a statement's author, even when its text is a statement's.
+  assert.deepEqual(
+    answerProvenance(
+      { projectId: 'p', projectRevision: 'r', checkedBy: { actor: 'Dana', via: 'cli' } },
+      provenance,
+      [{ sourceIds: ['case-1/s1', 's1'] }],
+      [...sources, { id: 'case-1/s1', kind: 'case', text: 'The gate opens.' }],
+    ).statements,
+    [
+      { sourceId: 'case-1/s1', text: 'The gate opens.', kind: 'case', author: 'Dana', via: 'cli' },
+      {
+        sourceId: 's1',
+        text: 'The gate opens.',
+        author: 'A',
+        accepted: { by: 'B', on: '2026-10-25' },
+      },
+    ],
+  );
+  console.log(
+    'ok statement provenance: validated, read by text, carried by exported answers; a case names its check',
+  );
 } finally {
   await rm(directory, { recursive: true, force: true });
 }
