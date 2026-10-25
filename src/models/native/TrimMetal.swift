@@ -379,7 +379,8 @@ kernel void trimRules(
         r.slots[k] = 0; r.kept[k] = 0; r.keptCount[k] = 0; r.keptStart[k] = 0; r.keptSorted[k] = 1;
         for (uint i = 0; i < 3; i++) {
           uint a = r.pat[k][i];
-          if (!(a & VAR)) continue;
+          // A missing constant (NONE) is no variable: its rule keeps nothing.
+          if (a == NONE || !(a & VAR)) continue;
           uint v = a & ~VAR;
           bool seen = false;
           for (uint j = 0; j < r.slots[k]; j++) if (r.slotV[k][j] == v) seen = true;
@@ -520,7 +521,11 @@ func trimPipeline(_ device: MTLDevice, archivePath: String) throws -> (MTLComput
 
 func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeatCount: Int, report: (String, [[UInt32]], [Double], [String: Any]) -> Void) {
   let setupStarted = now()
-  let device = MTLCreateSystemDefaultDevice()!
+  guard let device = MTLCreateSystemDefaultDevice() else {
+    // No GPU reachable: none here, or a sandbox that withholds it.
+    FileHandle.standardError.write("no Metal device is reachable from this process\n".data(using: .utf8)!)
+    exit(3)
+  }
   let archivePath = (ProcessInfo.processInfo.environment["TRIM_ARCHIVE"] ?? "tmp/lean/trim.mtl4archive")
   let (pipeline, pipelineMs, fromArchive) = try! trimPipeline(device, archivePath: archivePath)
   let maxVars = c.rules.map { $0.vars }.max() ?? 1

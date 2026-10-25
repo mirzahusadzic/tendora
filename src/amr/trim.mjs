@@ -303,11 +303,28 @@ export function storeCapture(store, bodies, length = store.length) {
   };
 }
 
+const invalid = (why) =>
+  Object.assign(new Error(`Malformed trim output: ${why}.`), { code: 'TRIM_OUTPUT_INVALID' });
+
+/** Lists that answer a capture: one per pattern, each strictly ascending
+ * within its facts. A trim that does not fit is refused, so a backend's fault
+ * can never pass for facts no rule could use. */
+export function checkTrim(lists, capture) {
+  const patterns = capture.rules.reduce((n, rule) => n + rule.patterns.length, 0);
+  if (lists.length !== patterns) throw invalid(`${lists.length} lists for ${patterns} patterns`);
+  for (const list of lists)
+    for (let j = 0; j < list.length; j++)
+      if (list[j] >= capture.facts || (j && list[j] <= list[j - 1]))
+        throw invalid(`position ${list[j]} out of order or past ${capture.facts} facts`);
+  return lists;
+}
+
 /** The positions any of the bodies can still use, marked; `trim` is the
  * backend (lists per pattern, in rule order). */
 export function usablePositions(store, bodies, { length = store.length, trim = trimFast } = {}) {
   const usable = new Uint8Array(length);
-  for (const list of trim(storeCapture(store, bodies, length)))
+  const capture = storeCapture(store, bodies, length);
+  for (const list of checkTrim(trim(capture), capture))
     for (let j = 0; j < list.length; j++) usable[list[j]] = 1;
   return usable;
 }
@@ -328,11 +345,21 @@ export function encodeTrim(lists) {
   return words;
 }
 
-export function decodeTrim(bytes) {
-  const words = new Uint32Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 4);
+/** The lists a backend wrote, their layout checked, and against `capture`
+ * when given (checkTrim). */
+export function decodeTrim(bytes, capture) {
+  if (bytes.byteLength % 4 || bytes.byteLength < 8) throw invalid(`${bytes.byteLength} bytes`);
+  const aligned = bytes.byteOffset % 4 ? new Uint8Array(bytes) : bytes;
+  const words = new Uint32Array(aligned.buffer, aligned.byteOffset, aligned.byteLength / 4);
   const count = words[0],
     from = 2 + count;
-  return Array.from({ length: count }, (_, k) =>
+  if (from > words.length) throw invalid(`${count} lists in ${words.length} words`);
+  if (words[1] !== 0 || words[1 + count] !== words.length - from)
+    throw invalid(`offsets ${words[1]}…${words[1 + count]} for ${words.length - from} positions`);
+  for (let k = 1; k <= count; k++)
+    if (words[1 + k] < words[k]) throw invalid(`offsets out of order at list ${k}`);
+  const lists = Array.from({ length: count }, (_, k) =>
     words.subarray(from + words[1 + k], from + words[2 + k]),
   );
+  return capture ? checkTrim(lists, capture) : lists;
 }

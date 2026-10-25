@@ -27,7 +27,7 @@ import {
 import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { decodeTrim, trimFast, useTrim } from '../amr/trim.mjs';
+import { MISSING, decodeTrim, trimFast, useTrim } from '../amr/trim.mjs';
 
 export const trimBackends = ['js', 'swift', 'metal', 'auto'];
 // Where a native backend starts to pay: the trim in JS takes about 20 ms at
@@ -124,13 +124,47 @@ function writeCapture(capture) {
 }
 process.on('exit', () => scratch && rmSync(scratch, { recursive: true, force: true }));
 
+const missingIn = (rule) => rule.patterns.some((pattern) => pattern.includes(MISSING));
+
+/** A capture without the rules that name a constant the store lacks, and how
+ * to put their lists back: such a rule keeps nothing, on every backend, and
+ * the native program never sees it. */
+export function withoutMissing(capture) {
+  const sent = { ...capture, rules: capture.rules.filter((rule) => !missingIn(rule)) };
+  const restore = (lists) => {
+    const out = [];
+    let at = 0;
+    for (const rule of capture.rules)
+      for (let k = 0; k < rule.patterns.length; k++)
+        out.push(missingIn(rule) ? new Uint32Array(0) : lists[at++]);
+    return out;
+  };
+  return { sent, restore };
+}
+
+/** Why the Metal kernel cannot take these rules, or null: it holds at most 8
+ * variables and 16 patterns a rule (TrimMetal.swift); Swift and JavaScript
+ * take any. */
+export function metalLimit(rules) {
+  const over = rules.find(
+    (rule) => !missingIn(rule) && (rule.vars > 8 || rule.patterns.length > 16),
+  );
+  return over
+    ? `a rule has ${over.vars} variables and ${over.patterns.length} patterns, and Metal holds at most 8 variables and 16 patterns a rule`
+    : null;
+}
+
 /** A trim run by the native program. */
 function nativeTrim(kind) {
   const built = program(kind);
   if (built.reason) throw unavailable(kind, built.reason);
   const threads = availableParallelism();
   const trim = (capture) => {
-    const directory = writeCapture(capture),
+    const { sent, restore } = withoutMissing(capture);
+    if (!sent.rules.length) return restore([]);
+    const over = kind === 'metal' && metalLimit(sent.rules);
+    if (over) throw unavailable(kind, over);
+    const directory = writeCapture(sent),
       out = join(directory, 'out.bin');
     // The GPU lists its kept facts in one pool; a pool too small is retried larger.
     for (let pool = Math.max(1 << 20, capture.facts * 4); ; pool *= 4) {
@@ -146,10 +180,23 @@ function nativeTrim(kind) {
       );
       if (ran.status === 0) {
         trim.report = JSON.parse(ran.stdout.trim().split('\n').at(-1));
-        return decodeTrim(readFileSync(out));
+        // Output that does not fit the capture fails the check; it is never
+        // read as a trim that kept nothing.
+        try {
+          return restore(decodeTrim(readFileSync(out), sent));
+        } catch (error) {
+          throw unavailable(kind, error.message);
+        }
       }
       if (kind === 'metal' && /pool .* ran out/u.test(ran.stderr) && pool < 1 << 30) continue;
-      throw unavailable(kind, (ran.stderr || ran.error?.message || 'it stopped').trim());
+      throw unavailable(
+        kind,
+        (
+          ran.stderr ||
+          ran.error?.message ||
+          (ran.signal ? `it stopped on ${ran.signal}` : `it exited ${ran.status}`)
+        ).trim(),
+      );
     }
   };
   return trim;
@@ -180,10 +227,15 @@ function works(kind) {
   return found;
 }
 
-/** The backend `auto` chooses for a store of `facts`, given what works here. */
-export function chooseBackend(facts, available = (kind) => works(kind).available) {
+/** The backend `auto` chooses for a store of `facts` and its rules, given
+ * what works here: never Metal for a rule larger than it holds. */
+export function chooseBackend(facts, available = (kind) => works(kind).available, rules = []) {
   if (facts < nativeFrom) return 'js';
-  return ['metal', 'swift'].find(available) ?? 'js';
+  return (
+    ['metal', 'swift'].find(
+      (kind) => (kind !== 'metal' || !metalLimit(rules)) && available(kind),
+    ) ?? 'js'
+  );
 }
 
 /** A backend's trim; an unknown or unavailable one is refused with why. */
@@ -198,7 +250,7 @@ export function trimBackend(name = 'js') {
   if (name === 'js') return trimFast;
   if (name === 'auto')
     return (capture) => {
-      const chosen = chooseBackend(capture.facts);
+      const chosen = chooseBackend(capture.facts, undefined, capture.rules);
       return chosen === 'js' ? trimFast(capture) : works(chosen).trim(capture);
     };
   const found = works(name);

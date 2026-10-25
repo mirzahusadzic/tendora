@@ -10,15 +10,18 @@ import { listEngineRuns, readEngineArtifact } from '../../src/project/storage/en
 import { answerRecording } from '../../src/engine/answer.mjs';
 import { answerBase } from '../../src/recording/answers.mjs';
 import { knowledgeSnapshot } from '../../src/project/authoring/knowledge.mjs';
-import { currentTrim, storeCapture, trimFast } from '../../src/amr/trim.mjs';
+import { MISSING, VAR, currentTrim, storeCapture, trimFast } from '../../src/amr/trim.mjs';
 import {
   chooseBackend,
   describeBackends,
+  metalLimit,
   nativeFrom,
   trimBackend,
   useTrimBackend,
+  withoutMissing,
 } from '../../src/models/trim-backends.mjs';
 
+const list = (lists) => JSON.stringify(lists.map((items) => [...items]));
 assert.equal(trimBackend('js'), trimFast);
 assert.throws(() => trimBackend('gpu'), { code: 'BACKEND_UNKNOWN', message: /Choose js, swift/u });
 assert.equal(useTrimBackend('js'), 'js');
@@ -32,6 +35,40 @@ assert.equal(chooseBackend(nativeFrom - 1, here('metal', 'swift')), 'js');
 assert.equal(chooseBackend(nativeFrom, here('metal', 'swift')), 'metal');
 assert.equal(chooseBackend(nativeFrom, here('swift')), 'swift');
 assert.equal(chooseBackend(nativeFrom, here()), 'js');
+// Metal's kernel holds at most 8 variables and 16 patterns a rule; auto passes
+// a larger rule to Swift or JavaScript, which take any (review 2026-10-25,
+// v0.2.0 #3). A rule with a constant the store lacks never reaches it.
+const rule = (vars, patterns, constant = 1) => ({
+  vars,
+  patterns: Array.from({ length: patterns }, (_, k) => [
+    (VAR | (k % vars)) >>> 0,
+    constant,
+    (VAR | ((k + 1) % vars)) >>> 0,
+  ]),
+});
+assert.equal(metalLimit([rule(8, 16)]), null);
+assert.match(metalLimit([rule(9, 2)]), /9 variables .* at most 8 variables and 16 patterns/u);
+assert.match(metalLimit([rule(2, 17)]), /17 patterns/u);
+assert.equal(metalLimit([rule(9, 17, MISSING)]), null);
+assert.equal(chooseBackend(nativeFrom, here('metal', 'swift'), [rule(9, 2)]), 'swift');
+assert.equal(chooseBackend(nativeFrom, here('metal'), [rule(2, 17)]), 'js');
+assert.equal(chooseBackend(nativeFrom, here('metal', 'swift'), [rule(8, 16)]), 'metal');
+// Rules with a missing constant keep nothing, without the native program
+// seeing them (review 2026-10-25, v0.2.0 #1): the others go, in order, and
+// come back in place.
+const mixed = {
+  columns: [Uint32Array.of(0, 2), Uint32Array.of(1, 1), Uint32Array.of(2, 3)],
+  rules: [rule(2, 1), rule(2, 2, MISSING), rule(2, 1)],
+  facts: 2,
+  terms: 4,
+};
+const { sent, restore } = withoutMissing(mixed);
+assert.deepEqual(sent.rules, [mixed.rules[0], mixed.rules[2]]);
+assert.deepEqual(list(restore(trimFast(sent))), list(trimFast(mixed)));
+assert.deepEqual(
+  list(withoutMissing({ ...mixed, rules: [mixed.rules[1]] }).restore([])),
+  '[[],[]]',
+);
 
 // Without a Swift toolchain (or off macOS) native backends are refused with
 // why, and js and auto still run.
@@ -83,7 +120,6 @@ const shape = (inference) =>
       fact.alternatives?.map((p) => p.premises),
     ]),
   );
-const list = (lists) => JSON.stringify(lists.map((items) => [...items]));
 const runs = (await listEngineRuns(project)).slice(0, 4);
 for (const { name } of native) {
   const trim = trimBackend(name);
@@ -102,6 +138,13 @@ for (const { name } of native) {
     );
     assert.equal(list(trim(capture)), list(trimFast(capture)), `${name} lists`);
   }
+  // A rule with a missing constant keeps nothing here too; a rule larger than
+  // Metal holds runs on Swift and is refused by an explicit metal, with why.
+  assert.equal(list(trim(mixed)), list(trimFast(mixed)), `${name}: missing constant`);
+  const large = { ...mixed, rules: [rule(9, 17)] };
+  if (name === 'metal')
+    assert.throws(() => trim(large), { code: 'BACKEND_UNAVAILABLE', message: /at most 8/u });
+  else assert.equal(list(trim(large)), list(trimFast(large)), `${name}: a large rule`);
 }
 console.log(
   `ok trim backends: js default, auto below ${nativeFrom.toLocaleString('en')} facts, refusals with why${native.length ? `; ${native.map(({ name }) => name).join(' and ')} equal js on ${runs.length} checks` : ''}`,

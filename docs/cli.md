@@ -141,6 +141,10 @@ one; the workbench takes `--backend` too. The native program is built on first
 use into `.deps/native`; starting it costs tens of milliseconds, so it pays
 only on large stores, and a check's inference is bounded at 48,000 facts today:
 `auto` then chooses `js`. A backend this machine lacks is refused with why.
+Metal holds at most 8 variables and 16 patterns a rule: `auto` passes a larger
+rule to Swift or `js`, and an explicit `metal` refuses it. A native program's
+output that does not fit what it was given fails the check; it is never read
+as a trim that kept nothing.
 
 ## Output and exit status
 

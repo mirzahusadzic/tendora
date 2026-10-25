@@ -69,6 +69,35 @@ assert.equal(
   0,
 );
 // Every backend's output encodes and decodes the same way.
-const lists = trimFast(storeCapture(store, [[['?x', ':ARG0', '?y']]]));
-assert.deepEqual(list(decodeTrim(Buffer.from(encodeTrim(lists).buffer))), list(lists));
+const arg0 = storeCapture(store, [[['?x', ':ARG0', '?y']]]);
+const lists = trimFast(arg0);
+assert.deepEqual(list(decodeTrim(Buffer.from(encodeTrim(lists).buffer), arg0)), list(lists));
+// Output that does not fit its capture is refused, never read as an empty
+// trim (review 2026-10-25, v0.2.0 #2): a truncated file, offsets out of
+// order, a total that disagrees, a list too few or too many, a position past
+// the facts or out of order.
+const words = (...values) => Buffer.from(Uint32Array.from(values).buffer);
+const malformed = {
+  truncated: Uint8Array.of(1, 2, 3),
+  'too short': words(1),
+  'offsets out of order': words(2, 0, 2, 1, 0, 1, 2),
+  'total disagrees': words(1, 0, 3, 0, 1),
+  'missing words': words(1, 0, 2, 0),
+};
+for (const [why, bytes] of Object.entries(malformed))
+  assert.throws(() => decodeTrim(bytes), { code: 'TRIM_OUTPUT_INVALID' }, why);
+const one = { ...arg0, facts: 4 };
+for (const [why, bytes] of Object.entries({
+  'a list too many': words(2, 0, 0, 0),
+  'past the facts': words(1, 0, 1, 4),
+  'out of order': words(1, 0, 2, 2, 1),
+  repeated: words(1, 0, 2, 1, 1),
+}))
+  assert.throws(() => decodeTrim(bytes, one), { code: 'TRIM_OUTPUT_INVALID' }, why);
+assert.deepEqual(list(decodeTrim(words(1, 0, 2, 1, 3), one)), [[1, 3]]);
+// Whatever backend trims, its lists must fit the capture.
+for (const bad of [() => [], (capture) => [Uint32Array.of(capture.facts)]])
+  assert.throws(() => usablePositions(store, [[['?x', ':ARG0', '?y']]], { trim: bad }), {
+    code: 'TRIM_OUTPUT_INVALID',
+  });
 console.log(`ok trim in inference: ${checks} checks identical with and without it; fast = oracle`);
