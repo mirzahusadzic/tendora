@@ -73,7 +73,7 @@ says when a rule never applies: no statement meets its condition.
 rules that would answer it to the premise nothing brings about, and asks the
 rule's author whether it holds, in the rule's own words. `equivocation` names a
 predicate read in two senses across the statements, with each sense's PropBank
-gloss. `definition` gives a term's genus, species and siblings from the kind
+gloss, and the same words read as two structures. `definition` gives a term's genus, species and siblings from the kind
 statements, what is said of it, and asks what nothing says.
 
 **Structure and voices.** `division` finds a role whose statements fall into
@@ -83,6 +83,17 @@ alternatives and gives each as a case: a conclusion under every one follows
 either way. `analogy` pairs statements of one shape and asks whether a rule
 that applies with one holds for the other. `dialogue` asks each statement of the
 others and names where two authors, as recorded or declared, clash or agree.
+
+## In the workbench
+
+The root role shows the corpus-wide methods, each with its findings or that it
+found none: aporia, dilemma, analogy, dialogue, equivocation, and collection and
+division. They read every statement in a worker, by themselves up to 300
+statements (a larger corpus names the commands instead), as corpus fidelity
+does. A statement shows its elenchus, asked of the others, and its
+counterexamples; a saved question left open, without a case, shows the
+premises maieutics finds. `suppose`, `definition` and `elenchus --text` take
+words of their own and are CLI commands.
 
 ## Reading a finding
 
@@ -107,10 +118,10 @@ output says the same, one finding at a time.
 ## What they cannot do
 
 - **They find what the readings support.** A reading can be wrong or
-  inconsistent: on the demo, eGemma reads "payment key" three ways across three
-  sentences, and a case worded one way may not meet a rule worded another.
-  `equivocation` catches a word read in two senses, not the same words read as
-  two structures.
+  inconsistent: on the demo, eGemma reads "payment key" three ways, and a case
+  worded one way may not meet a rule worded another. `equivocation` names a
+  word read in two senses and two concepts related two ways; a reading with a
+  different head altogether (a verb "key" for the noun) it does not catch.
 - **A conditional answer's clause is no premise.** An answer that holds "when a
   payment key is exposed" already names its clause, and a case does not
   discharge it; maieutics finds premises behind rules only.

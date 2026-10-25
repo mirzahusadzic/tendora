@@ -35,6 +35,15 @@ import {
   tensionReport,
 } from '../../project/inquiries/inspection.mjs';
 import { fidelityInWorker } from '../../project/inquiries/fidelity.mjs';
+import { corpusMethodsInWorker } from '../../project/inquiries/methods.mjs';
+import { elenchusReport } from '../../project/inquiries/elenchus.mjs';
+import { counterexampleReport } from '../../project/inquiries/counterexample.mjs';
+import { maieuticsReport } from '../../project/inquiries/maieutics.mjs';
+import {
+  corpusMethodsGroups,
+  questionMaieuticsGroups,
+  statementMethodsGroups,
+} from './methods-view.mjs';
 import { readProvenance, recordedAuthors } from '../../project/authoring/provenance.mjs';
 import {
   pendingGroups,
@@ -89,6 +98,18 @@ export function createQuestionWorkflow({
       : insight(['fidelity'], () =>
           fidelityInWorker(state.project, { signal: fidelityStop.signal }),
         );
+  // The corpus-wide methods read every statement, as fidelity does: in a
+  // worker, stopped on dispose, by themselves only up to the same size.
+  const methodsStop = new AbortController();
+  const methodsNow = () =>
+    sourceCatalog(state.project.data).length > fidelityLimit
+      ? {
+          status: 'deferred',
+          note: `${sourceCatalog(state.project.data).length} statements: run the methods with tendora aporia, dilemma, … --project ${dirname(state.project.path)}`,
+        }
+      : insight(['methods'], () =>
+          corpusMethodsInWorker(state.project, { signal: methodsStop.signal }),
+        );
   function questionInsights(run) {
     const project = state.project;
     const caseText = run.caseSelection?.sources?.map((source) => source.text).join(' ') ?? null;
@@ -102,10 +123,21 @@ export function createQuestionWorkflow({
       }),
     );
     const tensions = tensionsNow();
+    // A question left open, or answered under a rule, without a case: the
+    // premises an author could complete.
+    const maieutics =
+      !run.caseSelection && ['open', 'conditional', 'limited'].includes(run.status)
+        ? insight(['maieutics', text], () => maieuticsReport(project, { question: text }))
+        : null;
     return (
       pendingGroups('What the answer rests on', recoiled) ??
-      pendingGroups('Juxtaposition: what it brings together', tensions) ??
-      questionGroups(recoiled.value, tensions.value, { text, caseText })
+      pendingGroups('Juxtaposition: what it brings together', tensions) ?? [
+        ...questionGroups(recoiled.value, tensions.value, { text, caseText }),
+        ...(maieutics
+          ? (pendingGroups('Maieutics: questions for authors', maieutics) ??
+            questionMaieuticsGroups(maieutics.value))
+          : []),
+      ]
     );
   }
   function statementInsights(text) {
@@ -129,7 +161,18 @@ export function createQuestionWorkflow({
         : {}),
       author: recorded?.author ?? sidecar.author ?? 'unrecorded',
     };
-    return statementGroups(recoiled.value, probes, author);
+    const elenchus = insight(['elenchus', text], () =>
+      elenchusReport(project, { statement: text, offline: true }),
+    );
+    const counter = insight(['counterexample', text], () =>
+      counterexampleReport(project, { statement: text }),
+    );
+    return [
+      ...statementGroups(recoiled.value, probes, author),
+      ...(pendingGroups('Elenchus: asked of the others', elenchus) ??
+        pendingGroups('Counterexamples', counter) ??
+        statementMethodsGroups(elenchus.value, counter.value)),
+    ];
   }
   let current = null,
     pending = null,
@@ -674,6 +717,12 @@ export function createQuestionWorkflow({
           ? (() => {
               const fidelity = fidelityNow();
               return pendingGroups('Corpus fidelity', fidelity) ?? fidelityGroups(fidelity.value);
+            })()
+          : []),
+        ...(role().parentId == null
+          ? (() => {
+              const found = methodsNow();
+              return pendingGroups('Socratic methods', found) ?? corpusMethodsGroups(found.value);
             })()
           : []),
         ...(role().children.length
@@ -1511,6 +1560,7 @@ export function createQuestionWorkflow({
     dispose: () => {
       disposed = true;
       fidelityStop.abort();
+      methodsStop.abort();
       settleNow(false);
       cancel();
       inspectionWork?.controller.abort();

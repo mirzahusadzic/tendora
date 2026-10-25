@@ -162,11 +162,11 @@ rule's author, in the rule's own words: the deepest first. Both deepest premises
 are the alternatives of the dilemma below. Without its answer, the question
 stays open; with it, the answer is Sam, resting on what the author said.
 
-### Equivocation: one word, two senses
+### Equivocation: one word, two senses or two structures
 
 ```
 $ npx tendora equivocation --project .proj/payments-demo --offline
-Equivocation over 58 predicate lemmas: 1 word doing more than one job.
+Equivocation over 58 predicate lemmas: 2 places where words do more than one job.
 
 “restore” is read in 2 senses.
   restore-01 (give back):
@@ -174,12 +174,21 @@ Equivocation over 58 predicate lemmas: 1 word doing more than one job.
   restore-02 (make like new, restore to previous state):
     “Jordan, the database administrator, tests a backup before restoring it.” [Database Administrator]
   Is “restore” one meaning here, or 2? If one, reword so they read alike.
+
+“a payment key” is read with 2 structures.
+  key :mod pay-01:
+    “Priya, the security engineer, reviews access logs when a payment key is exposed.” [Security Engineer]
+    “If a payment key leaks, Morgan, the release manager, ships a release.” [Release Manager]
+  key :instrument-of pay-01:
+…
 ```
 
 Jordan restores a backup in both statements, and they are read in two PropBank
-senses. A question worded with one sense does not meet a statement read in the
-other. If both mean the same, a rewording reads them alike; if not, the two
-meanings are now explicit.
+senses. The same words can also be read as two structures: "a payment key" is
+a key modified by paying in two readings, and a key that pays in four. A
+question read one way does not meet a statement read the other. If the
+readings mean the same, a rewording reads them alike; if not, the two meanings
+are now explicit.
 
 ### Definition: what a term is
 

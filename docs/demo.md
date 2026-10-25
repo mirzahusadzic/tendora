@@ -520,5 +520,6 @@ Open Development (`o`) and select a saved question: below its answer and
 evidence come **What the answer rests on**, **Other questions resting on the
 same statements** and **Juxtaposition: what it brings together**. Select a statement there (`Enter`)
 for **What rests on it**, **Asked back from its reading** and **Written by**. A
-role with children shows **Juxtaposition: tension lines**. A proposal is confirmed with
-`d` on the question.
+role with children shows **Juxtaposition: tension lines**, and the root role
+**Corpus fidelity** and the corpus-wide [methods](methods.md#in-the-workbench).
+A proposal is confirmed with `d` on the question.

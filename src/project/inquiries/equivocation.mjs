@@ -1,6 +1,8 @@
 /** Equivocation: is one word doing two jobs? Every reading's predicates are
  * gathered by lemma; a lemma read in two or more PropBank senses across the
- * statements is named with each sense's gloss and its statements. A saved
+ * statements is named with each sense's gloss and its statements; so are the
+ * same two concepts related two ways ("payment key" as key :mod pay-01 and as
+ * key :instrument-of pay-01), the same words read as two structures. A saved
  * question that reads a lemma in a sense no statement has, while statements
  * have another, is named too: the question and the statements may mean the
  * same and be read apart, or mean two things. Either is a question for a
@@ -9,6 +11,18 @@ import { propbankAuditor } from '../../models/propbank.mjs';
 import { clauseText, corpusView, latestChecks, savedCheck } from './corpus.mjs';
 
 const sense = /^(.+)-(\d+)$/u;
+// What relates to everything, structure no reading can be told by.
+const unrelated = /^(?:name|person|thing|and|or|amr-unknown|-|\+|date-entity)$|-91$|-quantity$/u;
+// Frames say how a claim is held (possible, in contrast), not what it relates.
+const framing = new Set([
+  'possible-01',
+  'obligate-01',
+  'recommend-01',
+  'permit-01',
+  'contrast-01',
+  'cause-01',
+  'mean-01',
+]);
 /** A reading's predicates: [lemma, concept, node]; roles (-91) left out. */
 const predicates = (graph) =>
   graph.nodes
@@ -44,6 +58,45 @@ export async function equivocationReport(project, { signal } = {}) {
       })),
       statements: view.named([...senses.values()].flatMap((items) => [...items.keys()])),
       question: `Is “${lemma}” one meaning here, or ${senses.size}? If one, reword so they read alike.`,
+    });
+  }
+  // The same two concepts related two ways ("payment key": key :mod pay-01 in
+  // one reading, key :instrument-of pay-01 in another). Frames, names and
+  // values relate everything and are left out.
+  const pairs = new Map();
+  for (const item of view.statements.filter((entry) => entry.graph)) {
+    const nodes = new Map(item.graph.nodes.map((node) => [node.id, node]));
+    for (const edge of item.graph.edges) {
+      if (/^:(?:op\d+|name|wiki|polarity|quant|mode)$/u.test(edge.role)) continue;
+      const [a, b] = [nodes.get(edge.from), nodes.get(edge.to)];
+      if (!a?.concept || !b?.concept || b.literal !== undefined) continue;
+      if ([a, b].some((node) => unrelated.test(node.concept) || framing.has(node.concept)))
+        continue;
+      const [first, second, relation] =
+        a.concept < b.concept ? [a, b, edge.role] : [b, a, `${edge.role}-of`];
+      const key = `${first.concept}\u0000${second.concept}`;
+      if (!pairs.has(key)) pairs.set(key, new Map());
+      const relations = pairs.get(key);
+      if (!relations.has(relation)) relations.set(relation, new Map());
+      relations.get(relation).set(item.id, clauseText(item, [first.id, second.id]));
+    }
+  }
+  for (const [key, relations] of pairs) {
+    if (relations.size < 2) continue;
+    const [first, second] = key.split('\u0000');
+    const words = [...relations.values()].flatMap((items) => [...items.values()]).find(Boolean);
+    findings.push({
+      method: 'equivocation',
+      kind: 'structure',
+      summary: `${words ? `“${words}”` : `${first} and ${second}`} is read with ${relations.size} structures.`,
+      words,
+      structures: [...relations].map(([relation, items]) => ({
+        reading: `${first} ${relation} ${second}`,
+        statements: view.named([...items.keys()]),
+      })),
+      statements: view.named([...relations.values()].flatMap((items) => [...items.keys()])),
+      question:
+        'Do they say the same? If so, reword so they read alike; a question read one way does not meet a statement read the other.',
     });
   }
   // Questions read in a sense no statement has.
@@ -90,8 +143,8 @@ export function formatEquivocation(report) {
   const lines = [
     `Equivocation over ${report.lemmas} predicate lemmas: ${
       report.findings.length
-        ? `${report.findings.length} ${report.findings.length === 1 ? 'word' : 'words'} doing more than one job.`
-        : 'each word is read in one sense.'
+        ? `${report.findings.length} ${report.findings.length === 1 ? 'place' : 'places'} where words do more than one job.`
+        : 'each word is read in one sense and one structure.'
     }`,
   ];
   for (const finding of report.findings) {
@@ -100,9 +153,14 @@ export function formatEquivocation(report) {
       lines.push(
         `  asked: ${finding.asked.concept} in “${finding.asked.question}” (${finding.asked.status})`,
       );
-    for (const item of finding.senses)
+    for (const item of finding.senses ?? [])
       lines.push(
         `  ${item.concept}${item.gloss ? ` (${item.gloss})` : ''}:`,
+        ...item.statements.map((entry) => `    “${entry.statement}” [${entry.role}]`),
+      );
+    for (const item of finding.structures ?? [])
+      lines.push(
+        `  ${item.reading}:`,
         ...item.statements.map((entry) => `    “${entry.statement}” [${entry.role}]`),
       );
     lines.push(`  ${finding.question}`);

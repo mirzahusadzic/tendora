@@ -71,6 +71,20 @@ assert.deepEqual(
   ],
 );
 assert.match(formatEquivocation(words), /“restore” is read in 2 senses/u);
+// The same words read as two structures: "a payment key" is key :mod pay-01
+// in two readings and key :instrument-of pay-01 in four.
+const key = words.findings.find((finding) => finding.kind === 'structure');
+assert.deepEqual(
+  [key.words, key.structures.map((item) => [item.reading, item.statements.length])],
+  [
+    'a payment key',
+    [
+      ['key :mod pay-01', 2],
+      ['key :instrument-of pay-01', 4],
+    ],
+  ],
+);
+assert.match(formatEquivocation(words), /“a payment key” is read with 2 structures/u);
 
 // Definition: a deployment is a change (eGemma reads it as deploy-01, which
 // PropBank names "deployment"); nothing says what a change is.

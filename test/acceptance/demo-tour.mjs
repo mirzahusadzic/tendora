@@ -234,6 +234,27 @@ try {
     ['Author', 'Claude'],
     ['Through', 'library'],
   ]);
+  // The statement asked of the others (elenchus), and its counterexamples:
+  // no statement says a certificate expires, so the rule never applies.
+  const groupOf = (view, heading) =>
+    view.sections
+      .flatMap((section) => section.groups ?? [])
+      .find((group) => group.heading === heading);
+  assert.deepEqual(groupOf(statement, 'Elenchus: asked of the others').rows, [
+    ['', 'Nothing in the other statements refutes or supports it.', 'muted'],
+  ]);
+  assert.match(groupOf(statement, 'Counterexamples').rows[0][1], /^It never applies: nothing/u);
+  // An open question: the premises an author could complete.
+  const open = ui.state.workflow
+    .developmentItems()
+    .find((entry) => entry.question === 'Who notifies the customers?' && !entry.caseSelection);
+  await ui.state.workflow.openDevelopment(open.id);
+  await ui.app.idle();
+  const premises = groupOf(ui.state.workflow.readingView(), 'Maieutics: questions for authors');
+  assert.deepEqual(premises.rows.slice(0, 2), [
+    ['missing premise', 'a certificate expires (then: Sam)', 'warning'],
+    ['', 'ask Claude: Is it so that a certificate expires?'],
+  ]);
   // The root role: juxtaposition between its branches, and corpus fidelity.
   ui.app.dispose();
   ui = journeyWorkbench(await openProject(project), directory);
@@ -250,6 +271,29 @@ try {
     .find((group) => group.heading === 'Corpus fidelity');
   assert.match(fidelityGroup.rows[0][1], /96 variables of 30 statements; answerable 87 \(91%\)/u);
   assert.equal(fidelityGroup.table.entries.length, 6, 'one row a top-level role');
+  // The corpus-wide methods, each with its findings or that it found none.
+  const aporiaGroup = groupOf(rootView, 'Aporia: where the statements cannot hold together');
+  assert.deepEqual(
+    aporiaGroup.rows.filter((row) => row[2] === 'warning').map((row) => row[0]),
+    ['in its case', 'joint case'],
+  );
+  assert.match(
+    groupOf(rootView, 'Dilemma: what follows either way').rows[0][1],
+    /^Whichever holds/u,
+  );
+  assert.equal(
+    groupOf(rootView, 'Analogy: what holds here, asked there').rows[0][1],
+    'Does “If Priya reviews access logs, she files an audit note.” hold for Alex as for Priya?',
+  );
+  assert.equal(groupOf(rootView, 'Dialogue: where authors clash or agree').rows[0][0], 'clash');
+  assert.equal(
+    groupOf(rootView, 'Equivocation: words in more than one sense or structure').rows[0][1],
+    '“restore” is read in 2 senses.',
+  );
+  assert.equal(
+    groupOf(rootView, 'Collection and division: the role tree').rows[0][0],
+    'collection',
+  );
   console.log(
     `ok demo tour: every capability replays offline in the CLI and the workbench (${directory})`,
   );
