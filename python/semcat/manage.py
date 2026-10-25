@@ -55,7 +55,7 @@ def verify_tree(source, directory):
 
 def assemble(root=HERE, build_root=None):
     manifest = validate_inputs(root)
-    build_root = build_root or REPOSITORY / ".proj" / "semcat-builds"
+    build_root = build_root or REPOSITORY / ".deps" / "semcat-builds"
     build_root.mkdir(parents=True, exist_ok=True)
     temporary = Path(tempfile.mkdtemp(prefix=".assemble-", dir=build_root))
     try:

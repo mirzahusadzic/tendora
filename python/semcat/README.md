@@ -18,7 +18,7 @@ checks before comparisons, rejects shadowed imports, and reports commit,
 fingerprints and dependency versions. These checks detect drift; they are not
 a substitute for reviewing dependency changes.
 
-Builds live in ignored `.proj/semcat-builds/`. Reinstall after editing the
+Builds live in ignored `.deps/semcat-builds/`. Reinstall after editing the
 adapter. Change runtime behavior in the fork, then update both the dependency
 pin and `UPSTREAM.json` hashes from that commit. Do not install the standalone
 `smatchpp` or `semantic-rose` distributions in the same environment.
