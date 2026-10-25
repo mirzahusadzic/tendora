@@ -4,22 +4,41 @@
  * the other is a proposed transfer, asked as a question: never an answer,
  * since the rule says only what it says. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { consequences, corpusView, supposedSource } from './corpus.mjs';
+import {
+  consequences,
+  corpusView,
+  coverage,
+  coverageLines,
+  nothing,
+  supposedSource,
+} from './corpus.mjs';
 
 const core = /^:ARG\d$/u;
+// Modal frames hold a claim (may, must, should): its truth is the framed one's.
+const modal = new Set(['possible-01', 'obligate-01', 'recommend-01', 'permit-01']);
 
-/** A plain statement's shape and fillers: its claim's predicate and core
- * roles, and what fills each (a name, or a concept). */
-function shape(graph) {
+/** A plain statement's shape and fillers: its claim's predicate, core roles
+ * and truth (negated under a modal frame too), and what fills each role (a
+ * name, or a concept). */
+export function shape(graph) {
   const top = graph.assertionTop ?? graph.top;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   const head = nodes.get(top)?.concept;
   if (!head || !/-\d+$/u.test(head)) return null;
   const roles = graph.edges.filter((edge) => edge.from === top && core.test(edge.role));
   if (!roles.length) return null;
-  const negated = graph.edges.some(
-    (edge) => edge.from === top && edge.role === ':polarity' && nodes.get(edge.to)?.concept === '-',
-  );
+  // Negated anywhere down the modal frames ("must not promise") is negated.
+  const negatedAt = (id) =>
+    graph.edges.some(
+      (edge) =>
+        edge.from === id && edge.role === ':polarity' && nodes.get(edge.to)?.concept === '-',
+    );
+  let negated = negatedAt(top);
+  for (let at = top; modal.has(nodes.get(at)?.concept);) {
+    at = graph.edges.find((edge) => edge.from === at && edge.role === ':ARG1')?.to;
+    if (!at) break;
+    negated ||= negatedAt(at);
+  }
   const filler = (id) => {
     const name = graph.edges.find((edge) => edge.from === id && edge.role === ':name');
     const words = name
@@ -99,7 +118,7 @@ export async function analogyReport(project, { signal } = {}) {
               });
             }
       }
-  return { revision: project.digest, pairs, findings };
+  return { revision: project.digest, pairs, findings, ...coverage(view) };
 }
 
 /** The report as plain text, for the CLI. */
@@ -108,9 +127,11 @@ export function formatAnalogy(report) {
     `Analogy over ${report.pairs} ${report.pairs === 1 ? 'pair' : 'pairs'} of statements of one shape: ${
       report.findings.length
         ? `${report.findings.length} proposed ${report.findings.length === 1 ? 'transfer' : 'transfers'}.`
-        : 'no rule applies to one and not the other.'
+        : `${nothing(report, 'no rule applies to one and not the other')}.`
     }`,
   ];
   for (const finding of report.findings) lines.push('', finding.question, `  ${finding.summary}`);
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

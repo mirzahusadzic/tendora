@@ -2,6 +2,14 @@
  * their reports: the corpus-wide methods at the root role, a statement's
  * elenchus and counterexamples, and a saved question's missing premises.
  * Read-only: each finding is a question or a proposal for a person. */
+import { coverageLines, who } from '../../project/inquiries/corpus.mjs';
+
+/** What a report could not ask (statements without a reading, a search at
+ * its bound), as a group of its own; none when it asked everything. */
+const coverageGroups = (heading, report) => {
+  const lines = coverageLines(report);
+  return lines.length ? [{ heading, rows: lines.map((line) => ['', line.trim(), 'warning']) }] : [];
+};
 
 /** A finding: what it is and asks, then the statements it rests on. */
 const findingRows = (finding) => [
@@ -32,32 +40,36 @@ const methods = [
 
 /** The root role: each corpus-wide method, its findings or that it found none. */
 export function corpusMethodsGroups(reports) {
-  return methods.map(([name, heading, none]) => {
-    const findings = reports[name].findings;
-    return {
-      heading,
-      rows: findings.length
-        ? findings.flatMap((finding) =>
-            name === 'equivocation'
-              ? [
-                  [finding.kind, finding.summary, 'warning'],
-                  ...(finding.senses ?? []).map((sense) => [
-                    sense.concept,
-                    sense.gloss ?? '',
-                    'muted',
-                  ]),
-                  ...(finding.structures ?? []).map((item) => [
-                    item.reading,
-                    item.statements.map((entry) => `“${entry.statement}”`).join(' '),
-                    'muted',
-                  ]),
-                  ['', finding.question],
-                ]
-              : findingRows(finding),
-          )
-        : [['', none, 'muted']],
-    };
-  });
+  const limited = methods.some(([name]) => reports[name].limited);
+  return [
+    ...methods.map(([name, heading, none]) => {
+      const findings = reports[name].findings;
+      return {
+        heading,
+        rows: findings.length
+          ? findings.flatMap((finding) =>
+              name === 'equivocation'
+                ? [
+                    [finding.kind, finding.summary, 'warning'],
+                    ...(finding.senses ?? []).map((sense) => [
+                      sense.concept,
+                      sense.gloss ?? '',
+                      'muted',
+                    ]),
+                    ...(finding.structures ?? []).map((item) => [
+                      item.reading,
+                      item.statements.map((entry) => `“${entry.statement}”`).join(' '),
+                      'muted',
+                    ]),
+                    ['', finding.question],
+                  ]
+                : findingRows(finding),
+            )
+          : [['', none, 'muted']],
+      };
+    }),
+    ...coverageGroups('Socratic methods: not asked', { ...reports.aporia, limited }),
+  ];
 }
 
 /** A statement: asked of the others (elenchus), and its counterexamples. */
@@ -94,6 +106,7 @@ export function statementMethodsGroups(elenchus, counterexample) {
         ]),
       ],
     },
+    ...coverageGroups('Elenchus: not asked', elenchus),
     {
       heading: 'Counterexamples',
       rows: [
@@ -118,7 +131,7 @@ export function questionMaieuticsGroups(report) {
                 : finding.statements[0].statement,
               'warning',
             ],
-            ['', `ask ${finding.author}: ${finding.ask}`],
+            ['', `ask ${who(finding.author)}: ${finding.ask}`],
             ...(finding.kind === 'missing premise'
               ? finding.statements.map((item) => [
                   '',
@@ -129,5 +142,6 @@ export function questionMaieuticsGroups(report) {
           ])
         : [['', 'No premise or connection found to ask about.', 'muted']],
     },
+    ...coverageGroups('Maieutics: not asked', report),
   ];
 }

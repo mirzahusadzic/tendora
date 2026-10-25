@@ -7,14 +7,17 @@
  * and what tells X from a sibling, when nothing does. Read-only and offline. */
 import { kindReading } from '../../amr/kinds.mjs';
 import { propbankAuditor } from '../../models/propbank.mjs';
-import { corpusView } from './corpus.mjs';
+import { corpusView, coverage, coverageLines } from './corpus.mjs';
 
-const stem = (word) =>
-  String(word)
-    .toLowerCase()
-    .replace(/-\d+$/u, '')
-    .replace(/(?:ies)$/u, 'y')
-    .replace(/(?:es|s)$/u, '');
+// A light, symmetric plural rule: changes is change, policies is policy,
+// boxes is box; a word not plural stays as it is.
+const stem = (word) => {
+  const w = String(word).toLowerCase().replace(/-\d+$/u, '');
+  if (/ies$/u.test(w) && w.length > 4) return w.replace(/ies$/u, 'y');
+  if (/(?:ches|shes|sses|xes|zes)$/u.test(w)) return w.slice(0, -2);
+  if (/s$/u.test(w) && !/ss$/u.test(w) && w.length > 3) return w.slice(0, -1);
+  return w;
+};
 
 /** A kind statement's subject and predicate heads: what is said to be what. */
 function kindHeads(reading) {
@@ -28,7 +31,12 @@ function kindHeads(reading) {
 export async function definitionReport(project, { term }) {
   if (typeof term !== 'string' || !term.trim()) throw new Error('Name a term to define.');
   const view = await corpusView(project);
-  const wanted = stem(term.trim().split(/\s+/u).at(-1));
+  // A term of several words is searched by its last, and said so: the report
+  // names the word it read, never a phrase it did not match.
+  const words = term.trim().split(/\s+/u);
+  const asked = term.trim();
+  term = words.at(-1);
+  const wanted = stem(term);
   // A term names a concept by its own word, or by a word PropBank gives its
   // frame ("deployment" is deploy-01).
   const { frames } = await propbankAuditor();
@@ -100,6 +108,7 @@ export async function definitionReport(project, { term }) {
   return {
     revision: project.digest,
     term,
+    ...(words.length > 1 ? { asked } : {}),
     genus: genus.map(({ item, heads }) => ({ kind: heads.predicate, ...view.named([item.id])[0] })),
     species: species.map(({ item, heads }) => ({
       kind: heads.subject,
@@ -115,6 +124,7 @@ export async function definitionReport(project, { term }) {
       statements: view.named([...ids]),
     })),
     findings,
+    ...coverage(view),
   };
 }
 
@@ -122,8 +132,10 @@ export async function definitionReport(project, { term }) {
  * genus even when nothing gives it (that is the question), the rest when
  * there is some. */
 export function formatDefinition(report) {
-  const lines = [`Definition of “${report.term}”, by what the statements say`];
-  const kind = (row) => `${row.kind}: “${row.statement}” [${row.role}]`;
+  const lines = [
+    `Definition of “${report.term}”${report.asked ? ` (the last word of “${report.asked}”)` : ''}, by what the statements say`,
+  ];
+  const kind = (row) => `${row.kind}: “${row.statement}” [${row.role}] (${row.author})`;
   const section = (title, rows, line, always = false) => {
     if (!rows.length && !always) return;
     lines.push('', `${title}`);
@@ -136,7 +148,8 @@ export function formatDefinition(report) {
   section(
     'Said of it',
     report.said,
-    (row) => `${row.relation}: ${row.statements.map((item) => `“${item.statement}”`).join(', ')}`,
+    (row) =>
+      `${row.relation}: ${row.statements.map((item) => `“${item.statement}” (${item.author})`).join(', ')}`,
   );
   if (report.siblings.length)
     section(
@@ -146,5 +159,7 @@ export function formatDefinition(report) {
       true,
     );
   for (const finding of report.findings) lines.push('', `${finding.summary} ${finding.question}`);
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

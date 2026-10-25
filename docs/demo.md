@@ -103,8 +103,8 @@ Commander's, outside that scope.
 | ------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Who freezes changes during a major incident?                  | Morgan, through the kind statement "A deployment is a change."           |
 | Does Morgan ship a release? (case: A major incident is open.) | No: a negated conclusion under its condition                             |
-| Does Jordan test a backup before restoring it?                | Yes, `Read "it" as the backup the question names.`                       |
-| Who should rotate a leaked payment key?                       | Priya, `A source says it must be done; that answers "should".`           |
+| Does Jordan test a backup before restoring it?                | Yes, `"it" read as the backup the question names`                        |
+| Who should rotate a leaked payment key?                       | Priya, `a statement says it must be done; that answers "should"`         |
 | Who may fail over the primary database?                       | Jordan, conditional: after the on-call engineer confirms replication lag |
 
 A kind statement extends one way: what is a change is not thereby a
@@ -495,6 +495,7 @@ What follows (2 rules)
   only with it: “If Priya renews the certificate, Sam, the support lead, notifies the customers.” [Support Lead], with …
 …
   changed: Who renews the certificate? (case: A certificate expires.)  Priya → ambiguous: …
+  changed: Who notifies the customers? (case: A certificate expires.)  Sam → ambiguous: …
   answered: Who notifies the customers?  open → Sam; rests on the supposition and 2 statements
   32 unchanged
 ```

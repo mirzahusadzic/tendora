@@ -12,7 +12,15 @@
 import { projectTree } from '../authoring/project.mjs';
 import { ruleParts } from '../../engine/cloze.mjs';
 import { resolveInquiryPlacement } from './scope.mjs';
-import { clauseText, corpusView, smallest } from './corpus.mjs';
+import {
+  clauseText,
+  commitment,
+  corpusView,
+  coverage,
+  coverageLines,
+  nothing,
+  smallest,
+} from './corpus.mjs';
 
 export async function aporiaReport(project, { role = null, signal } = {}) {
   const view = await corpusView(project);
@@ -25,6 +33,11 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
     return !scope;
   };
   const chosen = view.statements.filter((item) => item.graph && within(item.placementId));
+  // Within a role, only its statements are asked: what lies outside it is
+  // withheld from every question.
+  const outside = view.statements
+    .filter((item) => !within(item.placementId))
+    .map((item) => item.id);
   const rules = chosen
     .map((item) => ({ item, parts: ruleParts(item.graph) }))
     .filter(({ parts }) => parts && !parts.necessary);
@@ -44,7 +57,7 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
 
   for (const item of plain) {
     signal?.throwIfAborted();
-    const denied = sides(view.truth(item.graph, { withhold: [item.id] }));
+    const denied = sides(view.truth(item.graph, { withhold: [...outside, item.id] }));
     for (const binding of denied)
       findings.push({
         method: 'aporia',
@@ -59,7 +72,7 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
     const denied = sides(
       view.truth(rule.parts.conclusion, {
         cases: [rule.parts.condition],
-        withhold: [rule.item.id],
+        withhold: [...outside, rule.item.id],
       }),
     ).filter((binding) => binding.sourceIds.some((id) => view.byId.has(id)));
     const when = condition(rule);
@@ -96,7 +109,7 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
         [a, b],
         [b, a],
       ].some(([asked, other]) =>
-        sides(view.truth(asked.parts.conclusion, { cases })).some((binding) =>
+        sides(view.truth(asked.parts.conclusion, { cases, withhold: outside })).some((binding) =>
           binding.ruleIds.some((id) => view.ruleSource(id) === other.item.id),
         ),
       );
@@ -114,10 +127,7 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
   // One pair is one aporia, however it was found.
   const seen = new Set();
   const unique = smallest(findings).filter((finding) => {
-    const key = finding.statements
-      .map((item) => item.statement)
-      .sort()
-      .join('\u0000');
+    const key = finding.statements.map(commitment).sort().join('\u0001');
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -128,6 +138,10 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
     statements: chosen.length,
     rules: rules.length,
     findings: unique,
+    ...coverage(
+      view,
+      view.statements.filter((item) => within(item.placementId)).map((item) => item.id),
+    ),
   };
 }
 
@@ -137,7 +151,7 @@ export function formatAporia(report) {
     `Aporia over ${report.statements} statements (${report.rules} rules): ${
       report.findings.length
         ? `${report.findings.length} ${report.findings.length === 1 ? 'place' : 'places'} where they cannot hold together.`
-        : 'they hold together; nothing opposes.'
+        : `${nothing(report, 'they hold together; nothing opposes')}.`
     }`,
   ];
   for (const finding of report.findings)
@@ -146,5 +160,7 @@ export function formatAporia(report) {
       `${finding.kind}: ${finding.question}`,
       ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
     );
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

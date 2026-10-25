@@ -6,10 +6,7 @@
  * Authors are as recorded or declared (provenance.json); "unrecorded" is
  * named as such, not as a person. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { corpusView, smallest } from './corpus.mjs';
-
-/** An author as findings name them: "unrecorded" is no one's name. */
-const who = (author) => (author === 'unrecorded' ? 'an unrecorded author' : author);
+import { corpusView, coverage, coverageLines, smallest, who } from './corpus.mjs';
 const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export async function dialogueReport(project, { signal } = {}) {
@@ -70,6 +67,7 @@ export async function dialogueReport(project, { signal } = {}) {
     revision: project.digest,
     authors,
     findings: smallest(findings).map(({ via: _via, ...finding }) => finding),
+    ...coverage(view),
   };
 }
 
@@ -86,5 +84,7 @@ export function formatDialogue(report) {
       ...(finding.question ? [`  ${finding.question}`] : []),
       ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
     );
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

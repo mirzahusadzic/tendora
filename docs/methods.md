@@ -20,6 +20,11 @@ the bundled demo.
 - **It saves nothing.** No statement, check or case is saved. A new text (a
   supposition, a thesis) is read once and its reading retained, like a
   question's.
+- **It says what it could not ask.** Only what holds outright is evidence: an
+  answer that holds under a clause ("at night") refutes nothing. A statement
+  without a reading is named and never asked, and a search that stopped at its
+  bound is said to have; then "nothing" reads "nothing found among what was
+  read".
 
 Two of these promises follow David Matta's _Juxtaposition as a Deliberate
 Cognitive Method: The Value of Putting Things Together_ (2026,
@@ -40,11 +45,12 @@ check's circumstances: what if this held?). Asked over the whole corpus, that
 one move supposes, refutes, finds contradictions, tries premises and compares
 alternatives.
 
-A named participant is identified by its name. What describes it ("Morgan, the
-release manager") is left out of the question, and the question is asked under
-each type the statements give that name, since a reader's type is a guess: the
-demo's readings make Morgan a company in one statement and a person in
-another.
+A named participant is identified by its name. A description that only names
+its role ("Morgan, the release manager") is left out of the question, while one
+carrying a value ("Alex with employee ID 123") stays, since it tells one Alex
+from another. The question is asked under each type the statements give that
+name, since a reader's type is a guess: the demo's readings make Morgan a
+company in one statement and a person in another.
 
 Like probes and corpus fidelity, the methods read the latest check at the root
 role at the project's revision, so one must exist.
@@ -105,7 +111,8 @@ words of their own and are CLI commands.
 
 ## Reading a finding
 
-`--json` gives each finding in one shape, whatever the method:
+`--json` gives a report with its `findings`, each in one shape, whatever the
+method:
 
 ```json
 {
@@ -119,8 +126,14 @@ words of their own and are CLI commands.
 ```
 
 `kind` names the finding within its method, and `statements` the commitments
-it rests on. A method that asks a person gives `question` (maieutics adds `ask`,
-addressed to an author); one that proposes a change gives `proposal`. The text
+it rests on. A finding that asks something of a person gives `question` (a
+refutation, an aporia, a counterexample, a word in two senses, a transfer, a
+clash; maieutics adds `ask`, addressed to an author) or `proposal` (a role to
+split or join); one that only reports (a support, a conclusion that follows
+either way, a shared commitment) gives neither. Each report also gives
+`unread`, the statements in scope without a reading, and `limited`, whether a
+search stopped at its bound. `suppose` reports in its own shape: what the
+supposition says, what follows, and the questions it would change. The text
 output says the same, one finding at a time.
 
 ## What they cannot do
@@ -136,5 +149,8 @@ output says the same, one finding at a time.
 - **Few rules, little to oppose.** A corpus of plain statements gives the
   methods of opposition little to search. The methods of words and structure
   find the most there.
+- **A name told apart by role words alone is one participant.** "Alex, the
+  engineer" and "Alex, the manager" are asked as one Alex; give one of them a
+  value (an ID) and they are two.
 - **Commonness tells nothing.** Collection and division leaves out what nearly
   every statement mentions, quantifiers and measures; a name always counts.

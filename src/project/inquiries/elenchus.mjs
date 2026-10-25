@@ -15,17 +15,27 @@ import { ruleParts } from '../../engine/cloze.mjs';
 import {
   consequences,
   corpusView,
+  coverage,
+  coverageLines,
   readText,
   smallest,
   supposedId,
   supposedSource,
 } from './corpus.mjs';
 
+// What a refutation asks of whoever holds the thesis.
+const gives = 'Which gives way: the thesis, or one of these commitments?';
+
 /** A thesis asked: its truth, or a conditional thesis's conclusion under its
- * condition. */
+ * condition. A necessary condition ("only if") is no sufficient one: it is
+ * asked apart (see below). */
 function thesisParts(graph) {
   const parts = ruleParts(graph);
-  return { asked: parts ? parts.conclusion : graph, cases: parts ? [parts.condition] : [] };
+  return {
+    asked: parts ? parts.conclusion : graph,
+    cases: parts ? [parts.condition] : [],
+    necessary: parts?.necessary ? parts : null,
+  };
 }
 
 export async function elenchusReport(project, { text = null, statement = null, offline, signal }) {
@@ -73,28 +83,49 @@ export async function elenchusReport(project, { text = null, statement = null, o
   const findings = [];
 
   // Directly: the thesis's truth asked of the other statements.
-  const { asked, cases } = thesisParts(graph);
-  const direct = view.truth(asked, { cases, withhold });
-  const [agree, deny] =
-    direct.expected === 'Yes' ? [direct.yes, direct.no] : [direct.no, direct.yes];
-  for (const binding of deny)
-    findings.push({
-      method: 'elenchus',
-      kind: 'refutes',
-      summary: cases.length
-        ? 'Under its own condition, the statements answer it the other way.'
-        : 'The statements answer it the other way.',
-      statements: commitments([binding]),
-      via: 'directly',
-    });
-  for (const binding of agree)
-    findings.push({
-      method: 'elenchus',
-      kind: 'supports',
-      summary: 'The statements answer it its own way.',
-      statements: commitments([binding]),
-      via: 'directly',
-    });
+  const { asked, cases, necessary } = thesisParts(graph);
+  if (necessary) {
+    // "Only if C, Q" says Q requires C: refuted only where the statements give
+    // Q outright and deny C. That Q fails, or C holds, refutes nothing.
+    const holds = view.truth(necessary.conclusion, { withhold });
+    const condition = view.truth(necessary.condition, { withhold });
+    const given = holds.expected === 'Yes' ? holds.yes : holds.no;
+    const denied = condition.expected === 'Yes' ? condition.no : condition.yes;
+    for (const one of given)
+      for (const other of denied)
+        findings.push({
+          method: 'elenchus',
+          kind: 'refutes',
+          summary:
+            'The statements give what it says requires its condition, and deny the condition.',
+          statements: commitments([one, other]),
+          via: 'directly',
+          question: gives,
+        });
+  } else {
+    const direct = view.truth(asked, { cases, withhold });
+    const [agree, deny] =
+      direct.expected === 'Yes' ? [direct.yes, direct.no] : [direct.no, direct.yes];
+    for (const binding of deny)
+      findings.push({
+        method: 'elenchus',
+        kind: 'refutes',
+        summary: cases.length
+          ? 'Under its own condition, the statements answer it the other way.'
+          : 'The statements answer it the other way.',
+        statements: commitments([binding]),
+        via: 'directly',
+        question: gives,
+      });
+    for (const binding of agree)
+      findings.push({
+        method: 'elenchus',
+        kind: 'supports',
+        summary: 'The statements answer it its own way.',
+        statements: commitments([binding]),
+        via: 'directly',
+      });
+  }
 
   // Through a rule: each rule that applies only with the thesis, its
   // conclusion asked with the thesis beside the statements.
@@ -103,7 +134,7 @@ export async function elenchusReport(project, { text = null, statement = null, o
     if (!entry.statementId || !entry.onlyWith) continue;
     const rule = view.byId.get(entry.statementId);
     const parts = rule.graph && ruleParts(rule.graph);
-    if (!parts) continue;
+    if (!parts || parts.necessary) continue;
     const both = view.truth(parts.conclusion, { extra: [supposed], withhold });
     if (!both.yes.length || !both.no.length) continue;
     const rests = (binding) => binding.sourceIds.includes(supposedId);
@@ -127,6 +158,7 @@ export async function elenchusReport(project, { text = null, statement = null, o
         ]),
       ]),
       via: { rule: rule.text, role: view.role(rule.id) },
+      question: gives,
     });
   }
 
@@ -145,6 +177,7 @@ export async function elenchusReport(project, { text = null, statement = null, o
     verdict:
       refuted && supported ? 'contested' : refuted ? 'refuted' : supported ? 'supported' : 'open',
     findings,
+    ...coverage(view),
   };
 }
 
@@ -154,6 +187,8 @@ const verdicts = {
   supported: 'supported, and nothing refutes it',
   open: 'open: nothing in the statements refutes or supports it',
 };
+// Open, when the reading was not whole: nothing among what was read.
+const openPartly = 'open: nothing among the statements read refutes or supports it';
 
 /** The report as plain text, for the CLI. */
 export function formatElenchus(report) {
@@ -164,7 +199,11 @@ export function formatElenchus(report) {
       ? `${head}\nIt has no retained reading. Without --offline it is read through eGemma.`
       : `${head}\nIt was not read: ${thesis.reason}`;
   if (thesis.reading !== 'read') return `${head}\nIt has no usable reading.`;
-  const lines = [`${head}: ${verdicts[report.verdict]}.`];
+  const verdict =
+    report.verdict === 'open' && (report.unread?.length || report.limited)
+      ? openPartly
+      : verdicts[report.verdict];
+  const lines = [`${head}: ${verdict}.`];
   for (const finding of report.findings) {
     const by = `${finding.statements.length} ${finding.statements.length === 1 ? 'statement' : 'statements'}`;
     lines.push(
@@ -175,7 +214,10 @@ export function formatElenchus(report) {
           : `Refuted through “${finding.via.rule}” [${finding.via.role}], by ${by}:`
         : `Supported by ${by}:`,
       ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
+      ...(finding.question ? [`  ${finding.question}`] : []),
     );
   }
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

@@ -8,9 +8,9 @@
  * offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
 import { findStatement } from './inspection.mjs';
-import { clauseText, corpusView, smallest } from './corpus.mjs';
+import { clauseText, corpusView, coverage, coverageLines, nothing, smallest } from './corpus.mjs';
 
-export async function counterexampleReport(project, { statement }) {
+export async function counterexampleReport(project, { statement, signal } = {}) {
   const view = await corpusView(project);
   const { named } = view;
   const text = findStatement(project.data, statement).text;
@@ -40,10 +40,26 @@ export async function counterexampleReport(project, { statement }) {
         item,
         parts.condition.nodes.map((node) => node.id),
       ) ?? 'its condition';
+    // One counterexample is one occasion: the denial must share a statement
+    // with what met the condition, or name someone those statements name.
+    // Otherwise the two may be about different occasions, and are not paired.
+    const occasion = (application) =>
+      application.sourceIds.filter((id) => id !== item.id && view.byId.has(id));
+    const namesOf = (ids) => new Set(ids.flatMap((id) => [...view.names(id)]));
+    const sameOccasion = (application, denial) => {
+      const met = occasion(application),
+        denying = cited([denial]).filter((id) => id !== item.id);
+      if (met.some((id) => denying.includes(id))) return true;
+      const names = namesOf(met);
+      return [...namesOf(denying)].some((name) => names.has(name));
+    };
     for (const application of applies)
       for (const denial of against.filter(
-        (binding) => !binding.ruleIds.some((id) => view.ruleSource(id) === item.id),
-      ))
+        (binding) =>
+          !binding.ruleIds.some((id) => view.ruleSource(id) === item.id) &&
+          sameOccasion(application, binding),
+      )) {
+        signal?.throwIfAborted();
         findings.push({
           method: 'counterexample',
           kind: 'rule',
@@ -54,6 +70,7 @@ export async function counterexampleReport(project, { statement }) {
           ]),
           question: `When ${condition}, does it hold, or do these statements say otherwise?`,
         });
+      }
     return {
       revision: project.digest,
       statement: { ...subject, rule: true },
@@ -62,6 +79,7 @@ export async function counterexampleReport(project, { statement }) {
         ? {}
         : { never: `Nothing the statements say meets its condition (${condition}).` }),
       findings: smallest(findings),
+      ...coverage(view),
     };
   }
   const truth = view.truth(item.graph, { withhold: [item.id] });
@@ -77,6 +95,7 @@ export async function counterexampleReport(project, { statement }) {
     revision: project.digest,
     statement: subject,
     findings: smallest(findings),
+    ...coverage(view),
   };
 }
 
@@ -90,15 +109,22 @@ export function formatCounterexample(report) {
   if (statement.rule)
     lines.push(
       report.applies
-        ? `It applies ${report.applies} ${report.applies === 1 ? 'time' : 'times'}${report.findings.length ? '.' : ', and nothing says otherwise.'}`
+        ? `It applies ${report.applies} ${report.applies === 1 ? 'time' : 'times'}${report.findings.length ? '.' : `, and ${nothing(report, 'nothing says otherwise')}.`}`
         : `It never applies: ${report.never.charAt(0).toLowerCase()}${report.never.slice(1)}`,
     );
-  else if (!report.findings.length) lines.push('Nothing the other statements say opposes it.');
+  else if (!report.findings.length)
+    lines.push(
+      report.unread?.length || report.limited
+        ? 'Nothing found against it among what was read.'
+        : 'Nothing the other statements say opposes it.',
+    );
   for (const finding of report.findings)
     lines.push(
       '',
       finding.summary,
       ...finding.statements.map((item) => `  “${item.statement}” [${item.role}] (${item.author})`),
     );
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

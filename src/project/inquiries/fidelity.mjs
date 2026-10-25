@@ -23,13 +23,13 @@
  * roles), conditional, possible, in conflict or open; an open question whose supported
  * parts reach two or more statements is a composition met, not closed.
  */
-import { Worker } from 'node:worker_threads';
 import { dirname } from 'node:path';
 import { projectTree } from '../authoring/project.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { listEngineRuns } from '../storage/engine-runs.mjs';
 import { clozeProbes, checkProbe } from '../../engine/cloze.mjs';
 import { probeAsks, releasedNote, roleName, rootCheck } from './inspection.mjs';
+import { inWorker } from './worker.mjs';
 
 export const variableKinds = [
   'own',
@@ -245,20 +245,13 @@ export async function fidelityReport(project, { withhold = false } = {}) {
   };
 }
 
-/** The report from a worker thread; `signal` stops it. */
+/** The report from a worker thread; `signal` stops it, and the promise then
+ * rejects with "Stopped." (it settles exactly once). */
 export function fidelityInWorker(project, { signal } = {}) {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./fidelity-worker.mjs', import.meta.url), {
-      workerData: { directory: dirname(project.path), digest: project.digest },
-    });
-    const stop = () => worker.terminate();
-    signal?.addEventListener('abort', stop, { once: true });
-    worker.once('message', resolve);
-    worker.once('error', reject);
-    worker.once('exit', (code) => {
-      signal?.removeEventListener('abort', stop);
-      if (code) reject(new Error(signal?.aborted ? 'Stopped.' : `Fidelity stopped (${code}).`));
-    });
+  return inWorker(new URL('./fidelity-worker.mjs', import.meta.url), {
+    workerData: { directory: dirname(project.path), digest: project.digest },
+    signal,
+    name: 'Fidelity',
   });
 }
 

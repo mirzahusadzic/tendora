@@ -24,7 +24,7 @@ npm run workbench -- --project .proj/payments-demo
 ```
 
 The demo contains `project.json`, retained material in `material.sqlite`, and
-36 computed results with their evidence in `engine/artifacts.sqlite`; the
+37 computed results with their evidence in `engine/artifacts.sqlite`; the
 [capability tour](demo.md) walks through them.
 The bundled snapshot lives in `demo/payments-on-call` and changes only through
 its tools; `npm run demo` copies it to `.proj/payments-demo`, the one project in

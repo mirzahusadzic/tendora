@@ -153,10 +153,30 @@ export function ruleParts(graph) {
       edge.from === top && (edge.role === ':condition' || onlyTimeCondition(reading, top, edge)),
   );
   if (!condition) return null;
+  const necessary = onlyClause(reading, condition.to);
+  const asked = conditionGraph(reading, top, condition);
+  // A necessary condition's "only" says how it holds, not what: the condition
+  // itself is the clause without it.
+  const only = new Set(
+    asked.edges
+      .filter(
+        (edge) =>
+          edge.from === condition.to &&
+          edge.role === ':mod' &&
+          asked.nodes.find((node) => node.id === edge.to)?.concept === 'only',
+      )
+      .map((edge) => edge.to),
+  );
   return {
-    condition: conditionGraph(reading, top, condition),
+    condition: necessary
+      ? {
+          ...asked,
+          nodes: asked.nodes.filter((node) => !only.has(node.id)),
+          edges: asked.edges.filter((edge) => !only.has(edge.to)),
+        }
+      : asked,
     conclusion: { ...consequent(reading, top, condition), top },
-    ...(onlyClause(reading, condition.to) ? { necessary: true } : {}),
+    ...(necessary ? { necessary: true } : {}),
   };
 }
 

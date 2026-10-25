@@ -84,6 +84,7 @@ export const suites = {
     'project/opposition.mjs',
     'project/premises-and-words.mjs',
     'project/structure-and-voices.mjs',
+    'project/method-guards.mjs',
     'project/authorship.mjs',
     'project/juxtaposition.mjs',
     'project/contribution-statements.mjs',

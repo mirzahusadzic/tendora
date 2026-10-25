@@ -35,10 +35,7 @@ import {
   tensionReport,
 } from '../../project/inquiries/inspection.mjs';
 import { fidelityInWorker } from '../../project/inquiries/fidelity.mjs';
-import { corpusMethodsInWorker } from '../../project/inquiries/methods.mjs';
-import { elenchusReport } from '../../project/inquiries/elenchus.mjs';
-import { counterexampleReport } from '../../project/inquiries/counterexample.mjs';
-import { maieuticsReport } from '../../project/inquiries/maieutics.mjs';
+import { corpusMethodsInWorker, methodInWorker } from '../../project/inquiries/methods.mjs';
 import {
   corpusMethodsGroups,
   questionMaieuticsGroups,
@@ -87,13 +84,21 @@ export function createQuestionWorkflow({
   // Corpus fidelity probes every statement: in a worker, stopped on dispose,
   // and by itself only for a corpus it reads in seconds; a larger one names
   // the CLI command instead.
+  // The statement count decides what runs by itself; counting walks the whole
+  // project, so it is counted once a revision, not on every draw.
+  let counted = { digest: null, size: 0 };
+  const statementCount = () => {
+    if (counted.digest !== state.project.digest)
+      counted = { digest: state.project.digest, size: sourceCatalog(state.project.data).length };
+    return counted.size;
+  };
   const fidelityStop = new AbortController();
   const fidelityLimit = 300;
   const fidelityNow = () =>
-    sourceCatalog(state.project.data).length > fidelityLimit
+    statementCount() > fidelityLimit
       ? {
           status: 'deferred',
-          note: `${sourceCatalog(state.project.data).length} statements: measure with tendora fidelity --project ${dirname(state.project.path)}`,
+          note: `${statementCount()} statements: measure with tendora fidelity --project ${dirname(state.project.path)}`,
         }
       : insight(['fidelity'], () =>
           fidelityInWorker(state.project, { signal: fidelityStop.signal }),
@@ -101,11 +106,22 @@ export function createQuestionWorkflow({
   // The corpus-wide methods read every statement, as fidelity does: in a
   // worker, stopped on dispose, by themselves only up to the same size.
   const methodsStop = new AbortController();
-  const methodsNow = () =>
-    sourceCatalog(state.project.data).length > fidelityLimit
+  // A statement's or a question's methods ask the whole corpus too: in a
+  // worker, deferred past the same size, stopped on dispose.
+  const methodNow = (key, method, options, command) =>
+    statementCount() > fidelityLimit
       ? {
           status: 'deferred',
-          note: `${sourceCatalog(state.project.data).length} statements: run the methods with tendora aporia, dilemma, … --project ${dirname(state.project.path)}`,
+          note: `${statementCount()} statements: ${command} --project ${dirname(state.project.path)}`,
+        }
+      : insight(key, () =>
+          methodInWorker(state.project, method, options, { signal: methodsStop.signal }),
+        );
+  const methodsNow = () =>
+    statementCount() > fidelityLimit
+      ? {
+          status: 'deferred',
+          note: `${statementCount()} statements: run the methods with tendora aporia, dilemma, … --project ${dirname(state.project.path)}`,
         }
       : insight(['methods'], () =>
           corpusMethodsInWorker(state.project, { signal: methodsStop.signal }),
@@ -127,7 +143,12 @@ export function createQuestionWorkflow({
     // premises an author could complete.
     const maieutics =
       !run.caseSelection && ['open', 'conditional', 'limited'].includes(run.status)
-        ? insight(['maieutics', text], () => maieuticsReport(project, { question: text }))
+        ? methodNow(
+            ['maieutics', text],
+            'maieutics',
+            { question: text },
+            `tendora maieutics --question "${text}"`,
+          )
         : null;
     return (
       pendingGroups('What the answer rests on', recoiled) ??
@@ -161,11 +182,17 @@ export function createQuestionWorkflow({
         : {}),
       author: recorded?.author ?? sidecar.author ?? 'unrecorded',
     };
-    const elenchus = insight(['elenchus', text], () =>
-      elenchusReport(project, { statement: text, offline: true }),
+    const elenchus = methodNow(
+      ['elenchus', text],
+      'elenchus',
+      { statement: text },
+      `tendora elenchus --statement "${text}"`,
     );
-    const counter = insight(['counterexample', text], () =>
-      counterexampleReport(project, { statement: text }),
+    const counter = methodNow(
+      ['counterexample', text],
+      'counterexample',
+      { statement: text },
+      `tendora counterexample --statement "${text}"`,
     );
     return [
       ...statementGroups(recoiled.value, probes, author),

@@ -15,7 +15,17 @@
  * Questions to people, never answers: what an author says becomes a
  * statement only when saved. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { clauseText, corpusView, latestChecks, recheck, savedCheck } from './corpus.mjs';
+import {
+  clauseText,
+  corpusView,
+  coverage,
+  coverageLines,
+  latestChecks,
+  recheck,
+  savedCheck,
+  who,
+} from './corpus.mjs';
+import { roleName } from './inspection.mjs';
 
 const depth = 3;
 // Frames a question asks through ("why" is cause-01), not what it asks about.
@@ -46,6 +56,9 @@ export async function maieuticsReport(project, { question = null, signal } = {})
     ) ?? rule.item.text;
 
   const latest = await latestChecks(project);
+  // A question never asked is not one with nothing to complete.
+  if (question && !latest.runs.some((run) => run.questions[0].text === question))
+    throw new Error(`No such saved question: ${question}`);
   const asked = latest.runs.filter(
     (run) =>
       !run.caseSelection &&
@@ -74,7 +87,12 @@ export async function maieuticsReport(project, { question = null, signal } = {})
         ...(opening.candidateConnections ?? []).flatMap((connection) => connection.sourceIds ?? []),
       ]),
     ].filter((id) => view.byId.has(id));
-    const subject = { question: run.questions[0].text, status: run.status };
+    // The same question asked at two roles is two questions.
+    const subject = {
+      question: run.questions[0].text,
+      scope: roleName(project.data, run.scopePlacementId),
+      status: run.status,
+    };
     // Premises: each reached rule's condition, then the conditions of the
     // rules whose conclusion is that condition's relation, up to three rules deep.
     const premises = [],
@@ -164,6 +182,7 @@ export async function maieuticsReport(project, { question = null, signal } = {})
     questions: asked.length,
     released,
     findings,
+    ...coverage(view),
   };
 }
 
@@ -178,13 +197,14 @@ export function formatMaieutics(report) {
   ];
   let at = null;
   for (const finding of report.findings) {
-    if (finding.question !== at) lines.push('', `“${finding.question}” (${finding.status})`);
-    at = finding.question;
+    const heading = `“${finding.question}” at ${finding.scope} (${finding.status})`;
+    if (heading !== at) lines.push('', heading);
+    at = heading;
     lines.push(
       finding.kind === 'missing premise'
         ? `  missing premise: ${finding.premise} (then: ${finding.answers.join('; ')})`
         : `  unjoined: “${finding.statements[0].statement}” [${finding.statements[0].role}]`,
-      `    ask ${finding.author}: ${finding.ask}`,
+      `    ask ${who(finding.author)}: ${finding.ask}`,
       ...(finding.kind === 'missing premise'
         ? finding.statements.map((item) => `    through “${item.statement}” [${item.role}]`)
         : []),
@@ -193,5 +213,7 @@ export function formatMaieutics(report) {
   }
   if (report.released)
     lines.push('', `${report.released} more released by compaction and not read.`);
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

@@ -1,6 +1,5 @@
 /** The Socratic methods that read the whole corpus at once, together: what
  * the workbench shows at the root role. Read-only and offline. */
-import { Worker } from 'node:worker_threads';
 import { dirname } from 'node:path';
 import { aporiaReport } from './aporia.mjs';
 import { dilemmaReport } from './dilemma.mjs';
@@ -8,6 +7,7 @@ import { analogyReport } from './analogy.mjs';
 import { dialogueReport } from './dialogue.mjs';
 import { equivocationReport } from './equivocation.mjs';
 import { divisionReport } from './division.mjs';
+import { inWorker } from './worker.mjs';
 
 /** Each corpus-wide method's report, by method. */
 export async function corpusMethodsReport(project, { signal } = {}) {
@@ -26,19 +26,18 @@ export async function corpusMethodsReport(project, { signal } = {}) {
   return reports;
 }
 
-/** The reports from a worker thread; `signal` stops it. */
-export function corpusMethodsInWorker(project, { signal } = {}) {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./methods-worker.mjs', import.meta.url), {
-      workerData: { directory: dirname(project.path), digest: project.digest },
-    });
-    const stop = () => worker.terminate();
-    signal?.addEventListener('abort', stop, { once: true });
-    worker.once('message', resolve);
-    worker.once('error', reject);
-    worker.once('exit', (code) => {
-      signal?.removeEventListener('abort', stop);
-      if (code) reject(new Error(signal?.aborted ? 'Stopped.' : `The methods stopped (${code}).`));
-    });
+/** A method's report from a worker thread (`method`: corpus, elenchus,
+ * counterexample or maieutics, with its `options`). The promise settles once:
+ * with the report, with the worker's error, or with "Stopped." when `signal`
+ * stops it, whatever the worker does as it ends. */
+export function methodInWorker(project, method, options = {}, { signal } = {}) {
+  return inWorker(new URL('./methods-worker.mjs', import.meta.url), {
+    workerData: { directory: dirname(project.path), digest: project.digest, method, options },
+    signal,
+    name: 'The methods',
   });
 }
+
+/** The corpus-wide reports from a worker thread; `signal` stops it. */
+export const corpusMethodsInWorker = (project, { signal } = {}) =>
+  methodInWorker(project, 'corpus', {}, { signal });

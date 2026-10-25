@@ -585,6 +585,16 @@ func trimPipeline(_ device: MTLDevice, archivePath: String) throws -> (MTLComput
   return (state, now() - t, false)
 }
 
+/// A buffer the device gave, or a clear refusal: a failed allocation ends the
+/// run with a reason the engine reports, never a crash.
+func allocated(_ buffer: MTLBuffer?, _ what: String) -> MTLBuffer {
+  guard let buffer else {
+    FileHandle.standardError.write("Metal could not allocate \(what).\n".data(using: .utf8)!)
+    exit(3)
+  }
+  return buffer
+}
+
 func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeatCount: Int, report: (String, [[UInt32]], [Double], [String: Any]) -> Void) {
   let setupStarted = now()
   guard let device = MTLCreateSystemDefaultDevice() else {
@@ -628,17 +638,18 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
       records[f * 4] = c.columns[0][f]; records[f * 4 + 1] = c.columns[1][f]
       records[f * 4 + 2] = c.columns[2][f]; records[f * 4 + 3] = 0
     }
-    packedBuffer = device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(records), length: alignedBytes(c.facts * 4), options: shared, deallocator: nil)!
+    packedBuffer = allocated(device.makeBuffer(bytesNoCopy: UnsafeMutableRawPointer(records), length: alignedBytes(c.facts * 4), options: shared, deallocator: nil), "\(c.facts * 16) bytes of packed facts")
   }
   let words = (c.terms + 31) / 32
   // Persistent threadgroups: enough to fill the GPU, each with its own bitsets.
   let groups = Int(ProcessInfo.processInfo.environment["TRIM_GROUPS"] ?? "") ?? 64
   let bitsBytes = groups * 8 * (maxVars + 1) * words * 4
-  let bitsBuffer = device.makeBuffer(length: bitsBytes, options: [.storageModePrivate, .hazardTrackingModeUntracked])!
+  // No terms is no bits: a buffer is still one page, never zero bytes.
+  let bitsBuffer = allocated(device.makeBuffer(length: max(pageSize, bitsBytes), options: [.storageModePrivate, .hazardTrackingModeUntracked]), "\(bitsBytes) bytes of bitsets")
   let poolCapacity = Int(ProcessInfo.processInfo.environment["TRIM_POOL"] ?? "") ?? 96_000_000
-  let poolBuffer = device.makeBuffer(length: poolCapacity * 4, options: shared)!
+  let poolBuffer = allocated(device.makeBuffer(length: poolCapacity * 4, options: shared), "a pool of \(poolCapacity * 4) bytes")
   let controlBuffer = device.makeBuffer(length: 16, options: shared)!
-  let outputBuffer = device.makeBuffer(length: max(8, patterns * 8), options: shared)!
+  let outputBuffer = allocated(device.makeBuffer(length: max(8, patterns * 8), options: shared), "\(patterns * 8) bytes of output")
   var params: [UInt32] = [UInt32(c.rules.count), UInt32(words), UInt32(c.facts), UInt32(c.terms), UInt32(poolCapacity), variant == "dense" ? 1 : 0, UInt32(maxVars), level]
   let paramsBuffer = device.makeBuffer(bytes: &params, length: params.count * 4, options: shared)!
 

@@ -46,22 +46,27 @@ const noNetwork =
   encodeURIComponent('globalThis.fetch = () => { throw new Error("NETWORK_FORBIDDEN"); };');
 
 /** A demo copy under tmp/ with `statements` placed in a new role (by default
- * the first three above), declared as written by `author` when one is given,
- * checked at the root; returns its directory. */
+ * the first three above), or `roles` ({ name: [texts] }) placed in new roles,
+ * read as `extra` gives ({ text: penman }) when the module's readings do not;
+ * a text with no reading anywhere stays unread. Declared as written by
+ * `author` when one is given, checked at the root; returns its directory. */
 export async function methodsDemo(
   prefix,
-  { role = 'Release Policy', statements, author = null } = {},
+  { role = 'Release Policy', statements, roles = null, extra = {}, author = null } = {},
 ) {
   await mkdir('tmp', { recursive: true });
   const directory = await mkdtemp(resolve(`tmp/${prefix}-`));
   const path = join(directory, 'payments-demo');
   await cp(resolve('demo/payments-on-call'), path, { recursive: true });
-  const texts = statements ?? Object.keys(readings).slice(0, 3);
+  const placed = roles ?? { [role]: statements ?? Object.keys(readings).slice(0, 3) };
+  const texts = Object.values(placed).flat();
   let project = await openProject(path);
   let data = project.data;
-  const added = addConcept(data, data.placements.find((p) => p.parentId === null).id, role);
-  const placement = added.data.placements.find((p) => p.id === added.placementId);
-  data = editConcept(added.data, placement.conceptId, role, texts);
+  for (const [name, own] of Object.entries(placed)) {
+    const added = addConcept(data, data.placements.find((p) => p.parentId === null).id, name);
+    const placement = added.data.placements.find((p) => p.id === added.placementId);
+    data = editConcept(added.data, placement.conceptId, name, own);
+  }
   await saveProject(project, data);
   project = await openProject(path);
   if (author)
@@ -70,13 +75,13 @@ export async function methodsDemo(
       JSON.stringify({ version: 1, statements: texts.map((text) => ({ text, author })) }, null, 2),
     );
   // A text the demo already reads (a case's) keeps its reading.
-  const all = { ...readings, ...theses };
-  const wanted = [...new Set([...texts, ...Object.keys(theses)])];
+  const all = { ...readings, ...theses, ...extra };
+  const wanted = [...new Set([...texts, ...Object.keys(theses), ...Object.keys(extra)])];
   const held = await acquiredTexts(project, wanted);
   await retainAcquisitions(
     project,
     wanted
-      .filter((text, index) => held?.[index]?.status !== 'retained')
+      .filter((text, index) => held?.[index]?.status !== 'retained' && all[text])
       .map((text) => ({ text, penman: all[text], origin: { kind: 'test-fixture' } })),
   );
   const asked = spawnSync(
@@ -94,6 +99,9 @@ export async function methodsDemo(
     ],
     { encoding: 'utf8', env: { ...process.env, NODE_NO_WARNINGS: '1' } },
   );
-  if (asked.status !== 0) throw new Error(`The root check failed:\n${asked.stderr}`);
+  // With a statement left unread, the check may say it needs a reading (1).
+  const unread = texts.some((text) => !all[text]);
+  if (asked.status !== 0 && !(unread && asked.status === 1))
+    throw new Error(`The root check failed:\n${asked.stderr}`);
   return path;
 }

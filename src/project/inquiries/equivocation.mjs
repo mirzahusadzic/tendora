@@ -8,7 +8,15 @@
  * same and be read apart, or mean two things. Either is a question for a
  * person: reword, or confirm two meanings. Read-only and offline. */
 import { propbankAuditor } from '../../models/propbank.mjs';
-import { clauseText, corpusView, latestChecks, savedCheck } from './corpus.mjs';
+import {
+  clauseText,
+  corpusView,
+  coverage,
+  coverageLines,
+  latestChecks,
+  nothing,
+  savedCheck,
+} from './corpus.mjs';
 
 const sense = /^(.+)-(\d+)$/u;
 // What relates to everything, structure no reading can be told by.
@@ -135,6 +143,7 @@ export async function equivocationReport(project, { signal } = {}) {
     lemmas: lemmas.size,
     released: latest.released,
     findings,
+    ...coverage(view),
   };
 }
 
@@ -144,7 +153,7 @@ export function formatEquivocation(report) {
     `Equivocation over ${report.lemmas} predicate lemmas: ${
       report.findings.length
         ? `${report.findings.length} ${report.findings.length === 1 ? 'place' : 'places'} where words do more than one job.`
-        : 'each word is read in one sense and one structure.'
+        : `${nothing(report, 'each word is read in one sense and one structure')}.`
     }`,
   ];
   for (const finding of report.findings) {
@@ -156,14 +165,20 @@ export function formatEquivocation(report) {
     for (const item of finding.senses ?? [])
       lines.push(
         `  ${item.concept}${item.gloss ? ` (${item.gloss})` : ''}:`,
-        ...item.statements.map((entry) => `    “${entry.statement}” [${entry.role}]`),
+        ...item.statements.map(
+          (entry) => `    “${entry.statement}” [${entry.role}] (${entry.author})`,
+        ),
       );
     for (const item of finding.structures ?? [])
       lines.push(
         `  ${item.reading}:`,
-        ...item.statements.map((entry) => `    “${entry.statement}” [${entry.role}]`),
+        ...item.statements.map(
+          (entry) => `    “${entry.statement}” [${entry.role}] (${entry.author})`,
+        ),
       );
     lines.push(`  ${finding.question}`);
   }
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

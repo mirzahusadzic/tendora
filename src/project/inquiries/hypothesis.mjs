@@ -25,6 +25,8 @@ import { resolveInquiryPlacement } from './scope.mjs';
 import {
   consequences,
   corpusView,
+  coverage,
+  coverageLines,
   latestChecks,
   readText,
   supposedId,
@@ -216,6 +218,7 @@ export async function hypothesisReport(project, { text, role = null, offline = f
     },
     nothingFollows:
       !follows.some((rule) => rule.onlyWith) && !changed.some((q) => q.kind !== 'also'),
+    ...coverage(view),
   };
 }
 
@@ -288,7 +291,12 @@ export function formatHypothesis(report) {
   if (report.nothingFollows)
     lines.push(
       '',
-      'Nothing follows from it: no rule applies only with it, and no saved question changes.',
+      report.unread?.length || report.limited
+        ? 'Nothing follows from it among what was read: no rule applies only with it, and no saved question changes.'
+        : 'Nothing follows from it: no rule applies only with it, and no saved question changes.',
     );
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
+
   return lines.join('\n');
 }

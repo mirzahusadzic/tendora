@@ -4,6 +4,11 @@
 script. The workbench (`npm run workbench`) is where statements are written;
 both use the same engine.
 
+The examples use the demo copy at `.proj/payments-demo`, which `npm run demo`
+makes from the bundled demo. Run again, it leaves an existing copy alone;
+`npm run demo -- --reset` replaces the copy, discarding what was changed in it,
+and `--target <directory>` makes a copy elsewhere ([setup](setup.md#work-on-a-copy)).
+
 ```sh
 npx tendora --help                 # in a checkout; npm link installs it on PATH
 npx tendora --version
@@ -98,7 +103,10 @@ the demo. They read the latest check at the root role, as `probe` and
 text once and retain its reading, like a question's; with `--offline` a text
 without a retained reading is not read, and the command exits 1. Each prints
 its findings, or says it found none; `--json` gives them in one shape
-(`method`, `kind`, `summary`, `statements`, `question` or `proposal`).
+(`method`, `kind`, `summary`, `statements`, and `question` or `proposal` when
+a person is asked), with `unread` and `limited` for what it could not ask. A
+statement in scope without a reading is never asked: the method names it and
+exits 1, as a check that needs a reading does.
 
 ### suppose
 
@@ -228,12 +236,12 @@ Results go to stdout; diagnostics and progress to stderr, progress only on a
 terminal or with `--explain`. With `--json`, stdout is JSON only. No output
 uses color.
 
-| Exit  | Meaning                                                                                                                                                       |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`   | Completed, including an open answer; `show` and `runs` exit 0 whatever status the checks they read have                                                       |
-| `1`   | A failure: `ask` whose check ended in a status marked 1 below, `suppose` whose statement has no reading, an error reading the project, or a declined deletion |
-| `2`   | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing                                                    |
-| `130` | Interrupted: the first `Ctrl+C` cancels, the second exits                                                                                                     |
+| Exit  | Meaning                                                                                                                                                                                 |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`   | Completed, including an open answer; `show` and `runs` exit 0 whatever status the checks they read have                                                                                 |
+| `1`   | A failure: `ask` whose check ended in a status marked 1 below, a method whose new text or a statement in its scope has no reading, an error reading the project, or a declined deletion |
+| `2`   | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing                                                                              |
+| `130` | Interrupted: the first `Ctrl+C` cancels, the second exits                                                                                                                               |
 
 A syntax error points to the help. A name that matches nothing gives its own
 next step instead: the closest statements, the roles there are, or the command

@@ -499,6 +499,8 @@ try {
     };
     const demo = demoCopyNote(project);
     let output;
+    // The report of a Socratic method, kept for its exit status.
+    let methodReport = null;
     if (action === 'init')
       output = values.json
         ? { project: location, id: project.data.id }
@@ -629,6 +631,7 @@ try {
         signal: controller.signal,
       });
       output = values.json ? report : formatHypothesis(report);
+      methodReport = report;
       if (['needs-amr', 'invalid-amr'].includes(report.supposed.reading)) process.exitCode = 1;
     } else if (action === 'elenchus') {
       if (values.statement)
@@ -640,6 +643,7 @@ try {
         signal: controller.signal,
       });
       output = values.json ? report : formatElenchus(report);
+      methodReport = report;
       if (['needs-amr', 'invalid-amr'].includes(report.thesis.reading)) process.exitCode = 1;
     } else if (action === 'aporia') {
       if (values.role) placement(values.role);
@@ -648,22 +652,34 @@ try {
         signal: controller.signal,
       });
       output = values.json ? report : formatAporia(report);
+      methodReport = report;
     } else if (action === 'counterexample') {
       named(() => recoilLocus(project, { statement: values.statement }), demo);
       const report = await counterexampleReport(project, { statement: values.statement });
       output = values.json ? report : formatCounterexample(report);
+      methodReport = report;
     } else if (action === 'maieutics') {
       const report = await maieuticsReport(project, {
         question: values.question ?? null,
         signal: controller.signal,
+      }).catch((error) => {
+        if (/^No such saved question/u.test(error.message))
+          throw new EngineUsageError(error.message, {
+            syntax: false,
+            hint: `Ask it first (${program} ask --project ${values.project} --question …), or list saved checks: ${program} runs --project ${values.project}`,
+          });
+        throw error;
       });
       output = values.json ? report : formatMaieutics(report);
+      methodReport = report;
     } else if (action === 'equivocation') {
       const report = await equivocationReport(project, { signal: controller.signal });
       output = values.json ? report : formatEquivocation(report);
+      methodReport = report;
     } else if (action === 'definition') {
       const report = await definitionReport(project, { term: values.term });
       output = values.json ? report : formatDefinition(report);
+      methodReport = report;
     } else if (['division', 'dilemma', 'analogy', 'dialogue'].includes(action)) {
       const [report, format] = {
         division: [divisionReport, formatDivision],
@@ -673,6 +689,7 @@ try {
       }[action];
       const result = await report(project, { signal: controller.signal });
       output = values.json ? result : format(result);
+      methodReport = result;
     } else if (action === 'probe') {
       if (values.statement)
         named(() => recoilLocus(project, { statement: values.statement }), demo);
@@ -802,6 +819,9 @@ try {
         process.exitCode = 1;
     }
     console.log(typeof output === 'string' ? output : JSON.stringify(output, null, 2));
+    // A method that could not read a statement in scope did not ask it: as a
+    // check with a statement lacking a reading, it exits 1 (needs-reading).
+    if (methodReport?.unread?.length) process.exitCode = 1;
   }
 } catch (error) {
   clearStatus();

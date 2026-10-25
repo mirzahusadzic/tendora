@@ -28,7 +28,7 @@ import { repairReading } from '../../amr/lexical-audit.mjs';
 import { proofGraph, traceRelations, withheldSupport } from '../../amr/inference.mjs';
 import { answerBase, evaluateAnswer } from '../../recording/answers.mjs';
 import { answerRecording, checkAnswer } from '../../engine/answer.mjs';
-import { truthQuestion } from '../../engine/cloze.mjs';
+import { ruleParts, truthQuestion } from '../../engine/cloze.mjs';
 import { roleName, rootCheck } from './inspection.mjs';
 
 /** A text's reading: retained, or read by eGemma and retained (`origin` names
@@ -172,6 +172,11 @@ export async function corpusView(project) {
     if (!bases.has(key)) bases.set(key, answerBase(recording, used));
     return evaluateAnswer(recording, used, { base: { ...bases.get(key), recording } });
   };
+  // Whether any question asked here stopped at a bound: a method that finds
+  // nothing says so then, since what is not found is not shown absent.
+  const limits = { reached: false };
+  // The statements without a reading: never asked, so never "nothing".
+  const unread = statements.filter((item) => !item.graph).map((item) => item.id);
   // The types the statements give each name. A parser types a name by guess
   // (Morgan a company in one reading, a person in another), as it links one:
   // a question about a named participant is asked under each type the
@@ -189,26 +194,31 @@ export async function corpusView(project) {
   const truth = (graph, options = {}) => {
     const { expected, graph: question } = truthQuestion(namedCore(graph));
     const nodes = new Map(question.nodes.map((node) => [node.id, node]));
-    let variants = [question];
+    let variants = [question],
+      cut = false;
     for (const [id, name] of namedNodes(question)) {
       const types = [...new Set([nodes.get(id).concept, ...(nameTypes.get(name) ?? [])])];
-      variants = variants
-        .flatMap((variant) =>
-          types.map((concept) => ({
-            ...variant,
-            nodes: variant.nodes.map((node) => (node.id === id ? { ...node, concept } : node)),
-          })),
-        )
-        .slice(0, 8);
+      variants = variants.flatMap((variant) =>
+        types.map((concept) => ({
+          ...variant,
+          nodes: variant.nodes.map((node) => (node.id === id ? { ...node, concept } : node)),
+        })),
+      );
+      // Too many combinations to ask is a bound reached: said, never silent.
+      if (variants.length > variantLimit) {
+        variants = variants.slice(0, variantLimit);
+        cut = true;
+      }
     }
     const seen = new Set(),
-      merged = { yes: [], no: [], status: 'open' };
+      merged = { yes: [], no: [], qualified: [], status: 'open', limited: cut };
     for (const variant of variants) {
       const answer = yesNo(ask(variant, options));
-      if (answer.status !== 'open') merged.status = answer.status;
-      for (const side of ['yes', 'no'])
+      if (answer.limited) merged.limited = true;
+      else if (answer.status !== 'open') merged.status = answer.status;
+      for (const side of ['yes', 'no', 'qualified'])
         for (const binding of answer[side]) {
-          const key = JSON.stringify([side, binding.sourceIds, binding.ruleIds]);
+          const key = JSON.stringify([side, binding.answer, binding.sourceIds, binding.ruleIds]);
           if (!seen.has(key)) {
             seen.add(key);
             merged[side].push(binding);
@@ -216,6 +226,12 @@ export async function corpusView(project) {
         }
     }
     if (merged.yes.length && merged.no.length) merged.status = 'conflict';
+    else if (!merged.yes.length && !merged.no.length && merged.status === 'conflict')
+      merged.status = 'open';
+    if (merged.limited) {
+      limits.reached = true;
+      if (merged.status === 'open') merged.status = 'limited';
+    }
     return { expected, ...merged };
   };
   return {
@@ -232,24 +248,35 @@ export async function corpusView(project) {
     ruleSource,
     ask,
     truth,
+    unread,
+    names: (id) =>
+      new Set(byId.get(id)?.graph ? namedNodes(byId.get(id).graph).map(([, name]) => name) : []),
+    get limited() {
+      return limits.reached;
+    },
     overlayKnowledge,
   };
 }
 
 /** A yes/no answer read as its two sides, each binding with the statements
- * and rules it rests on (undecided answers count as given: a conflict holds
- * both). */
+ * and rules it rests on. Only what holds outright is evidence: a binding that
+ * holds under a clause (at night, during an incident) is kept apart as
+ * qualified, and a search that stopped at its bound gives none (an undecided
+ * answer's candidates count otherwise: a conflict holds both). */
 export function yesNo(answer) {
+  if (answer.status === 'limited')
+    return { status: 'limited', limited: true, yes: [], no: [], qualified: [] };
   const all = [...(answer.answers ?? []), ...(answer.candidates ?? [])];
-  const side = (text) =>
-    all
-      .filter((binding) => binding.text === text)
-      .map((binding) => ({
-        sourceIds: binding.sourceIds ?? [],
-        ruleIds: binding.ruleIds ?? [],
-        ...(binding.conditional ? { conditional: true } : {}),
-      }));
-  return { status: answer.status, yes: side('Yes'), no: side('No') };
+  const binding = (item) => ({ sourceIds: item.sourceIds ?? [], ruleIds: item.ruleIds ?? [] });
+  const side = (text) => all.filter((item) => item.text === text && !item.conditional).map(binding);
+  return {
+    status: answer.status,
+    yes: side('Yes'),
+    no: side('No'),
+    qualified: all
+      .filter((item) => item.conditional && ['Yes', 'No'].includes(item.text))
+      .map((item) => ({ answer: item.text, ...binding(item) })),
+  };
 }
 
 /** The words of a statement that say some of its reading's nodes: the
@@ -303,6 +330,9 @@ export function clauseText(source, nodeIds) {
   const before = source.text.slice(0, best.start).match(/\b(?:a|an|the|every|each|no)\s+$/iu);
   return source.text.slice(before ? best.start - before[0].length : best.start, best.end);
 }
+
+/** How many type combinations of a question's named participants are asked. */
+const variantLimit = 32;
 
 /** A supposition's id among the sources of a check. */
 export const supposedId = 'hypothesis';
@@ -371,6 +401,17 @@ export function consequences(view, supposed, { withhold = [] } = {}) {
       rules.set(key, entry);
     }
   });
+  // A fact new by its identity may say what already holds (a rule said again
+  // in other words): a rule whose conclusion the statements give without the
+  // supposition follows also without it.
+  const holdsAlready = (entry) => {
+    const graph = entry.key === supposedId ? supposed.graph : view.byId.get(entry.key)?.graph;
+    const parts = graph && ruleParts(graph);
+    if (!parts || parts.necessary) return false;
+    const truth = view.truth(parts.conclusion, { withhold });
+    return (truth.expected === 'Yes' ? truth.yes : truth.no).length > 0;
+  };
+  for (const entry of rules.values()) if (entry.onlyWith && holdsAlready(entry)) entry.onlyWith = 0;
   return [...rules.values()]
     .filter((entry) => entry.key !== supposedId || entry.rests.size)
     .map((entry) => ({
@@ -404,24 +445,48 @@ export async function latestChecks(project) {
   return { runs: [...latest.values()], released: released.size };
 }
 
-/** A reading with its named participants identified by their names alone:
- * what describes a named participant ("Morgan, the release manager") is left
- * out, and so is a guessed wiki link, while an unnamed participant keeps its
- * description, which is what identifies it. Methods ask what statements say
- * of a participant, whoever describes it how. */
+/** A reading with its named participants identified by name: what describes
+ * a named participant as a role ("Morgan, the release manager") is left out,
+ * and so is a guessed wiki link, while a description carrying a value ("Alex
+ * with employee ID 123") stays, since it tells one Alex from another. An
+ * unnamed participant keeps its description, which is what identifies it.
+ * Methods ask what statements say of a participant, whoever describes it how. */
 export function namedCore(graph) {
   const top = graph.assertionTop ?? graph.top;
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   const named = new Set(
     graph.edges.filter((edge) => edge.role === ':name').map((edge) => edge.from),
   );
+  // Whether what an edge leads to, away from `from` and short of the claim
+  // itself, holds a value (a number, a quoted string): an identifier, not a
+  // role, and never the claim's own polarity.
+  const value = (node) =>
+    node?.literal !== undefined &&
+    /^(?:"|-?\d)/u.test(String(node.literal)) &&
+    node.literal !== '-';
+  const valued = (edge, from) => {
+    const start = edge.from === from ? edge.to : edge.from;
+    if (start === top) return false;
+    const seen = new Set([from, top, start]);
+    for (const id of seen) {
+      if (id === from || id === top) continue;
+      if (value(nodes.get(id))) return true;
+      for (const other of graph.edges) {
+        if (other.role === ':wiki' || other.role === ':name') continue;
+        const next = other.from === id ? other.to : other.to === id ? other.from : null;
+        if (next && !seen.has(next)) seen.add(next);
+      }
+    }
+    return false;
+  };
   const kept = new Set([top]);
   for (const id of kept)
     for (const edge of graph.edges) {
       if (edge.role === ':wiki') continue;
       if (edge.from === id) {
-        if (named.has(id) && edge.role !== ':name') continue;
+        if (named.has(id) && edge.role !== ':name' && !valued(edge, id)) continue;
         kept.add(edge.to);
-      } else if (edge.to === id && !named.has(id)) kept.add(edge.from);
+      } else if (edge.to === id && (!named.has(id) || valued(edge, id))) kept.add(edge.from);
     }
   return {
     ...graph,
@@ -455,12 +520,16 @@ function namedTypes(graph) {
   return namedNodes(graph).map(([id, name]) => [name, nodes.get(id).concept]);
 }
 
+/** A statement as a commitment: its words, where it stands and who wrote it.
+ * The same words at two roles, or by two authors, are two commitments. */
+export const commitment = (item) => `${item.statement}\u0000${item.role}\u0000${item.author}`;
+
 /** Findings without those that add nothing: of findings of one kind (and one
- * way, `via`), one whose statements hold all of another's is left out, so
+ * way, `via`), one whose commitments hold all of another's is left out, so
  * the smallest set of commitments stands; the rest keep their order. */
 export function smallest(findings) {
   const key = (finding) => JSON.stringify([finding.kind, finding.via ?? null]);
-  const texts = (finding) => new Set(finding.statements.map((item) => item.statement));
+  const texts = (finding) => new Set(finding.statements.map(commitment));
   return findings.filter(
     (finding, i) =>
       !findings.some((other, j) => {
@@ -517,3 +586,36 @@ export function recheck(project, check, { cases = [], extra = [], knowledge }) {
     { knowledge },
   );
 }
+
+/** What a method could not ask: the statements in scope without a reading
+ * (`ids`, all by default), and whether a search stopped at its bound. A report
+ * carries both, so it never says "nothing" over what it did not read. */
+export function coverage(view, ids = null) {
+  const scoped = ids ? new Set(ids) : null;
+  return {
+    unread: view.named(view.unread.filter((id) => !scoped || scoped.has(id))),
+    limited: view.limited,
+  };
+}
+
+/** The lines a report adds for what it could not ask. */
+export function coverageLines(report) {
+  return [
+    ...(report.unread?.length
+      ? [
+          `Not asked: ${report.unread.length} ${report.unread.length === 1 ? 'statement has' : 'statements have'} no reading.`,
+          ...report.unread.map((item) => `  “${item.statement}” [${item.role}]`),
+        ]
+      : []),
+    ...(report.limited
+      ? ['Limited: a search stopped at its bound; what is not found is not shown absent.']
+      : []),
+  ];
+}
+
+/** A report's "nothing found", qualified when it could not ask everything. */
+export const nothing = (report, said) =>
+  report.unread?.length || report.limited ? 'nothing found among what was read' : said;
+
+/** An author as findings name them in prose: "unrecorded" is no one's name. */
+export const who = (author) => (author === 'unrecorded' ? 'an unrecorded author' : author);

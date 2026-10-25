@@ -71,6 +71,14 @@ assert.deepEqual(
   ],
 );
 assert.match(formatEquivocation(words), /“restore” is read in 2 senses/u);
+assert.deepEqual(
+  words.findings.map((finding) => [finding.kind, finding.lemma]),
+  [
+    ['senses', 'restore'],
+    ['structure', undefined],
+  ],
+  'the whole inventory: one word in two senses, one phrase in two structures',
+);
 // The same words read as two structures: "a payment key" is key :mod pay-01
 // in two readings and key :instrument-of pay-01 in four.
 const key = words.findings.find((finding) => finding.kind === 'structure');

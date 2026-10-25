@@ -6,7 +6,7 @@
  * depends on which alternative holds, which is a question for its author.
  * Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { clauseText, corpusView } from './corpus.mjs';
+import { clauseText, commitment, corpusView, coverage, coverageLines, nothing } from './corpus.mjs';
 
 /** What an edge leads to, cut from the rest: [node ids]. */
 function part(graph, edge) {
@@ -126,12 +126,10 @@ export async function dilemmaReport(project, { signal } = {}) {
     revision: project.digest,
     alternatives: ors.length,
     findings: findings.filter((finding) => {
-      const key = JSON.stringify([
-        finding.kind,
-        finding.statements.map((item) => item.statement).sort(),
-      ]);
+      const key = JSON.stringify([finding.kind, finding.statements.map(commitment).sort()]);
       return !seen.has(key) && seen.add(key);
     }),
+    ...coverage(view),
   };
 }
 
@@ -141,7 +139,7 @@ export function formatDilemma(report) {
     `Dilemma over ${report.alternatives} ${report.alternatives === 1 ? 'statement' : 'statements'} with alternatives: ${
       report.findings.length
         ? `${report.findings.length} ${report.findings.length === 1 ? 'conclusion' : 'conclusions'}.`
-        : 'nothing follows from any alternative.'
+        : `${nothing(report, 'nothing follows from any alternative')}.`
     }`,
   ];
   for (const finding of report.findings)
@@ -151,5 +149,7 @@ export function formatDilemma(report) {
       ...(finding.question ? [`  ${finding.question}`] : []),
       ...finding.statements.map((item) => `  “${item.statement}” [${item.role}]`),
     );
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

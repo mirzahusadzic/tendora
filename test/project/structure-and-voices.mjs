@@ -14,6 +14,7 @@ import { divisionReport, formatDivision } from '../../src/project/inquiries/divi
 import { dilemmaReport, formatDilemma } from '../../src/project/inquiries/dilemma.mjs';
 import { analogyReport, formatAnalogy } from '../../src/project/inquiries/analogy.mjs';
 import { dialogueReport, formatDialogue } from '../../src/project/inquiries/dialogue.mjs';
+import { methodsDemo } from '../support/methods-demo.mjs';
 
 globalThis.fetch = () => {
   throw new Error('NETWORK_FORBIDDEN');
@@ -85,6 +86,50 @@ assert.deepEqual(
 assert.match(
   formatDialogue(dialogue),
   /An unrecorded author and Claude disagree here: which is meant\?/u,
+);
+
+// One way only: with "either a certificate expires or the vault opens" and
+// no rule for the vault, Priya renews the certificate under one alternative,
+// and the finding asks which holds.
+const oneWay = await dilemmaReport(
+  await openProject(
+    await methodsDemo('dilemma-one-way', {
+      roles: { Vault: ['Either a certificate expires or the vault opens.'] },
+      extra: {
+        'Either a certificate expires or the vault opens.':
+          '(o / or :op1 (e / expire-01 :ARG1 (c / certificate)) :op2 (p / open-01 :ARG1 (v / vault)))',
+      },
+    }),
+  ),
+);
+const renews = oneWay.findings.find(
+  (finding) => finding.conclusion === 'Priya, the security engineer, renews the certificate',
+);
+assert.equal(renews.kind, 'one way only');
+assert.match(renews.question, /^Which is it: a certificate expires, or the vault opens\?/u);
+
+// A declared author who says, in other words, what an unrecorded statement
+// says: a shared commitment, not a clash. (eGemma reads this Maya as a
+// company; the name identifies her.)
+const shared = await dialogueReport(
+  await openProject(
+    await methodsDemo('dialogue-shared', {
+      roles: { Finance: ['Maya approves the database vendor invoice.'] },
+      extra: {
+        'Maya approves the database vendor invoice.':
+          '(z0 / approve-01 :ARG0 (z1 / company :wiki - :name (z2 / name :op1 "Maya")) :ARG1 (z3 / bill-01 :ARG2 (z4 / person :ARG0-of (z5 / vend-01 :ARG1 (z6 / database)))))',
+      },
+      author: 'Dana',
+    }),
+  ),
+);
+assert(
+  shared.findings.some(
+    (finding) =>
+      finding.kind === 'agreement' &&
+      JSON.stringify([...finding.authors].sort()) === JSON.stringify(['Dana', 'unrecorded']),
+  ),
+  'Dana and an unrecorded author commit to the same',
 );
 
 // What each says when it finds nothing.

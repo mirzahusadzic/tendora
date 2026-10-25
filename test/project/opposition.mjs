@@ -93,7 +93,10 @@ const conjunction = await elenchusReport(project, {
   offline: true,
 });
 assert.equal(conjunction.verdict, 'refuted');
-assert(conjunction.findings.some((finding) => finding.via?.rule === freeze));
+assert.deepEqual(
+  conjunction.findings.map((finding) => [finding.kind, finding.via?.rule, texts(finding)]),
+  [['refutes', freeze, [freeze]]],
+);
 // Nothing refutes or supports what nothing speaks of.
 const holiday = await elenchusReport(project, { text: 'Sam is on holiday.', offline: true });
 assert.deepEqual([holiday.verdict, holiday.findings.length], ['open', 0]);

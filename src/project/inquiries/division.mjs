@@ -9,7 +9,7 @@
  *                than with any of its own role's: does it belong there?
  * Proposals for a person to make in the role tree, never made here.
  * Read-only and offline. */
-import { corpusView } from './corpus.mjs';
+import { corpusView, coverage, coverageLines, nothing } from './corpus.mjs';
 
 const generic = new Set([
   'person',
@@ -180,6 +180,7 @@ export async function divisionReport(project) {
     roles: byRole.size,
     statements: items.length,
     findings,
+    ...coverage(view),
   };
 }
 
@@ -189,7 +190,7 @@ export function formatDivision(report) {
     `Collection and division over ${report.statements} statements in ${report.roles} roles: ${
       report.findings.length
         ? `${report.findings.length} ${report.findings.length === 1 ? 'proposal' : 'proposals'}.`
-        : 'each role holds together, and no statement leans elsewhere.'
+        : `${nothing(report, 'each role holds together, and no statement leans elsewhere')}.`
     }`,
   ];
   for (const finding of report.findings) {
@@ -204,5 +205,7 @@ export function formatDivision(report) {
         ...finding.statements.map((item) => `  “${item.statement}” [${item.role}]`),
       );
   }
+  const notes = coverageLines(report);
+  if (notes.length) lines.push('', ...notes);
   return lines.join('\n');
 }

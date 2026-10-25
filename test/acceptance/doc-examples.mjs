@@ -87,6 +87,14 @@ try {
       assert.equal(result.status, 0, `${where}\n${result.stderr}`);
       assert(!result.stderr.includes('NETWORK_FORBIDDEN'), `${where} acquires nothing`);
       const output = result.stdout.split('\n').map((line) => line.trimEnd());
+      // Shown without "…", an output is shown whole: every line it prints, in
+      // order, so a document cannot leave a line out unmarked.
+      if (shown.length && !shown.some((line) => line.includes('…')))
+        assert.deepEqual(
+          output.filter(Boolean),
+          shown.map((line) => line.trimEnd()),
+          `${where}\nshows only part of its output without marking it with …`,
+        );
       for (const line of shown) {
         // A trimmed line shows parts of one output line, in order.
         const parts = line

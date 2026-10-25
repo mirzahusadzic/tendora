@@ -58,10 +58,12 @@ Elenchus of “If a major incident is open, Morgan ships a release.”: refuted.
 
 Refuted directly, by 1 statement:
   “If a major incident is open, Morgan, the release manager, does not ship a release.” [Release Manager] (Claude)
+  Which gives way: the thesis, or one of these commitments?
 ```
 
 Under its own condition, the statements answer the thesis the other way: one
-statement refutes it, named with its role and author. A thesis can also fall
+statement refutes it, named with its role and author, and the finding asks
+which gives way. A thesis can also fall
 through a rule it makes apply:
 
 ```
@@ -143,7 +145,7 @@ $ npx tendora maieutics --project .proj/payments-demo --offline \
     --question "Who notifies the customers?"
 Maieutics over 1 open or conditional question: 3 questions for authors.
 
-“Who notifies the customers?” (open)
+“Who notifies the customers?” at Incident Commander (open)
   missing premise: a certificate expires (then: Sam)
     ask Claude: Is it so that a certificate expires?
     through “If a certificate expires, Priya, the security engineer, renews the certificate.” [Security Engineer]
@@ -170,15 +172,15 @@ Equivocation over 58 predicate lemmas: 2 places where words do more than one job
 
 “restore” is read in 2 senses.
   restore-01 (give back):
-    “Jordan, the database administrator, restores a backup only after the incident commander approves the restore.” [Database Administrator]
+    “Jordan, the database administrator, restores a backup only after the incident commander approves the restore.” [Database Administrator] (unrecorded)
   restore-02 (make like new, restore to previous state):
-    “Jordan, the database administrator, tests a backup before restoring it.” [Database Administrator]
+    “Jordan, the database administrator, tests a backup before restoring it.” [Database Administrator] (Claude)
   Is “restore” one meaning here, or 2? If one, reword so they read alike.
 
 “a payment key” is read with 2 structures.
   key :mod pay-01:
-    “Priya, the security engineer, reviews access logs when a payment key is exposed.” [Security Engineer]
-    “If a payment key leaks, Morgan, the release manager, ships a release.” [Release Manager]
+    “Priya, the security engineer, reviews access logs when a payment key is exposed.” [Security Engineer] (unrecorded)
+    “If a payment key leaks, Morgan, the release manager, ships a release.” [Release Manager] (Claude)
   key :instrument-of pay-01:
 …
 ```
@@ -200,7 +202,7 @@ Genus: what it is said to be
   nothing
 
 Species: what is said to be one
-  deploy-01: “A deployment is a change.” [Release Manager]
+  deploy-01: “A deployment is a change.” [Release Manager] (Claude)
 
 Nothing says what kind of thing a change is. What is a change?
 ```

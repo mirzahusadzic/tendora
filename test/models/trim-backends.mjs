@@ -102,13 +102,11 @@ assert.deepEqual(
 const native = describeBackends().filter(
   ({ name, available }) => ['swift', 'metal'].includes(name) && available,
 );
-if (!native.length)
-  console.log(
-    `native backends not tried: ${describeBackends()
-      .filter(({ available }) => !available)
-      .map(({ name, detail }) => `${name}: ${detail}`)
-      .join('; ')}`,
-  );
+// A native backend this machine lacks is skipped, and said so by name: the
+// packed Metal variant is compared with js only where a Metal device runs.
+const skipped = describeBackends()
+  .filter(({ name, available }) => ['swift', 'metal'].includes(name) && !available)
+  .map(({ name, detail }) => `${name} skipped (${detail})`);
 const project = await openProject('demo/payments-on-call');
 const knowledge = knowledgeSnapshot(project.data);
 const shape = (inference) =>
@@ -147,5 +145,5 @@ for (const { name } of native) {
   else assert.equal(list(trim(large)), list(trimFast(large)), `${name}: a large rule`);
 }
 console.log(
-  `ok trim backends: js default, auto below ${nativeFrom.toLocaleString('en')} facts, refusals with why${native.length ? `; ${native.map(({ name }) => name).join(' and ')} equal js on ${runs.length} checks` : ''}`,
+  `ok trim backends: js default, auto below ${nativeFrom.toLocaleString('en')} facts, refusals with why${native.length ? `; ${native.map(({ name }) => name).join(' and ')} equal js on ${runs.length} checks` : ''}${skipped.length ? `; ${skipped.join('; ')}` : ''}`,
 );
