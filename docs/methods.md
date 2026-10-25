@@ -21,6 +21,14 @@ the bundled demo.
   supposition, a thesis) is read once and its reading retained, like a
   question's.
 
+Two of these promises follow David Matta's _Juxtaposition as a Deliberate
+Cognitive Method: The Value of Putting Things Together_ (2026,
+[doi:10.5281/zenodo.21977249](https://doi.org/10.5281/zenodo.21977249),
+CC BY 4.0). A relation is worth more when it can be derived again without the
+arrangement that suggested it: every consequence of a supposition says whether
+it follows only with it. And a search that may find nothing is honest, since
+one that always finds something is ritual rather than inquiry.
+
 ## How they work
 
 Every method stands on one move: a reading asked as a yes/no question. The
