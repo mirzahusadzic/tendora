@@ -29,6 +29,36 @@ assert(
 );
 assert(!reading.graph.nodes.some((node) => node.concept === 'it'));
 
+// “Does Jordan test a backup before restoring it?”: a name's own node and a
+// clause operator (before) are no entities; the backup is the one candidate.
+const named = graph(
+  'q3',
+  't',
+  {
+    t: 'test-01',
+    u: 'amr-unknown',
+    j: 'person',
+    n: 'name',
+    b: 'backup',
+    f: 'before',
+    r: 'restore-02',
+    p: 'it',
+  },
+  [
+    ['t', ':polarity', 'u'],
+    ['t', ':ARG0', 'j'],
+    ['j', ':name', 'n'],
+    ['t', ':ARG1', 'b'],
+    ['t', ':time', 'f'],
+    ['f', ':op1', 'r'],
+    ['r', ':ARG0', 'j'],
+    ['r', ':ARG1', 'p'],
+  ],
+);
+named.nodes.push({ id: 'o', concept: '"Jordan"', literal: '"Jordan"' });
+named.edges.push({ id: 'eo', from: 'n', role: ':op1', to: 'o' });
+assert.equal(referenceReading(named)?.antecedent, 'backup');
+
 // “Does the clerk file it?”: the only entity is a co-argument, so no reading.
 const coArgument = graph('q2', 'f', { f: 'file-01', c: 'clerk', p: 'it', u: 'amr-unknown' }, [
   ['f', ':ARG0', 'c'],

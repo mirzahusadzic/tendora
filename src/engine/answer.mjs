@@ -177,6 +177,13 @@ export function referenceReading(graph) {
   const coArguments = new Set(
     graph.edges.filter((edge) => heads.includes(edge.from)).map((edge) => edge.to),
   );
+  // A name's own node and an operator over clauses (before, after) are no
+  // entities a pronoun could refer to.
+  const notEntities = new Set(
+    graph.edges
+      .filter((edge) => edge.role === ':name' || /^:op\d+$/u.test(edge.role))
+      .map((edge) => (edge.role === ':name' ? edge.to : edge.from)),
+  );
   const candidates = graph.nodes.filter(
     (node) =>
       node.id !== pronoun.id &&
@@ -184,7 +191,8 @@ export function referenceReading(graph) {
       !structural.has(node.concept) &&
       !pronouns.has(node.concept) &&
       !/-\d+$/u.test(node.concept) &&
-      !coArguments.has(node.id),
+      !coArguments.has(node.id) &&
+      !notEntities.has(node.id),
   );
   if (candidates.length !== 1) return null;
   const [antecedent] = candidates;
