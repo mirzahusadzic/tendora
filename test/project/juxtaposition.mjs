@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { addConcept, createProject } from '../../src/project/authoring/project.mjs';
+import { addConcept, createProject, editConcept } from '../../src/project/authoring/project.mjs';
 import {
   activation,
   branchAt,
@@ -121,8 +121,39 @@ try {
   );
   assert.deepEqual(tree.tensions[0].open, ['Who files the report?']);
   assert.deepEqual(tree.tensions[0].gathered, ['Who inspects the lift, and who keeps the office?']);
+
+  // An answer composed through a rule joins the branch its rule comes from
+  // (review 2026-10-25, #6).
+  const ruled = activation(
+    { answers: [{ sourceIds: [at(lift)], ruleIds: ['office-rule'] }] },
+    branchOf,
+    (id) => (id === 'office-rule' ? [at(office)] : null),
+  );
+  assert.equal(ruled.tensions[0]?.status, 'resolved', 'A rule from another branch composes it');
+  const officeConcept = data.placements.find((placement) => placement.id === office).conceptId;
+  const withRule = editConcept(data, officeConcept, 'Office', [
+    'Every inspection needs a signature.',
+  ]);
+  const derived = await opportunityTree(null, {
+    context: {
+      data: withRule,
+      digest: 'rev',
+      runs: [
+        run(
+          'Who signs for the lift?',
+          { answers: [{ sourceIds: [at(lift)], ruleIds: [`${at(office)}/clause/c0/kind`] }] },
+          6,
+        ),
+      ],
+    },
+  });
+  assert.deepEqual(
+    derived.tensions.map((line) => line.resolved),
+    [['Who signs for the lift?']],
+    'and so does a rule derived from a statement there',
+  );
   console.log(
-    'ok juxtaposition: quiet, branch and juxtaposition at a grain; tension lines resolved only by one composed answer, gathered by separate ones; the opportunity tree',
+    'ok juxtaposition: quiet, branch and juxtaposition at a grain; tension lines resolved only by one composed answer (its sources or its rules), gathered by separate ones; the opportunity tree',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });

@@ -43,6 +43,34 @@ export async function recoilContext(project) {
   };
 }
 
+/** The project's statements, each by the id a check cites it with. */
+export const statementCatalog = (data) =>
+  sourceCatalog(data).map((item) => ({
+    ...item,
+    id: item.development ? item.sentenceId : `${item.nodeId}/s${item.index + 1}`,
+  }));
+
+// A rule derived from a statement names it: `<statement>/clause/<clause>/<kind>`.
+const derivedFrom = (ruleId) => /^(.*)\/clause\/[^/]+\/[^/]+$/u.exec(ruleId)?.[1];
+
+/** The statements each rule rests on: the one it was read from, or those an
+ * authored rule cites. Null when the rule's origin was not retained. */
+export function ruleOrigins(data, catalog = statementCatalog(data)) {
+  const statements = new Set(catalog.map((item) => item.id));
+  const authored = new Map(knowledgeSnapshot(data).rules.map((rule) => [rule.id, rule]));
+  return (ruleId) => {
+    if (statements.has(derivedFrom(ruleId))) return [derivedFrom(ruleId)];
+    const rule = authored.get(ruleId);
+    if (!rule) return null;
+    return (rule.sources ?? [])
+      .map(
+        (source) =>
+          catalog.find((item) => item.nodeId === source.nodeId && item.text === source.text)?.id,
+      )
+      .filter(Boolean);
+  };
+}
+
 export async function projectRecoil(project, locus, options) {
   return recoil(await recoilContext(project), locus, options);
 }
@@ -50,10 +78,7 @@ export async function projectRecoil(project, locus, options) {
 /** `readings`, when given, holds the text revisions that have a retained reading. */
 export function recoil({ data, digest, runs, asks = [], readings = null }, locus, options = {}) {
   const { limit = 500 } = options;
-  const catalog = sourceCatalog(data).map((item) => ({
-    ...item,
-    id: item.development ? item.sentenceId : `${item.nodeId}/s${item.index + 1}`,
-  }));
+  const catalog = statementCatalog(data);
   const statements = new Map(catalog.map((item) => [item.id, item]));
   const placements = new Map(data.placements.map((placement) => [placement.id, placement]));
   const concepts = new Map(data.concepts.map((concept) => [concept.id, concept]));
@@ -110,19 +135,7 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
           ? 'released'
           : null;
 
-  // A rule derived from a statement names it: `<statement>/clause/<clause>/<kind>`.
-  const derivedFrom = (ruleId) => /^(.*)\/clause\/[^/]+\/[^/]+$/u.exec(ruleId)?.[1];
-  const ruleOrigins = (ruleId) => {
-    if (statements.has(derivedFrom(ruleId))) return [derivedFrom(ruleId)];
-    const rule = authoredRules.get(ruleId);
-    if (!rule) return null;
-    return (rule.sources ?? [])
-      .map(
-        (source) =>
-          catalog.find((item) => item.nodeId === source.nodeId && item.text === source.text)?.id,
-      )
-      .filter(Boolean);
-  };
+  const originsOf = ruleOrigins(data, catalog);
   // What each visible check cites, at this revision.
   const citations = new Map(),
     caseTexts = new Map();
@@ -174,7 +187,7 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
                   ? 'a supported part rests on'
                   : 'rests on',
           });
-        else if (link.kind === 'rule' && ruleOrigins(link.id)?.includes(statementId))
+        else if (link.kind === 'rule' && originsOf(link.id)?.includes(statementId))
           found.push({ question: key, relation: 'rests on a rule read from' });
     return found;
   };
@@ -245,7 +258,7 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
             link.fragments.length ? { fragments: link.fragments } : {},
           );
     } else if (entry.kind === 'rule') {
-      const found = ruleOrigins(entry.id);
+      const found = originsOf(entry.id);
       if (!found) return hide(entry, 'rule origin not retained');
       for (const id of found) next('statement', id, 'read from');
     }
@@ -321,7 +334,7 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       link.kind === 'statement' && link.current
         ? [link.id]
         : link.kind === 'rule'
-          ? (ruleOrigins(link.id) ?? [])
+          ? (originsOf(link.id) ?? [])
           : [],
     );
   if (start.kind === 'statement' || start.kind === 'role') {

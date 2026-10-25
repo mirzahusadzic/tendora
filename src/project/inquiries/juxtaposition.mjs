@@ -1,6 +1,6 @@
 /** What a checked question brings together in the role tree. At a chosen grain
  * (depth in the tree: 1 is the top-level sections), the statements its check
- * cites fall into branches:
+ * cites, and those the rules it applied come from, fall into branches:
  *
  *   quiet          it cites no statement
  *   branch         one branch
@@ -18,7 +18,7 @@
  * been answered. Nothing is checked again; an open line is a place to ask or
  * to author, never an answer.
  */
-import { recoilContext } from './recoil.mjs';
+import { recoilContext, ruleOrigins } from './recoil.mjs';
 
 const questionPurposes = new Set(['inquiry', 'question-refresh']);
 
@@ -42,14 +42,20 @@ export function branchAt(data, grain = 1) {
 /** A source identifier names its placement: `<placement>/s<n>`. */
 const placementOf = (sourceId) => /^(.*)\/s\d+$/u.exec(sourceId)?.[1] ?? null;
 
-export function activation(answer, branchOf) {
+/** A binding rests on its statements and on those its rules come from
+ * (`originsOf`, as recoil reads them; review 2026-10-25, #6). */
+export function activation(answer, branchOf, originsOf = () => null) {
   const branches = (ids) =>
     new Set(ids.map((id) => branchOf(placementOf(id))).filter((branch) => branch !== null));
-  const bindings = (answer.answers ?? []).map((binding) => branches(binding.sourceIds));
+  const restsOn = (binding) => [
+    ...(binding.sourceIds ?? []),
+    ...(binding.ruleIds ?? []).flatMap((id) => originsOf(id) ?? []),
+  ];
+  const bindings = (answer.answers ?? []).map((binding) => branches(restsOn(binding)));
   const answered = new Set(bindings.flatMap((set) => [...set]));
   const reached = branches([
-    ...(answer.candidates ?? []).flatMap((binding) => binding.sourceIds),
-    ...(answer.partial?.parts ?? []).flatMap((part) => part.sourceIds ?? []),
+    ...(answer.candidates ?? []).flatMap(restsOn),
+    ...(answer.partial?.parts ?? []).flatMap(restsOn),
   ]);
   const active = [...new Set([...answered, ...reached])].sort();
   const tensions = [];
@@ -75,6 +81,7 @@ export function activation(answer, branchOf) {
 export async function opportunityTree(project, { grain = 1, context = null } = {}) {
   const { data, digest, runs } = context ?? (await recoilContext(project));
   const branchOf = branchAt(data, grain);
+  const originsOf = ruleOrigins(data);
   const concepts = new Map(data.concepts.map((concept) => [concept.id, concept]));
   const placements = new Map(data.placements.map((placement) => [placement.id, placement]));
   const name = (id) => concepts.get(placements.get(id)?.conceptId)?.name ?? id;
@@ -96,7 +103,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     ...(run.caseSelection?.sources?.length
       ? { case: run.caseSelection.sources.map((source) => source.text).join(' ') }
       : {}),
-    ...activation(run.answer, branchOf),
+    ...activation(run.answer, branchOf, originsOf),
   }));
   const lines = new Map();
   for (const item of questions)
