@@ -54,8 +54,10 @@ A saved check keeps the text of the statements it read and cites, with their
 provenance, so it reads as it was after the statements change;
 `material.sqlite` stays the authoritative copy of what was authored.
 Compaction releases old checks to what they found (the question, its last
-answer, the statements it rests on and its provenance); `tendora delete`
-removes saved checks, and those copies with them.
+answer and an ambiguous check's candidates, the statements they rest on, and
+its provenance). It keeps the latest check at the root role whole first, since
+probes and corpus fidelity read it, then the newest checks while they fit.
+`tendora delete` removes saved checks, and those copies with them.
 
 ## Guarantees
 

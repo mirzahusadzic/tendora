@@ -106,6 +106,16 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     const key = questionIdentity(text, run.scopePlacementId, run.caseSelection ?? run.case);
     if (!latest.has(key) || latest.get(key).startedAt < run.startedAt) latest.set(key, run);
   }
+  // Questions whose latest check was released by compaction are not read;
+  // the report says how many.
+  const released = new Set();
+  for (const run of runs) {
+    const text = run.questions?.[0]?.text;
+    if (!text || run.answer || run.cache !== 'recheck' || run.projectDigest !== digest) continue;
+    if (run.purpose && !questionPurposes.has(run.purpose)) continue;
+    const key = questionIdentity(text, run.scopePlacementId, run.caseSelection ?? run.case);
+    if (!latest.has(key)) released.add(key);
+  }
   const questions = [...latest.values()].map((run) => ({
     question: run.questions[0].text,
     ...(run.caseSelection?.sources?.length
@@ -134,6 +144,7 @@ export async function opportunityTree(project, { grain = 1, context = null } = {
     grain,
     revision: digest,
     effects,
+    released: released.size,
     tensions: [...lines.values()].sort(
       (a, b) =>
         b.resolved.length +

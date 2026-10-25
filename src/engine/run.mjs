@@ -114,6 +114,9 @@ async function executeEngineRun(
     calls: [],
     openings: [],
     candidates: [],
+    // Kept when the check answers; a check that ends before then keeps none,
+    // and is never given provenance read later.
+    provenance: null,
     clients: {
       penman: { profile: normalizedRoleProfile },
       semcat: { profile: comparisonProfile },

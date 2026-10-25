@@ -147,6 +147,22 @@ function unread(coverage) {
   return missing.length ? missing.join(', ').replace(/, ([^,]*)$/u, ' and $1') : null;
 }
 
+/** What a check kept of provenance, for export: a check that ended before
+ * it kept any (failed, cancelled, without a reading) exports none, with why,
+ * never provenance read from the project as it is now. One saved before
+ * checks kept provenance has no such field; show reads it now and marks it. */
+const keptProvenance = (run) =>
+  run.provenance === undefined
+    ? {}
+    : {
+        provenance: run.provenance,
+        ...(run.provenance === null
+          ? {
+              provenanceNotKept: `The check ended ${run.status} before it kept the provenance of what it read.`,
+            }
+          : {}),
+      };
+
 /** A saved or fresh check in words: the status, the answers and what they rest
  * on, why it stays open and what is one confirmation away, then where it was
  * saved. `--explain` adds sources, rules, readings and vocabulary findings.
@@ -158,12 +174,45 @@ function describe(
   { explain = false, offline = false, relations, digest, demo, fresh = false } = {},
 ) {
   const short = run.id.slice(0, 8);
-  if (run.cache === 'recheck' && !run.answer)
-    return [
-      `saved: ${header(run).replace(/^[^:]+: /u, '')}`,
-      'Released by compaction: ask it again to check it.',
-      `Saved as ${short}.`,
-    ].join('\n');
+  if (run.cache === 'recheck' && !run.answer) {
+    // A released check: its last answer and the statements it rests on, a
+    // summary, never shown as a whole check.
+    const last = run.lastAnswer;
+    if (!last)
+      return [
+        `saved: ${header(run).replace(/^[^:]+: /u, '')}`,
+        'Released by compaction: ask it again to check it.',
+        `Saved as ${short}.`,
+      ].join('\n');
+    const fromCase = new Set(
+      (last.sources ?? []).filter((s) => s.kind === 'case').map((s) => s.id),
+    );
+    const lines = [
+      header({ ...run, status: last.status ?? run.status }),
+      'Released by compaction: its last answer is kept, not its evidence; ask it again to check it.',
+    ];
+    if (changedSince(run, digest)) lines.push('The statements changed since this check.');
+    for (const [label, items] of [
+      ['Answer', last.answers],
+      ['Candidate', last.candidates],
+    ])
+      for (const answer of items ?? []) {
+        lines.push(`${label}: ${answer.text}`);
+        const cited = answer.sourceIds ?? [],
+          statements = cited.filter((id) => !fromCase.has(id)).length;
+        if (cited.length)
+          lines.push(
+            statements < cited.length
+              ? statements
+                ? `  rests on the case and ${plural(statements, 'statement')}`
+                : '  from the case alone; no statement says it'
+              : `  rests on ${plural(statements, 'statement')}`,
+          );
+        for (const detail of answer.qualifications ?? []) lines.push('  ' + detail);
+      }
+    lines.push(`Check ${short}, made ${run.startedAt.slice(0, 16).replace('T', ' ')} UTC.`);
+    return lines.join('\n');
+  }
   const lines = [header(run)];
   if (changedSince(run, digest))
     lines.push('The statements changed since this check; ask again to check them as they are now.');
@@ -513,28 +562,33 @@ try {
             ...saved(run, project.digest),
             // The check's own provenance; one saved before checks kept it is
             // read now and says so.
-            provenance: run.provenance ?? {
-              ...answerProvenance(
-                {
-                  projectId: run.projectId,
-                  projectRevision: run.projectDigest,
-                  checkedBy: { actor: run.actor, via: run.via },
-                },
-                await readProvenance(project),
-                answers,
-                [
-                  ...(input?.sources ?? []),
-                  ...(input?.cases ?? []),
-                  ...(run.lastAnswer?.sources ?? []),
-                ],
-                recordedAuthors(project.data),
-              ),
-              computedAtExport: true,
-              // Released before it kept them: its statements are not known.
-              ...(answers?.some((answer) => !answer.sourceIds)
-                ? { statementsUnrecorded: true }
-                : {}),
-            },
+            ...(run.provenance !== undefined
+              ? keptProvenance(run)
+              : {
+                  provenance: {
+                    ...answerProvenance(
+                      {
+                        projectId: run.projectId,
+                        projectRevision: run.projectDigest,
+                        checkedBy: { actor: run.actor, via: run.via },
+                      },
+                      await readProvenance(project),
+                      answers,
+                      [
+                        ...(input?.sources ?? []),
+                        ...(input?.cases ?? []),
+                        ...(run.lastAnswer?.sources ?? []),
+                      ],
+                      recordedAuthors(project.data),
+                      run.answer?.candidates ?? run.lastAnswer?.candidates,
+                    ),
+                    computedAtExport: true,
+                    // Released before it kept them: its statements are not known.
+                    ...(answers?.some((answer) => !answer.sourceIds)
+                      ? { statementsUnrecorded: true }
+                      : {}),
+                  },
+                }),
             ...(values.explain && run.resultRef
               ? { result: await readEngineArtifact(project, run.resultRef) }
               : {}),
@@ -597,12 +651,8 @@ try {
           ...run,
           cache: stored.cache,
           // The corpus the answer was checked against, and who wrote what it
-          // rests on; a check that gave no answer names no statements.
-          provenance: run.provenance ?? {
-            projectId: run.projectId,
-            projectRevision: run.projectDigest,
-            statements: [],
-          },
+          // rests on; a check that ended before it answered keeps none.
+          ...keptProvenance(run),
         };
         if (stored.cache === 'recheck') {
           for (const key of ['inputRef', 'sourceInputRef', 'resultRef', 'errorRef'])

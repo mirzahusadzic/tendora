@@ -97,6 +97,7 @@ export async function tensionReport(project, { grain = 1, context } = {}) {
     grain: tree.grain,
     revision: tree.revision,
     effects: tree.effects,
+    released: tree.released,
     lines: tree.tensions.map((line) => ({
       between: line.labels,
       resolved: line.resolved,
@@ -247,13 +248,12 @@ export function blankedText(source, probe) {
   return text.replace(/^___,\s*/u, '___ ').replace(/,\s*___,/u, ', ___');
 }
 
-/** The latest full check at the root at this revision: what probes are read
- * against. Probes need one; they do not check anything themselves. */
-/** The latest check at the root role at this revision, without a case: what
- * probes and corpus fidelity read. */
+/** The latest whole check at the root role at this revision, without a case:
+ * what probes and corpus fidelity read; they check nothing themselves. */
 export async function rootCheck(project) {
   const root = project.data.placements.find((placement) => placement.parentId === null).id;
-  const run = (await listEngineRuns(project))
+  const runs = await listEngineRuns(project);
+  const run = runs
     .filter(
       (item) =>
         item.answer &&
@@ -266,7 +266,12 @@ export async function rootCheck(project) {
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   if (!run)
     throw new Error(
-      'Probes and corpus fidelity read the latest check at the root role at this revision; ask a question there first.',
+      'Probes and corpus fidelity read the latest check at the root role at this revision; ask a question there first.' +
+        (runs.some(
+          (item) => item.scopePlacementId === root && item.cache === 'recheck' && !item.answer,
+        )
+          ? ' The one there was released by compaction.'
+          : ''),
     );
   const [input, result] = await Promise.all([
     readEngineArtifact(project, run.inputRef),
@@ -379,8 +384,16 @@ export function effectSummary({ quiet, branch, juxtaposition }) {
   );
 }
 
+/** How many questions an inspection leaves out because compaction released
+ * their latest check. */
+export const releasedNote = (count) =>
+  count
+    ? `${count} more ${count === 1 ? 'question was' : 'questions were'} released by compaction and ${count === 1 ? 'is' : 'are'} not read; ask them again to include them.`
+    : null;
+
 export function formatTensions(report) {
   const lines = [effectSummary(report.effects)];
+  if (releasedNote(report.released)) lines.push(releasedNote(report.released));
   if (!report.lines.length) lines.push('', 'No question brings two roles together yet.');
   for (const line of report.lines) {
     lines.push('', `${line.between.join(' ↔ ')}`);

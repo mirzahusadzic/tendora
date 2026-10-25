@@ -69,6 +69,7 @@ try {
   );
   assert.deepEqual(report.questions, {
     total: 36,
+    released: 0,
     one: 14,
     composed: 3,
     conditional: 11,

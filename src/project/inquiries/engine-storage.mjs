@@ -105,21 +105,24 @@ function questionRecord(run) {
   };
 }
 // It keeps the statements each answer rests on, by id and text, so an exported
-// answer still names them and their provenance (review 2026-10-25, #4).
+// answer still names them and their provenance (review 2026-10-25, #4); an
+// ambiguous check's candidates are kept the same way, apart from its answers.
 const lastAnswer = (run) => {
   if (run.lastAnswer) return run.lastAnswer;
-  const answers = run.answer.answers.map(
-    ({ text, conditional, qualifications, readAs, sourceIds = [] }) => ({
+  const summary = (items) =>
+    (items ?? []).map(({ text, conditional, qualifications, readAs, sourceIds = [] }) => ({
       text,
       ...(conditional ? { conditional, qualifications } : {}),
       ...(readAs ? { readAs } : {}),
       sourceIds,
-    }),
-  );
-  const cited = new Set(answers.flatMap((answer) => answer.sourceIds));
+    }));
+  const answers = summary(run.answer.answers),
+    candidates = summary(run.answer.candidates);
+  const cited = new Set([...answers, ...candidates].flatMap((answer) => answer.sourceIds));
   return {
     status: run.answer.status,
     answers,
+    ...(candidates.length ? { candidates } : {}),
     sources: (run.answer.sources ?? [])
       .filter((source) => cited.has(source.id))
       .map(({ id, text, kind }) => ({ id, text, ...(kind ? { kind } : {}) })),
@@ -374,16 +377,9 @@ export async function compactEngineStorage(
           ),
           { code: 'ENGINE_STORAGE_REQUIRED' },
         );
-      // Keep reusable corpus compilation ahead of old question diagnostics.
-      for (const entry of await listGrammarCaches(project)) {
-        const ref = entry.ref ? await keep(entry.ref) : storeArtifact(db, await json(entry.path));
-        if (databaseBytes(db) <= cacheBudget / 2) {
-          retained.add(ref);
-          db.prepare('INSERT INTO grammars VALUES (?, ?, ?)').run(entry.key, ref, entry.updated);
-        } else pruneArtifacts(db, retained);
-      }
-      for (const run of [...kept.values()].sort((a, b) => b.startedAt.localeCompare(a.startedAt))) {
-        if (!run.inputRef || !run.resultRef) continue;
+      // A check kept whole while it fits the budget; otherwise its summary.
+      const cacheWhole = async (run) => {
+        if (!run.inputRef || !run.resultRef) return;
         const group = new Set();
         try {
           for (const ref of artifactRefs(run)) group.add(await keep(ref));
@@ -421,7 +417,30 @@ export async function compactEngineStorage(
           storeRun(db, summary(run));
           pruneArtifacts(db, retained);
         }
+      };
+      // The latest check at the root role, without a case, is kept whole first
+      // of all, ahead of the grammars: probes and corpus fidelity read it.
+      const root = project.data.placements.find((placement) => placement.parentId === null)?.id;
+      const base = [...kept.values()]
+        .filter(
+          (run) =>
+            run.scopePlacementId === root &&
+            !run.caseSelection &&
+            run.projectDigest === project.digest &&
+            run.answer,
+        )
+        .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
+      if (base) await cacheWhole(base);
+      // Keep reusable corpus compilation ahead of old question diagnostics.
+      for (const entry of await listGrammarCaches(project)) {
+        const ref = entry.ref ? await keep(entry.ref) : storeArtifact(db, await json(entry.path));
+        if (databaseBytes(db) <= cacheBudget / 2) {
+          retained.add(ref);
+          db.prepare('INSERT INTO grammars VALUES (?, ?, ?)').run(entry.key, ref, entry.updated);
+        } else pruneArtifacts(db, retained);
       }
+      for (const run of [...kept.values()].sort((a, b) => b.startedAt.localeCompare(a.startedAt)))
+        if (run !== base) await cacheWhole(run);
       for (const record of recordings) {
         if (!requiredRecordings.has(record.path) && !kept.has(record.header.reasoning?.runId)) {
           obsolete.push(record.path);

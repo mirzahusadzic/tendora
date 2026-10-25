@@ -29,7 +29,7 @@ import { projectTree } from '../authoring/project.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { listEngineRuns } from '../storage/engine-runs.mjs';
 import { clozeProbes, checkProbe } from '../../engine/cloze.mjs';
-import { probeAsks, roleName, rootCheck } from './inspection.mjs';
+import { probeAsks, releasedNote, roleName, rootCheck } from './inspection.mjs';
 
 export const variableKinds = [
   'own',
@@ -133,16 +133,22 @@ export async function fidelityReport(project, { withhold = false } = {}) {
   });
 
   // The latest check of each question, its scope and its case, at this revision.
-  const latest = new Map();
-  const runs = (await listEngineRuns(project))
-    .filter((run) => run.answer && run.projectDigest === project.digest)
+  const latest = new Map(),
+    released = new Set();
+  const saved = (await listEngineRuns(project))
+    .filter((run) => run.projectDigest === project.digest)
     .filter((run) => !run.purpose || ['inquiry', 'question-refresh'].includes(run.purpose))
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  for (const run of runs) {
-    const text = run.questions?.[0]?.text;
-    const key = JSON.stringify([text, run.scopePlacementId, run.case || null]);
-    if (text && !latest.has(key)) latest.set(key, run);
+  const key = (run) =>
+    JSON.stringify([run.questions?.[0]?.text, run.scopePlacementId, run.case || null]);
+  for (const run of saved) {
+    if (!run.questions?.[0]?.text) continue;
+    if (run.answer && !latest.has(key(run))) latest.set(key(run), run);
   }
+  // A question whose checks were all released is not read; the report counts it.
+  for (const run of saved)
+    if (run.questions?.[0]?.text && !run.answer && run.cache === 'recheck' && !latest.has(key(run)))
+      released.add(key(run));
   const known = new Set(placementOf.keys());
   const cited = (binding) =>
     new Set(
@@ -217,6 +223,7 @@ export async function fidelityReport(project, { withhold = false } = {}) {
     totals: tally(statements),
     questions: {
       total: asked.length,
+      released: released.size,
       ...Object.fromEntries(
         questionKinds.map((kind) => [kind, asked.filter((q) => q.kind === kind).length]),
       ),
@@ -264,6 +271,7 @@ export function formatFidelity(report) {
     '',
     `${q.total} checked questions: one statement ${q.one}, composed ${q.composed} (across roles ${q.composedAcrossRoles}),`,
     `  conditional ${q.conditional}, possible ${q.possible}, composition met ${q.met}, open ${q.open}`,
+    ...(releasedNote(q.released) ? [`  ${releasedNote(q.released)}`] : []),
     '',
   ];
   const width = Math.max(4, ...report.roles.map((role) => (role.role ?? '').length));

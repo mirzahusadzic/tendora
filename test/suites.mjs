@@ -65,6 +65,7 @@ export const suites = {
     'architecture/doc-links.mjs',
     'architecture/licensing.mjs',
     'project/storage.mjs',
+    'project/released-checks.mjs',
     'project/examples.mjs',
     'project/demo-graphs.mjs',
     'project/payments-demo-copy.mjs',

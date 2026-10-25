@@ -58,9 +58,12 @@ and the statements'); they never change the answer.
 
 `--json` writes the full result with the provenance the check kept: the
 project, the revision checked, the digest of the `provenance.json` it read
-(`declaredDigest`) and who wrote each statement the answer rests on. `show
+(`declaredDigest`) and who wrote each statement the answer rests on; an
+ambiguous check lists its candidates' statements apart (`candidates`). `show
 --json` gives the same; a later `provenance.json` changes only later checks. A
-check saved before checks kept provenance has it read at export, marked
+check that ended before it kept provenance (failed, cancelled, without a
+reading) exports `provenance: null` and why (`provenanceNotKept`). A check
+saved before checks kept provenance has it read at export, marked
 `computedAtExport`.
 
 `--scope` and `--case` take a role label, a `/Root/Child` path or a placement
@@ -78,7 +81,10 @@ every CLI check records `via: cli`.
 statements changed since a check (`statementsChanged` in JSON). `recoil`,
 `tensions`, `probe` and `fidelity` read the latest check of each question,
 scope and case at the project's current revision, so they can count fewer
-checks than `runs` lists.
+checks than `runs` lists. A question whose checks compaction released is left
+out, and they say how many. `show` reads a released check back as what it
+kept: its last answer, its candidates and what they rest on, not its
+evidence.
 
 All six are offline by construction: they acquire nothing and save nothing.
 `probe` and `fidelity` evaluate the retained readings in memory, so they can

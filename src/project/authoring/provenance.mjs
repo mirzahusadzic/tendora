@@ -89,51 +89,49 @@ export function recordedAuthors(data) {
  * declared provenance adds what was not recorded (a proposer, an acceptance),
  * and a different declared author stays visible as `declaredAuthor`. A case
  * is the check's circumstance, not a statement: it names who made the check
- * (`checkedBy`). */
+ * (`checkedBy`). An ambiguous check's candidates are no answers: the
+ * statements they rest on are listed apart, as `candidates`. */
 export function answerProvenance(
   { projectId, projectRevision, declaredDigest, checkedBy = {} },
   provenance,
   answers,
   sources,
   recorded = new Map(),
+  candidates = [],
 ) {
   const byId = new Map(sources.map((source) => [source.id, source]));
-  const seen = new Set(),
-    statements = [];
-  for (const answer of answers ?? [])
-    for (const sourceId of answer.sourceIds ?? []) {
-      if (seen.has(sourceId)) continue;
-      seen.add(sourceId);
-      const source = byId.get(sourceId),
-        text = source?.text ?? null;
-      if (source?.kind === 'case') {
-        statements.push({
-          sourceId,
-          text,
-          kind: 'case',
-          author: checkedBy.actor ?? unrecorded,
-          ...(checkedBy.via ? { via: checkedBy.via } : {}),
-        });
-        continue;
-      }
-      const { text: _text, ...declared } = (text !== null && provenance.get(text)) || {};
-      const own = recorded.get(sourceId);
-      statements.push({
+  const statement = (sourceId) => {
+    const source = byId.get(sourceId),
+      text = source?.text ?? null;
+    if (source?.kind === 'case')
+      return {
         sourceId,
         text,
-        ...declared,
-        ...(own ?? {}),
-        ...(own && declared.author && declared.author !== own.author
-          ? { declaredAuthor: declared.author }
-          : {}),
-        author: own?.author ?? declared.author ?? unrecorded,
-      });
-    }
+        kind: 'case',
+        author: checkedBy.actor ?? unrecorded,
+        ...(checkedBy.via ? { via: checkedBy.via } : {}),
+      };
+    const { text: _text, ...declared } = (text !== null && provenance.get(text)) || {};
+    const own = recorded.get(sourceId);
+    return {
+      sourceId,
+      text,
+      ...declared,
+      ...(own ?? {}),
+      ...(own && declared.author && declared.author !== own.author
+        ? { declaredAuthor: declared.author }
+        : {}),
+      author: own?.author ?? declared.author ?? unrecorded,
+    };
+  };
+  const cited = (items) => [...new Set((items ?? []).flatMap((item) => item.sourceIds ?? []))];
+  const fromCandidates = cited(candidates).map(statement);
   return {
     projectId,
     projectRevision,
     ...(declaredDigest !== undefined ? { declaredDigest } : {}),
-    statements,
+    statements: cited(answers).map(statement),
+    ...(fromCandidates.length ? { candidates: fromCandidates } : {}),
   };
 }
 
@@ -153,5 +151,6 @@ export async function checkProvenance(project, run, sources) {
     run.answer?.answers,
     sources,
     recordedAuthors(project.data),
+    run.answer?.candidates,
   );
 }
