@@ -279,7 +279,7 @@ export function clauseText(source, nodeIds) {
   const stem = (word) => word.replace(/(?:ing|ed|es|s)$/u, '');
   const matches = (token, word) => {
     const t = token.toLowerCase();
-    return t === word || stem(t) === stem(word) || (word.length > 3 && t.startsWith(word));
+    return t === word || stem(t) === stem(word) || (word.length >= 3 && t.startsWith(word));
   };
   const tokens = [...source.text.matchAll(/[\p{L}\p{N}][\p{L}\p{N}'-]*/gu)];
   const hits = tokens

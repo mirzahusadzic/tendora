@@ -5,7 +5,7 @@
  * and a new check at the root role made offline, so the methods read every
  * statement. Nothing is acquired; the copy is left in tmp/. */
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import {
   addConcept,
@@ -21,6 +21,12 @@ export const readings = {
   'Morgan ships a release.':
     '(z0 / ship-01 :ARG0 (z1 / person :wiki - :name (z2 / name :op1 "Morgan")) :ARG1 (z3 / release-01))',
   'A major incident is open.': '(z0 / open-01 :ARG1 (z1 / incident :ARG1-of (z2 / major-02)))',
+  'Either a certificate expires or a payment key leaks.':
+    '(z0 / or :op1 (z1 / expire-01 :ARG1 (z2 / certificate)) :op2 (z3 / leak-01 :ARG1 (z4 / key :instrument-of (z5 / pay-01))))',
+  'If a payment key leaks, Priya renews the certificate.':
+    '(z0 / renew-01 :ARG0 (z1 / person :wiki - :name (z2 / name :op1 "Priya")) :ARG1 (z3 / certificate) :condition (z4 / leak-01 :ARG1 (z5 / key :instrument-of (z6 / pay-01))))',
+  'A payment key expires.': '(z0 / expire-01 :ARG1 (z1 / key :instrument-of (z2 / pay-01)))',
+  'A certificate expires.': '(z0 / expire-01 :ARG1 (z1 / certificate))',
 };
 
 /** Theses that are not statements, read by eGemma, for elenchus. */
@@ -36,13 +42,17 @@ const noNetwork =
   encodeURIComponent('globalThis.fetch = () => { throw new Error("NETWORK_FORBIDDEN"); };');
 
 /** A demo copy under tmp/ with `statements` placed in a new role (by default
- * the three above), checked at the root; returns its directory. */
-export async function methodsDemo(prefix, { role = 'Release Policy', statements } = {}) {
+ * the first three above), declared as written by `author` when one is given,
+ * checked at the root; returns its directory. */
+export async function methodsDemo(
+  prefix,
+  { role = 'Release Policy', statements, author = null } = {},
+) {
   await mkdir('tmp', { recursive: true });
   const directory = await mkdtemp(resolve(`tmp/${prefix}-`));
   const path = join(directory, 'payments-demo');
   await cp(resolve('demo/payments-on-call'), path, { recursive: true });
-  const texts = statements ?? Object.keys(readings);
+  const texts = statements ?? Object.keys(readings).slice(0, 3);
   let project = await openProject(path);
   let data = project.data;
   const added = addConcept(data, data.placements.find((p) => p.parentId === null).id, role);
@@ -50,6 +60,11 @@ export async function methodsDemo(prefix, { role = 'Release Policy', statements 
   data = editConcept(added.data, placement.conceptId, role, texts);
   await saveProject(project, data);
   project = await openProject(path);
+  if (author)
+    await writeFile(
+      join(path, 'provenance.json'),
+      JSON.stringify({ version: 1, statements: texts.map((text) => ({ text, author })) }, null, 2),
+    );
   // A text the demo already reads (a case's) keeps its reading.
   const all = { ...readings, ...theses };
   const wanted = [...new Set([...texts, ...Object.keys(theses)])];

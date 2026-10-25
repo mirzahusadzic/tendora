@@ -43,6 +43,10 @@ import {
 import { formatMaieutics, maieuticsReport } from '../project/inquiries/maieutics.mjs';
 import { equivocationReport, formatEquivocation } from '../project/inquiries/equivocation.mjs';
 import { definitionReport, formatDefinition } from '../project/inquiries/definition.mjs';
+import { divisionReport, formatDivision } from '../project/inquiries/division.mjs';
+import { dilemmaReport, formatDilemma } from '../project/inquiries/dilemma.mjs';
+import { analogyReport, formatAnalogy } from '../project/inquiries/analogy.mjs';
+import { dialogueReport, formatDialogue } from '../project/inquiries/dialogue.mjs';
 import { describeBackends, trimBackends, useTrimBackend } from '../engine/trim-backend.mjs';
 import {
   listEngineRuns,
@@ -419,6 +423,10 @@ try {
         'maieutics',
         'equivocation',
         'definition',
+        'division',
+        'dilemma',
+        'analogy',
+        'dialogue',
         'probe',
         'fidelity',
       ].includes(action)
@@ -656,6 +664,15 @@ try {
     } else if (action === 'definition') {
       const report = await definitionReport(project, { term: values.term });
       output = values.json ? report : formatDefinition(report);
+    } else if (['division', 'dilemma', 'analogy', 'dialogue'].includes(action)) {
+      const [report, format] = {
+        division: [divisionReport, formatDivision],
+        dilemma: [dilemmaReport, formatDilemma],
+        analogy: [analogyReport, formatAnalogy],
+        dialogue: [dialogueReport, formatDialogue],
+      }[action];
+      const result = await report(project, { signal: controller.signal });
+      output = values.json ? result : format(result);
     } else if (action === 'probe') {
       if (values.statement)
         named(() => recoilLocus(project, { statement: values.statement }), demo);
