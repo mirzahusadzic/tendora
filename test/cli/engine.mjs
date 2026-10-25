@@ -21,11 +21,11 @@ const noNetwork =
   'data:text/javascript,' +
   encodeURIComponent('globalThis.fetch = () => { throw new Error("NETWORK_FORBIDDEN"); };');
 const observations = [];
-function command(args, { interrupt = false, closeOutput = false, input } = {}) {
+function command(args, { interrupt = false, closeOutput = false, input, env = {} } = {}) {
   return new Promise((done, reject) => {
     const child = spawn(process.execPath, ['--import', noNetwork, 'src/cli/engine.mjs', ...args], {
       cwd: resolve('.'),
-      env: { ...process.env, NODE_NO_WARNINGS: '1' },
+      env: { ...process.env, NODE_NO_WARNINGS: '1', ...env },
       stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
     });
     if (input !== undefined) child.stdin.end(input);
@@ -174,6 +174,11 @@ const invalid = [
     data: true,
   },
   { args: ['ask', '--not-real'], match: /Unknown option/u },
+  {
+    args: ['ask', '--project', absent, '--question', 'Who?', '--backend', 'gpu'],
+    match: /Unknown trim backend: gpu\. Choose js, swift, metal, auto\./u,
+  },
+  { args: ['backends', '--project', absent], match: /--project is not available/u },
   { args: ['ask', '--question'], match: /argument missing/u },
 ];
 for (const { args, match, data } of invalid) {
@@ -469,6 +474,30 @@ assert.deepEqual(
     ['what', 'Sam repairs ___.', 'recovered'],
     ['is it so (Yes)', 'Sam repairs bicycles.', 'recovered'],
   ],
+);
+// Trim backends: listed without a project; one this machine lacks is refused
+// with why, and a check runs on js, the default, or one named.
+const backends = await command(['backends']);
+successful(backends);
+assert.match(backends.stdout, /^js +available +Node v/mu);
+assert.match(backends.stdout, /^auto +available +js below 250,000 facts/mu);
+assert.match(backends.stdout, /In use: js \(the default\)\n$/u);
+const listed = machine(await command(['backends', '--json']));
+assert.deepEqual(
+  listed.backends.map(({ name }) => name),
+  ['js', 'swift', 'metal', 'auto'],
+);
+assert.equal(listed.using, 'js');
+const lacking = await command(['fidelity', '--project', location, '--backend', 'swift'], {
+  env: { TENDORA_SWIFTC: '/nonexistent/swiftc' },
+});
+assert.equal(lacking.code, 2);
+assert.match(lacking.stderr, /The swift backend is not available here: it needs /u);
+assert.match(lacking.stderr, /See what this machine offers with: tendora backends\n$/u);
+assert.equal(
+  machine(await command(['fidelity', '--project', location, '--json', '--backend', 'js'])).totals
+    .own,
+  3,
 );
 // Corpus fidelity: the one statement asked back for each of its variables.
 const fidelity = machine(await command(['fidelity', '--project', location, '--json']));

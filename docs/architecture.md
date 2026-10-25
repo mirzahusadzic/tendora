@@ -25,7 +25,9 @@ The engine compiles the statements' readings into hyperedge replacement grammar
 (HRG) material, matches the question through a query chart and checks
 attributed answers. Each inference round first trims the facts to those some
 rule can still use, by arc consistency (after Cuckoo Cycle's edge trimming);
-the matches, and so the answers, are the same, with less to join. A question never supplies its own evidence, and grammar
+the matches, and so the answers, are the same, with less to join. The trim runs
+in JavaScript by default, or in Swift or Metal where the machine has them
+([trim backends](cli.md#trim-backends)). A question never supplies its own evidence, and grammar
 recognition alone is not entailment.
 
 - **Boundaries:** conditions, modality, polarity, reference and scope constrain
@@ -103,7 +105,7 @@ The demo bundles its 36 answers with their evidence.
 | ---------------------- | ----------------------------------------------------------------- |
 | `src/amr/`             | Graphs, fragments, grammar, correspondences and answer structure  |
 | `src/engine/`          | Preparation, compilation, checking, cloze probes and explanations |
-| `src/models/`          | eGemma clients, PENMAN and SEMCAT transports                      |
+| `src/models/`          | eGemma clients, PENMAN and SEMCAT transports, the native trim     |
 | `src/project/`         | Authored records, scope, inquiries, inspection and storage        |
 | `src/tui/`, `src/cli/` | Interactive authoring and scriptable checks                       |
 | `test/`, `tools/`      | Regressions, fixtures, demo tools and PTY capture                 |

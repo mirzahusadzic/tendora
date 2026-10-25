@@ -19,8 +19,9 @@ Two workloads: the bundled demo, which anyone can capture and run again
 developed beside Tendora and not in this repository
 (`reports/trim-2026-10-25.json`, raw output at the end).
 
-The JavaScript trim is the engine's (`src/amr/trim.mjs`): inference trims
-every round with it. The benchmark itself is not run by `npm run check` or CI
+Every version is the engine's: the JavaScript trim (`src/amr/trim.mjs`) by
+default, and the Swift and Metal programs (`src/models/native`) as the
+`swift` and `metal` backends (`tendora backends`). The benchmark itself is not run by `npm run check` or CI
 (it needs macOS and Metal).
 
 ## The trim
@@ -246,8 +247,9 @@ node bench/lean-core/bench.mjs --rounds 3 --out bench/lean-core/reports/<name>.j
 node bench/lean-core/bench.mjs --memory --out bench/lean-core/reports/<name>-memory.json tmp/lean/k16 tmp/lean/k64 tmp/lean/k64x16
 ```
 
-`bench.mjs` builds `tmp/lean/trim` (`swiftc -O -enforce-exclusivity=unchecked
--swift-version 5 TrimCore.swift TrimMetal.swift main.swift`); the Metal
+`bench.mjs` builds `tmp/lean/trim` from the engine's native sources
+(`swiftc -O -enforce-exclusivity=unchecked -swift-version 5 -D TRIM_METAL
+src/models/native/{TrimCore,TrimMetal,main}.swift`); the Metal
 archive is kept at `tmp/lean/trim.mtl4archive` and made again when the shader
 changes. The ceiling: `swiftc -O bench/lean-core/gather.swift -o
 tmp/lean/gather && tmp/lean/gather`.

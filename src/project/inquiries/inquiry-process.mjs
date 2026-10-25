@@ -6,6 +6,7 @@ import { dirname } from 'node:path';
 import { availableParallelism } from 'node:os';
 import { openProject } from '../authoring/project.mjs';
 import { captureProjectInquiry } from './inquiry.mjs';
+import { useTrimBackend } from '../../models/trim-backends.mjs';
 import { compactProjectStorage } from './project-storage.mjs';
 import {
   readyCheckpointWorkers,
@@ -16,6 +17,8 @@ import {
 // Role checkpoints are checked in two worker threads as well (more add
 // little), started while the first question is read; each keeps a base of
 // its own. TENDORA_CHECKPOINT_WORKERS sets their number, 0 for none.
+// The trim backend of the process that started this one (TENDORA_BACKEND).
+useTrimBackend();
 useCheckpointWorkers(
   Number(process.env.TENDORA_CHECKPOINT_WORKERS ?? Math.min(2, availableParallelism() - 2)),
 );

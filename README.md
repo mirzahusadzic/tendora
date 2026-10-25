@@ -186,7 +186,7 @@ In the workbench, choose a role; `n` adds statements, `a` asks, `o` opens Develo
 
 ## Performance
 
-Trimming keeps only the facts a rule can still use, before the engine joins, as John Tromp's [Cuckoo Cycle](https://github.com/tromp/cuckoo) trims a graph's edges before its cycle search. In JavaScript, Swift and Metal, every output byte-identical to a JavaScript oracle, on captures of the bundled demo that anyone can reproduce ([bench/lean-core](bench/lean-core/README.md), Apple M5 Pro). The engine trims every inference round this way, in JavaScript: on the demo and a 210-statement corpus its inference is identical and 16 to 31% faster.
+Trimming keeps only the facts a rule can still use, before the engine joins, as John Tromp's [Cuckoo Cycle](https://github.com/tromp/cuckoo) trims a graph's edges before its cycle search. In JavaScript, Swift and Metal, every output byte-identical to a JavaScript oracle, on captures of the bundled demo that anyone can reproduce ([bench/lean-core](bench/lean-core/README.md), Apple M5 Pro). The engine trims every inference round this way, in JavaScript by default: on the demo and a 210-statement corpus its inference is identical and 16 to 31% faster. `--backend` runs it in Swift or Metal where the machine has them ([trim backends](docs/cli.md#trim-backends)); that pays above about 250,000 facts, beyond the 48,000 a check's inference is bounded at today.
 
 Time, the median of three interleaved rounds (Metal: the faster of its two variants, GPU time):
 

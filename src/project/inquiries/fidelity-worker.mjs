@@ -3,6 +3,10 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { openProject } from '../authoring/project.mjs';
 import { fidelityReport } from './fidelity.mjs';
+import { useTrimBackend } from '../../models/trim-backends.mjs';
+
+// The trim backend of the process that started this thread (TENDORA_BACKEND).
+useTrimBackend();
 
 const project = await openProject(workerData.directory);
 if (project.digest !== workerData.digest)

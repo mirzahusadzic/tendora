@@ -1,5 +1,6 @@
 /** One command declaration drives engine argument validation and scoped help. */
 import { parseArgs } from 'node:util';
+import { trimBackends } from '../engine/trim-backend.mjs';
 
 export const program = 'tendora';
 const options = {
@@ -23,6 +24,11 @@ const options = {
   trace: ['boolean', '', 'Retain detailed local comparison diagnostics.'],
   actor: ['string', '<name>', 'Record the check as made by NAME; otherwise unrecorded.'],
   file: ['string', '<path>', 'Existing authored engine-knowledge JSON to import.'],
+  backend: [
+    'string',
+    '<name>',
+    'Where the trim runs: js (default), swift, metal or auto; see tendora backends.',
+  ],
   withhold: [
     'boolean',
     '',
@@ -31,7 +37,17 @@ const options = {
   help: ['boolean', '', 'Show help for this command.'],
   version: ['boolean', '', 'Show the version.'],
 };
-const checking = ['scope', 'case', 'case-text', 'question', 'offline', 'trace', 'explain', 'actor'];
+const checking = [
+  'scope',
+  'case',
+  'case-text',
+  'question',
+  'offline',
+  'trace',
+  'explain',
+  'actor',
+  'backend',
+];
 const demo = '.proj/payments-demo';
 export const engineCommands = {
   ask: {
@@ -89,7 +105,7 @@ export const engineCommands = {
   juxtaposition: { alias: 'tensions' },
   probe: {
     description: 'Ask statements back from their own readings (cloze probes).',
-    options: ['statement', 'role'],
+    options: ['statement', 'role', 'backend'],
     required: '(--statement <text> | --role <role>)',
     example: '--role "Security Engineer"',
     notes: [
@@ -100,7 +116,7 @@ export const engineCommands = {
   fidelity: {
     description:
       'Corpus fidelity: what the statements can be asked back for, what questions rest on.',
-    options: ['withhold'],
+    options: ['withhold', 'backend'],
     example: '',
     notes: [
       "Each statement's participants, circumstances and truth are asked back (the probes),",
@@ -108,6 +124,17 @@ export const engineCommands = {
       'condition not given); possible, otherwise, owed or conflict (to review). Each saved',
       'question is answered by one statement, composed, conditional, possible or open.',
       'Reads the latest check at the root role; --withhold doubles the work.',
+    ],
+  },
+  backends: {
+    description: 'List where the trim can run on this machine.',
+    options: [],
+    project: false,
+    notes: [
+      'js runs everywhere and is the default. swift and metal need macOS and the Swift',
+      'toolchain; they are built on first use into .deps/native. auto uses js below',
+      '250,000 facts and the fastest native backend above. --backend on a check, or',
+      'TENDORA_BACKEND, chooses one; every backend gives the same answers.',
     ],
   },
   init: {
@@ -149,6 +176,7 @@ const sections = [
   ['Check questions', ['ask', 'runs', 'show']],
   ['Inspect saved checks (read-only, offline)', ['recoil', 'tensions', 'probe', 'fidelity']],
   ['Manage a project', ['init', 'delete', 'storage', 'compact', 'knowledge']],
+  ['This machine', ['backends']],
 ];
 
 /** An invalid invocation (exit status 2). A syntax error points to the help;
@@ -194,7 +222,7 @@ export function engineHelp(action) {
         ...names.map((name) => `  ${name.padEnd(10)} ${engineCommands[name].description}`),
         '',
       ]),
-      'All commands require --project <directory>.',
+      'Every command but backends requires --project <directory>.',
       `Use ${program} <command> --help for its options and an example.`,
       'From a checkout, npm run --silent engine -- <command> runs the same CLI.',
       '',
@@ -202,17 +230,18 @@ export function engineHelp(action) {
       '             130 interrupted. An open answer is a completed check.',
       '',
       'Environment: EGEMMA_URL, EGEMMA_API_KEY (acquisition), PENMAN_PYTHON (graph',
-      'preparation). See docs/cli.md.',
+      'preparation), TENDORA_BACKEND (the trim). See docs/cli.md.',
     ].join('\n');
   const name = engineCommands[action].alias ?? action;
   const command = engineCommands[name];
+  const project = command.project !== false;
   const lines = [
-    `Usage: ${program} ${action} --project <directory>${command.required ? ' ' + command.required : ''} [options]`,
+    `Usage: ${program} ${action}${project ? ' --project <directory>' : ''}${command.required ? ' ' + command.required : ''} [options]`,
     '',
     command.description,
     '',
     'Options:',
-    ...['project', ...command.options, 'json', 'help'].map((option) => {
+    ...[...(project ? ['project'] : []), ...command.options, 'json', 'help'].map((option) => {
       const [, value, description] = options[option];
       return `  ${(option === 'help' ? '-h, --help' : `--${option}${value ? ' ' + value : ''}`).padEnd(27)} ${description}`;
     }),
@@ -221,7 +250,7 @@ export function engineHelp(action) {
   lines.push(
     '',
     'Example:',
-    `  ${program} ${action} --project ${command.project ?? demo}${command.example ? ' ' + command.example : ''}`,
+    `  ${program} ${action}${project ? ` --project ${command.project ?? demo}` : ''}${command.example ? ' ' + command.example : ''}`,
     '',
     'Diagnostics go to stderr; --json leaves stdout machine-readable.',
   );
@@ -273,7 +302,12 @@ export function parseEngineArguments(args) {
     return { help: engineHelp(), values };
   }
   const command = engineCommands[engineCommands[action].alias ?? action];
-  const allowed = new Set(['project', 'json', 'help', ...command.options]);
+  const allowed = new Set([
+    ...(command.project !== false ? ['project'] : []),
+    'json',
+    'help',
+    ...command.options,
+  ]);
   for (const name of Object.keys(values))
     if (!allowed.has(name))
       throw new EngineUsageError(`--${name} is not available for ${program} ${action}.`);
@@ -295,7 +329,11 @@ export function parseEngineArguments(args) {
         `Choose one of ${names.map((name) => `--${name}`).join(', ')} for ${program} ${action}.`,
       );
   };
-  requireOption('project');
+  if (command.project !== false) requireOption('project');
+  if (values.backend && !trimBackends.includes(values.backend))
+    throw new EngineUsageError(
+      `Unknown trim backend: ${values.backend}. Choose ${trimBackends.join(', ')}.`,
+    );
   if (['ask', 'run'].includes(action)) {
     requireOption('question');
     if (values.case && values['case-text'])

@@ -29,6 +29,7 @@ export const suites = {
     'models/normalization.mjs',
     'models/acquisition.mjs',
     'models/dependency-sources.mjs',
+    'models/trim-backends.mjs',
     'models/lexical-audit.mjs',
     'engine/build.mjs',
     'engine/trim.mjs',

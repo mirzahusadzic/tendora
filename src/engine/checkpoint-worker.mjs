@@ -6,6 +6,10 @@ import { openProject } from '../project/authoring/project.mjs';
 import { knowledgeSnapshot } from '../project/authoring/knowledge.mjs';
 import { checkCheckpoint, explorationPlan, explorationViews } from './role-exploration.mjs';
 import { answerRecording } from './answer.mjs';
+import { useTrimBackend } from '../models/trim-backends.mjs';
+
+// The trim backend of the process that started this thread (TENDORA_BACKEND).
+useTrimBackend();
 
 const items = new Map();
 let opened = null;

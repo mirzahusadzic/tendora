@@ -43,6 +43,8 @@ for (const [args, expected] of [
   assert.match(output.stderr, /Use --help/u);
   assert(!output.stderr.includes('    at '), 'Expected input errors do not print a stack');
 }
+assert.equal(workbenchArguments(['--backend', 'auto']).backend, 'auto');
+assert.throws(() => workbenchArguments(['--backend', 'gpu']), /--backend must be js, swift/u);
 assert.equal(workbenchArguments([], { NO_COLOR: '0' }).noColor, true);
 assert.equal(workbenchArguments([], { NO_COLOR: '' }).noColor, false);
 assert.equal(workbenchArguments([], { TERM: 'dumb' }).noColor, true);

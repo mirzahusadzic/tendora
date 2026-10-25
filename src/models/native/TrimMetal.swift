@@ -11,6 +11,7 @@
 // Columns are wrapped without copying (the capture's mapped pages, the index's
 // page-aligned arrays). Pipelines are compiled once into a Metal 4 archive and
 // loaded from it on later runs.
+#if TRIM_METAL
 import Foundation
 import Metal
 
@@ -643,3 +644,4 @@ func runMetal(_ c: Capture, _ index: Index, variant: String, warmup: Int, repeat
   if !gpus.isEmpty { extra["gpuMedianMs"] = (median(gpus) * 1000).rounded() / 1000 }
   report("metal-\(variant)", lists, walls, extra)
 }
+#endif

@@ -11,6 +11,7 @@ Usage:
 Options:
   --project PATH       Open a project directory or project.json
   --actor NAME         Attribute edits to NAME (default: participant)
+  --backend NAME       Where the trim runs: js (default), swift, metal or auto
   --snapshot           Print the project or recording without opening the TUI
   --no-color           Disable colors (also respects NO_COLOR and TERM=dumb)
   --color              Enable colors, overriding the environment
@@ -35,10 +36,9 @@ export function workbenchArguments(args, env = process.env) {
     allowPositionals: true,
     tokens: true,
     options: Object.fromEntries([
-      ...['project', 'recording', 'actor', 'node', 'visit', 'occurrence', 'detail'].map((name) => [
-        name,
-        { type: 'string' },
-      ]),
+      ...['project', 'recording', 'actor', 'backend', 'node', 'visit', 'occurrence', 'detail'].map(
+        (name) => [name, { type: 'string' }],
+      ),
       ...['snapshot', 'color', 'no-color'].map((name) => [name, { type: 'boolean' }]),
     ]),
   });
@@ -53,6 +53,8 @@ export function workbenchArguments(args, env = process.env) {
     throw new Error('--project cannot be combined with recording selections');
   if (selections.length && !values.recording)
     throw new Error(`--${selections[0]} requires --recording PATH`);
+  if (values.backend && !['js', 'swift', 'metal', 'auto'].includes(values.backend))
+    throw new Error('--backend must be js, swift, metal or auto');
   if (values.detail && !['scope', 'source', 'proposal', 'provenance'].includes(values.detail))
     throw new Error('--detail must be scope, source, proposal or provenance');
   if (values.snapshot && !values.project && !values.recording)

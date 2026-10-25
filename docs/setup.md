@@ -42,6 +42,9 @@ npm run workbench -- --project .proj/payments-demo --snapshot
 npm run workbench -- --help
 ```
 
+The trim runs in JavaScript; on macOS with the Swift toolchain it can run in
+Swift or on the GPU instead ([trim backends](cli.md#trim-backends)).
+
 `--snapshot` prints a plain-text view. A project opened without a terminal also
 uses that mode. `NO_COLOR=1`, `TERM=dumb` or `--no-color` disable color.
 

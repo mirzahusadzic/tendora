@@ -31,6 +31,7 @@ import {
   tensionReport,
 } from '../project/inquiries/inspection.mjs';
 import { fidelityReport, formatFidelity } from '../project/inquiries/fidelity.mjs';
+import { describeBackends, useTrimBackend } from '../engine/trim-backend.mjs';
 import {
   listEngineRuns,
   readEngineRun,
@@ -260,8 +261,35 @@ try {
     const manifest = JSON.parse(await readFile(new URL('../../package.json', import.meta.url)));
     console.log(`${program} ${manifest.version}`);
   } else if (help) console.log(help);
-  else {
+  else if (action === 'backends') {
+    const backends = describeBackends(),
+      using = process.env.TENDORA_BACKEND || 'js';
+    console.log(
+      values.json
+        ? JSON.stringify({ using, backends }, null, 2)
+        : [
+            ...backends.map(
+              ({ name, available, detail }) =>
+                `${name.padEnd(6)} ${available ? 'available    ' : 'not available'}  ${detail}`,
+            ),
+            `In use: ${using}${process.env.TENDORA_BACKEND ? ' (TENDORA_BACKEND)' : ' (the default)'}`,
+          ].join('\n'),
+    );
+  } else {
     if (values.question === '-') values.question = await standardInput();
+    // The trim backend of a check: --backend, else TENDORA_BACKEND, else js;
+    // worker threads and processes inherit it through the environment.
+    if (['ask', 'probe', 'fidelity'].includes(action)) {
+      if (values.backend) process.env.TENDORA_BACKEND = values.backend;
+      try {
+        useTrimBackend();
+      } catch (error) {
+        throw new EngineUsageError(error.message, {
+          syntax: false,
+          hint: `See what this machine offers with: ${program} backends`,
+        });
+      }
+    }
     const location = resolve(values.project);
     const project =
       action === 'init'

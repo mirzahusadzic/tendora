@@ -45,15 +45,16 @@ if (missing.length)
         .join('\n'),
   );
 const binary = join(repo, 'tmp/lean/trim');
-const source = join(repo, 'bench/lean-core');
-const swiftFlags = ['-O', '-enforce-exclusivity=unchecked', '-swift-version 5'];
+const source = join(repo, 'bench/lean-core'),
+  native = join(repo, 'src/models/native');
+const swiftFlags = ['-O', '-enforce-exclusivity=unchecked', '-swift-version 5', '-D TRIM_METAL'];
 execFileSync(
   'swiftc',
   [
     ...swiftFlags.flatMap((f) => f.split(' ')),
     '-o',
     binary,
-    ...['TrimCore.swift', 'TrimMetal.swift', 'main.swift'].map((f) => join(source, f)),
+    ...['TrimCore.swift', 'TrimMetal.swift', 'main.swift'].map((f) => join(native, f)),
   ],
   { stdio: 'inherit' },
 );

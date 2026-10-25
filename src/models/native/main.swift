@@ -53,7 +53,12 @@ case "cpu":
   }
   report("swift-cpu-\(threads)", lists, times, ["threads": threads])
 case "metal":
+  #if TRIM_METAL
   runMetal(capture, index, variant: variant, warmup: warmup, repeatCount: repeatCount, report: report)
+  #else
+  FileHandle.standardError.write("this build has no Metal backend; build it with -D TRIM_METAL\n".data(using: .utf8)!)
+  exit(3)
+  #endif
 default:
   print("unknown mode \(mode)")
   exit(2)

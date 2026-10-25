@@ -9,8 +9,8 @@ npx tendora --help                 # in a checkout; npm link installs it on PATH
 npm run --silent engine -- --help  # the same CLI through npm
 ```
 
-Every command takes `--project <directory>`, `--json` and `-h, --help`; each
-help ends with an example on the bundled demo.
+Every command but `backends` takes `--project <directory>`; all take `--json`
+and `-h, --help`, and each help ends with an example on the bundled demo.
 
 ## Commands
 
@@ -28,6 +28,7 @@ help ends with an example on the bundled demo.
 | `storage`   | Reports storage use                                                    |                                                     |
 | `compact`   | Compacts storage and rebuildable caches                                |                                                     |
 | `knowledge` | Imports authored engine knowledge (advanced)                           | `--file`                                            |
+| `backends`  | Lists where the trim can run on this machine (no project)              |                                                     |
 
 `run` is an alias for `ask`, `juxtaposition` for `tensions`. `--question -` reads the question from standard
 input.
@@ -105,6 +106,30 @@ npx tendora fidelity --project .proj/payments-demo
   asks each answerable variable again without its statement: borne alone, or
   shared.
 
+## Trim backends
+
+Each inference round trims its facts to those some rule can still use before
+it joins; the answers are the same on every backend.
+
+```sh
+npx tendora backends
+npx tendora ask --project .proj/payments-demo --offline --backend auto \
+  --question "Who notifies the customers?" --case-text "A certificate expires."
+```
+
+| Backend | Runs                                                           | Needs                               |
+| ------- | -------------------------------------------------------------- | ----------------------------------- |
+| `js`    | In the engine's process; the default                           | nothing                             |
+| `swift` | A native program on every CPU thread                           | macOS and the Swift toolchain       |
+| `metal` | The same program on the GPU                                    | that, and an Apple GPU with Metal 4 |
+| `auto`  | `js` below 250,000 facts, then the fastest native backend here | nothing                             |
+
+`--backend` on `ask`, `probe` and `fidelity`, or `TENDORA_BACKEND`, chooses
+one; the workbench takes `--backend` too. The native program is built on first
+use into `.deps/native`; starting it costs tens of milliseconds, so it pays
+only on large stores, and a check's inference is bounded at 48,000 facts today:
+`auto` then chooses `js`. A backend this machine lacks is refused with why.
+
 ## Output and exit status
 
 Results go to stdout; diagnostics and progress to stderr, progress only on a
@@ -131,6 +156,8 @@ exit status.
 | `EGEMMA_API_KEY_FILE` | A file holding the service key; preferred, wins over the variable |
 | `EGEMMA_API_KEY`      | The service key; default `dummy-key`                              |
 | `PENMAN_PYTHON`       | The Python used for graph preparation; default `.venv/bin/python` |
+| `TENDORA_BACKEND`     | The trim backend when `--backend` is not given; default `js`      |
+| `TENDORA_SWIFTC`      | The Swift compiler that builds the native trim; default `swiftc`  |
 
 ## Conventions
 

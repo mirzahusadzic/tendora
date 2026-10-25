@@ -10,6 +10,7 @@ import { runWorkbench } from './shell/app.mjs';
 import { backgroundProjectInquiry } from '../project/inquiries/background.mjs';
 import { roleStatements } from '../engine/statements.mjs';
 import { workbenchArguments, workbenchHelp } from './shell/arguments.mjs';
+import { useTrimBackend } from '../engine/trim-backend.mjs';
 
 // A downstream reader may finish before a snapshot or help text is written.
 process.stdout.on('error', (error) => {
@@ -30,6 +31,10 @@ async function main() {
     process.stdout.write(workbenchHelp);
     return;
   }
+  // The trim backend: --backend, else TENDORA_BACKEND, else js; background
+  // checks inherit it through the environment.
+  if (options.backend) process.env.TENDORA_BACKEND = options.backend;
+  useTrimBackend();
   const recordingArg = options.recording;
   const projectArg = options.project;
   const actor = options.actor ?? 'participant';
