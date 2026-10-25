@@ -3,7 +3,7 @@
  * down, up and sideways. Read-only and offline. Each graph is a mermaid block,
  * left to right; test/project/demo-graphs.mjs keeps docs/demo.md equal to them.
  *
- *   node tools/demo-graphs.mjs [--project <copy of the demo>] [--write docs/demo.md]
+ *   node tools/demo-graphs.mjs [--project <copy of the demo>] [--write [docs/demo.md]]
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -218,7 +218,8 @@ export { graphs };
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const write = process.argv.indexOf('--write');
   if (write > 0) {
-    const path = resolve(process.argv[write + 1]);
+    const target = process.argv[write + 1];
+    const path = resolve(target && !target.startsWith('--') ? target : join(root, 'docs/demo.md'));
     await writeFile(path, withGraphs(await readFile(path, 'utf8')));
     console.log(`Graphs written into ${path}`);
   } else

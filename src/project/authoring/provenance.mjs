@@ -5,6 +5,7 @@
  * are kept as given. A statement it does not list, or a project without it,
  * names no one: `unrecorded`. Authorship is declared, not verified.
  */
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { sourceCatalog } from './sources.mjs';
@@ -32,18 +33,24 @@ export function validateProvenance(data) {
   return data;
 }
 
-/** The project's statement provenance by text, or an empty one. */
-export async function readProvenance(project) {
+/** The project's statement provenance by text, or an empty one, and the
+ * digest of the file it was read from (null without one). */
+export async function declaredProvenance(project) {
   let text;
   try {
     text = await readFile(join(dirname(project.path), provenanceFile), 'utf8');
   } catch (error) {
-    if (error.code === 'ENOENT') return new Map();
+    if (error.code === 'ENOENT') return { entries: new Map(), digest: null };
     throw error;
   }
   const data = validateProvenance(JSON.parse(text));
-  return new Map(data.statements.map((entry) => [entry.text, entry]));
+  return {
+    entries: new Map(data.statements.map((entry) => [entry.text, entry])),
+    digest: createHash('sha256').update(text).digest('hex'),
+  };
 }
+
+export const readProvenance = async (project) => (await declaredProvenance(project)).entries;
 
 /** The authors recorded when statements were written, by the id a check cites
  * them with: a contribution's part, or a passage edited in the workbench; and
@@ -73,13 +80,13 @@ export function recordedAuthors(data) {
 }
 
 /** What an exported answer carries: the corpus it was checked against (its
- * id and the revision digest of the check) and the provenance of every
- * statement its answers rest on, in the order the answers name them. A
- * recorded author comes first; declared provenance adds what was not recorded
- * (a proposer, an acceptance), and a different declared author stays visible
- * as `declaredAuthor`. */
+ * id and the revision digest of the check; the digest of the declared file
+ * when the caller read one) and the provenance of every statement its answers
+ * rest on, in the order the answers name them. A recorded author comes first;
+ * declared provenance adds what was not recorded (a proposer, an acceptance),
+ * and a different declared author stays visible as `declaredAuthor`. */
 export function answerProvenance(
-  { projectId, projectRevision },
+  { projectId, projectRevision, declaredDigest },
   provenance,
   answers,
   sources,
@@ -106,5 +113,28 @@ export function answerProvenance(
         author: own?.author ?? declared.author ?? unrecorded,
       });
     }
-  return { projectId, projectRevision, statements };
+  return {
+    projectId,
+    projectRevision,
+    ...(declaredDigest !== undefined ? { declaredDigest } : {}),
+    statements,
+  };
+}
+
+/** The provenance a check keeps when it answers: who was recorded and declared
+ * then, so a later edit to `provenance.json` or to the statements cannot
+ * change what an answer already given rests on. */
+export async function checkProvenance(project, run, sources) {
+  const declared = await declaredProvenance(project);
+  return answerProvenance(
+    {
+      projectId: run.projectId,
+      projectRevision: run.projectDigest,
+      declaredDigest: declared.digest,
+    },
+    declared.entries,
+    run.answer?.answers,
+    sources,
+    recordedAuthors(project.data),
+  );
 }

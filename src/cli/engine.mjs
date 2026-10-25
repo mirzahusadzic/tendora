@@ -357,7 +357,9 @@ try {
       output = values.json
         ? {
             ...run,
-            provenance: {
+            // The check's own provenance; one saved before checks kept it is
+            // read now and says so.
+            provenance: run.provenance ?? {
               ...answerProvenance(
                 { projectId: run.projectId, projectRevision: run.projectDigest },
                 await readProvenance(project),
@@ -369,6 +371,7 @@ try {
                 ],
                 recordedAuthors(project.data),
               ),
+              computedAtExport: true,
               // Released before it kept them: its statements are not known.
               ...(answers?.some((answer) => !answer.sourceIds)
                 ? { statementsUnrecorded: true }
@@ -426,14 +429,13 @@ try {
         output = {
           ...run,
           cache: stored.cache,
-          // The corpus the answer was checked against, and who wrote what it rests on.
-          provenance: answerProvenance(
-            { projectId: run.projectId, projectRevision: run.projectDigest },
-            await readProvenance(project),
-            run.answer?.answers,
-            [...input.sources, ...input.cases],
-            recordedAuthors(project.data),
-          ),
+          // The corpus the answer was checked against, and who wrote what it
+          // rests on; a check that gave no answer names no statements.
+          provenance: run.provenance ?? {
+            projectId: run.projectId,
+            projectRevision: run.projectDigest,
+            statements: [],
+          },
         };
         if (stored.cache === 'recheck') {
           for (const key of ['inputRef', 'sourceInputRef', 'resultRef', 'errorRef'])

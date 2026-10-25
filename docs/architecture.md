@@ -69,10 +69,12 @@ Read-only views over the saved checks at the project's revision (CLI `recoil`,
 | A check (engine run)   | the workbench's actor, the CLI's `--actor`, or `unrecorded` | `workbench`, `cli`, `library` |
 
 A project may also declare authorship in `provenance.json` beside its manifest,
-for statements written elsewhere or proposed by a model. An exported answer
-(`--json`, a recording) carries the project id, the revision digest of its check
-and, for every statement it rests on, the recorded author, then what
-`provenance.json` adds. An actor is a label, not a verified identity.
+for statements written elsewhere or proposed by a model. A check keeps, for
+every statement its answer rests on, the recorded author, then what
+`provenance.json` adds, with the project id, the revision digest and the digest
+of the `provenance.json` it read. An exported answer (`--json`, a recording)
+carries that; a later edit changes only later checks. An actor is a label, not
+a verified identity.
 
 ## Retained work
 

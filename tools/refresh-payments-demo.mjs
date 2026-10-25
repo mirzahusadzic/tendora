@@ -72,7 +72,9 @@ try {
   await compactEngineStorage(project, { force: true, budget: 64 * 1024 * 1024 });
   const runs = await listEngineRuns(project);
   assert.equal(runs.length, questions.length);
-  assert(runs.every((run) => run.cache === 'retained' && run.answer && run.resultRef));
+  assert(
+    runs.every((run) => run.cache === 'retained' && run.answer && run.resultRef && run.provenance),
+  );
   assert(!JSON.stringify(runs).includes(directory), 'Run metadata must be portable');
   const database = openArtifactDatabase(join(directory, 'engine/artifacts.sqlite'));
   try {

@@ -41,13 +41,19 @@ npx tendora ask --project .proj/payments-demo \
 The first line is the status: `supported`, `conditional` (it holds under a
 clause the output names), `open`, `ambiguous`, `conflict`, `limited`,
 `needs-reading` (a statement in scope has no reading, so the answer shown is
-incomplete) or a failure (`needs-amr`, `failed`). Then each answer, how it was read when a step
-read it (a pronoun, "should" from "must", one modal word), and what it depends
-on. An open check says why in words, names the closest statements and lists
-proposals: a connection that answers once a person confirms it in the workbench
-(Development, `d`). `--explain` adds sources, bindings, rules and evidence;
-`--json` writes the full result, including the answer's provenance: the
-project, the revision checked and who wrote each statement it rests on.
+incomplete) or a failure (`needs-amr`, `failed`). Then each answer, how it was
+read when a step read it (a pronoun, "should" from "must", one modal word), and
+what it depends on. An open check says why in words, names the closest
+statements and lists proposals: a connection that answers once a person
+confirms it in the workbench (Development, `d`). `--explain` adds sources,
+bindings, rules and evidence.
+
+`--json` writes the full result with the provenance the check kept: the
+project, the revision checked, the digest of the `provenance.json` it read
+(`declaredDigest`) and who wrote each statement the answer rests on. `show
+--json` gives the same; a later `provenance.json` changes only later checks. A
+check saved before checks kept provenance has it read at export, marked
+`computedAtExport`.
 
 `--scope` and `--case` take a role label, a `/Root/Child` path or a placement
 ID. `--case-text` supplies case material that does not become evidence.

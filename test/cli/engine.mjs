@@ -1,7 +1,7 @@
 /** Real engine processes: useful arguments, pure JSON, offline proof and cancellation. */
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, writeFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { editConcept, openProject, saveProject } from '../../src/project/authoring/project.mjs';
@@ -279,6 +279,9 @@ assert(answer.calls.every((call) => call.client === 'PENMAN'));
 assert.deepEqual(answer.provenance, {
   projectId: project.data.id,
   projectRevision: answer.projectDigest,
+  declaredDigest: createHash('sha256')
+    .update(await readFile(join(location, 'provenance.json')))
+    .digest('hex'),
   statements: [
     {
       sourceId: answer.answer.answers[0].sourceIds[0],
@@ -329,6 +332,30 @@ assert.match(detailed.stderr, /Check scoped source revisions/u);
 const shown = machine(await command(['show', '--project', location, '--run', answer.id, '--json']));
 assert.equal(shown.id, answer.id);
 assert.deepEqual(shown.provenance, answer.provenance, 'and so does a saved check shown again');
+// The provenance is the check's (final review #5): editing the declared file
+// afterwards cannot attach a proposer or an acceptance to an answer given.
+const declaredFile = join(location, 'provenance.json'),
+  declared = await readFile(declaredFile, 'utf8');
+await writeFile(
+  declaredFile,
+  JSON.stringify({
+    version: 1,
+    statements: [
+      {
+        text: 'Sam repairs bicycles.',
+        author: 'Mallory',
+        proposer: { model: 'Mallory', run: 'after-the-fact' },
+        accepted: { by: 'Mallory', on: '2026-10-26' },
+      },
+    ],
+  }),
+);
+assert.deepEqual(
+  machine(await command(['show', '--project', location, '--run', answer.id, '--json'])).provenance,
+  answer.provenance,
+  'A later provenance.json does not rewrite a saved check',
+);
+await writeFile(declaredFile, declared);
 assert.equal(shown.questions[0].text, question);
 const human = await command(['show', '--project', location, '--run', answer.id, '--explain']);
 successful(human);
@@ -548,6 +575,7 @@ const releasedRun = await readEngineRun(project, alias.id);
 const olderRelease = {
   ...releasedRun,
   id: randomUUID(),
+  provenance: undefined,
   lastAnswer: {
     status: releasedRun.lastAnswer.status,
     answers: releasedRun.lastAnswer.answers.map(({ text }) => ({ text })),
@@ -559,6 +587,7 @@ const older = machine(
 );
 assert.deepEqual(older.provenance.statements, []);
 assert.equal(older.provenance.statementsUnrecorded, true);
+assert.equal(older.provenance.computedAtExport, true, 'and that its provenance is read now');
 assert.equal(released.provenance.statementsUnrecorded, undefined);
 const reset = machine(await command(['delete', '--project', location, '--all', '--json']));
 assert.equal(reset.reset, true);

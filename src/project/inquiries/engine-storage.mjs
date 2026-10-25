@@ -84,6 +84,7 @@ function questionRecord(run) {
     'caseSelection',
     'ask',
     'recording',
+    'provenance',
     'elapsedMs',
     'error',
   ];

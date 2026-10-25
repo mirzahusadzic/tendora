@@ -5,6 +5,7 @@ import { prepareGraphs, normalizedRoleProfile } from '../models/graph-preparatio
 import { compareGraphs, comparisonProfile } from '../models/semantic-comparison.mjs';
 import { traceInquiry, semanticChainProfile } from './semantic-chain.mjs';
 import { sourceCatalog } from '../project/authoring/sources.mjs';
+import { checkProvenance } from '../project/authoring/provenance.mjs';
 import { openProject } from '../project/authoring/project.mjs';
 import {
   acquireEngineRunLease,
@@ -446,6 +447,8 @@ async function executeEngineRun(
         // acquisition never becomes a supported answer).
         if (!run.coverage.complete && ['supported', 'conditional'].includes(run.status))
           run.status = 'needs-reading';
+        // Who wrote what the answer rests on, as recorded and declared now.
+        run.provenance = await checkProvenance(project, run, [...input.sources, ...input.cases]);
         run.openings = [
           ...preparedInput.openings,
           ...answer.openings,
