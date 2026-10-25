@@ -89,14 +89,11 @@ case, source revisions); following an opening creates a linked frame that
 records who carried it and why. Scope, case, source or project changes require
 a fresh check; a purpose-only change keeps the assessment.
 
-`project.json` is the manifest. `material.sqlite` holds compressed,
-hash-checked blocks: authored records, readings, role vectors and questions,
-their decoded bytes and references preserved. sqlite-vec stores 128-dimension
-vectors for ranking, rebuildable from the readings. Engine artifacts and
-recordings are rebuildable; the demo bundles its 36 answers with their
-evidence. Storage inside a project (its stores, leases and directories) is
-refused when it is a symbolic link; the project directory may be one. A stored
-block, run or artifact decodes within 256 MiB, before its hash is checked.
+`project.json` is the manifest, and its digest the project's revision.
+Authored records, readings, questions and role vectors live in
+`material.sqlite`, saved checks in `engine/artifacts.sqlite`: content-addressed,
+hash-checked and bounded when read ([storage, schemas and embeddings](storage.md)).
+The demo bundles its 36 answers with their evidence.
 
 | Location               | Responsibility                                                    |
 | ---------------------- | ----------------------------------------------------------------- |
