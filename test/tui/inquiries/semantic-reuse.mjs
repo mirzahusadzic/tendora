@@ -96,7 +96,7 @@ try {
     );
     const { confirmation } = c.wordings.find((w) => w.kind === 'clarification');
     assert.equal(confirmation.via, 'editor', 'Confirmed in the workbench');
-    assert.equal(confirmation.actor, 'local-workbench-user', 'By the declared actor');
+    assert.equal(confirmation.actor, 'participant', "By the workbench's actor, as its check");
     assert.deepEqual(ui.state.project.data.contributions[0], source);
     assert(
       confirmed.recording.sources.every((source) => source.development?.asserted !== false),

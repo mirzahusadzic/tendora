@@ -2,7 +2,7 @@
 import { roleStatements, reviseRoleStatements } from '../../engine/statements.mjs';
 import { placementLabel } from '../concepts/placement-label.mjs';
 
-export function createStatementsEditor({ state, forms, projects, draw, setNotice }) {
+export function createStatementsEditor({ state, config = {}, forms, projects, draw, setNotice }) {
   return function statementsEditor({ add = false, source = null } = {}) {
     let project = state.project;
     const placementId = state.placementId;
@@ -45,6 +45,8 @@ export function createStatementsEditor({ state, forms, projects, draw, setNotice
           { placementId, blocks, values },
           {
             signal: form.controller.signal,
+            actor: config.actor ?? 'participant',
+            via: 'editor',
             progress: (message) => {
               form.progress = message;
               draw();

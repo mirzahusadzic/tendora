@@ -9,6 +9,7 @@ import {
 } from '../../../src/project/authoring/project.mjs';
 import { sourceCatalog } from '../../../src/project/authoring/sources.mjs';
 import { journeyWorkbench, capturedParser } from '../../support/journey-workbench.mjs';
+import { recordedAuthors } from '../../../src/project/authoring/provenance.mjs';
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/unified-statements-'));
 const fixture = JSON.parse(
@@ -103,6 +104,22 @@ try {
     'Untouched developed source retains identity',
   );
   assert(revised.responses[1].withdrawn, 'Removed developed source is withdrawn');
+  // Whatever the workbench writes records its actor, through the editor: the
+  // edited passage, the added statement and the earlier developed source.
+  const authors = recordedAuthors(ui.state.project.data);
+  const added = ui.state.project.data.contributions.find((c) =>
+    c.responses.some((r) => r.text === 'The rig supports the lights.'),
+  );
+  for (const id of [
+    `${sources[0].nodeId}/s1`,
+    `contribution:${added.id}:${added.responses.find((r) => r.text === 'The rig supports the lights.').id}`,
+    `contribution:${contribution.id}:${contribution.responses[0].id}`,
+  ])
+    assert.deepEqual(
+      [authors.get(id)?.author, authors.get(id)?.via],
+      ['participant', 'editor'],
+      id,
+    );
   const saved = ui.state.project.digest,
     count = requests.length;
   await ui.key('e');

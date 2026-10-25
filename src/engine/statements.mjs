@@ -53,7 +53,13 @@ export async function reviseRoleStatements(project, { placementId, blocks, value
           ...block.source,
           text,
           revision: sentenceRevision(text),
-          ...(text !== block.source.text ? { previousRevision: block.source.revision } : {}),
+          ...(text !== block.source.text
+            ? {
+                previousRevision: block.source.revision,
+                actor: options.actor ?? 'unrecorded',
+                via: options.via ?? 'library',
+              }
+            : {}),
         });
     } else if (texts.some((t, i) => t !== block.texts[i])) {
       const c = data.contributions.find((c) => c.id === block.contributionId);

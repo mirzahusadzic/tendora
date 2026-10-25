@@ -143,8 +143,14 @@ async function readResponse(project, question, text, options) {
     composition: composed,
     ...(reading ? { acquisition: reading.acquisition } : {}),
     at: new Date().toISOString(),
+    ...authorship(options),
   };
 }
+
+/** Who wrote a statement (`actor`: a label, not a verified identity;
+ * "unrecorded" when the caller names none) and through what (`via`: a library
+ * call unless the caller says), recorded when it is written. */
+const authorship = ({ actor = 'unrecorded', via = 'library' } = {}) => ({ actor, via });
 
 export const materialSentences = (text) =>
   [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)]
@@ -246,6 +252,7 @@ export async function developContribution(
     c.wordings.push({
       id: randomUUID(),
       ...reading,
+      ...authorship(options),
       ...(perspective
         ? {
             kind: 'perspective',

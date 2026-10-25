@@ -8,7 +8,7 @@ import { recordRun, validateRecording } from '../../recording/format.mjs';
 import { selectCase, validateCase, textDigest } from './investigation.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { sourceCatalog } from '../authoring/sources.mjs';
-import { answerProvenance, readProvenance } from '../authoring/provenance.mjs';
+import { answerProvenance, readProvenance, recordedAuthors } from '../authoring/provenance.mjs';
 
 import { projectInquiryBranch } from './scope.mjs';
 import { inputFromProject, retainedAcquisition } from '../../engine/input.mjs';
@@ -292,6 +292,7 @@ async function retainTraversal(
     await readProvenance(project),
     reasoning.answer?.answers,
     reasoning.inputs,
+    recordedAuthors(project.data),
   );
   recording.routing = routing;
   if (routing.status === 'matched') {

@@ -546,7 +546,7 @@ export function createInterpretation({
       proposal,
       decision,
       state.interpretationDecisions,
-      { actor: config.actor ?? 'local-workbench-user', via: 'editor' },
+      { actor: config.actor ?? 'participant', via: 'editor' },
     );
     if (proposal.caseBinding && state.investigation && state.project) {
       const data = structuredClone(state.investigation.data),

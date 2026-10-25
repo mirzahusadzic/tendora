@@ -4,7 +4,11 @@ import { access, readFile } from 'node:fs/promises';
 import { EngineUsageError, parseEngineArguments } from './engine-options.mjs';
 import { createProject, openProject, saveProject } from '../project/authoring/project.mjs';
 import { authorEngineKnowledge } from '../project/authoring/knowledge.mjs';
-import { answerProvenance, readProvenance } from '../project/authoring/provenance.mjs';
+import {
+  answerProvenance,
+  readProvenance,
+  recordedAuthors,
+} from '../project/authoring/provenance.mjs';
 import { selectCase, authorCase } from '../project/inquiries/investigation.mjs';
 import { resolveInquiryPlacement } from '../project/inquiries/scope.mjs';
 import { inputFromProject } from '../engine/input.mjs';
@@ -213,6 +217,7 @@ try {
                   ...(input?.cases ?? []),
                   ...(run.lastAnswer?.sources ?? []),
                 ],
+                recordedAuthors(project.data),
               ),
               // Released before it kept them: its statements are not known.
               ...(answers?.some((answer) => !answer.sourceIds)
@@ -268,6 +273,7 @@ try {
             await readProvenance(project),
             run.answer?.answers,
             [...input.sources, ...input.cases],
+            recordedAuthors(project.data),
           ),
         };
         if (stored.cache === 'recheck') {

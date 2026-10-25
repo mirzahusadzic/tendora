@@ -440,7 +440,7 @@ export function makeInterpretationDecision(
   proposal,
   decision,
   previous = null,
-  { actor = 'local-workbench-user', via } = {},
+  { actor = 'unrecorded', via } = {},
 ) {
   if (!['accepted', 'rejected', 'revoked'].includes(decision))
     throw new Error('Invalid interpretation decision');

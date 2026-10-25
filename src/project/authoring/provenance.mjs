@@ -7,6 +7,7 @@
  */
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { sourceCatalog } from './sources.mjs';
 
 export const provenanceFile = 'provenance.json';
 const unrecorded = 'unrecorded';
@@ -44,10 +45,34 @@ export async function readProvenance(project) {
   return new Map(data.statements.map((entry) => [entry.text, entry]));
 }
 
+/** The authors recorded when statements were written, by the id a check cites
+ * them with: a contribution's part, or a passage edited in the workbench. A
+ * statement written before authors were recorded is not listed. */
+export function recordedAuthors(data) {
+  const recorded = new Map();
+  const entry = ({ actor, via, at }) => ({ author: actor, via, ...(at ? { at } : {}) });
+  for (const c of data.contributions ?? [])
+    for (const r of c.responses ?? [])
+      if (r.actor) recorded.set(`contribution:${c.id}:${r.id}`, entry(r));
+  for (const item of sourceCatalog(data))
+    if (!item.development && item.actor)
+      recorded.set(`${item.nodeId}/s${item.index + 1}`, entry(item));
+  return recorded;
+}
+
 /** What an exported answer carries: the corpus it was checked against (its
  * id and the revision digest of the check) and the provenance of every
- * statement its answers rest on, in the order the answers name them. */
-export function answerProvenance({ projectId, projectRevision }, provenance, answers, sources) {
+ * statement its answers rest on, in the order the answers name them. A
+ * recorded author comes first; declared provenance adds what was not recorded
+ * (a proposer, an acceptance), and a different declared author stays visible
+ * as `declaredAuthor`. */
+export function answerProvenance(
+  { projectId, projectRevision },
+  provenance,
+  answers,
+  sources,
+  recorded = new Map(),
+) {
   const byId = new Map(sources.map((source) => [source.id, source]));
   const seen = new Set(),
     statements = [];
@@ -56,10 +81,18 @@ export function answerProvenance({ projectId, projectRevision }, provenance, ans
       if (seen.has(sourceId)) continue;
       seen.add(sourceId);
       const text = byId.get(sourceId)?.text ?? null;
-      const { text: _text, ...entry } = (text !== null && provenance.get(text)) || {
-        author: unrecorded,
-      };
-      statements.push({ sourceId, text, ...entry });
+      const { text: _text, ...declared } = (text !== null && provenance.get(text)) || {};
+      const own = recorded.get(sourceId);
+      statements.push({
+        sourceId,
+        text,
+        ...declared,
+        ...(own ?? {}),
+        ...(own && declared.author && declared.author !== own.author
+          ? { declaredAuthor: declared.author }
+          : {}),
+        author: own?.author ?? declared.author ?? unrecorded,
+      });
     }
   return { projectId, projectRevision, statements };
 }

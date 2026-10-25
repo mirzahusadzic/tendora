@@ -27,7 +27,14 @@ export function createDevelopment({
   draw,
   setNotice,
 }) {
-  const statementsEditor = createStatementsEditor({ state, forms, projects, draw, setNotice });
+  const statementsEditor = createStatementsEditor({
+    state,
+    config,
+    forms,
+    projects,
+    draw,
+    setNotice,
+  });
   const command = (key, description, run, pane = 'reading') => ({ key, description, run, pane });
   const contribution = (id) => state.project.data.contributions.find((c) => c.id === id);
   async function assess(c, question = c.question?.text, signal) {
@@ -387,7 +394,7 @@ export function createDevelopment({
         form.progress = 'Save the confirmed connection';
         form.execution = (async () => {
           const { data } = await acceptClarification(project, choice.candidate, {
-            actor: config.actor ?? 'local-workbench-user',
+            actor: config.actor ?? 'participant',
             via: 'editor',
           });
           state.project = await projects.persistProject(project, data);
