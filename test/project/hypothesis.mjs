@@ -12,11 +12,8 @@ import { join, resolve } from 'node:path';
 import { openProject } from '../../src/project/authoring/project.mjs';
 import { retainAcquisitions } from '../../src/project/storage/acquisitions.mjs';
 import { listEngineRuns } from '../../src/project/storage/engine-runs.mjs';
-import {
-  formatHypothesis,
-  hypothesisReport,
-  supposedId,
-} from '../../src/project/inquiries/hypothesis.mjs';
+import { formatHypothesis, hypothesisReport } from '../../src/project/inquiries/hypothesis.mjs';
+import { supposedId } from '../../src/project/inquiries/corpus.mjs';
 
 const noNetwork =
   'data:text/javascript,' +

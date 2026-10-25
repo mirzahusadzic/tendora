@@ -17,23 +17,20 @@
  * case is saved. */
 import { projectTree } from '../authoring/project.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
-import { sentenceRevision } from '../authoring/sources.mjs';
-import { listEngineRuns, readEngineArtifact } from '../storage/engine-runs.mjs';
-import { acquiredTexts, retainAcquisitions } from '../storage/acquisitions.mjs';
-import { parseTexts } from '../../models/acquisition.mjs';
-import { prepareGraphs, normalizedRoleProfile } from '../../models/graph-preparation.mjs';
-import { propbankAuditor } from '../../models/propbank.mjs';
-import { validateGraph } from '../../amr/revision.mjs';
-import { repairReading } from '../../amr/lexical-audit.mjs';
-import { proofGraph, traceRelations, withheldSupport } from '../../amr/inference.mjs';
-import { answerBase } from '../../recording/answers.mjs';
-import { answerRecording, checkAnswer } from '../../engine/answer.mjs';
+import { readEngineArtifact } from '../storage/engine-runs.mjs';
+import { checkAnswer } from '../../engine/answer.mjs';
 import { clozeProbes, checkProbe } from '../../engine/cloze.mjs';
-import { probeAsks, releasedNote, roleName, rootCheck } from './inspection.mjs';
+import { probeAsks, releasedNote, roleName } from './inspection.mjs';
 import { resolveInquiryPlacement } from './scope.mjs';
-
-/** The supposition's id among the sources of a check. */
-export const supposedId = 'hypothesis';
+import {
+  consequences,
+  corpusView,
+  latestChecks,
+  readText,
+  supposedId,
+  supposedSource,
+  withSupposed,
+} from './corpus.mjs';
 
 export const variableOutcomes = {
   recovered: 'new',
@@ -48,66 +45,11 @@ export const variableOutcomes = {
 };
 export const questionKinds = ['answered', 'changed', 'conflict', 'also', 'unchanged'];
 
-/** The supposition's reading: retained, or read by eGemma and retained;
- * offline, only a retained one. Audited and repaired as a check's inputs are. */
-async function supposedReading(project, text, { offline, signal }) {
-  let retained = (await acquiredTexts(project, [text]))?.[0];
-  if (retained?.status !== 'retained') {
-    if (offline) return { status: 'needs-amr', reason: 'It has no retained reading.' };
-    let read;
-    try {
-      read = (await parseTexts([text], () => {}, signal)).results[0];
-    } catch (error) {
-      if (signal?.aborted) throw error;
-      return { status: 'needs-amr', reason: error.message };
-    }
-    if (read.decode_status !== 'ok' || !read.penman)
-      return { status: 'needs-amr', reason: 'eGemma could not read it.' };
-    await retainAcquisitions(project, [
-      {
-        text,
-        penman: read.penman,
-        acquisition: read,
-        origin: { kind: 'hypothesis-acquisition', at: new Date().toISOString() },
-      },
-    ]);
-    retained = (await acquiredTexts(project, [text]))[0];
-  }
-  const prepared = (
-    await prepareGraphs([{ penman: retained.penman }], { signal, profile: normalizedRoleProfile })
-  ).results[0];
-  if (!prepared.ok)
-    return {
-      status: 'invalid-amr',
-      reason: prepared.diagnostics.map((item) => item.message).join('; '),
-    };
-  const { audit } = await propbankAuditor();
-  let graph = validateGraph(prepared.graph),
-    lexicalAudit = audit(text, graph);
-  const repaired = repairReading(text, graph, lexicalAudit.checks);
-  if (repaired.repairs.length) {
-    graph = validateGraph(repaired.graph);
-    lexicalAudit = audit(text, graph);
-  }
-  return { status: 'read', graph, lexicalAudit, penman: retained.penman };
-}
-
-/** A check's inputs with the supposition among its sources. */
-const withSupposed = (result, supposed) => ({
-  ...result,
-  inputs: [
-    ...result.inputs.filter((item) => item.kind !== 'question'),
-    supposed,
-    ...result.inputs.filter((item) => item.kind === 'question'),
-  ],
-});
-
 export async function hypothesisReport(project, { text, role = null, offline = false, signal }) {
   if (typeof text !== 'string' || !text.trim()) throw new Error('Name what to suppose.');
   text = text.trim();
   const root = project.data.placements.find((placement) => placement.parentId === null).id;
   const placementId = role ? resolveInquiryPlacement(project, role) : root;
-  const placement = project.data.placements.find((item) => item.id === placementId);
   const supposition = { text, role: roleName(project.data, placementId) };
   // Said again, a statement would only stand beside itself, its participants
   // twice over: it is already said, and nothing follows from supposing it.
@@ -129,7 +71,11 @@ export async function hypothesisReport(project, { text, role = null, offline = f
       },
       nothingFollows: true,
     };
-  const reading = await supposedReading(project, text, { offline, signal });
+  const reading = await readText(project, text, {
+    offline,
+    signal,
+    origin: 'hypothesis-acquisition',
+  });
   if (reading.status !== 'read')
     return {
       revision: project.digest,
@@ -140,54 +86,20 @@ export async function hypothesisReport(project, { text, role = null, offline = f
       },
       saved: false,
     };
-  const supposed = {
-    id: supposedId,
-    kind: 'source',
-    placementId,
-    conceptId: placement.conceptId,
-    sentenceId: supposedId,
-    revision: sentenceRevision(text),
-    text,
-    sourceRefs: [],
-    graph: reading.graph,
-    penman: reading.penman,
-    lexicalAudit: reading.lexicalAudit,
-  };
-  const knowledge = knowledgeSnapshot(project.data);
+  const supposed = supposedSource(project, { text, reading, placementId });
+  const view = await corpusView(project);
+  const { knowledge, named } = view;
   // The engine reads only the project's statements; in the overlay the
   // supposition is one of them.
-  const overlay = {
-    ...knowledge,
-    sourceCatalog: [
-      ...(knowledge.sourceCatalog ?? []),
-      {
-        text,
-        revision: supposed.revision,
-        conceptId: placement.conceptId,
-        sentenceId: supposedId,
-        nodeId: placementId,
-        authoring: [],
-      },
-    ],
-  };
-  const { input, result } = await rootCheck(project);
-  const statements = result.inputs.filter((item) => !['question', 'case'].includes(item.kind));
-  const textOf = new Map(statements.map((item) => [item.id, item]));
-  const named = (ids) =>
-    [...new Set(ids)]
-      .filter((id) => textOf.has(id))
-      .map((id) => ({
-        statement: textOf.get(id).text,
-        role: roleName(project.data, textOf.get(id).placementId),
-      }));
+  const overlay = view.overlayKnowledge([supposed]);
 
   // What it says: its own variables, asked back against the corpus with it.
-  const whole = withSupposed(result, supposed);
+  const whole = withSupposed(view.result, supposed);
   let grammarCache;
   const variables = [];
   for (const probe of clozeProbes(supposed)) {
     signal?.throwIfAborted();
-    const checked = checkProbe(project, input, whole, probe, {
+    const checked = checkProbe(project, view.input, whole, probe, {
       knowledge: overlay,
       grammarCache,
     });
@@ -204,44 +116,17 @@ export async function hypothesisReport(project, { text, role = null, offline = f
     });
   }
 
-  // What follows: facts inferred with it that rest on it, by the rule that
-  // infers them; a fact holds without it when one of its proofs does not use it.
-  const recording = answerRecording(project, input, whole);
-  const { inference } = answerBase(recording, overlay);
-  const facts = inference.facts;
-  const holds = withheldSupport(proofGraph(facts), [supposedId]);
-  const rules = new Map();
-  facts.forEach((fact, i) => {
-    const proofs = [fact, ...(fact.alternatives ?? [])].filter((proof) => proof.ruleId);
-    if (!proofs.length) return;
-    const trace = traceRelations(facts, [fact.id]);
-    if (!trace.sourceIds.includes(supposedId)) return;
-    for (const ruleId of new Set(proofs.map((proof) => proof.ruleId))) {
-      const from = ruleId.split('/clause/')[0];
-      const key = textOf.has(from) || from === supposedId ? from : ruleId;
-      const entry = rules.get(key) ?? { key, facts: 0, onlyWith: 0, rests: new Set() };
-      entry.facts++;
-      if (!holds[i]) entry.onlyWith++;
-      for (const id of trace.sourceIds) if (id !== supposedId && id !== from) entry.rests.add(id);
-      rules.set(key, entry);
-    }
-  });
-  // Its own rules count only where they apply to statements: a supposed
-  // "if" over what the corpus says, not its own clauses read apart.
-  const follows = [...rules.values()]
-    .filter((entry) => entry.key !== supposedId || entry.rests.size)
+  // What follows: the rules that apply with it.
+  const follows = consequences(view, supposed)
     .map((entry) => ({
-      ...(entry.key === supposedId
+      ...(entry.own
         ? { rule: text, role: supposition.role, ofSupposition: true }
-        : textOf.has(entry.key)
-          ? {
-              rule: textOf.get(entry.key).text,
-              role: roleName(project.data, textOf.get(entry.key).placementId),
-            }
-          : { rule: entry.key, knowledge: true }),
+        : entry.statementId
+          ? { rule: view.byId.get(entry.statementId).text, role: view.role(entry.statementId) }
+          : { rule: entry.knowledge, knowledge: true }),
       facts: entry.facts,
       onlyWith: entry.onlyWith,
-      restsOn: named([...entry.rests]),
+      restsOn: named(entry.rests),
     }))
     .sort((a, b) => b.onlyWith - a.onlyWith || a.rule.localeCompare(b.rule));
 
@@ -253,24 +138,15 @@ export async function hypothesisReport(project, { text, role = null, offline = f
       if (at === scope) return true;
     return false;
   };
-  const saved = (await listEngineRuns(project))
-    .filter((run) => run.projectDigest === project.digest && run.questions?.[0]?.text)
-    .filter((run) => !run.purpose || ['inquiry', 'question-refresh'].includes(run.purpose))
-    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const key = (run) =>
-    JSON.stringify([run.questions[0].text, run.scopePlacementId, run.case || null]);
-  const latest = new Map(),
-    released = new Set();
-  for (const run of saved) if (run.answer && !latest.has(key(run))) latest.set(key(run), run);
-  for (const run of saved)
-    if (!run.answer && run.cache === 'recheck' && !latest.has(key(run))) released.add(key(run));
-  const inScope = [...latest.values()].filter((run) => within(run.scopePlacementId));
+  const latest = await latestChecks(project);
+  let released = latest.released;
+  const inScope = latest.runs.filter((run) => within(run.scopePlacementId));
   const texts = (answer) => [...new Set(answer.answers.map((item) => item.text))].sort();
   const questions = [];
   for (const run of inScope) {
     signal?.throwIfAborted();
     if (!run.inputRef || !run.resultRef) {
-      released.add(key(run));
+      released++;
       continue;
     }
     const [checkInput, checkResult] = await Promise.all([
@@ -334,7 +210,7 @@ export async function hypothesisReport(project, { text, role = null, offline = f
     follows,
     questions: {
       checked: questions.length,
-      released: released.size,
+      released,
       ...Object.fromEntries(questionKinds.map((kind) => [kind, count(kind)])),
       items: changed,
     },

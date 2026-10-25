@@ -141,6 +141,49 @@ export function clozeProbes(source) {
   return probes;
 }
 
+/** A statement's reading as a rule, cut as its probes cut it: the condition
+ * (a case's reading) and the conclusion; null when it is not conditional or
+ * its condition cannot be read apart. */
+export function ruleParts(graph) {
+  const reading = dereifiedCondition(graph);
+  if (reading.reason) return null;
+  const top = reading.assertionTop ?? reading.top;
+  const condition = reading.edges.find(
+    (edge) =>
+      edge.from === top && (edge.role === ':condition' || onlyTimeCondition(reading, top, edge)),
+  );
+  if (!condition) return null;
+  return {
+    condition: conditionGraph(reading, top, condition),
+    conclusion: { ...consequent(reading, top, condition), top },
+    ...(onlyClause(reading, condition.to) ? { necessary: true } : {}),
+  };
+}
+
+/** A reading asked as a yes/no question: its truth left unknown. Expected is
+ * what the reading itself says: No when it is negated. */
+export function truthQuestion(graph) {
+  const top = graph.assertionTop ?? graph.top;
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  const negation = graph.edges.find(
+    (edge) => edge.from === top && edge.role === ':polarity' && nodes.get(edge.to)?.concept === '-',
+  );
+  return {
+    expected: negation ? 'No' : 'Yes',
+    graph: {
+      ...graph,
+      nodes: [
+        ...graph.nodes.filter((node) => node.id !== negation?.to),
+        { id: 'cloze', concept: 'amr-unknown' },
+      ],
+      edges: [
+        ...graph.edges.filter((edge) => edge !== negation),
+        { id: 'cloze-edge', from: top, role: ':polarity', to: 'cloze' },
+      ],
+    },
+  };
+}
+
 /** A conditional statement without its condition: what it says holds. */
 function consequent(graph, top, condition) {
   const kept = connected(graph, top, condition.to, condition);
