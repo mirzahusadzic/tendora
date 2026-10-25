@@ -1,6 +1,6 @@
 {
   "name": "tendora",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Knowledge as a corpus of plain-language statements, by role: answers only what it supports and names the statements behind every answer.",
   "type": "module",
