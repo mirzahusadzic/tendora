@@ -1,7 +1,9 @@
-/** One modal word read two ways, and one word in two concept forms, are read as
- * in the source and cited; other modals and other words settle nothing. */
+/** One modal word read two ways is read as in the source and cited; other
+ * modals settle nothing. A word in two concept forms is no longer read in by
+ * the engine (test/engine/settlement.mjs); an answer recorded that way still
+ * shows how it was read. */
 import assert from 'node:assert/strict';
-import { conversed, settleModalWord, settleWordForm } from '../../src/engine/answer.mjs';
+import { settleModalWord } from '../../src/engine/answer.mjs';
 import { evaluateAnswer } from '../../src/recording/answers.mjs';
 import { readingNote } from '../../src/recording/answer-output.mjs';
 import { unopened } from '../../src/amr/labels.mjs';
@@ -70,36 +72,19 @@ assert.equal(
   'A source that does not say the word answers nothing',
 );
 
-// “A rollback is a new act.” reads rollback as a noun; the question, as roll-back-02.
-const act = (id, rollback) =>
-  graph(id, 'a', { a: 'act', n: 'new-01', r: rollback }, [
-    ['n', ':ARG1', 'a'],
-    ['r', ':mod', 'a'],
-  ]);
-const rollbackQuestion = act('q', 'roll-back-02');
-rollbackQuestion.nodes.push({ id: 'u', concept: 'amr-unknown' });
-rollbackQuestion.edges.push({ id: 'eu', from: 'a', role: ':polarity', to: 'u' });
-const form = recording(rollbackQuestion, 'Is a rollback a new act?', [
-  [act('s', 'rollback'), 'A rollback is a new act.'],
-]);
-assert.equal(evaluateAnswer(form, {}).status, 'open');
-const read = settle(settleWordForm, form);
-assert.equal(read.answers[0].text, 'Yes');
-assert.deepEqual(read.answers[0].wordForms, [{ asked: 'roll-back-02', read: 'rollback' }]);
+// An answer recorded through a word's other form, before the engine stopped
+// reading questions that way, still says how it was read.
 assert.equal(
-  readingNote(read.answers[0]),
+  readingNote({ readAs: 'word-form', wordForms: [{ asked: 'roll-back-02', read: 'rollback' }] }),
   "The question's “roll back” is read as the source's “rollback”.",
 );
-// The same word in another sense is read in the source's sense.
-const sense = structuredClone(form);
-sense.graphs[1].nodes.find((node) => node.id === 'r').concept = 'roll-back-01';
 assert.equal(
-  readingNote(settle(settleWordForm, sense).answers[0]),
+  readingNote({
+    readAs: 'word-form',
+    wordForms: [{ asked: 'roll-back-02', read: 'roll-back-01' }],
+  }),
   "The question's “roll back” is read in the source's sense.",
 );
-const otherWord = structuredClone(form);
-otherWord.graphs[0].nodes.find((node) => node.id === 'r').concept = 'retreat-01';
-assert.equal(settle(settleWordForm, otherWord), null, 'Another word is not a form of this one');
 // A sentence's opening capital is not the word's; an acronym keeps its capitals.
 assert.equal(
   unopened('Customer service', 0, 'Customer service manages returns.'),
@@ -107,12 +92,6 @@ assert.equal(
 );
 assert.equal(unopened('AI', 0, 'AI may propose a change.'), 'AI');
 assert.equal(unopened('Tendora', 4, 'Ask Tendora.'), 'Tendora', 'Only the opening word');
-// Shared words do not settle a converse: the same words on the other side of “is”.
-assert.equal(conversed('Is joint work shared work?', 'Shared work is joint work.'), true);
-assert.equal(conversed('Is shared work joint work?', 'Shared work is joint work.'), false);
-assert.equal(conversed('Is a rollback a new act?', 'A rollback is a new act.'), false);
-assert.equal(conversed('Who brings the work?', 'Shared work is joint work.'), false);
-assert.equal(conversed('Is joint work shared?', 'The crew brings shared work.'), false);
 console.log(
-  'ok readings: one modal word read as in the source, one word in two forms; other modals and words settle nothing; shared words settle no converse',
+  'ok readings: one modal word read as in the source; other modals settle nothing; recorded word-form answers still say how they were read',
 );

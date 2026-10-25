@@ -33,6 +33,7 @@ export const suites = {
     'engine/domains.mjs',
     'engine/grammar.mjs',
     'engine/development.mjs',
+    'engine/settlement.mjs',
     'engine/semantic-reuse.mjs',
     'engine/partial.mjs',
     'engine/partial-replay.mjs',

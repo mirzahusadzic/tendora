@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "calibrationMs": 224,
+  "calibrationMs": 207,
   "benchmarks": {
     "independent-domain": {
-      "engineMs": 297,
+      "engineMs": 143,
       "results": [
         {
           "id": "archive/catalog-nominalization",
@@ -21,14 +21,25 @@
         },
         {
           "id": "archive/binding-passive",
-          "status": "supported",
-          "answers": [
-            "conservator"
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched bind-01",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG3 thing",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched repair-01 :ARG1 thing"
           ],
-          "evidence": [
-            "The conservator repairs damaged bindings."
-          ],
-          "openings": []
+          "proposals": [
+            {
+              "source": "The conservator repairs damaged bindings.",
+              "status": "supported",
+              "answers": [
+                "conservator"
+              ]
+            }
+          ]
         },
         {
           "id": "archive/storage-paraphrase",
@@ -45,14 +56,25 @@
         },
         {
           "id": "archive/binding-yesno",
-          "status": "supported",
-          "answers": [
-            "Yes"
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched bind-01",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG3 thing",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched repair-01 :ARG1 thing"
           ],
-          "evidence": [
-            "The conservator repairs damaged bindings."
-          ],
-          "openings": []
+          "proposals": [
+            {
+              "source": "The conservator repairs damaged bindings.",
+              "status": "supported",
+              "answers": [
+                "Yes"
+              ]
+            }
+          ]
         },
         {
           "id": "archive/wrong-repairer",
@@ -73,18 +95,25 @@
       ]
     },
     "blind-domain": {
-      "engineMs": 3016,
+      "engineMs": 1010,
       "results": [
         {
           "id": "archive-water/q01",
-          "status": "supported",
-          "answers": [
-            "collections conservator"
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "relation unmatched schedule-01 :ARG1 freeze-01"
           ],
-          "evidence": [
-            "The collections conservator signs release slips for crates scheduled for freezing."
-          ],
-          "openings": []
+          "proposals": [
+            {
+              "source": "The collections conservator signs release slips for crates scheduled for freezing.",
+              "status": "supported",
+              "answers": [
+                "collections conservator"
+              ]
+            }
+          ]
         },
         {
           "id": "archive-water/q02",
@@ -103,14 +132,24 @@
         },
         {
           "id": "archive-water/q03",
-          "status": "supported",
-          "answers": [
-            "intake cabinet"
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched admit-02",
+            "relation unjoined register-02 :ARG0 person",
+            "relation unjoined store-01 :ARG0 person",
+            "relation unmatched register-02 :ARG1 admit-02"
           ],
-          "evidence": [
-            "The intake registrar stores the original transfer forms in the intake cabinet."
-          ],
-          "openings": []
+          "proposals": [
+            {
+              "source": "The intake registrar stores the original transfer forms in the intake cabinet.",
+              "status": "supported",
+              "answers": [
+                "intake cabinet"
+              ]
+            }
+          ]
         },
         {
           "id": "archive-water/q04",
@@ -512,7 +551,7 @@
       ]
     },
     "requestioned": {
-      "engineMs": 5110,
+      "engineMs": 1624,
       "results": [
         {
           "id": "archive/catalog-nominalization~1",
@@ -637,14 +676,25 @@
         },
         {
           "id": "archive/binding-yesno~2",
-          "status": "supported",
-          "answers": [
-            "Yes"
+          "status": "open",
+          "answers": [],
+          "evidence": [],
+          "openings": [
+            "concept unmatched bind-01",
+            "concept unmatched thing",
+            "relation unmatched bind-01 :ARG3 thing",
+            "relation unmatched damage-01 :ARG1 thing",
+            "relation unmatched repair-01 :ARG1 thing"
           ],
-          "evidence": [
-            "The conservator repairs damaged bindings."
-          ],
-          "openings": []
+          "proposals": [
+            {
+              "source": "The conservator repairs damaged bindings.",
+              "status": "supported",
+              "answers": [
+                "Yes"
+              ]
+            }
+          ]
         },
         {
           "id": "archive/wrong-repairer~1",

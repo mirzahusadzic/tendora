@@ -13,6 +13,9 @@ import { promisify } from 'node:util';
 
 // Raise a floor when the engine improves; never lower it to make a change pass.
 // reachableFloor counts answers supported automatically or one confirmation away.
+// warrantedFloor was lowered once, on 2026-10-25 (review #2 and #3): answers the
+// engine had read in through shared wording became proposals a person confirms.
+// Each moved to one confirmation away; no reachableFloor changed.
 const benchmarks = [
   {
     name: 'independent-domain',
@@ -20,7 +23,7 @@ const benchmarks = [
     acquisitions: 'test/support/independent-domain-acquisitions.json',
     fixtures: ['test/support/evaluation-archive'],
     questions: 5,
-    warrantedFloor: 2,
+    warrantedFloor: 0,
     reachableFloor: 2,
     confirmationFalseSupportCeiling: 0,
   },
@@ -30,7 +33,7 @@ const benchmarks = [
     acquisitions: 'test/support/blind-domain-acquisitions.json',
     fixtures: ['test/support/blind-archive-water', 'test/support/blind-bracken'],
     questions: 20,
-    warrantedFloor: 2,
+    warrantedFloor: 0,
     reachableFloor: 2,
     // “Who had collected the key?” is offered “The freezer van collects booked
     // crates”: a different-word proposal the author must reject.
@@ -48,7 +51,7 @@ const benchmarks = [
       'test/support/blind-bracken',
     ],
     questions: 46,
-    warrantedFloor: 2,
+    warrantedFloor: 1,
     reachableFloor: 6,
     confirmationFalseSupportCeiling: 0,
   },

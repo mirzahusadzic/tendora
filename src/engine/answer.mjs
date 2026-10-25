@@ -7,10 +7,10 @@ import { answerLabels } from '../amr/labels.mjs';
 export function checkAnswer(project, input, result, options) {
   const recording = answerRecording(project, input, result);
   const knowledge = options?.knowledge ?? knowledgeSnapshot(project.data);
-  // The question settled another way (a reference, a modal word, a word form)
-  // is checked against the same sources, and the question is not part of
-  // their material: one base serves every reading, as a caller's supplied
-  // base would. (Where a reading's interpretation is material, or another
+  // The question settled another way (a reference, a modal word) is checked
+  // against the same sources, and the question is not part of their
+  // material: one base serves every reading, as a caller's supplied base
+  // would. (Where a reading's interpretation is material, or another
   // knowledge is checked, a base is made for it.)
   if (!options?.supplied) {
     let base = null;
@@ -19,11 +19,12 @@ export function checkAnswer(project, input, result, options) {
   }
   const answer = evaluateAnswer(recording, knowledge, options);
   answer.clarifications = buildClarifications(project, input, result, answer);
+  // A question shares words with a source but was read differently: the
+  // connection is a proposal (answer.clarifications), never read in by the
+  // engine itself; a person confirms it (review 2026-10-25, #2 and #3).
   const checked =
-    settleSharedWording(recording, knowledge, options, input, answer) ??
     settleReference(recording, knowledge, options, answer) ??
     settleModalWord(recording, knowledge, options, answer) ??
-    settleWordForm(recording, knowledge, options, answer) ??
     answer;
   return checked.answers.length ? checked : { ...checked, related: closestStatements(recording) };
 }
@@ -227,29 +228,6 @@ export function settleReference(recording, knowledge, options, answer) {
   };
 }
 
-const generalParticipants = new Set(['amr-unknown', 'person', 'thing', 'it', 'they']);
-/** The participants a question names, by concept; predicates are not participants. */
-function questionParticipants(recording) {
-  const graph = recording.graphs.find((item) => item.id === recording.inquiry.graphId);
-  return new Set(
-    (graph?.nodes ?? [])
-      .filter(
-        (node) =>
-          node.literal === undefined &&
-          !generalParticipants.has(node.concept) &&
-          !/-\d+$/u.test(node.concept),
-      )
-      .map((node) => node.concept),
-  );
-}
-/** The concept of a bound source node, `<source>#<node>`. */
-function participantConcept(recording, id) {
-  const at = id.lastIndexOf('#');
-  const source = recording.sources.find((item) => item.id === id.slice(0, at));
-  const graph = recording.graphs.find((item) => item.id === source?.graphId);
-  return graph?.nodes.find((node) => node.id === id.slice(at + 1))?.concept;
-}
-
 /** One modal word, read two ways: “May a participant withdraw?” is read as
  * permission (permit-01), “A participant may withdraw.” as possibility
  * (possible-01). When the question and the answering source use the same
@@ -305,166 +283,4 @@ export function settleModalWord(recording, knowledge, options, answer) {
     }
   }
   return null;
-}
-
-/** One word, two concept forms: “rollback” read as a noun in one text and as
- * roll-back-02 in another. A question concept with no occurrence in the
- * sources is read as the one source concept of the same form (sense number
- * and hyphens aside), and cited.
- */
-const wordForm = (concept) => concept.replace(/-\d+$/u, '').replaceAll('-', '');
-export function settleWordForm(recording, knowledge, options, answer) {
-  if (answer.status !== 'open') return null;
-  const query = recording.graphs.find((graph) => graph.id === recording.inquiry.graphId);
-  if (!query) return null;
-  const present = new Set(
-    recording.graphs
-      .filter((graph) => graph.id !== query.id)
-      .flatMap((graph) => graph.nodes.map((node) => node.concept))
-      .filter(Boolean),
-  );
-  const forms = new Map();
-  for (const concept of present) {
-    if (!forms.has(wordForm(concept))) forms.set(wordForm(concept), new Set());
-    forms.get(wordForm(concept)).add(concept);
-  }
-  const readings = new Map();
-  for (const node of query.nodes) {
-    if (!node.concept || present.has(node.concept) || node.literal !== undefined) continue;
-    const same = [...(forms.get(wordForm(node.concept)) ?? [])];
-    if (same.length === 1 && wordForm(node.concept).length >= 4) readings.set(node.id, same[0]);
-  }
-  if (!readings.size) return null;
-  const graph = {
-    ...query,
-    nodes: query.nodes.map((node) =>
-      readings.has(node.id) ? { ...node, concept: readings.get(node.id) } : node,
-    ),
-  };
-  const settled = evaluateAnswer(
-    {
-      ...recording,
-      graphs: recording.graphs.map((item) =>
-        item.id === query.id ? { ...graph, id: query.id } : item,
-      ),
-    },
-    knowledge,
-    options,
-  );
-  if (!['supported', 'conditional'].includes(settled.status) || !settled.answers.length)
-    return null;
-  const readAs = [...readings].map(([id, concept]) => ({
-    asked: query.nodes.find((node) => node.id === id).concept,
-    read: concept,
-  }));
-  return {
-    ...settled,
-    answers: settled.answers.map((item) => ({ ...item, readAs: 'word-form', wordForms: readAs })),
-    clarifications: [],
-  };
-}
-
-/** A proposal whose source uses the question's own words, read differently,
- * needs no person: the engine reads the question's words as in that source.
- * The connection holds for this check only and is cited with the answer.
- */
-// Words that frame a question but carry no content of their own. Negation and
-// modal words are not here: they must match.
-const framing = new Set(
-  'a an the of for to in on at by from with as and or but is are was were be been being do does did have has had who whom whose what which where when why how that this these those it its'.split(
-    ' ',
-  ),
-);
-const contentWords = (text) =>
-  (
-    String(text)
-      .toLowerCase()
-      .match(/[\p{L}\p{N}]+/gu) ?? []
-  ).filter((w) => !framing.has(w));
-const sameWord = (a, b) => {
-  let n = 0;
-  while (n < a.length && a[n] === b[n]) n++;
-  return a === b || n >= Math.max(4, Math.min(a.length, b.length) - 3);
-};
-/** The question says nothing the source does not: every content word of the
- * question occurs in the source, so only the reading of those words differs. */
-const withinSource = (question, source) => {
-  const available = contentWords(source);
-  return contentWords(question).every((word) => available.some((other) => sameWord(word, other)));
-};
-
-/** Shared words do not settle a converse: “Is joint work shared work?” asks
- * the other way round from “Shared work is joint work.”, the same words on
- * the other side of the copula. The first word after “is” that only one side
- * of the source has tells which side the question puts first. */
-const copula = /\b(?:is|are)\b/iu,
-  asksCopula = /^\s*(?:is|are)\b/iu;
-export const conversed = (question, source) => {
-  const at = String(source).search(copula);
-  if (at < 0 || !asksCopula.test(question)) return false;
-  const before = contentWords(String(source).slice(0, at)),
-    after = contentWords(String(source).slice(at));
-  const only = (words, others) => words.filter((w) => !others.some((o) => sameWord(w, o)));
-  const subject = only(before, after),
-    predicate = only(after, before);
-  const first = contentWords(String(question).replace(asksCopula, '')).find((word) =>
-    [...subject, ...predicate].some((other) => sameWord(word, other)),
-  );
-  return first !== undefined && predicate.some((other) => sameWord(first, other));
-};
-
-export function settleSharedWording(recording, knowledge, options, input, answer) {
-  const same = (answer.clarifications ?? []).filter(
-    (candidate) =>
-      candidate.sharedWording &&
-      withinSource(recording.inquiry.text, candidate.source.text) &&
-      !conversed(recording.inquiry.text, candidate.source.text),
-  );
-  if (answer.status !== 'open' || !same.length) return null;
-  const rules = same.map((candidate) => ({
-    ...candidate.rule,
-    baseOnly: true,
-    id: `shared-wording:${candidate.id}`,
-    scopePlacementId: input.scopePlacementId,
-    applicationSourceReferences: [candidate.source],
-    attribution: `The question and the source both say “${candidate.sharedWording}”; read as in the source.`,
-    sources: [
-      {
-        text: candidate.source.text,
-        nodeId: candidate.source.nodeId,
-        revision: candidate.source.revision,
-      },
-    ],
-    origin: { kind: 'engine-shared-wording', candidateId: candidate.id },
-  }));
-  const settled = evaluateAnswer(
-    recording,
-    { ...knowledge, rules: [...(knowledge.rules ?? []), ...rules] },
-    options,
-  );
-  if (!['supported', 'conditional'].includes(settled.status) || !settled.answers.length)
-    return null;
-  const wording = new Map(rules.map((rule, i) => [rule.id, same[i].sharedWording]));
-  // Shared words do not settle roles: an answer that is a participant the
-  // question itself names (“Who may refuse a proposal of the intelligence?”
-  // answered “intelligence” from “The intelligence may refuse a proposed
-  // change”) swaps roles, and stays open for a person.
-  const named = questionParticipants(recording);
-  const kept = settled.answers.filter(
-    (item) =>
-      !item.ruleIds.some((id) => wording.has(id)) ||
-      !item.bindings.some((binding) => named.has(participantConcept(recording, binding.id))),
-  );
-  if (!kept.length) return null;
-  // Several proposals from one source can settle the same answer; report it once.
-  const answers = new Map();
-  for (const item of kept) {
-    const key = JSON.stringify([item.text, item.conditional, [...item.sourceIds].sort()]);
-    const used = item.ruleIds.filter((id) => wording.has(id)).map((id) => wording.get(id));
-    const marked = used.length
-      ? { ...item, readAs: 'shared-wording', sharedWording: [...new Set(used)] }
-      : item;
-    if (!answers.has(key)) answers.set(key, marked);
-  }
-  return { ...settled, answers: [...answers.values()], clarifications: [] };
 }

@@ -106,7 +106,53 @@ export function sharedWording(question, source) {
   return best ? source.text.slice(best.phrase[0].start, best.phrase.at(-1).end) : null;
 }
 
-/** Candidate alignments explain a gap. They neither assert the question nor alter its AMR. */
+// Participants named by kind alone say nothing about who they are.
+const general = new Set(['amr-unknown', 'person', 'thing', 'it', 'they']);
+/** A named entity's name: its :name node's :opN parts, in order. */
+function nameOf(graph, id) {
+  const nameNode = graph.edges.find((edge) => edge.from === id && edge.role === ':name')?.to;
+  if (!nameNode) return null;
+  const parts = graph.edges
+    .filter((edge) => edge.from === nameNode && /^:op\d+$/u.test(edge.role))
+    .sort((a, b) => Number(a.role.slice(3)) - Number(b.role.slice(3)))
+    .map((edge) => graph.nodes.find((node) => node.id === edge.to))
+    .map((node) => String(node?.literal ?? node?.concept ?? '').replace(/^"|"$/gu, ''));
+  return parts.length ? parts.join(' ') : null;
+}
+/** A proposal that would answer with a participant the question itself names,
+ * by its concept or its name, reads the question's words in swapped roles:
+ * "Who may reject a proposal of Ana?" answered "Ana" from "Ana may
+ * reject a proposal of the intelligence". Such a proposal is not offered. */
+export function swapsNamedParticipant(question, basis, answerNodeIds) {
+  const concepts = new Set(),
+    names = new Set();
+  for (const node of question.nodes)
+    if (
+      node.literal === undefined &&
+      node.concept &&
+      node.concept !== 'name' &&
+      !general.has(node.concept) &&
+      !/-\d+$/u.test(node.concept)
+    )
+      concepts.add(node.concept);
+  for (const node of question.nodes) {
+    const name = nameOf(question, node.id);
+    if (name) names.add(name);
+  }
+  return Object.values(answerNodeIds ?? {}).some((id) => {
+    const node = basis.nodes.find((item) => item.id === id);
+    if (!node) return false;
+    const name = nameOf(basis, id);
+    return (
+      (name !== null && names.has(name)) ||
+      (!general.has(node.concept) && concepts.has(node.concept))
+    );
+  });
+}
+
+/** Candidate alignments explain a gap. They neither assert the question nor
+ * alter its AMR, and the engine never reads them in itself: a person confirms
+ * one, and only then does it answer. */
 export function buildClarifications(project, input, result, answer) {
   if (answer.status !== 'open' || !answer.complete) return [];
   const question = result.inputs.find((entry) => entry.kind === 'question');
@@ -149,27 +195,35 @@ export function buildClarifications(project, input, result, answer) {
     relevance: relevance(entry),
     graph: withAbstractLabels(entry.graph, labels.get(entry.id)),
   }));
-  return proposeCorrespondences(question.graph, labelled).map((candidate) => {
-    const basis = bases.find((entry) => entry.id === candidate.basisId);
-    const source = reference(basis);
-    const shared = sharedWording(question, basis);
-    return {
-      ...candidate,
-      ...(shared ? { sharedWording: shared } : {}),
-      basisLabels: labels.get(basis.id),
-      id: identity([source, graphRevision(question.graph), candidate.answerNodeId]),
-      projectId: project.data.id,
-      projectRevision: input.projectRevision,
-      scopePlacementId: input.scopePlacementId,
-      source,
-      basisGraph: structuredClone(basis.graph),
-      question: {
-        text: question.text,
-        graph: structuredClone(question.graph),
-        acquisition: structuredClone(question.acquisition),
-      },
-    };
-  });
+  return proposeCorrespondences(question.graph, labelled)
+    .filter((candidate) => {
+      const basis = bases.find((entry) => entry.id === candidate.basisId);
+      const answerNodeIds =
+        candidate.answerNodeIds ??
+        (candidate.answerNodeId ? { answer: candidate.answerNodeId } : {});
+      return !swapsNamedParticipant(question.graph, basis.graph, answerNodeIds);
+    })
+    .map((candidate) => {
+      const basis = bases.find((entry) => entry.id === candidate.basisId);
+      const source = reference(basis);
+      const shared = sharedWording(question, basis);
+      return {
+        ...candidate,
+        ...(shared ? { sharedWording: shared } : {}),
+        basisLabels: labels.get(basis.id),
+        id: identity([source, graphRevision(question.graph), candidate.answerNodeId]),
+        projectId: project.data.id,
+        projectRevision: input.projectRevision,
+        scopePlacementId: input.scopePlacementId,
+        source,
+        basisGraph: structuredClone(basis.graph),
+        question: {
+          text: question.text,
+          graph: structuredClone(question.graph),
+          acquisition: structuredClone(question.acquisition),
+        },
+      };
+    });
 }
 
 /** A person, or a program, confirms a proposed meaning; the engine owns rule

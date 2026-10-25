@@ -274,11 +274,16 @@ try {
   await ask(location.question.text, 'supported');
   const actor = 'Who recognizes intention in the resulting design?';
   const which = 'Which person recognizes intention in the resulting design?';
-  // The question repeats its source's words, so the engine reads them as in the
-  // source; a question that says more ("person") waits for an authored perspective.
-  const settled = await ask(actor, 'supported');
-  assert.deepEqual(texts(settled), ['programmer']);
-  assert.equal(settled.answer.answers[0].readAs, 'shared-wording');
+  // The question repeats its source's words, read differently: the engine
+  // proposes the connection and waits for a person, as for a question that says
+  // more ("person"); an authored perspective answers both (review 2026-10-25, #3).
+  const proposed = await ask(actor, 'open');
+  assert(
+    proposed.answer.clarifications.some(
+      (candidate) => candidate.sharedWording && candidate.answerLabel === 'programmer',
+    ),
+    'The shared-wording connection is one confirmation away',
+  );
   await ask(which, 'open');
   const perspective = await develop(actor, '', {
     contributionId: main.id,
@@ -297,7 +302,7 @@ try {
     withdrawContributionPart(project.data, main.id, perspective.wordings[0].id),
   );
   await ask(which, 'open');
-  assert.equal((await ask(actor, 'supported')).answer.answers[0].readAs, 'shared-wording');
+  await ask(actor, 'open');
   await ask(main.question.text, 'supported');
   project = await saveProject(project, withPerspective); // restore the prior authored revision
   await ask(actor, 'supported');

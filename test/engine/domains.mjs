@@ -120,9 +120,9 @@ try {
 
   const expected = {
     simulation: 'supported',
-    // The question repeats the source's words, read differently; the engine
-    // reads them as in the source (shared wording).
-    receipt: 'supported',
+    // The question repeats the source's words, read differently: one
+    // confirmation away (a shared-wording proposal), not read in by the engine.
+    receipt: 'open',
     causation: 'open',
     refusal: 'supported',
     probe: 'conditional',
@@ -132,14 +132,14 @@ try {
     'modal-positive': 'open',
     'modal-preserved': 'supported',
     'wrong-role': 'open',
-    recognition: 'supported', // Shared wording: “recognizes intention”.
+    recognition: 'open', // A shared-wording proposal: “recognizes intention”.
     authority: 'supported',
     pipeline: 'supported',
     effects: 'open',
     safety: 'open',
-    // Shared wording: “shapes digital work through the intelligence”, now that
-    // proposals rank their sources by relevance instead of taking the first 64.
-    shaping: 'supported',
+    // A shared-wording proposal: “shapes digital work through the intelligence”,
+    // found since proposals rank their sources by relevance.
+    shaping: 'open',
     compound: 'open',
   };
   for (const [name, status] of Object.entries(expected)) {
@@ -154,6 +154,18 @@ try {
   }
   for (const name of ['authority', 'pipeline'])
     assert.equal(evaluate('hand', load('hand', name)).answers[0].text, 'No');
+  // Each answer the engine once read in through shared words is proposed instead.
+  for (const [name, label] of [
+    ['receipt', 'receipt'],
+    ['recognition', 'person'],
+    ['shaping', 'person'],
+  ])
+    assert(
+      evaluate('hand', load('hand', name)).clarifications.some(
+        (candidate) => candidate.sharedWording && candidate.answerLabel === label,
+      ),
+      `${name}: one confirmation away`,
+    );
   assert(
     evaluate('hand', load('hand', 'modal-positive')).openings.some(
       (opening) => opening.kind === 'assertion' && opening.state === 'unasserted',

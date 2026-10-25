@@ -8,8 +8,7 @@ import {
   questionBranches,
 } from '../../src/amr/development.mjs';
 import { evaluateAnswer } from '../../src/recording/answers.mjs';
-import { sharedWording } from '../../src/engine/clarify.mjs';
-import { settleSharedWording } from '../../src/engine/answer.mjs';
+import { sharedWording, swapsNamedParticipant } from '../../src/engine/clarify.mjs';
 
 const graph = (id, top, nodes, edges) => ({
   id,
@@ -186,69 +185,19 @@ const said = {
 };
 assert.equal(sharedWording(asked, said), 'crates scheduled for freezing');
 assert.equal(sharedWording(said, said), null, 'One reading has no difference');
-// The engine settles a shared-wording proposal itself, for this check only.
+// A shared-wording proposal stays a proposal: the engine does not read the
+// question as in the source by itself (review 2026-10-25, #3).
 const signRecording = {
   inquiry: { text: asked.text, graphId: whoSigns.id },
   project: { placementId: 'root' },
   graphs: [whoSigns, signs],
   sources: [{ id: 'signs', nodeId: 'root', text: said.text, graphId: signs.id }],
 };
-const openSign = evaluateAnswer(signRecording, { rules: [] });
-assert.equal(openSign.status, 'open');
+assert.equal(evaluateAnswer(signRecording, { rules: [] }).status, 'open');
 const [signProposal] = proposeCorrespondences(whoSigns, [
   { id: 'signs', graph: signs, text: said.text },
 ]);
-const signCandidate = {
-  ...signProposal,
-  id: 'candidate',
-  source: { text: said.text, nodeId: 'root' },
-};
-const settled = settleSharedWording(
-  signRecording,
-  { rules: [] },
-  undefined,
-  { scopePlacementId: 'root' },
-  {
-    ...openSign,
-    clarifications: [{ ...signCandidate, sharedWording: 'crates scheduled for freezing' }],
-  },
-);
-assert.equal(settled.status, 'supported');
-assert.deepEqual(
-  settled.answers.map((answer) => [answer.readAs, answer.sharedWording]),
-  [['shared-wording', ['crates scheduled for freezing']]],
-);
-assert.equal(
-  settleSharedWording(
-    signRecording,
-    { rules: [] },
-    undefined,
-    { scopePlacementId: 'root' },
-    { ...openSign, clarifications: [signCandidate] },
-  ),
-  null,
-  'A proposal with different words still waits for a person',
-);
-assert.equal(
-  settleSharedWording(
-    {
-      ...signRecording,
-      inquiry: {
-        ...signRecording.inquiry,
-        text: 'Who signs release slips for crates scheduled for freezing at noon?',
-      },
-    },
-    { rules: [] },
-    undefined,
-    { scopePlacementId: 'root' },
-    {
-      ...openSign,
-      clarifications: [{ ...signCandidate, sharedWording: 'crates scheduled for freezing' }],
-    },
-  ),
-  null,
-  'A question that says more than its source still waits for a person',
-);
+assert.equal(signProposal.answerNodeId, 'p', 'The connection is offered for a person to confirm');
 assert.equal(
   sharedWording(
     { text: 'What does the registrar keep?', graph: keeping('register-02', 'amr-unknown') },
@@ -306,40 +255,61 @@ const whoRejects = (text, proposer) => ({
     ],
   ),
 });
-const settleRejecting = (asked) => {
-  const recording = {
-    inquiry: { text: asked.text, graphId: asked.graph.id },
-    project: { placementId: 'root' },
-    graphs: [asked.graph, mayReject.graph],
-    sources: [{ id: 'reject', nodeId: 'root', text: mayReject.text, graphId: mayReject.graph.id }],
-  };
-  const open = evaluateAnswer(recording, { rules: [] });
-  assert.equal(open.status, 'open');
-  const clarifications = proposeCorrespondences(asked.graph, [
+const proposedFor = (asked) =>
+  proposeCorrespondences(asked.graph, [
     { id: 'reject', graph: mayReject.graph, text: mayReject.text },
-  ]).map((proposal, i) => ({
-    ...proposal,
-    id: `reject-${i}`,
-    source: { text: mayReject.text, nodeId: 'root' },
-    sharedWording: sharedWording(asked, mayReject),
-  }));
-  assert(clarifications.length && clarifications[0].sharedWording);
-  return settleSharedWording(
-    recording,
-    { rules: [] },
-    undefined,
-    { scopePlacementId: 'root' },
-    { ...open, clarifications },
-  );
-};
-assert.deepEqual(
-  settleRejecting(whoRejects('Who may reject a proposal?', false)).answers.map((a) => a.text),
-  ['inspector'],
+  ]).filter((proposal) => proposal.answerNodeIds?.u === 'i');
+const plain = whoRejects('Who may reject a proposal?', false);
+assert(proposedFor(plain).length, 'The rejector is offered when the question names no proposer');
+assert.equal(
+  swapsNamedParticipant(plain.graph, mayReject.graph, { u: 'i' }),
+  false,
+  'Answering with a participant the question does not name swaps nothing',
+);
+const ofInspector = whoRejects('Who may reject a proposal of the inspector?', true);
+assert.equal(
+  swapsNamedParticipant(ofInspector.graph, mayReject.graph, { u: 'i' }),
+  true,
+  'The question names the inspector as the proposer: answering inspector swaps roles',
+);
+// By name too: a person is named by its :name, not its concept.
+const withName = (id, top, nodes, edges) =>
+  graph(id, top, { ...nodes, n: 'name', l: { concept: 'Ana', literal: '"Ana"' } }, [
+    ...edges,
+    ['p', ':name', 'n'],
+    ['n', ':op1', 'l'],
+  ]);
+const anaRejects = withName(
+  'ana-rejects',
+  'r',
+  { r: 'reject-01', p: 'person', t: 'thing', q: 'propose-01', i: 'intelligence' },
+  [
+    ['r', ':ARG0', 'p'],
+    ['r', ':ARG1', 't'],
+    ['q', ':ARG1', 't'],
+    ['q', ':ARG0', 'i'],
+  ],
+);
+const ofAna = withName(
+  'of-ana',
+  'r',
+  { r: 'reject-01', u: 'amr-unknown', t: 'thing', q: 'propose-01', p: 'person' },
+  [
+    ['r', ':ARG0', 'u'],
+    ['r', ':ARG1', 't'],
+    ['q', ':ARG1', 't'],
+    ['q', ':ARG0', 'p'],
+  ],
 );
 assert.equal(
-  settleRejecting(whoRejects('Who may reject a proposal of the inspector?', true)),
-  null,
-  'An answer that is a participant the question names elsewhere waits for a person',
+  swapsNamedParticipant(ofAna, anaRejects, { u: 'p' }),
+  true,
+  'A named proposer keeps its role',
+);
+assert.equal(
+  swapsNamedParticipant(ofAna, anaRejects, { u: 'i' }),
+  false,
+  'Another participant is not the named one',
 );
 const unrelated = structuredClone(source);
 unrelated.nodes[0].concept = 'sell-01';
