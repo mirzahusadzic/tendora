@@ -28,6 +28,7 @@ import { repairReading } from '../../amr/lexical-audit.mjs';
 import { proofGraph, traceRelations, withheldSupport } from '../../amr/inference.mjs';
 import { answerBase, evaluateAnswer } from '../../recording/answers.mjs';
 import { answerRecording } from '../../engine/answer.mjs';
+import { truthQuestion } from '../../engine/cloze.mjs';
 import { roleName, rootCheck } from './inspection.mjs';
 
 /** A text's reading: retained, or read by eGemma and retained (`origin` names
@@ -171,6 +172,52 @@ export async function corpusView(project) {
     if (!bases.has(key)) bases.set(key, answerBase(recording, used));
     return evaluateAnswer(recording, used, { base: { ...bases.get(key), recording } });
   };
+  // The types the statements give each name. A parser types a name by guess
+  // (Morgan a company in one reading, a person in another), as it links one:
+  // a question about a named participant is asked under each type the
+  // statements give that name.
+  const nameTypes = new Map();
+  for (const item of statements)
+    if (item.graph)
+      for (const [name, concept] of namedTypes(item.graph)) {
+        if (!nameTypes.has(name)) nameTypes.set(name, new Set());
+        nameTypes.get(name).add(concept);
+      }
+  /** A reading's truth asked of the statements: its named participants
+   * identified by name, under each type the statements give them, the
+   * answers merged. `expected` is what the reading itself says. */
+  const truth = (graph, options = {}) => {
+    const { expected, graph: question } = truthQuestion(namedCore(graph));
+    const nodes = new Map(question.nodes.map((node) => [node.id, node]));
+    let variants = [question];
+    for (const [id, name] of namedNodes(question)) {
+      const types = [...new Set([nodes.get(id).concept, ...(nameTypes.get(name) ?? [])])];
+      variants = variants
+        .flatMap((variant) =>
+          types.map((concept) => ({
+            ...variant,
+            nodes: variant.nodes.map((node) => (node.id === id ? { ...node, concept } : node)),
+          })),
+        )
+        .slice(0, 8);
+    }
+    const seen = new Set(),
+      merged = { yes: [], no: [], status: 'open' };
+    for (const variant of variants) {
+      const answer = yesNo(ask(variant, options));
+      if (answer.status !== 'open') merged.status = answer.status;
+      for (const side of ['yes', 'no'])
+        for (const binding of answer[side]) {
+          const key = JSON.stringify([side, binding.sourceIds, binding.ruleIds]);
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged[side].push(binding);
+          }
+        }
+    }
+    if (merged.yes.length && merged.no.length) merged.status = 'conflict';
+    return { expected, ...merged };
+  };
   return {
     project,
     input,
@@ -184,6 +231,7 @@ export async function corpusView(project) {
     named,
     ruleSource,
     ask,
+    truth,
     overlayKnowledge,
   };
 }
@@ -251,7 +299,9 @@ export function clauseText(source, nodeIds) {
       break;
     }
   }
-  return source.text.slice(best.start, best.end);
+  // A determiner just before the words goes with them: "a major incident".
+  const before = source.text.slice(0, best.start).match(/\b(?:a|an|the|every|each|no)\s+$/iu);
+  return source.text.slice(before ? best.start - before[0].length : best.start, best.end);
 }
 
 /** A supposition's id among the sources of a check. */
@@ -275,11 +325,11 @@ export function supposedSource(project, { text, reading, placementId }) {
   };
 }
 
-/** A check's inputs with a supposition among its sources. */
-export const withSupposed = (result, supposed) => ({
+/** A check's inputs with a supposition among its sources, less `withhold`. */
+export const withSupposed = (result, supposed, withhold = []) => ({
   ...result,
   inputs: [
-    ...result.inputs.filter((item) => item.kind !== 'question'),
+    ...result.inputs.filter((item) => item.kind !== 'question' && !withhold.includes(item.id)),
     supposed,
     ...result.inputs.filter((item) => item.kind === 'question'),
   ],
@@ -290,9 +340,10 @@ export const withSupposed = (result, supposed) => ({
  * supposition's own, or engine knowledge by its id). A fact holds without it
  * when one of its proofs does not use it; `onlyWith` counts those that do not.
  * Its own rules count only where they apply to statements: a supposed "if"
- * over what the corpus says, not its own clauses read apart. */
-export function consequences(view, supposed) {
-  const whole = withSupposed(view.result, supposed);
+ * over what the corpus says, not its own clauses read apart. A statement of
+ * the corpus is supposed in place of itself by withholding it. */
+export function consequences(view, supposed, { withhold = [] } = {}) {
+  const whole = withSupposed(view.result, supposed, withhold);
   const recording = answerRecording(view.project, view.input, whole);
   const { inference } = answerBase(recording, view.overlayKnowledge([supposed]));
   const facts = inference.facts;
@@ -351,4 +402,72 @@ export async function latestChecks(project) {
   for (const run of saved)
     if (!run.answer && run.cache === 'recheck' && !latest.has(key(run))) released.add(key(run));
   return { runs: [...latest.values()], released: released.size };
+}
+
+/** A reading with its named participants identified by their names alone:
+ * what describes a named participant ("Morgan, the release manager") is left
+ * out, and so is a guessed wiki link, while an unnamed participant keeps its
+ * description, which is what identifies it. Methods ask what statements say
+ * of a participant, whoever describes it how. */
+export function namedCore(graph) {
+  const top = graph.assertionTop ?? graph.top;
+  const named = new Set(
+    graph.edges.filter((edge) => edge.role === ':name').map((edge) => edge.from),
+  );
+  const kept = new Set([top]);
+  for (const id of kept)
+    for (const edge of graph.edges) {
+      if (edge.role === ':wiki') continue;
+      if (edge.from === id) {
+        if (named.has(id) && edge.role !== ':name') continue;
+        kept.add(edge.to);
+      } else if (edge.to === id && !named.has(id)) kept.add(edge.from);
+    }
+  return {
+    ...graph,
+    nodes: graph.nodes.filter((node) => kept.has(node.id)),
+    edges: graph.edges.filter(
+      (edge) => edge.role !== ':wiki' && kept.has(edge.from) && kept.has(edge.to),
+    ),
+  };
+}
+
+/** The named nodes of a reading, by their name's words. */
+function namedNodes(graph) {
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  return graph.edges
+    .filter((edge) => edge.role === ':name')
+    .map((edge) => [
+      edge.from,
+      graph.edges
+        .filter((op) => op.from === edge.to && /^:op\d+$/u.test(op.role))
+        .sort((a, b) => a.role.localeCompare(b.role, 'en', { numeric: true }))
+        .map((op) =>
+          String(nodes.get(op.to)?.literal ?? nodes.get(op.to)?.concept).replace(/^"|"$/gu, ''),
+        )
+        .join(' '),
+    ]);
+}
+
+/** The type a reading gives each name: [name, concept]. */
+function namedTypes(graph) {
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  return namedNodes(graph).map(([id, name]) => [name, nodes.get(id).concept]);
+}
+
+/** Findings without those that add nothing: of findings of one kind (and one
+ * way, `via`), one whose statements hold all of another's is left out, so
+ * the smallest set of commitments stands; the rest keep their order. */
+export function smallest(findings) {
+  const key = (finding) => JSON.stringify([finding.kind, finding.via ?? null]);
+  const texts = (finding) => new Set(finding.statements.map((item) => item.statement));
+  return findings.filter(
+    (finding, i) =>
+      !findings.some((other, j) => {
+        if (j === i || key(other) !== key(finding)) return false;
+        const [mine, theirs] = [texts(finding), texts(other)];
+        const within = [...theirs].every((text) => mine.has(text));
+        return within && (theirs.size < mine.size || j < i);
+      }),
+  );
 }

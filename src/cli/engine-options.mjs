@@ -81,6 +81,40 @@ export const engineCommands = {
     ],
   },
   hypothesis: { alias: 'suppose' },
+  elenchus: {
+    description: 'Elenchus: does the corpus refute a thesis? Nothing is saved.',
+    options: ['text', 'statement', 'backend', 'offline'],
+    required: '(--text <thesis> | --statement <text>)',
+    example: '--text "If a major incident is open, Morgan ships a release." --offline',
+    notes: [
+      'A thesis is refuted directly when the statements answer it the other way (a',
+      'conditional one under its condition), or through a rule it makes apply whose',
+      'conclusion they deny. Each refutation names its commitments, smallest first; a',
+      'statement is asked of the others. A thesis nothing refutes or supports stays open.',
+    ],
+  },
+  aporia: {
+    description: 'Aporia: where the statements cannot hold together.',
+    options: ['role', 'backend', 'offline'],
+    example: '',
+    notes: [
+      'A statement the others deny, a rule the others deny under its own condition, and',
+      'two rules with opposed conclusions whose conditions meet. Each comes with both',
+      'sides and a question for their authors. --role keeps the statements at and under',
+      'a role. Read-only and offline.',
+    ],
+  },
+  counterexample: {
+    description: 'Counterexample: does a rule or kind hold everywhere the corpus speaks?',
+    options: ['statement', 'backend', 'offline'],
+    required: '--statement <text>',
+    example: '--statement "If a certificate expires"',
+    notes: [
+      'For a rule: where the statements meet its condition and also answer its',
+      'conclusion the other way; a rule whose condition nothing meets never applies.',
+      'For any other statement: the statements answering it the other way.',
+    ],
+  },
   runs: {
     description: 'List saved checks and questions.',
     options: ['explain'],
@@ -191,7 +225,8 @@ export const engineCommands = {
   },
 };
 const sections = [
-  ['Check questions', ['ask', 'suppose', 'runs', 'show']],
+  ['Check questions', ['ask', 'runs', 'show']],
+  ['Socratic methods (nothing saved)', ['suppose', 'elenchus', 'aporia', 'counterexample']],
   ['Inspect saved checks (read-only, offline)', ['recoil', 'tensions', 'probe', 'fidelity']],
   ['Manage a project', ['init', 'delete', 'storage', 'compact', 'knowledge']],
   ['This machine', ['backends']],
@@ -231,17 +266,18 @@ export function closest(word, names) {
 }
 
 export function engineHelp(action) {
+  const width = Math.max(...sections.flatMap(([, names]) => names.map((name) => name.length)));
   if (!action)
     return [
       `Usage: ${program} <command> [options]`,
       '',
       ...sections.flatMap(([title, names]) => [
         `${title}:`,
-        ...names.map((name) => `  ${name.padEnd(10)} ${engineCommands[name].description}`),
+        ...names.map((name) => `  ${name.padEnd(width)} ${engineCommands[name].description}`),
         '',
       ]),
       'Every command but backends requires --project <directory>.',
-      'Aliases: run (ask), juxtaposition (tensions). tendora --version prints the version.',
+      'Aliases: run (ask), hypothesis (suppose), juxtaposition (tensions). tendora --version prints the version.',
       `Use ${program} <command> --help for its options and an example.`,
       'From a checkout, npm run --silent engine -- <command> runs the same CLI.',
       '',
@@ -362,6 +398,8 @@ export function parseEngineArguments(args) {
       throw new EngineUsageError('Choose --case or --case-text, not both.');
   }
   if (['suppose', 'hypothesis'].includes(action)) requireOption('text');
+  if (action === 'elenchus') exactlyOne(['text', 'statement']);
+  if (action === 'counterexample') requireOption('statement');
   if (action === 'recoil') {
     exactlyOne(['statement', 'role', 'question']);
     if (!values.question && (values.scope || values['case-text']))
