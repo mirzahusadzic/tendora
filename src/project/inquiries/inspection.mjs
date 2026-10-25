@@ -95,6 +95,10 @@ export async function tensionReport(project, { grain = 1, context } = {}) {
       ...(item.case ? { case: item.case } : {}),
       effect: item.effect,
       branches: item.branches.map((id) => roleName(project.data, id)),
+      lines: item.tensions.map((line) => ({
+        between: [roleName(project.data, line.left), roleName(project.data, line.right)],
+        status: line.status,
+      })),
     })),
   };
 }
@@ -345,11 +349,21 @@ export function formatRecoil(report) {
   return lines.join('\n');
 }
 
+/** How a revision's checked questions fall: "Of 11 checked questions, 1 brings
+ * roles together, 8 stay in one role and 2 cite no statement." */
+export function effectSummary({ quiet, branch, juxtaposition }) {
+  const verb = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const total = quiet + branch + juxtaposition;
+  return (
+    `Of ${verb(total, 'checked question', 'checked questions')}, ` +
+    `${verb(juxtaposition, 'brings', 'bring')} roles together, ` +
+    `${verb(branch, 'stays', 'stay')} in one role and ` +
+    `${verb(quiet, 'cites', 'cite')} no statement.`
+  );
+}
+
 export function formatTensions(report) {
-  const { quiet, branch, juxtaposition } = report.effects;
-  const lines = [
-    `Questions at this revision: ${juxtaposition} bring roles together, ${branch} stay in one role, ${quiet} cite no statement.`,
-  ];
+  const lines = [effectSummary(report.effects)];
   if (!report.lines.length) lines.push('', 'No question brings two roles together yet.');
   for (const line of report.lines) {
     lines.push('', `${line.between.join(' ↔ ')}`);

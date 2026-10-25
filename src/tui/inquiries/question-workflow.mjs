@@ -27,6 +27,19 @@ import { inputFromProject } from '../../engine/input.mjs';
 import { retainPartialContribution } from '../../engine/partial.mjs';
 import { partialIdentity } from '../../amr/partial-coverage.mjs';
 import { caseName } from '../shell/wording.mjs';
+import {
+  probeReport,
+  recoilLocus,
+  recoilReport,
+  tensionReport,
+} from '../../project/inquiries/inspection.mjs';
+import { readProvenance, recordedAuthors } from '../../project/authoring/provenance.mjs';
+import {
+  pendingGroups,
+  questionGroups,
+  roleTensionGroups,
+  statementGroups,
+} from './inspection-view.mjs';
 import { backgroundEngineStorage } from '../../project/inquiries/background.mjs';
 
 export function createQuestionWorkflow({
@@ -38,6 +51,69 @@ export function createQuestionWorkflow({
   draw,
 }) {
   let disposed = false;
+  // Recoil, tension lines and probes, read from the saved checks once per
+  // project revision and locus; the view shows them when they arrive.
+  const insights = new Map(),
+    loadingInsights = new Set();
+  function insight(key, load) {
+    const id = JSON.stringify([state.project.digest, ...key]);
+    if (insights.has(id)) return insights.get(id);
+    const entry = { status: 'loading' };
+    insights.set(id, entry);
+    if (insights.size > 120) insights.delete(insights.keys().next().value);
+    const work = load()
+      .then((value) => Object.assign(entry, { status: 'ready', value }))
+      .catch((error) => Object.assign(entry, { status: 'error', error: error.message }))
+      .finally(() => {
+        loadingInsights.delete(work);
+        if (!disposed) draw();
+      });
+    loadingInsights.add(work);
+    return entry;
+  }
+  const tensionsNow = () => insight(['tensions'], () => tensionReport(state.project));
+  function questionInsights(run) {
+    const project = state.project;
+    const caseText = run.caseSelection?.sources?.map((source) => source.text).join(' ') ?? null;
+    const text = run.questions?.[0]?.text;
+    const recoiled = insight(['recoil-question', text, run.scopePlacementId, caseText], () =>
+      recoilReport(project, {
+        kind: 'question',
+        text,
+        scopePlacementId: run.scopePlacementId,
+        caseSelection: run.caseSelection ?? null,
+      }),
+    );
+    const tensions = tensionsNow();
+    return (
+      pendingGroups('What the answer rests on', recoiled) ??
+      pendingGroups('Brings together', tensions) ??
+      questionGroups(recoiled.value, tensions.value, { text, caseText })
+    );
+  }
+  function statementInsights(text) {
+    const project = state.project;
+    const recoiled = insight(['recoil-statement', text], () =>
+      recoilReport(project, recoilLocus(project, { statement: text })),
+    );
+    const probes = insight(['probes', text], () => probeReport(project, { statement: text }));
+    const declared = insight(['declared', text], async () =>
+      (await readProvenance(project)).get(text),
+    );
+    if (pendingGroups('What rests on it', recoiled))
+      return pendingGroups('What rests on it', recoiled);
+    const recorded = recordedAuthors(project.data).get(recoiled.value.locus.id);
+    const sidecar = declared.status === 'ready' ? (declared.value ?? {}) : {};
+    const author = {
+      ...sidecar,
+      ...(recorded ?? {}),
+      ...(recorded && sidecar.author && sidecar.author !== recorded.author
+        ? { declaredAuthor: sidecar.author }
+        : {}),
+      author: recorded?.author ?? sidecar.author ?? 'unrecorded',
+    };
+    return statementGroups(recoiled.value, probes, author);
+  }
   let current = null,
     pending = null,
     maintenance = Promise.resolve(),
@@ -499,6 +575,9 @@ export function createQuestionWorkflow({
                   },
                 ]
               : []),
+            ...(!['question', 'case'].includes(inspection.kind) && !inspection.readingError
+              ? statementInsights(inspection.text)
+              : []),
           ],
         },
         'Language reading',
@@ -529,11 +608,13 @@ export function createQuestionWorkflow({
         },
         'Question',
       );
-    if (ready())
+    if (ready()) {
+      const section = journeySection({ ...current, project: state.project }, state.placementId);
       return view(
-        journeySection({ ...current, project: state.project }, state.placementId),
+        { ...section, groups: [...(section.groups ?? []), ...questionInsights(current.run)] },
         'Develop question',
       );
+    }
     const draft = selectedQuestion();
     if (state.projectReadingOrigin === 'development' && draft && !draft.run)
       return view(
@@ -562,6 +643,12 @@ export function createQuestionWorkflow({
             ? { table: sourceStatements(sources, { audit: auditFor }) }
             : { rows: [['', 'No source statements at this role.', 'muted']] }),
         },
+        ...(role().children.length
+          ? (() => {
+              const tensions = tensionsNow();
+              return pendingGroups('Tension lines', tensions) ?? roleTensionGroups(tensions.value);
+            })()
+          : []),
         ...(role().children.length
           ? [
               {
@@ -1406,6 +1493,8 @@ export function createQuestionWorkflow({
       await pending?.execution;
       await inspectionWork?.execution;
       await maintenance;
+      // A view drawn while waiting may ask for more: wait until none is loading.
+      while (loadingInsights.size) await Promise.all(loadingInsights);
     },
     current: () => (ready() ? current : null),
   };

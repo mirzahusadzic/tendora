@@ -19,7 +19,7 @@ const reached = (...changed) => affectedSuites(changed, suites.check).map(({ sui
 
 const recoil = reached('src/project/inquiries/recoil.mjs');
 assert(recoil.includes('project/recoil.mjs'), 'A module reaches the suite that imports it');
-assert(!recoil.includes('tui/scale.mjs'), 'and not suites that never reach it');
+assert(!recoil.includes('amr/kinds.mjs'), 'and not suites that never reach it');
 const matcher = reached('src/amr/hrg-query.mjs');
 assert(matcher.includes('acceptance/payments.mjs'), 'through the modules a suite reaches');
 assert(matcher.includes('amr/hrg.mjs'));

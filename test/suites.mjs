@@ -6,6 +6,7 @@ export const suites = {
   'research:hand': ['engine/partial-hand.mjs'],
   check: [
     'acceptance/payments.mjs',
+    'acceptance/demo-tour.mjs',
     'acceptance/blind-holdout.mjs',
     'acceptance/independent-domain.mjs',
     'acceptance/load-bearing.mjs',
