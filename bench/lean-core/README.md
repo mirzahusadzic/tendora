@@ -19,8 +19,9 @@ Two workloads: the bundled demo, which anyone can capture and run again
 developed beside Tendora and not in this repository
 (`reports/trim-2026-10-25.json`, raw output at the end).
 
-A benchmark, not part of Tendora: nothing in `src/` imports it, and it is not
-run by `npm run check` or CI (it needs macOS and Metal).
+The JavaScript trim is the engine's (`src/amr/trim.mjs`): inference trims
+every round with it. The benchmark itself is not run by `npm run check` or CI
+(it needs macOS and Metal).
 
 ## The trim
 

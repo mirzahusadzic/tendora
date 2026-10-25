@@ -7,6 +7,7 @@ import {
   withheldSupport,
 } from '../amr/inference.mjs';
 import { storeOf } from '../amr/fact-store.mjs';
+import { currentTrim } from '../amr/trim.mjs';
 import { reviseGraph } from '../amr/revision.mjs';
 import { graphRevision } from './revisions.mjs';
 import {
@@ -721,6 +722,8 @@ export function answerBase(recording, knowledge = recording.knowledge ?? {}, lim
   const inference = inferRelations(material.facts, material.rules, {
     matchLimit: matchCap(material.sources.length),
     maxFacts: factCap(material.sources.length),
+    // Rules are matched over the facts the trim keeps; null matches all.
+    trim: currentTrim(),
     ...options,
     account,
     matcher: grammar.match,

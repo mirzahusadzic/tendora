@@ -31,6 +31,7 @@ export const suites = {
     'models/dependency-sources.mjs',
     'models/lexical-audit.mjs',
     'engine/build.mjs',
+    'engine/trim.mjs',
     'engine/lexical-audit.mjs',
     'engine/knowledge.mjs',
     'engine/domains.mjs',

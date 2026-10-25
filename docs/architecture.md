@@ -23,7 +23,9 @@ were the reference for notation.
 
 The engine compiles the statements' readings into hyperedge replacement grammar
 (HRG) material, matches the question through a query chart and checks
-attributed answers. A question never supplies its own evidence, and grammar
+attributed answers. Each inference round first trims the facts to those some
+rule can still use, by arc consistency (after Cuckoo Cycle's edge trimming);
+the matches, and so the answers, are the same, with less to join. A question never supplies its own evidence, and grammar
 recognition alone is not entailment.
 
 - **Boundaries:** conditions, modality, polarity, reference and scope constrain

@@ -1,6 +1,7 @@
 /** Bounded forward chaining over authored triples. No domain predicates or aliases. */
 import { hash53 } from './hash.mjs';
 import { FactStore, NONE, storeOf, storePrefix } from './fact-store.mjs';
+import { usablePositions } from './trim.mjs';
 const variable = (term) => /^\?[A-Za-z][\w-]*$/u.test(term);
 const fresh = (term) => /^\$[A-Za-z][\w-]*$/u.test(term);
 const key = (triple) => JSON.stringify(triple);
@@ -167,6 +168,12 @@ export function inferRelations(
     account = null,
     maxDerivations = 64,
     matcher = matchRelations,
+    // The trim (src/amr/trim.mjs): a backend that keeps, per rule, the facts
+    // that can still take part in a match; from a round of `trimFrom` facts on,
+    // rules are matched over only the facts some rule can use. Exact: every
+    // match's witnesses survive. Null matches over every fact.
+    trim = null,
+    trimFrom = 0,
   } = {},
 ) {
   rules.forEach(validateRule);
@@ -218,6 +225,8 @@ export function inferRelations(
             : [],
         );
   let evaluations = 0;
+  // Per round with a trim: the facts, and how many some rule could use.
+  const trimmed = trim ? [] : null;
   // Names are interned per run: a hash shared by two applications never
   // merges them; the later one is told apart.
   const named = new Map();
@@ -263,10 +272,33 @@ export function inferRelations(
       if (joined.length) baseChanged = delta([...changed.all, ...joined]);
       previousBase = new Set(baseCohort.map((fact) => fact.id));
     }
-    for (const rule of rules) {
+    // The facts the rules matched this round can still use: one narrowed
+    // cohort for them all, so they share one compiled grammar. A fact no rule
+    // can use is no witness; a later round trims its grown store again.
+    const matched = rules.filter(
+      (rule) => seeds(rule, rule.baseOnly ? baseChanged : changed).length,
+    );
+    const usable =
+      trim && matched.length && cohort.length >= trimFrom
+        ? usablePositions(
+            store,
+            matched.map((rule) => rule.when),
+            { length: cohort.length, trim },
+          )
+        : null;
+    const narrowed = usable && {
+      cohort: cohort.filter((_, f) => usable[f]),
+      base: baseCohort.filter((fact) => usable[store.position(fact.id)]),
+      input: inputCohort.filter((_, f) => usable[f]),
+    };
+    if (trimmed) trimmed.push({ facts: cohort.length, usable: narrowed?.cohort.length ?? null });
+    for (const rule of matched) {
       const ruleSeeds = seeds(rule, rule.baseOnly ? baseChanged : changed);
-      if (!ruleSeeds.length) continue;
-      const input = rule.baseOnly ? baseCohort : rule.inputOnly ? inputCohort : cohort;
+      const input = rule.baseOnly
+        ? (narrowed?.base ?? baseCohort)
+        : rule.inputOnly
+          ? (narrowed?.input ?? inputCohort)
+          : (narrowed?.cohort ?? cohort);
       const scoped = rule.inputSourceIds
         ? input.filter(
             (f) =>
@@ -381,6 +413,7 @@ export function inferRelations(
         complete,
         rounds: rounds + 1,
         evaluations,
+        ...(trimmed ? { trimmed } : {}),
       };
     changed = delta([...touched].map((id) => facts.get(id)));
   }
@@ -390,6 +423,7 @@ export function inferRelations(
     complete: false,
     rounds,
     evaluations,
+    ...(trimmed ? { trimmed } : {}),
   };
 }
 
