@@ -112,8 +112,12 @@ export async function warmCheckpoints(project, input, result) {
   while (pool.length < size) pool.push(spawn());
   const { records, task } = await describe(project, input, result);
   await Promise.all(
-    pool.map(async (entry) => {
+    // A copy, as for checkpoints: a worker that fails leaves the pool.
+    [...pool].map(async (entry) => {
       await send(entry, records);
+      // One that ended while its records were sent has already been reported;
+      // waiting for it to warm would wait forever (review 2026-10-25, #14).
+      if (entry.failed) return;
       const warmed = new Promise((resolve) => (entry.onWarm = resolve));
       entry.worker.ref();
       entry.worker.postMessage({ kind: 'warm', ...task });
