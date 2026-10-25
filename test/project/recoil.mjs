@@ -229,6 +229,62 @@ try {
     partly.consequences.filter((visit) => visit.kind === 'question').map((visit) => visit.relation),
     ['a supported part rests on'],
   );
+  // Every edge is kept (review 2026-10-25, #7): a statement cited as an answer
+  // and as a supported part, the kind of support a role's questions rest on,
+  // and each question a sideways neighbour comes through.
+  const signed = source(office, 1, signs);
+  const both = [
+    {
+      ...run('Who inspects the lift and signs?', root, [], { sources: [lift, signed] }),
+      answer: {
+        answers: [{ text: 'technician', sourceIds: [lift.id], ruleIds: [], fragmentIds: [] }],
+        candidates: [],
+        sources: [lift, signed],
+        partial: { parts: [{ sourceIds: [lift.id] }, { sourceIds: [signed.id] }] },
+      },
+    },
+    run(
+      'Who inspects the lift for the manager?',
+      root,
+      [{ text: 'technician', sourceIds: [lift.id, signed.id], ruleIds: [], fragmentIds: [] }],
+      { sources: [lift, signed] },
+    ),
+  ];
+  const edges = (visit) => visit.relations.map((edge) => edge.relation);
+  const fromBoth = recoil(
+    { data, digest, runs: both, readings },
+    { kind: 'statement', text: inspects },
+  );
+  assert.deepEqual(
+    edges(fromBoth.consequences[0]),
+    ['rests on', 'a supported part rests on'],
+    'An answer and a supported part are two relations to one question',
+  );
+  const partOfRole = recoil(
+    { data, digest, runs: both.slice(0, 1), readings },
+    { kind: 'role', placementId: office },
+  );
+  assert.deepEqual(
+    partOfRole.consequences.filter((visit) => visit.kind === 'question').map(edges),
+    [['a supported part rests on a statement here']],
+    'A role says how its questions rest on it',
+  );
+  assert.deepEqual(
+    fromBoth.alongside.map((item) => [
+      item.label,
+      item.relations.map((edge) => [edge.via, edge.relation]),
+    ]),
+    [
+      [
+        signs,
+        [
+          ['Who inspects the lift and signs?', 'carries with it in a supported part'],
+          ['Who inspects the lift for the manager?', 'carries with it'],
+        ],
+      ],
+    ],
+    'A neighbour keeps every question it comes through, and how',
+  );
   const bounded = walk({ kind: 'statement', text: inspects }, { limit: 3 });
   assert(bounded.origins.length + bounded.consequences.length <= 2);
   assert(

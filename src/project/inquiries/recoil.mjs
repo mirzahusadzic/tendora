@@ -8,8 +8,9 @@
  * A locus is a statement ({ kind: 'statement', id } or { text }), a role
  * ({ kind: 'role', placementId }) or a saved question ({ kind: 'question',
  * text, scopePlacementId }). Each locus is visited once per direction at the
- * project's revision. Only what a check cited is an edge; similar wording,
- * closest statements and proposals are not.
+ * project's revision, with every edge that reaches it (its relations: an
+ * answer, a possible answer, a supported part, a rule). Only what a check cited
+ * is an edge; similar wording, closest statements and proposals are not.
  */
 import { sourceCatalog } from '../authoring/sources.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
@@ -218,15 +219,29 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
   };
   const start = resolveLocus(locus, { statements, catalog, placements, questions, questionKey });
   const contained = (roleId) => catalog.filter((item) => within(item.nodeId, roleId));
+  // A locus is visited once per direction; every edge that reaches it is kept
+  // in its relations, the first also as its from and relation.
   const visits = [],
     frontier = [],
     seen = new Set(),
+    reached = new Map(),
     queue = [];
   const enqueue = (entry) => {
     const key = JSON.stringify([entry.kind, entry.id, entry.direction]);
-    if (seen.has(key)) return;
-    seen.add(key);
-    queue.push(entry);
+    const edge = {
+      from: entry.from,
+      relation: entry.relation,
+      ...(entry.fragments ? { fragments: entry.fragments } : {}),
+    };
+    const known = reached.get(key);
+    if (known) {
+      if (!known.relations.some((e) => e.from === edge.from && e.relation === edge.relation))
+        known.relations.push(edge);
+      return;
+    }
+    const queued = { ...entry, relations: [edge] };
+    reached.set(key, queued);
+    queue.push(queued);
   };
   const hide = (entry, reason) => {
     const key = JSON.stringify(['frontier', entry.kind, entry.id, entry.direction]);
@@ -273,8 +288,8 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       for (const question of questions.values())
         if (question.scopePlacementId === entry.id) next('question', question.id, 'asked at');
       for (const item of contained(entry.id))
-        for (const { question } of restingOn(item.id))
-          next('question', question, 'rests on a statement here');
+        for (const { question, relation } of restingOn(item.id))
+          next('question', question, `${relation} a statement here`);
     } else if (entry.kind === 'question')
       next('role', questions.get(entry.id).scopePlacementId, 'asked at');
   };
@@ -287,7 +302,8 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       hide(entry, 'bound');
       continue;
     }
-    visits.push({ ...entry, label: label(entry.kind, entry.id) });
+    // The visit is the queued entry itself, so later edges still reach it.
+    visits.push(Object.assign(entry, { label: label(entry.kind, entry.id) }));
     (entry.direction === 'origin' ? origins : consequences)(entry);
   }
 
@@ -317,24 +333,43 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
   // the questions resting on it also cite (directly or through a rule read
   // from them); for a role, the other roles those come from; for a question,
   // the other questions resting on the statements it rests on.
+  // Each neighbour keeps every path to it: the question or statement it comes
+  // through, and how.
   const alongside = [],
-    beside = new Set();
+    beside = new Map();
   const side = (entry) => {
     const key = JSON.stringify([entry.kind, entry.id]);
-    if (beside.has(key)) return;
-    beside.add(key);
-    alongside.push({
-      ...entry,
-      label: label(entry.kind, entry.id),
+    const path = {
+      through: entry.through,
       via: label('question', entry.through) ?? label('statement', entry.through),
-    });
+      relation: entry.relation,
+    };
+    const known = beside.get(key);
+    if (known) {
+      if (!known.relations.some((p) => p.through === path.through && p.relation === path.relation))
+        known.relations.push(path);
+      return;
+    }
+    const item = { ...entry, label: label(entry.kind, entry.id), via: path.via, relations: [path] };
+    beside.set(key, item);
+    alongside.push(item);
   };
+  const carrying = {
+    answer: 'carries with it',
+    'possible answer': 'carries with it in a possible answer',
+    'supported part': 'carries with it in a supported part',
+  };
+  // What a question cites besides the locus, and how: its statements, and the
+  // statements its rules were read from.
   const carriers = (question) =>
     (citations.get(question) ?? []).flatMap((link) =>
       link.kind === 'statement' && link.current
-        ? [link.id]
+        ? [{ id: link.id, relation: carrying[link.relation] }]
         : link.kind === 'rule'
-          ? (originsOf(link.id) ?? [])
+          ? (originsOf(link.id) ?? []).map((id) => ({
+              id,
+              relation: 'carries with it through a rule',
+            }))
           : [],
     );
   if (start.kind === 'statement' || start.kind === 'role') {
@@ -345,27 +380,22 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
       .filter((visit) => visit.direction === 'consequence' && visit.kind === 'question')
       .map((visit) => visit.id);
     for (const question of resting)
-      for (const id of carriers(question))
+      for (const { id, relation } of carriers(question))
         if (!own.has(id))
           side(
             start.kind === 'statement'
-              ? { kind: 'statement', id, through: question, relation: 'carries with it' }
-              : {
-                  kind: 'role',
-                  id: statements.get(id).nodeId,
-                  through: question,
-                  relation: 'carries with it',
-                },
+              ? { kind: 'statement', id, through: question, relation }
+              : { kind: 'role', id: statements.get(id).nodeId, through: question, relation },
           );
   } else
-    for (const id of carriers(start.id))
-      for (const { question } of restingOn(id))
+    for (const { id } of carriers(start.id))
+      for (const { question, relation } of restingOn(id))
         if (question !== start.id)
           side({
             kind: 'question',
             id: question,
             through: id,
-            relation: 'rests on the same statement',
+            relation: `${relation} the same statement`,
           });
   const strip = ({ locus: _locus, ...visit }) => visit;
   return {
