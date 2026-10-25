@@ -34,9 +34,14 @@ const rest = () => {
   clearTimeout(idle);
   idle = setTimeout(() => process.connected && process.disconnect(), idleMs);
 };
+// Without its channel the process ends, once its question has stopped: the
+// checkpoint workers would otherwise keep it alive, orphaned (review
+// 2026-10-25, #10).
+const end = () => process.exit(0);
 process.on('disconnect', () => {
-  current?.controller.abort();
   clearTimeout(idle);
+  if (current) current.controller.abort();
+  else end();
 });
 process.on('message', async (message) => {
   if (message.cancel) {
@@ -87,7 +92,8 @@ process.on('message', async (message) => {
     });
   } finally {
     current = null;
-    if (controller.signal.aborted) process.connected && process.disconnect();
+    if (!process.connected) end();
+    else if (controller.signal.aborted) process.disconnect();
     else {
       rest();
       // The answer is sent: warm the checkpoint workers for its revision.

@@ -102,6 +102,8 @@ function projectProcess(project, request, progress, signal, onEngineUpdate) {
       settled = true;
       detach();
       if (reusable) keepWorker(child);
+      // A failed process is let go: without its channel it ends by itself.
+      else if (!stopping && child.connected) child.disconnect();
       error ? reject(error) : resolve(value);
     };
     const cancel = () => {
@@ -116,10 +118,9 @@ function projectProcess(project, request, progress, signal, onEngineUpdate) {
       if (settled || message.id !== id) return;
       if (message.progress !== undefined) progress?.(message.progress);
       else if (message.run) onEngineUpdate?.(message.run);
-      else if (message.error) {
-        reusable = true;
+      else if (message.error)
         finish(Object.assign(new Error(message.error.message), message.error));
-      } else if (message.result) {
+      else if (message.result) {
         reusable = true;
         finish(null, message.result);
       }

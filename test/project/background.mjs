@@ -1,6 +1,6 @@
 /** Real process isolation, cancellation and bounded reasoning at 10,000 sourced roles. */
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -174,6 +174,15 @@ await assert.rejects(
   backgroundProjectInquiry({ ...project, digest: 'changed' }, root, query),
   /changed before the question/u,
 );
+// A process whose question failed is not kept either, and a process let go
+// ends: none outlives its question (review 2026-10-25, #10).
+assert.equal(spareWorker(), null, 'A failed process is not kept');
+const questionProcesses = () =>
+  spawnSync('pgrep', ['-P', String(process.pid), '-f', 'inquiry-process'], { encoding: 'utf8' })
+    .stdout.split('\n')
+    .filter(Boolean);
+for (let i = 0; i < 250 && questionProcesses().length; i++) await delay(20);
+assert.deepEqual(questionProcesses(), [], 'Cancelled and failed processes end');
 await assert.rejects(
   backgroundProjectInquiry({ ...project, path: `${directory}/absent/project.json` }, root, query),
   /ENOENT/u,
