@@ -6,7 +6,8 @@
  * import.meta.url)`, and the repository paths it names in strings (fixtures,
  * spawned tools, bundled projects), followed through every module it reaches.
  * A change to the runner or the package reaches every suite; a change to the
- * suite list reaches the suites it adds.
+ * suite list reaches the suites it adds and the layout check. A file no suite
+ * depends on reaches every suite, unless it is documentation.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -21,7 +22,10 @@ const everything = new Set([
   'test/run.mjs',
   'tools/changes.mjs',
 ]);
-const suiteList = 'test/suites.mjs';
+const suiteList = 'test/suites.mjs',
+  layoutSuite = 'architecture/test-layout.mjs';
+// A pattern, not a quoted path: a quoted path here would be a dependency.
+const documentation = (path) => /\.md$|^docs\/|^(LICENSE|THIRD_PARTY_NOTICES)/u.test(path);
 
 // A deleted file is a change, staged or not, and a rename is two: its old path
 // and its new (review 2026-10-25, #5).
@@ -42,7 +46,7 @@ const imports = [
   /\bimport\s+['"](\.{1,2}\/[^'"]+)['"]/gu,
   /new URL\(\s*['"]([^'"]+)['"]\s*,\s*import\.meta\.url/gu,
 ];
-const named = /['"`]((?:src|test|tools|\.proj|python|docs)\/[^'"`$]*)['"`]/gu;
+const named = /['"`]((?:src|test|tools|\.proj|python|vendor|docs)\/[^'"`$]*)['"`]/gu;
 
 /** Repository paths a file depends on, followed through the modules it reaches. */
 export function dependencies(start, cache = new Map()) {
@@ -103,21 +107,29 @@ export function addedSuites({ since = 'HEAD' } = {}) {
 
 /** The suites a set of changed files reaches, each with the change that reaches it. */
 export function affectedSuites(changed, suites, { since = 'HEAD' } = {}) {
-  if (changed.some((path) => everything.has(path)))
-    return suites.map((suite) => ({
-      suite,
-      because: changed.find((path) => everything.has(path)),
-    }));
-  const added = new Set(changed.includes(suiteList) ? addedSuites({ since }) : []);
-  const cache = new Map();
-  return suites.flatMap((suite) => {
-    if (added.has(suite)) return [{ suite, because: `${suiteList} (added)` }];
-    const deps = dependencies(`test/${suite}`, cache);
-    const because = changed.find(
-      (path) => path !== suiteList && [...deps].some((dep) => reaches(dep, path)),
+  const all = (because) => suites.map((suite) => ({ suite, because }));
+  const global = changed.find((path) => everything.has(path));
+  if (global) return all(global);
+  const listed = changed.includes(suiteList);
+  const added = new Set(listed ? addedSuites({ since }) : []);
+  const cache = new Map(),
+    reached = new Set();
+  const affected = suites.flatMap((suite) => {
+    const deps = [...dependencies(`test/${suite}`, cache)];
+    const hits = changed.filter(
+      (path) => path !== suiteList && deps.some((dep) => reaches(dep, path)),
     );
-    return because ? [{ suite, because }] : [];
+    for (const path of hits) reached.add(path);
+    if (added.has(suite)) return [{ suite, because: `${suiteList} (added)` }];
+    // Any edit to the list, a removal too, is checked against the test files.
+    if (listed && suite === layoutSuite) return [{ suite, because: suiteList }];
+    return hits.length ? [{ suite, because: hits[0] }] : [];
   });
+  // What no suite depends on could still break a check: everything runs.
+  const unreached = changed.find(
+    (path) => path !== suiteList && !reached.has(path) && !documentation(path),
+  );
+  return unreached ? all(`${unreached} (no suite depends on it)`) : affected;
 }
 
 // The files `npm run format:check` covers.

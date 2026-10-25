@@ -39,11 +39,6 @@ jobs:
       - name: Check Python version
         run: .venv/bin/python -c "import sys; assert sys.version_info[:2] == (3, 14), sys.version"
       - run: npm run format:check
-      - name: Check dependency sources
-        run: |
-          .venv/bin/python python/semcat/test_manage.py
-          .venv/bin/python python/semcat/manage.py verify
-          .venv/bin/python vendor/propbank/build.py --check
       - run: npm run check
       - name: Install pinned Bolinas reference
         run: npm run setup:bolinas

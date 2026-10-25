@@ -5,13 +5,11 @@ After [setup](setup.md):
 ```sh
 npm run check
 npm run format:check
-.venv/bin/python python/semcat/test_manage.py
-.venv/bin/python python/semcat/manage.py verify
-.venv/bin/python vendor/propbank/build.py --check
 ```
 
 `npm run check` runs the offline suites, including the payments demo, engine,
-storage, CLI, architecture and actual terminal interactions. Each suite runs in
+storage, CLI, architecture, actual terminal interactions and the pinned SEMCAT
+adapter and PropBank resource. Each suite runs in
 its own process, up to eight at a time, slowest first by the times recorded in
 `tmp/suite-times.json`; `--jobs 1` runs them one after another in one process.
 It rejects JavaScript fetch calls. Fixtures are synthetic or retained
@@ -30,7 +28,9 @@ dependencies (a rename counts as its old path and its new): the modules it
 imports, the files it names with `new URL(…, import.meta.url)` and the
 repository paths it names in strings, followed through every module it reaches.
 A change to the runner, the package or the Prettier configuration reaches every
-suite; a change to the suite list reaches the suites it adds. Run the full
+suite; a change to the suite list reaches the suites it adds and the layout
+check. A file no suite depends on reaches every suite unless it is
+documentation, so nothing that can break a check passes unchecked. Run the full
 check before a snapshot.
 
 Every runnable test belongs to exactly one profile in `test/suites.mjs`.
@@ -40,8 +40,8 @@ For focused work, run the relevant `node test/<area>/<test>.mjs` first.
 vendored upstream source and canonical project data are excluded.
 
 [CI](../.github/workflows/ci.yml) runs on Linux and macOS with Node.js 24,
-installs Python 3.14 through uv, checks provenance and formatting, then runs
-the offline tests and the independent Bolinas cross-check.
+installs Python 3.14 through uv, checks formatting, then runs the offline tests
+and the independent Bolinas cross-check.
 
 The 10,000-role background-process test has a three-minute deadline. Navigation
 timings are reported everywhere; the 100 ms target is enforced locally because

@@ -35,6 +35,26 @@ assert(
   reached('test/suites.mjs').length < suites.check.length,
   'The suite list reaches only the suites it adds',
 );
+// Nothing that can break a check reaches no suite (final review #9): an edit
+// to the suite list, a removal included, reaches the layout check; the Python
+// SEMCAT adapter and the PropBank resource reach the suite that verifies them;
+// any other file no suite depends on reaches every suite.
+assert(reached('test/suites.mjs').includes('architecture/test-layout.mjs'));
+for (const path of [
+  ['python', 'semcat', 'adapter', 'semcat_bridge.py'],
+  ['python', 'semcat', 'manage.py'],
+  ['vendor', 'propbank', 'lexicon.json'],
+])
+  assert(
+    reached(path.join('/')).includes('models/dependency-sources.mjs'),
+    `${path.join('/')} reaches the dependency check`,
+  );
+const unknown = ['bench', 'lean-core', 'Package.swift'].join('/');
+assert.equal(reached(unknown).length, suites.check.length, 'An unreached file reaches every suite');
+assert.equal(
+  affectedSuites([unknown], suites.check)[0].because,
+  `${unknown} (no suite depends on it)`,
+);
 assert.deepEqual(
   formatTargets(['src/engine/cloze.mjs', 'tmp/x.mjs', 'notes/draft.md', docs]),
   ['src/engine/cloze.mjs', docs],

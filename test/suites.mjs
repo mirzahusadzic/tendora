@@ -27,6 +27,7 @@ export const suites = {
     'models/semantic-comparison.mjs',
     'models/normalization.mjs',
     'models/acquisition.mjs',
+    'models/dependency-sources.mjs',
     'models/lexical-audit.mjs',
     'engine/build.mjs',
     'engine/lexical-audit.mjs',
