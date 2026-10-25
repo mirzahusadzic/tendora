@@ -14,7 +14,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { openProject } from '../../src/project/authoring/project.mjs';
-import { listEngineRuns } from '../../src/project/storage/engine-runs.mjs';
+import { listEngineRuns, saveEngineRun } from '../../src/project/storage/engine-runs.mjs';
 import { compactEngineStorage } from '../../src/project/inquiries/engine-storage.mjs';
 
 await mkdir('tmp', { recursive: true });
@@ -149,6 +149,21 @@ assert.equal(
   json('ask', '--project', copy, '--question', invoice, '--offline').value.status,
   'supported',
 );
+// While a check runs, compact leaves the saved checks alone and says so; it
+// never reports them as already compact (the earlier review's partial fix).
+const running = {
+  ...(await listEngineRuns(project))[0],
+  id: '00000000-0000-4000-8000-000000000000',
+  status: 'running',
+  pid: process.pid,
+};
+await saveEngineRun(project, running);
+const busy = tendora('compact', '--project', copy);
+assert.equal(busy.status, 1);
+assert.doesNotMatch(busy.stdout, /Already compact/u);
+assert.match(busy.stderr, /saved checks were not compacted: a check is running/u);
+await saveEngineRun(project, { ...running, status: 'cancelled' });
+
 // One damaged saved check is left out of a listing, named, and kept as it is
 // (review #8); reading it fails, and so does maintenance that would rewrite it.
 const damagedId = (await listEngineRuns(project)).find((run) => run.cache === 'recheck').id;

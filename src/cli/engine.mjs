@@ -477,6 +477,12 @@ try {
       output = values.json ? result : usage(result);
     } else if (action === 'compact') {
       const result = await compactProjectStorage(project, { force: true });
+      // While a check runs the saved checks are left alone: that is not done,
+      // never "already compact".
+      if (result.engine?.busy)
+        throw new Error(
+          'The saved checks were not compacted: a check is running in this project. Run compact again when it ends.',
+        );
       output = values.json
         ? result
         : result.after.allocated < result.before.allocated

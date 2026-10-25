@@ -91,7 +91,8 @@ evidence.
 question still reads offline; `--all` also clears saved cases and the readings
 no statement owns. A saved check whose bytes no longer match their digest is
 left out of `runs`, named on stderr, and kept as it is; reading it, `compact`
-and `delete` refuse until it is restored.
+and `delete` refuse until it is restored. While a check runs, `compact` leaves
+the saved checks alone and exits 1, saying so.
 
 All six are offline by construction: they acquire nothing and save nothing.
 `probe` and `fidelity` evaluate the retained readings in memory, so they can
