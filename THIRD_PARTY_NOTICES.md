@@ -14,7 +14,7 @@ for original contributions only.
 | Everything not listed below: application code, tests, tools, documentation and the synthetic payments demo | MIT          | [LICENSE](LICENSE)                                   |
 | `python/semcat/adapter/` (SEMCAT Python adapter)                                                           | GPL-3.0-only | [Adapter license](python/semcat/adapter/LICENSE)     |
 | `vendor/propbank/lexicon.json` (PropBank-derived data; the `build.py` beside it is MIT)                    | CC BY-SA 4.0 | [License and attribution](vendor/propbank/README.md) |
-| [`load-bearing.md`](load-bearing.md) (essay)                                                               | CC BY 4.0    | [License](licenses/CC-BY-4.0.txt), Mirza Husadzic    |
+| `docs/load-bearing.md`, the essay [Load-bearing as situated meaning](docs/load-bearing.md)                 | CC BY 4.0    | [License](licenses/CC-BY-4.0.txt), Mirza Husadzic    |
 
 `package.json` states the same scope as an SPDX expression:
 `MIT AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0`.

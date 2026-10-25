@@ -201,7 +201,7 @@ Tendora comes from _tendon_, where load is carried and resistance felt: a questi
 
 JavaScript ES modules · terminal-kit · SQLite / sqlite-vec · Python / PENMAN · [SEMCAT](https://github.com/mirzahusadzic/semcat) · [PropBank](vendor/propbank/README.md) · optional [Bolinas](https://github.com/mirzahusadzic/bolinas) cross-check (`npm run setup:bolinas`, `npm run check:research`)
 
-[Demo tour](docs/demo.md) · [CLI](docs/cli.md) · [Setup](docs/setup.md) · [Architecture](docs/architecture.md) · [Development & CI](docs/development.md) · [Load-bearing meaning](load-bearing.md)
+[Demo tour](docs/demo.md) · [CLI](docs/cli.md) · [Setup](docs/setup.md) · [Architecture](docs/architecture.md) · [Development & CI](docs/development.md) · [Load-bearing as situated meaning](docs/load-bearing.md)
 
 ## License
 
@@ -209,6 +209,6 @@ Tendora's original code, tests, tools, documentation and payments demo are [MIT]
 
 - `python/semcat/adapter/` is GPL-3.0-only; the SEMCAT runtime that setup installs is GPL-3.0-only AND MIT. Distributing Tendora integrated with SEMCAT must comply with GPLv3.
 - `vendor/propbank/lexicon.json` is PropBank-derived data under CC BY-SA 4.0.
-- [`load-bearing.md`](load-bearing.md) is CC BY 4.0.
+- The essay [Load-bearing as situated meaning](docs/load-bearing.md) is CC BY 4.0.
 
 See [licensing and attribution](THIRD_PARTY_NOTICES.md) for every path, installed component and notice.

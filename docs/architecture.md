@@ -118,5 +118,6 @@ sources usually stays open or becomes a proposal. Offline replay uses retained
 wording. The cooperative frame is a first slice: no hypothetical-premise
 overlay, branch merging or neural answer realization; those remain proposals,
 as does [proposing premises at openings](consensual-premises.md).
-[Load-bearing as situated meaning](../load-bearing.md) defines the
-counterfactual criterion used by the research measurement helper.
+[Load-bearing as situated meaning](load-bearing.md) defines the counterfactual
+test that corpus fidelity's withholding applies per variable, and says which of
+its five checks Tendora meets.
