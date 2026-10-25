@@ -1,5 +1,5 @@
 /** Workspace and form rows, plus reading-pane wrapping. No I/O or mutations. */
-import { relationReading } from './wording.mjs';
+import { caseName, relationReading } from './wording.mjs';
 import { branch, treeRows, detailRows } from './tree.mjs';
 import { projectEntryTree } from '../concepts/project-outline.mjs';
 import { readingDevelopment } from './state.mjs';
@@ -307,7 +307,7 @@ export function createContent({ state, text, recordingContent, selectedConcept }
           labeledRow([
             [
               state.form.caseSelection.kind === 'authored' ? 'Text' : 'Role',
-              state.form.caseSelection.label,
+              caseName(state.form.caseSelection),
             ],
             ['Sentences', state.form.caseSelection.sources.length],
           ]),

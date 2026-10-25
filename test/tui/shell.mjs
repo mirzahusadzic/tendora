@@ -183,6 +183,17 @@ assert.equal(
 );
 assert.equal(caseName({ placementId: 'p' }), 'Selected case');
 assert.equal(caseName('An inspection is due.'), 'An inspection is due.');
+// Every view names a case through caseName, never by its label alone, which a
+// case selected without one lacks (review 2026-10-25, #11).
+for (const file of await readdir('src/tui', { recursive: true })) {
+  if (!file.endsWith('.mjs') || file.endsWith('wording.mjs')) continue;
+  const source = await readFile(join('src/tui', file), 'utf8');
+  assert.doesNotMatch(
+    source,
+    /(?:caseSelection|retained)\??\.label\b/u,
+    `${file} names a case by its label alone`,
+  );
+}
 const directory = await mkdtemp(join(tmpdir(), 'tendora-tui-'));
 const config = {
   projectsHome: directory,

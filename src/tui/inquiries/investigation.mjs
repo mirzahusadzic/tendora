@@ -41,7 +41,7 @@ import {
   rankedFindings,
   selectedMaterial,
 } from '../recordings/view.mjs';
-import { relationReading } from '../shell/wording.mjs';
+import { caseName, relationReading } from '../shell/wording.mjs';
 import {
   authoredContinuation,
   evidenceOpenings,
@@ -421,7 +421,7 @@ export function createInvestigation({
         ? [
             {
               id: retained.placementId,
-              label: retained.label + ' (saved case)',
+              label: caseName(retained) + ' (saved case)',
               texts: available.get(retained.placementId),
             },
           ]
@@ -1197,7 +1197,7 @@ export function createInvestigation({
       form.browserRows = [
         ['Inquiry', ask.question, 'input'],
         ['Scope', scopeLabel(ask.scopePlacementId)],
-        ...(ask.caseSelection ? [['Case', ask.caseSelection.label]] : []),
+        ...(ask.caseSelection ? [['Case', caseName(ask.caseSelection)]] : []),
       ];
       form.browserOpenings = [];
       if (run) {
@@ -1289,7 +1289,9 @@ export function createInvestigation({
   function reviewCase(active) {
     const catalog = active.caseSelection;
     const choices = () => [
-      ...(active.caseSelection ? [{ label: active.caseSelection.label, action: 'inspect' }] : []),
+      ...(active.caseSelection
+        ? [{ label: caseName(active.caseSelection), action: 'inspect' }]
+        : []),
       { label: 'Sources', action: 'sources' },
       ...(catalog.kind === 'authored'
         ? [{ label: 'Edit case', action: 'edit' }]

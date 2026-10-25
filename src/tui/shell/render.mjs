@@ -412,7 +412,7 @@ export function createRenderer({
                 [
                   currentRun(ask) ? 'recorded' : 'draft',
                   scope,
-                  ask?.caseSelection ? `case: ${ask.caseSelection.label}` : '',
+                  ask?.caseSelection ? `case: ${caseName(ask.caseSelection)}` : '',
                 ]
                   .filter(Boolean)
                   .join(' - '),

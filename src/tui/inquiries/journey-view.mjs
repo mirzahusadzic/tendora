@@ -4,6 +4,7 @@ import { placementLabel } from '../concepts/placement-label.mjs';
 import { readingNote } from '../../recording/answer-output.mjs';
 import { questionExplanation } from './question-explanation.mjs';
 import { frameLineageRows } from '../../recording/frame.mjs';
+import { caseName } from '../shell/wording.mjs';
 
 const unique = (values) => [...new Set(values)];
 const count = (n, label) => `${n} ${label}${n === 1 ? '' : 's'}`;
@@ -379,7 +380,7 @@ export function journeySection({ project, run, input, result, recording }, place
     [
       ['Question', question, 'input'],
       ['Asked at', placementLabel(project.data, run.scopePlacementId)],
-      ...(input.caseSelection ? [['Case', input.caseSelection.label, 'input']] : []),
+      ...(input.caseSelection ? [['Case', caseName(input.caseSelection), 'input']] : []),
       ['', ''],
       ...outcome,
       ...(exploration
