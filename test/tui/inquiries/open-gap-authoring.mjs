@@ -100,6 +100,11 @@ try {
   assert.equal(authored.anchor.from, target.anchor.from);
   assert.equal(authored.anchor.to, target.anchor.to);
   assert.equal(authored.anchor.role, target.anchor.role);
+  assert.deepEqual(
+    authored.responses.map((r) => [r.actor, r.via]),
+    [['participant', 'editor']],
+    'A statement written at a gap records the workbench actor and the editor',
+  );
   const cold = await openProject(join(directory, 'project'));
   assert.deepEqual(
     cold.data.contributions.find((c) => c.id === retained.id),

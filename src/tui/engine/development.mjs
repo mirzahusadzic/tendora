@@ -65,6 +65,8 @@ export function createDevelopment({
         : developContribution;
     form.execution = operation(project, request, {
       signal: form.controller.signal,
+      actor: config.actor ?? 'participant',
+      via: 'editor',
       progress: (message) => {
         form.progress = message;
         draw();

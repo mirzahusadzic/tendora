@@ -27,6 +27,15 @@ try {
   await ui.text(data.statements.join(' '));
   await ui.submit();
   assert.equal(ui.state.project.data.contributions[0].responses.length, 5);
+  assert.deepEqual(
+    [
+      ...new Set(
+        ui.state.project.data.contributions[0].responses.map((r) => `${r.actor}/${r.via}`),
+      ),
+    ],
+    ['participant/editor'],
+    'Statements written in the workbench record its actor and the editor',
+  );
   assert.equal(ui.state.project.data.contributions[0].question, null);
   assert.equal(
     ui.state.project.data.placements.length,
