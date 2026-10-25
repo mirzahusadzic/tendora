@@ -30,6 +30,7 @@ import { answerBase, evaluateAnswer } from '../../recording/answers.mjs';
 import { answerRecording, checkAnswer } from '../../engine/answer.mjs';
 import { ruleParts, truthQuestion } from '../../engine/cloze.mjs';
 import { roleName, rootCheck } from './inspection.mjs';
+import { newestChecks } from './investigation.mjs';
 
 /** A text's reading: retained, or read by eGemma and retained (`origin` names
  * why); offline, only a retained one. Audited and repaired as a check's inputs
@@ -175,10 +176,14 @@ export async function corpusView(project) {
       { ...result, inputs },
     );
     const used = overlayKnowledge(extra);
-    if (caseEntries.length) return evaluateAnswer(recording, used);
+    // Each answer names the nodes that fill the question's: who a place is.
+    if (caseEntries.length) return evaluateAnswer(recording, used, { places: true });
     const key = JSON.stringify([[...withhold].sort(), extra.map((item) => item.id)]);
     if (!bases.has(key)) bases.set(key, answerBase(recording, used));
-    return evaluateAnswer(recording, used, { base: { ...bases.get(key), recording } });
+    return evaluateAnswer(recording, used, {
+      base: { ...bases.get(key), recording },
+      places: true,
+    });
   };
   // Whether any question asked here stopped at a bound: a method that finds
   // nothing says so then, since what is not found is not shown absent.
@@ -226,7 +231,13 @@ export async function corpusView(project) {
       else if (answer.status !== 'open') merged.status = answer.status;
       for (const side of ['yes', 'no', 'qualified'])
         for (const binding of answer[side]) {
-          const key = JSON.stringify([side, binding.answer, binding.sourceIds, binding.ruleIds]);
+          const key = JSON.stringify([
+            side,
+            binding.answer,
+            binding.sourceIds,
+            binding.ruleIds,
+            binding.places,
+          ]);
           if (!seen.has(key)) {
             seen.add(key);
             merged[side].push(binding);
@@ -275,7 +286,11 @@ export function yesNo(answer) {
   if (answer.status === 'limited')
     return { status: 'limited', limited: true, yes: [], no: [], qualified: [] };
   const all = [...(answer.answers ?? []), ...(answer.candidates ?? [])];
-  const binding = (item) => ({ sourceIds: item.sourceIds ?? [], ruleIds: item.ruleIds ?? [] });
+  const binding = (item) => ({
+    sourceIds: item.sourceIds ?? [],
+    ruleIds: item.ruleIds ?? [],
+    places: item.places ?? {},
+  });
   const side = (text) => all.filter((item) => item.text === text && !item.conditional).map(binding);
   return {
     status: answer.status,
@@ -339,11 +354,61 @@ export function clauseText(source, nodeIds) {
   return source.text.slice(before ? best.start - before[0].length : best.start, best.end);
 }
 
-/** Concepts whose value identifies a participant (an employee ID, a badge
- * number), and a value: a number or a quoted string, never a polarity. */
-const identifiers = new Set(['identifier', 'id', 'number', 'code', 'serial', 'badge', 'account']);
+/** A value: a number or a quoted string, never a polarity. */
 const literalValue = (node) =>
   node?.literal !== undefined && /^(?:"|-?\d)/u.test(String(node.literal)) && node.literal !== '-';
+/** Concepts that hold an identifier however its value is attached (employee
+ * ID 123 read as `identifier :mod 123`), one kind of identifier among them. */
+const identifiers = new Set(['identifier', 'id', 'number', 'code', 'serial']);
+/** Concepts whose value measures or ranks a participant, and may change: a
+ * level, a grade, an age. They describe; they do not tell one from another. */
+const measures = new Set([
+  'level',
+  'grade',
+  'rank',
+  'tier',
+  'step',
+  'stage',
+  'age',
+  'version',
+  'priority',
+  'severity',
+  'score',
+  'rating',
+  'size',
+  'weight',
+  'height',
+  'salary',
+  'rate',
+  'count',
+  'amount',
+  'percentage',
+]);
+/** The values by which a node tells one participant from another, each with
+ * its kind: a value that labels (passport P123, employee 123, a phone number,
+ * any value of an identifier's concept), not one that measures. An amount
+ * (`:quant`: five years), an ordinal, a date, or a measuring concept's value
+ * (level 5) describes. Unknown is taken as a label: two Alexes wrongly kept
+ * apart miss a finding; two wrongly made one would make one. */
+function identifying(graph, node, nodes = new Map(graph.nodes.map((item) => [item.id, item]))) {
+  const concept = node?.concept ?? '';
+  if (
+    !concept ||
+    measures.has(concept) ||
+    /-quantity$|^(?:ordinal-entity|date-entity|date-interval)$/u.test(concept)
+  )
+    return [];
+  const kind = identifiers.has(concept) ? 'identifier' : concept;
+  return graph.edges
+    .filter(
+      (edge) =>
+        edge.from === node.id &&
+        literalValue(nodes.get(edge.to)) &&
+        (edge.role === ':value' ||
+          (kind === 'identifier' && ![':quant', ':ord'].includes(edge.role))),
+    )
+    .map((edge) => `${kind}=${String(nodes.get(edge.to).literal).replace(/^"|"$/gu, '')}`);
+}
 
 /** How many type combinations of a question's named participants are asked. */
 const variantLimit = 32;
@@ -424,7 +489,7 @@ export function consequences(view, supposed, { withhold = [] } = {}) {
   const holdsAlready = (entry) => {
     const graph = entry.key === supposedId ? supposed.graph : view.byId.get(entry.key)?.graph;
     const parts = graph && ruleParts(graph);
-    if (!parts || parts.necessary || linkedPlaces(parts).length) return false;
+    if (!parts || parts.necessary || links(parts).length) return false;
     const truth = view.truth(parts.conclusion, { withhold });
     return (truth.expected === 'Yes' ? truth.yes : truth.no).length > 0;
   };
@@ -448,18 +513,10 @@ export function consequences(view, supposed, { withhold = [] } = {}) {
  * project's revision; the questions whose checks compaction released are
  * counted apart. */
 export async function latestChecks(project) {
-  const saved = (await listEngineRuns(project))
-    .filter((run) => run.projectDigest === project.digest && run.questions?.[0]?.text)
-    .filter((run) => !run.purpose || ['inquiry', 'question-refresh'].includes(run.purpose))
-    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const key = (run) =>
-    JSON.stringify([run.questions[0].text, run.scopePlacementId, run.case || null]);
-  const latest = new Map(),
-    released = new Set();
-  for (const run of saved) if (run.answer && !latest.has(key(run))) latest.set(key(run), run);
-  for (const run of saved)
-    if (!run.answer && run.cache === 'recheck' && !latest.has(key(run))) released.add(key(run));
-  return { runs: [...latest.values()], released: released.size };
+  return newestChecks(await listEngineRuns(project), {
+    digest: project.digest,
+    purposes: ['inquiry', 'question-refresh'],
+  });
 }
 
 /** A reading with its named participants identified by name: what describes
@@ -477,9 +534,7 @@ export function namedCore(graph) {
   // Whether what an edge leads to, away from `from` and short of the claim
   // itself, holds an identifier's value (employee ID 123): a level, a count or
   // a tenure describes a participant, it does not tell one from another.
-  const value = (node) =>
-    identifiers.has(node?.concept) &&
-    graph.edges.some((edge) => edge.from === node.id && literalValue(nodes.get(edge.to)));
+  const value = (node) => node && identifying(graph, node, nodes).length > 0;
   const valued = (edge, from) => {
     const start = edge.from === from ? edge.to : edge.from;
     if (start === top) return false;
@@ -641,69 +696,162 @@ export const nothing = (report, said) =>
 /** An author as findings name them in prose: "unrecorded" is no one's name. */
 export const who = (author) => (author === 'unrecorded' ? 'an unrecorded author' : author);
 
-/** The places a rule links: a participant its condition and its conclusion
- * share, as the predicate and role it fills on each side ("if someone reviews
- * logs, they file a note": review-01 :ARG0 and file-01 :ARG0). */
-export function linkedPlaces(parts) {
+/** The participants a rule links, each as its node in the condition and its
+ * node in the conclusion: a node both share ("if someone reviews logs, they
+ * file a note"), or a named participant each names alike (a reading may give
+ * the two mentions of "Alex" in one sentence two nodes), unless their own
+ * identifiers tell them apart. */
+export function links(parts) {
   const conditionIds = new Set(parts.condition.nodes.map((node) => node.id));
-  const place = (graph, id) => {
+  const argument = (graph, id) => {
     const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
-    const edge = graph.edges.find(
-      (other) => other.to === id && /-\d+$/u.test(nodes.get(other.from)?.concept ?? ''),
+    return graph.edges.some(
+      (edge) => edge.to === id && /-\d+$/u.test(nodes.get(edge.from)?.concept ?? ''),
     );
-    return edge ? [nodes.get(edge.from).concept, edge.role] : null;
   };
-  return parts.conclusion.nodes
+  const shared = parts.conclusion.nodes
     .filter((node) => conditionIds.has(node.id) && node.literal === undefined)
-    .map((node) => ({
-      condition: place(parts.condition, node.id),
-      conclusion: place(parts.conclusion, node.id),
-    }))
-    .filter((link) => link.condition && link.conclusion);
+    .filter((node) => argument(parts.condition, node.id) && argument(parts.conclusion, node.id))
+    .map((node) => ({ condition: node.id, conclusion: node.id }));
+  const linked = new Set(shared.map((link) => link.conclusion));
+  const named = namedNodes(parts.condition).filter(([id]) => !linked.has(id));
+  const alike = namedNodes(parts.conclusion)
+    .filter(([id]) => !linked.has(id))
+    .flatMap(([id, name]) => {
+      const self = participant(parts.conclusion, id);
+      const other = named.find(
+        ([node, word]) =>
+          word === name && sameParticipant(self, participant(parts.condition, node)),
+      );
+      return other ? [{ condition: other[0], conclusion: id }] : [];
+    });
+  return [...shared, ...alike];
 }
 
-/** Who fills a place (a predicate's role) in a reading: their name and
- * identifiers; null when the reading has no such place. */
-export function participantAt(graph, [concept, role]) {
+/** Who a node of a reading is: their name and the values that identify them
+ * (each `kind=value`). */
+export function participant(graph, id) {
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
-  const edge = graph.edges.find(
-    (other) => other.role === role && nodes.get(other.from)?.concept === concept,
-  );
-  if (!edge) return null;
-  const id = edge.to;
   const name = namedNodes(graph).find(([node]) => node === id)?.[1] ?? null;
   const ids = graph.edges
-    .filter((other) => other.from === id || other.to === id)
-    .map((other) => (other.from === id ? other.to : other.from))
-    .filter((other) => identifiers.has(nodes.get(other)?.concept))
-    .flatMap((other) =>
-      graph.edges
-        .filter((value) => value.from === other && literalValue(nodes.get(value.to)))
-        .map((value) => String(nodes.get(value.to).literal)),
-    );
-  return { name, ids };
+    .filter((edge) => edge.from === id || edge.to === id)
+    .map((edge) => nodes.get(edge.from === id ? edge.to : edge.from))
+    .flatMap((node) => identifying(graph, node, nodes));
+  return { name, ids: [...new Set(ids)] };
 }
 
-/** Whether two who-fills-a-place may be one participant: unknown is no
- * evidence against; different names, or identifiers that share no value, are. */
+/** Whether two participants may be one: the same statement's node is; unknown
+ * is no evidence against; different names are, and so are identifiers of one
+ * kind that share no value (passport 123 and passport 456, not a passport and
+ * a badge). */
 export function sameParticipant(a, b) {
   if (!a || !b) return true;
+  if (a.place && b.place && a.place.sourceId === b.place.sourceId)
+    if (a.place.nodeId === b.place.nodeId) return true;
   if (a.name && b.name && a.name !== b.name) return false;
-  if (a.ids.length && b.ids.length && !a.ids.some((value) => b.ids.includes(value))) return false;
+  const kinds = (p) => new Set(p.ids.map((value) => value.split('=')[0]));
+  const theirs = kinds(b);
+  for (const kind of kinds(a))
+    if (
+      theirs.has(kind) &&
+      !a.ids.some((value) => value.startsWith(`${kind}=`) && b.ids.includes(value))
+    )
+      return false;
   return true;
 }
 
-/** Whether what met a rule's condition (`met`, statement ids) and what
- * answers its conclusion (`answers`) can be one occasion: at every place the
- * rule links, the participants they name may be the same. */
-export function oneOccasion(view, parts, met, answers) {
-  const filler = (ids, place) =>
-    ids
-      .map((id) => view.byId.get(id)?.graph)
-      .filter(Boolean)
-      .map((graph) => participantAt(graph, place))
-      .find(Boolean) ?? null;
-  return linkedPlaces(parts).every((link) =>
-    sameParticipant(filler(met, link.condition), filler(answers, link.conclusion)),
+/** Who an answer names at a node of the question asked: the participant of
+ * the statement (or case, from `graphs` by source) whose node filled it, with
+ * that place; null when no statement's node filled it. */
+export function filler(view, binding, nodeId, graphs = {}) {
+  const place = binding.places?.[nodeId];
+  if (!place) return null;
+  const graph = view.byId.get(place.sourceId)?.graph ?? graphs[place.sourceId];
+  return graph ? { ...participant(graph, place.nodeId), place } : { name: null, ids: [], place };
+}
+
+/** Whether an answer to a rule's condition (`met`) and one to its conclusion
+ * (`answer`) can be one occasion: at every participant the rule links, the
+ * statements' participants that filled the two may be the same. Each answer
+ * names its own (the conjunct that answered, never the statement's first). */
+export function oneOccasion(view, parts, met, answer) {
+  return links(parts).every((link) =>
+    sameParticipant(filler(view, met, link.condition), filler(view, answer, link.conclusion)),
   );
+}
+
+/** The answers that meet a rule's condition, under a clause or not: who met
+ * it is who met it, at night or not (what they answer is judged apart). */
+export function meetsCondition(view, parts, { withhold = [], extra = [] } = {}) {
+  const truth = view.truth(parts.condition, { withhold, extra });
+  return [
+    ...(truth.expected === 'Yes' ? truth.yes : truth.no),
+    ...truth.qualified.filter((binding) => binding.answer === truth.expected),
+  ];
+}
+
+/** For a rule (`ruleId`, the statement or supposition it was read from),
+ * whether one of its applications (an answer to its conclusion through it)
+ * and another answer to its conclusion can be one occasion: at every
+ * participant it links, whoever it applied to and whoever the answer names
+ * (the conjunct that answered) may be the same. An application names whoever
+ * met the condition; where the rule names a participant twice with two nodes
+ * it names its own, and who met the condition is read from the condition's
+ * answers among the statements the application rests on. `graphs` gives the
+ * readings of sources that are no statement (a supposition). */
+export function applicationOccasion(view, parts, ruleId, { withhold = [], extra = [] } = {}) {
+  const ls = links(parts);
+  const graphs = Object.fromEntries(extra.map((item) => [item.id, item.graph]));
+  let met = null;
+  return (application, answer) =>
+    ls.every((link) => {
+      const other = filler(view, answer, link.conclusion, graphs);
+      const own = filler(view, application, link.conclusion, graphs);
+      if (own && own.place.sourceId !== ruleId) return sameParticipant(own, other);
+      met ??= meetsCondition(view, parts, { withhold, extra });
+      const rests = new Set(application.sourceIds);
+      const who = met
+        .filter((binding) => binding.sourceIds.every((id) => rests.has(id)))
+        .map((binding) => filler(view, binding, link.condition, graphs))
+        .filter(Boolean);
+      return !who.length || who.some((one) => sameParticipant(one, other));
+    });
+}
+
+/** The source of the case a rule's condition is asked as (`cases[0]`). */
+const caseSource = 'case-method/s1';
+
+/** For answers to a rule's conclusion asked under its own condition (a case),
+ * whether each is about whoever met the condition: at every participant the
+ * rule links, the participant answering is the case's own (its node, or one
+ * named alike), or one the statements say meets the condition. Returns, for
+ * an answer, the statements that say the condition is met ([] when the case
+ * does), or null when it is about someone else ("Lee files no note" is no
+ * answer to "if someone reviews logs, they file a note" unless Lee does). */
+export function underCondition(view, parts, { withhold = [] } = {}) {
+  const ls = links(parts);
+  let met = null;
+  const meeting = () => (met ??= meetsCondition(view, parts, { withhold }));
+  return (binding) => {
+    const open = ls.filter((link) => {
+      const answer = filler(view, binding, link.conclusion, { [caseSource]: parts.condition });
+      if (answer?.place.sourceId === caseSource) return answer.place.nodeId !== link.condition;
+      const own = participant(parts.condition, link.condition);
+      return !(own.name && answer?.name === own.name && sameParticipant(own, answer));
+    });
+    if (!open.length) return [];
+    const one = meeting().find((candidate) =>
+      open.every((link) =>
+        sameParticipant(
+          filler(view, candidate, link.condition),
+          filler(view, binding, link.conclusion),
+        ),
+      ),
+    );
+    return one
+      ? [...one.sourceIds, ...one.ruleIds.map(view.ruleSource).filter(Boolean)].filter((id) =>
+          view.byId.has(id),
+        )
+      : null;
+  };
 }

@@ -47,10 +47,19 @@ alternatives.
 
 A named participant is identified by its name. A description that only names
 its role ("Morgan, the release manager") is left out of the question, while one
-carrying a value ("Alex with employee ID 123") stays, since it tells one Alex
-from another. The question is asked under each type the statements give that
-name, since a reader's type is a guess: the demo's readings make Morgan a
-company in one statement and a person in another.
+carrying a label ("Alex with employee ID 123", a passport number) stays, since
+it tells one Alex from another; a measure ("at level 5", "for five years")
+describes Alex and tells no one apart. The question is asked under each type
+the statements give that name, since a reader's type is a guess: the demo's
+readings make Morgan a company in one statement and a person in another.
+
+Who a finding is about comes from the engine's own match: the participant whose
+words answered, in the part of a statement that answered ("Kim files a note
+and Robin files no note" answers for Robin in its second part). A rule links
+its condition and its conclusion through a participant both name ("if someone
+reviews logs, they file a note"), and its findings stay on one occasion: under
+its condition, that Lee files no note answers nothing unless the statements say
+Lee reviews logs, and those statements are cited with it.
 
 Like probes and corpus fidelity, the methods read the latest check at the root
 role at the project's revision, so one must exist.

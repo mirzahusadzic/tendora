@@ -197,7 +197,7 @@ export function formatDivision(report) {
     lines.push('', `${finding.kind}: ${finding.proposal}`);
     if (finding.groups)
       finding.groups.forEach((group, index) =>
-        lines.push(`  group ${index + 1}:`, ...group.map((item) => `    “${item.statement}”`)),
+        lines.push(`  group ${index + 1}:`, ...group.map((item) => `    ${cite(item)}`)),
       );
     else
       lines.push(

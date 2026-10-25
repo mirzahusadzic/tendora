@@ -13,6 +13,7 @@
 import { findStatement } from './inspection.mjs';
 import { ruleParts } from '../../engine/cloze.mjs';
 import {
+  applicationOccasion,
   cite,
   consequences,
   corpusView,
@@ -20,6 +21,7 @@ import {
   coverageLines,
   oneOccasion,
   readText,
+  underCondition,
   smallest,
   supposedId,
   supposedSource,
@@ -81,13 +83,14 @@ export async function elenchusReport(project, { text = null, statement = null, o
     reading: { graph, penman: own?.penman, lexicalAudit: own?.lexicalAudit },
     placementId: own?.placementId ?? root,
   });
-  const commitments = (bindings) =>
-    named(
-      bindings.flatMap((binding) => [
+  const commitments = (bindings, met = []) =>
+    named([
+      ...met,
+      ...bindings.flatMap((binding) => [
         ...binding.sourceIds,
         ...binding.ruleIds.map(view.ruleSource).filter(Boolean),
       ]),
-    );
+    ]);
   const findings = [];
 
   // Directly: the thesis's truth asked of the other statements.
@@ -100,12 +103,9 @@ export async function elenchusReport(project, { text = null, statement = null, o
     const given = holds.expected === 'Yes' ? holds.yes : holds.no;
     const denied = condition.expected === 'Yes' ? condition.no : condition.yes;
     // On one occasion: whoever the statements say does Q is whoever they say
-    // fails C, at every place the thesis links (two Alexes are two).
-    const ids = (binding) => binding.sourceIds.filter((id) => view.byId.has(id));
+    // fails C, at every participant the thesis links (two Alexes are two).
     for (const one of given)
-      for (const other of denied.filter((binding) =>
-        oneOccasion(view, necessary, ids(binding), ids(one)),
-      ))
+      for (const other of denied.filter((binding) => oneOccasion(view, necessary, binding, one)))
         findings.push({
           method: 'elenchus',
           kind: 'refutes',
@@ -119,25 +119,34 @@ export async function elenchusReport(project, { text = null, statement = null, o
     const direct = view.truth(asked, { cases, withhold });
     const [agree, deny] =
       direct.expected === 'Yes' ? [direct.yes, direct.no] : [direct.no, direct.yes];
-    for (const binding of deny)
-      findings.push({
-        method: 'elenchus',
-        kind: 'refutes',
-        summary: cases.length
-          ? 'Under its own condition, the statements answer it the other way.'
-          : 'The statements answer it the other way.',
-        statements: commitments([binding]),
-        via: 'directly',
-        question: gives,
-      });
-    for (const binding of agree)
-      findings.push({
-        method: 'elenchus',
-        kind: 'supports',
-        summary: 'The statements answer it its own way.',
-        statements: commitments([binding]),
-        via: 'directly',
-      });
+    // Under its condition, an answer counts only about whoever met it: the
+    // statements saying someone else did not file a note refute nothing.
+    const occasion = cases.length ? underCondition(view, ruleParts(graph), { withhold }) : () => [];
+    for (const binding of deny) {
+      const met = occasion(binding);
+      if (met)
+        findings.push({
+          method: 'elenchus',
+          kind: 'refutes',
+          summary: cases.length
+            ? 'Under its own condition, the statements answer it the other way.'
+            : 'The statements answer it the other way.',
+          statements: commitments([binding], met),
+          via: 'directly',
+          question: gives,
+        });
+    }
+    for (const binding of agree) {
+      const met = occasion(binding);
+      if (met)
+        findings.push({
+          method: 'elenchus',
+          kind: 'supports',
+          summary: 'The statements answer it its own way.',
+          statements: commitments([binding], met),
+          via: 'directly',
+        });
+    }
   }
 
   // Through a rule: each rule that applies only with the thesis, its
@@ -153,9 +162,17 @@ export async function elenchusReport(project, { text = null, statement = null, o
     const rests = (binding) => binding.sourceIds.includes(supposedId);
     const thesisSide = both.expected === 'Yes' ? both.yes : both.no;
     const otherSide = both.expected === 'Yes' ? both.no : both.yes;
-    const against = otherSide.filter((binding) => !rests(binding));
-    const leadsToBoth = !against.length && otherSide.some(rests);
-    if (!thesisSide.some(rests) || (!against.length && !leadsToBoth)) continue;
+    // About whoever the thesis made it apply to: that someone else did not
+    // file a note denies nothing.
+    const occasion = applicationOccasion(view, parts, rule.id, { withhold, extra: [supposed] });
+    const applied = thesisSide.filter(
+      (binding) => rests(binding) && binding.ruleIds.some((id) => view.ruleSource(id) === rule.id),
+    );
+    const meets = (binding) => applied.some((application) => occasion(application, binding));
+    const against = otherSide.filter((binding) => !rests(binding) && meets(binding));
+    const leadsToBoth =
+      !against.length && otherSide.some((binding) => rests(binding) && meets(binding));
+    if (!applied.length || (!against.length && !leadsToBoth)) continue;
     findings.push({
       method: 'elenchus',
       kind: 'refutes',
@@ -165,7 +182,10 @@ export async function elenchusReport(project, { text = null, statement = null, o
       statements: named([
         entry.statementId,
         ...entry.rests,
-        ...(leadsToBoth ? otherSide : against).flatMap((binding) => [
+        ...(leadsToBoth
+          ? otherSide.filter((binding) => rests(binding) && meets(binding))
+          : against
+        ).flatMap((binding) => [
           ...binding.sourceIds,
           ...binding.ruleIds.map(view.ruleSource).filter(Boolean),
         ]),

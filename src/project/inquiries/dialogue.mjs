@@ -6,7 +6,16 @@
  * Authors are as recorded or declared (provenance.json); "unrecorded" is
  * named as such, not as a person. Read-only and offline. */
 import { ruleParts } from '../../engine/cloze.mjs';
-import { cite, commitment, corpusView, coverage, coverageLines, smallest, who } from './corpus.mjs';
+import {
+  cite,
+  commitment,
+  corpusView,
+  coverage,
+  coverageLines,
+  smallest,
+  underCondition,
+  who,
+} from './corpus.mjs';
 const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export async function dialogueReport(project, { signal } = {}) {
@@ -26,18 +35,24 @@ export async function dialogueReport(project, { signal } = {}) {
       withhold: [item.id],
     });
     const [same, other] = truth.expected === 'Yes' ? [truth.yes, truth.no] : [truth.no, truth.yes];
+    // A rule's answer counts only about whoever met its condition: that Lee
+    // files no note neither opposes nor shares "if someone reviews logs, they
+    // file a note" unless Lee reviews logs (those statements are cited too).
+    const occasion = parts ? underCondition(view, parts, { withhold: [item.id] }) : () => [];
     for (const [kind, bindings] of [
       ['clash', other],
       ['agreement', same],
     ])
       for (const binding of bindings) {
+        const met = occasion(binding);
+        if (!met) continue;
         const cited = [
           ...binding.sourceIds,
           ...binding.ruleIds.map(view.ruleSource).filter(Boolean),
         ].filter((id) => view.byId.has(id));
         const theirs = [...new Set(cited.map(view.author))].filter((name) => name !== author);
         for (const with_ of theirs) {
-          const statements = view.named([item.id, ...cited]);
+          const statements = view.named([item.id, ...met, ...cited]);
           const key = JSON.stringify([
             kind,
             [author, with_].sort(),

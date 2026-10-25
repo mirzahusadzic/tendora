@@ -9,13 +9,13 @@
 import { ruleParts } from '../../engine/cloze.mjs';
 import { findStatement } from './inspection.mjs';
 import {
+  applicationOccasion,
   cite,
   clauseText,
   corpusView,
   coverage,
   coverageLines,
   nothing,
-  oneOccasion,
   smallest,
 } from './corpus.mjs';
 
@@ -25,7 +25,12 @@ export async function counterexampleReport(project, { statement, signal } = {}) 
   const text = findStatement(project.data, statement).text;
   const item = view.statements.find((entry) => entry.text === text);
   if (!item?.graph)
-    return { revision: project.digest, statement: { text, reading: 'none' }, findings: [] };
+    return {
+      revision: project.digest,
+      statement: { text, reading: 'none' },
+      findings: [],
+      ...coverage(view),
+    };
   const subject = { text, role: view.role(item.id), author: view.author(item.id) };
   const parts = ruleParts(item.graph);
   const cited = (bindings) =>
@@ -49,18 +54,12 @@ export async function counterexampleReport(project, { statement, signal } = {}) 
         item,
         parts.condition.nodes.map((node) => node.id),
       ) ?? 'its condition';
-    // One counterexample is one occasion: at every place the rule links from
-    // its condition to its conclusion (the reviewer is the one who files),
-    // what met the condition and what denies the conclusion must name
-    // participants that may be the same. Different names or identifiers
-    // there are two occasions; no names at all is no evidence against.
-    const sameOccasion = (application, denial) =>
-      oneOccasion(
-        view,
-        parts,
-        application.sourceIds.filter((id) => id !== item.id && view.byId.has(id)),
-        cited([denial]).filter((id) => id !== item.id),
-      );
+    // One counterexample is one occasion: at every participant the rule links
+    // from its condition to its conclusion (the reviewer is the one who
+    // files), whoever it applied to and whoever the denial names (the conjunct
+    // that denies it) may be the same. Different names or identifiers are two
+    // occasions; no names at all is no evidence against.
+    const sameOccasion = applicationOccasion(view, parts, item.id);
     for (const application of applies)
       for (const denial of against.filter(
         (binding) =>

@@ -9,16 +9,18 @@ import { kindReading } from '../../amr/kinds.mjs';
 import { propbankAuditor } from '../../models/propbank.mjs';
 import { corpusView, coverage, coverageLines } from './corpus.mjs';
 
-// Plural or singular, a word is one term: its singular forms (aliases may be
-// alias or aliase, changes change or chang) are compared, not one guessed
-// stem, so alias and aliases, gas and gases, policy and policies meet.
+// Plural or singular, a word is one term: the word itself, and the singulars
+// a plural ending gives (aliases alias, changes change, policies policy), are
+// compared, not one guessed stem, so alias and aliases, gas and gases, ox and
+// ox meet. A word that ends in s as a singular does (alias, gas, class,
+// status, analysis) is no plural: alias is not the plural of an alia.
 const forms = (word) => {
   const w = String(word).toLowerCase().replace(/-\d+$/u, '');
-  return new Set(
-    [w, w.replace(/ies$/u, 'y'), w.replace(/es$/u, ''), w.replace(/s$/u, '')].filter(
-      (form) => form.length >= 3,
-    ),
-  );
+  const out = new Set([w]);
+  if (/[^aeiou]ies$/u.test(w)) out.add(w.slice(0, -3) + 'y');
+  if (/(?:s|x|z|ch|sh)es$/u.test(w)) out.add(w.slice(0, -2));
+  if (/[^s]s$/u.test(w) && !/(?:us|is|as)$/u.test(w)) out.add(w.slice(0, -1));
+  return out;
 };
 const alike = (a, b) => {
   const theirs = forms(b);

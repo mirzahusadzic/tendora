@@ -21,6 +21,7 @@ import {
   coverageLines,
   nothing,
   smallest,
+  underCondition,
 } from './corpus.mjs';
 
 export async function aporiaReport(project, { role = null, signal } = {}) {
@@ -70,22 +71,26 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
   }
   for (const rule of rules) {
     signal?.throwIfAborted();
+    const withhold = [...outside, rule.item.id];
     const denied = sides(
-      view.truth(rule.parts.conclusion, {
-        cases: [rule.parts.condition],
-        withhold: [...outside, rule.item.id],
-      }),
+      view.truth(rule.parts.conclusion, { cases: [rule.parts.condition], withhold }),
     ).filter((binding) => binding.sourceIds.some((id) => view.byId.has(id)));
+    // Only about whoever met its condition: someone else's answer is no case
+    // of it (the statements saying they met it are cited).
+    const occasion = underCondition(view, rule.parts, { withhold });
     const when = condition(rule);
-    for (const binding of denied)
-      findings.push({
-        method: 'aporia',
-        kind: 'in its case',
-        summary: 'Under its own condition, the others answer its conclusion the other way.',
-        statements: named([rule.item.id, ...cited([binding])]),
-        case: [when],
-        question: `When ${when}, both cannot hold: which is meant?`,
-      });
+    for (const binding of denied) {
+      const met = occasion(binding);
+      if (met)
+        findings.push({
+          method: 'aporia',
+          kind: 'in its case',
+          summary: 'Under its own condition, the others answer its conclusion the other way.',
+          statements: named([rule.item.id, ...met, ...cited([binding])]),
+          case: [when],
+          question: `When ${when}, both cannot hold: which is meant?`,
+        });
+    }
   }
   // Rules whose conclusions oppose (one relation, opposite truth), their
   // conditions given together.

@@ -718,7 +718,7 @@ export function answerBase(recording, knowledge = recording.knowledge ?? {}, lim
   const material = answerMaterial(recording, knowledge, limits?.preparation);
   const account = limits?.workBudget !== undefined ? { work: 0, limit: limits.workBudget } : null;
   const grammar = createGrammarMatcher(limits?.grammarCache);
-  const { base: _base, ...options } = limits ?? {};
+  const { base: _base, places: _places, ...options } = limits ?? {};
   const inference = inferRelations(material.facts, material.rules, {
     matchLimit: matchCap(material.sources.length),
     maxFacts: factCap(material.sources.length),
@@ -1167,6 +1167,20 @@ function evaluateReading(recording, knowledge, limits, reading) {
     for (const id of clauses) for (const to of reaches.get(id) ?? []) clauses.add(to);
     return (clausal = { clauses, predicates });
   };
+  // Which statement's node fills each node of the question, asked for by a
+  // method that must tell one participant from another (two Alexes, or the
+  // conjunct of a statement that answers): never part of a saved answer.
+  let occurrences = null;
+  const placesOf = (match) => {
+    occurrences ??= new Map(material.nodes.map((node) => [node.id, node]));
+    const places = {};
+    for (const [queryId, variable] of variables) {
+      const occurrence = occurrences.get(match.values[variable]);
+      if (occurrence)
+        places[queryId] = { sourceId: occurrence.sourceId, nodeId: occurrence.nodeId };
+    }
+    return places;
+  };
   for (const match of matching.matches) {
     if (conflictingQuery) break;
     if (
@@ -1527,6 +1541,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
       ...conditions.map((fact) => fact.id),
       ...sourceScope.map((fact) => JSON.stringify(fact.triple)),
     ]);
+    const places = limits?.places ? placesOf(match) : null;
     if (
       answers.some(
         (answer) =>
@@ -1534,7 +1549,9 @@ function evaluateReading(recording, knowledge, limits, reading) {
           answer.conditional === conditional &&
           JSON.stringify(answer.qualifications) === JSON.stringify(qualifications) &&
           evidenceIdentity(answer.sourceIds) === evidenceIdentity(proof.sourceIds) &&
-          JSON.stringify([...answer.ruleIds].sort()) === JSON.stringify([...proof.ruleIds].sort()),
+          JSON.stringify([...answer.ruleIds].sort()) ===
+            JSON.stringify([...proof.ruleIds].sort()) &&
+          (!places || JSON.stringify(answer.places) === JSON.stringify(places)),
       )
     )
       continue;
@@ -1581,6 +1598,7 @@ function evaluateReading(recording, knowledge, limits, reading) {
       ...(scope.length ? { dependsOn } : {}),
       ...(booleanQuestion ? { polarity: match.negative ? 'negative' : 'positive' } : {}),
       bindings: ids.map((id) => ({ id, text: label(id) })),
+      ...(places ? { places } : {}),
       ...proof,
       derivation: match.derivation,
       ...(assertions.length > 1
