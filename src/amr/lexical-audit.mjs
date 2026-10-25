@@ -1,5 +1,5 @@
 /** Lexical evidence for acquired predicates, not a semantic correctness test. */
-export const lexicalAuditProfile = 'amr-propbank-lexical-v4';
+export const lexicalAuditProfile = 'amr-propbank-lexical-v5';
 const tokensOf = (text) =>
   [...text.matchAll(/[\p{L}\p{N}]+(?:['’][\p{L}]+)?/gu)].map((match) => ({
     text: match[0],
@@ -52,6 +52,56 @@ const counted = Object.fromEntries([
   ['half', 0.5],
 ]);
 const clock = (hour, minute = '00') => `${hour}:${minute}`;
+const tens = Object.fromEntries(
+  'twenty thirty forty fifty sixty seventy eighty ninety'
+    .split(' ')
+    .map((word, i) => [word, 20 + i * 10]),
+);
+const multipliers = { hundred: 100, thousand: 1e3, million: 1e6, billion: 1e9 };
+/** Whole numbers in words: “one hundred and twenty-five” gives 125, “a
+ * hundred” 100, “nine hundred thousand” 900000, and its words give nothing
+ * else (`used`). `whole` is false when the text has a multiplier no number
+ * phrase takes (“hundreds of”, “the hundred”): its numbers cannot be read
+ * whole. */
+function numberPhrases(text, tokens) {
+  const values = [],
+    used = new Set();
+  let whole = true;
+  const joined = (i) => /^[-\s]+$/u.test(text.slice(tokens[i - 1].end, tokens[i].start));
+  for (let i = 0; i < tokens.length;) {
+    const start = i;
+    let total = 0,
+      current = 0,
+      any = false,
+      multiplied = false;
+    for (; i < tokens.length && (i === start || joined(i)); i++) {
+      const word = tokens[i].word,
+        next = tokens[i + 1]?.word;
+      if (units.includes(word)) current += units.indexOf(word);
+      else if (word in tens) current += tens[word];
+      else if (word === 'a' && !any && next in multipliers) current = 1;
+      else if (word in multipliers && any) {
+        if (word === 'hundred') current = (current || 1) * 100;
+        else {
+          total += (current || 1) * multipliers[word];
+          current = 0;
+        }
+        multiplied = true;
+      } else if (word === 'and' && multiplied && (units.includes(next) || next in tens)) continue;
+      else break;
+      any = true;
+    }
+    if (multiplied) {
+      values.push(total + current);
+      for (let k = start; k < i; k++) used.add(k);
+    }
+    if (i === start) {
+      if (/^(?:hundred|thousand|million|billion)s?$/u.test(tokens[i].word)) whole = false;
+      i++;
+    }
+  }
+  return { values, whole, used };
+}
 /** Numbers and clock times a text gives, in digits or words. A reading's
  * number or time is checked against these; nothing is inferred beyond them.
  */
@@ -59,10 +109,17 @@ function givenValues(text) {
   const numbers = new Set(),
     times = new Set();
   for (const match of text.matchAll(/\d+(?:\.\d+)?/gu)) numbers.add(Number(match[0]));
+  // Digits with thousands separators or a multiplier word: “1,500”, “2.5 million”.
+  for (const match of text.matchAll(/\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b/gu))
+    numbers.add(Number(match[0].replaceAll(',', '')));
+  for (const match of text.matchAll(/\b(\d+(?:\.\d+)?)\s+(hundred|thousand|million|billion)\b/giu))
+    numbers.add(Number(match[1]) * multipliers[match[2].toLowerCase()]);
   for (const match of text.matchAll(/\b(\d{1,2}):(\d{2})\b/gu))
     times.add(clock(Number(match[1]), match[2]));
   const tokens = tokensOf(text);
+  const phrases = numberPhrases(text, tokens);
   for (let i = 0; i < tokens.length; i++) {
+    if (phrases.used.has(i)) continue;
     const word = tokens[i].word,
       next = tokens[i + 1];
     let value = units.includes(word)
@@ -93,7 +150,8 @@ function givenValues(text) {
   }
   if (/\bnoon\b/iu.test(text)) times.add(clock(12));
   if (/\bmidnight\b/iu.test(text)) times.add(clock(0));
-  return { numbers, times };
+  for (const value of phrases.values) numbers.add(value);
+  return { numbers, times, whole: phrases.whole };
 }
 /** Replace a number or clock time the text does not give with the one it
  * does, when the text leaves exactly one: “sixty-four percent” read as 60.4
@@ -102,6 +160,8 @@ function givenValues(text) {
 export function repairReading(text, graph, checks) {
   const given = givenValues(text),
     repairs = [];
+  // A text whose numbers cannot be read whole settles none of them.
+  if (!given.whole) given.numbers.clear();
   const literalValue = (node) => String(node.literal).replace(/^"|"$/gu, '');
   for (const [kind, values, key] of [
     ['A number', given.numbers, (value) => Number(value)],
@@ -243,6 +303,7 @@ export function createLexicalAuditor(resource) {
               ? !given.times.has(clock(Number(time[1]), time[2]))
               : /^\d+(?:\.\d+)?$/u.test(value) &&
                 Number(value) !== 1 &&
+                given.whole &&
                 !given.numbers.has(Number(value))
           )
             checks.push({

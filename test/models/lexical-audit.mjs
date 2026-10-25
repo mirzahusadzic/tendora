@@ -269,6 +269,38 @@ try {
     [[], '"14:00"'],
     'An hour without morning or afternoon is not settled',
   );
+  // Hundreds, thousands and millions are read whole: a correct reading of “one
+  // hundred” is neither flagged nor repaired to one (review 2026-10-25, #1).
+  const count = (value) => valued(value, 'temporal-quantity', ':quant');
+  assert.deepEqual(unattested('The tank is one hundred percent full.', valued('100')), []);
+  assert.deepEqual(
+    repair('The tank is one hundred percent full.', valued('100')),
+    [[], '100'],
+    'A correct hundred stays',
+  );
+  assert.deepEqual(repair('Two thousand forms arrive.', count('2000')), [[], '2000']);
+  for (const [text, value] of [
+    ['One hundred and twenty-five forms arrive.', '125'],
+    ['A hundred forms arrive.', '100'],
+    ['Three million forms arrive.', '3000000'],
+    ['Nine hundred thousand forms arrive.', '900000'],
+    ['2.5 million forms arrive.', '2500000'],
+    ['1,500 forms arrive.', '1500'],
+  ])
+    assert.deepEqual(unattested(text, count(value)), [], `${text} gives ${value}`);
+  assert.deepEqual(
+    repair('One hundred and twenty-five forms arrive.', count('25')),
+    [['25->125'], '125'],
+    'A reading that dropped the hundred is repaired to the whole number',
+  );
+  assert.deepEqual(
+    [
+      unattested('Hundreds of forms arrive.', count('300')),
+      repair('Hundreds of forms arrive.', count('300')),
+    ],
+    [[], [[], '300']],
+    'A number the text gives only vaguely is neither flagged nor repaired',
+  );
   assert.match(
     audit(pickup, time('14:00')).findings[0].reason,
     /reading has 14:00, but the text gives no such time/u,
