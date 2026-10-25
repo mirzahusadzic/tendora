@@ -1,4 +1,7 @@
 /** Maintained suites use self-contained input and generated project artifacts. */
+// Suites that measure time: run alone, after the parallel batch (test/run.mjs).
+export const alone = ['acceptance/independent-domain.mjs'];
+
 export const suites = {
   'acceptance:tendora': ['acceptance/tendora-contract.mjs'],
   'acceptance:hand': ['acceptance/hand-contract.mjs'],

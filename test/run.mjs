@@ -12,7 +12,12 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { suites } from './suites.mjs';
+import * as registry from './suites.mjs';
+
+const { suites } = registry;
+// Suites that measure time run alone, after the others: a budget measured
+// beside other suites measures the machine, not the code.
+const alone = new Set(registry.alone ?? []);
 
 const timesPath = fileURLToPath(new URL('../tmp/suite-times.json', import.meta.url));
 const take = (name, arity = 1) => {
@@ -41,7 +46,7 @@ async function runSuite(path) {
   };
   const timeoutMs = ['acceptance:hand', 'acceptance:tendora'].includes(profile ?? workerProfile)
     ? 600_000
-    : path === 'project/background.mjs'
+    : ['project/background.mjs', 'project/role-matching.mjs'].includes(path)
       ? 180_000
       : 60_000;
   const timeout = setTimeout(() => {
@@ -126,13 +131,16 @@ async function runParallel(selected) {
       });
     });
   // Slowest first, so the longest suite does not start last.
-  const queue = [...selected].sort((a, b) => (times[b] ?? Infinity) - (times[a] ?? Infinity));
+  const queue = selected
+    .filter((path) => !alone.has(path))
+    .sort((a, b) => (times[b] ?? Infinity) - (times[a] ?? Infinity));
   let next = 0;
   await Promise.all(
     Array.from({ length: Math.min(jobs, queue.length) }, async () => {
       while (next < queue.length) await run(queue[next++]);
     }),
   );
+  for (const path of selected) if (alone.has(path)) await run(path);
   try {
     mkdirSync(fileURLToPath(new URL('../tmp/', import.meta.url)), { recursive: true });
     writeFileSync(timesPath, JSON.stringify(times, null, 2) + '\n');
