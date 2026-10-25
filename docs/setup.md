@@ -1,4 +1,4 @@
-# Setup and CLI
+# Setup
 
 Tendora runs on macOS and Linux with Node.js 24+, npm, Git and
 [uv](https://docs.astral.sh/uv/getting-started/installation/). Python deadlines
@@ -28,7 +28,8 @@ The demo contains `project.json`, retained material in `material.sqlite`, and
 [capability tour](demo.md) walks through them.
 Work on a copy to keep the bundled snapshot unchanged; generated databases and
 engine data elsewhere are ignored. `npm run demo` leaves an existing copy
-unchanged; `npm run demo -- --reset` discards it and starts again.
+alone and says whether it still matches the bundled demo; `npm run demo --
+--reset` discards it and starts again.
 The payments sources and acquisitions contain synthetic incident material.
 
 The editor starts with a role tree. Use `n` to add statements, `e` to edit,
@@ -73,8 +74,9 @@ when readings are missing. The demo's 36 questions and their cases replay
 offline; new wording needs a reading.
 
 The service must support `POST /amr/parse-batch` and `POST /embed/texts`.
-Embedding requests use `dimensions: 768` and `prompt_name: "STS"`; role ordering
-uses normalized leading dimensions. Ranking is navigation, not proof.
+Embedding requests use `dimensions: 768` and `prompt_name: "STS"`; Tendora
+keeps the first 128, and they only order exploration
+([what embeddings do](storage.md#embeddings)).
 
 Missing readings stay visible as `needs-amr`. Check the selected Python
 environment if graph preparation fails, and the eGemma URL/key if new language

@@ -11,7 +11,9 @@ eGemma reads text into an Abstract Meaning Representation (AMR); the PENMAN
 graph, the model and its revision are retained, so a text is read once. Local
 PENMAN processing normalizes roles and keeps the original variables. PropBank
 supplies lexical checks (an unlisted sense, a number or time the text does not
-give, a dropped negation); it does not certify a reading. A reading's `:wiki`
+give, a dropped negation); it does not certify a reading. A number or clock
+time read differently from the text is used as the text gives it, marked
+_Repaired_, while the reading stays as acquired. A reading's `:wiki`
 link is the parser's guess at a real-world referent and is not used in
 reasoning; names keep their parts. The
 [AMR guidelines](https://github.com/amrisi/amr-guidelines/blob/master/amr.md)
@@ -48,8 +50,8 @@ recognition alone is not entailment.
   (_needs-reading_), never supported.
 
 SEMCAT supplies bounded local Smatch++ and RoSE comparisons; similarity and
-embeddings help compare and navigate, and never establish an answer. There is no
-second generative pass.
+embeddings help compare and navigate ([what embeddings do](storage.md#embeddings))
+and never establish an answer. There is no second generative pass.
 
 ## Inspecting
 

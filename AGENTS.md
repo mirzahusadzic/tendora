@@ -51,7 +51,8 @@ lower a benchmark floor to make a change pass.
 Register every new test once in `test/suites.mjs`. Add focused regressions for
 behavior changes and run the affected tests, then `npm run check:changed` (the
 suites the change reaches); run the full `npm run check` before a snapshot or
-after changing the runner. Documentation changes need factual and link checks,
+after changing the runner. Documentation changes need factual checks and the
+two documentation suites (`architecture/doc-links`, `acceptance/doc-examples`),
 not a full engine run.
 
 Keep credentials, personal corpora and generated runtime state out of Git.

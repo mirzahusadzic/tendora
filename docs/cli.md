@@ -111,14 +111,17 @@ Results go to stdout; diagnostics and progress to stderr, progress only on a
 terminal or with `--explain`. With `--json`, stdout is JSON only. No output
 uses color.
 
-| Status | Meaning                                                    |
-| ------ | ---------------------------------------------------------- |
-| `0`    | Completed, including an open answer                        |
-| `1`    | A failure, a missing reading, or a declined deletion       |
-| `2`    | Invalid arguments: an unknown command, option, run or role |
-| `130`  | Interrupted: the first `Ctrl+C` cancels, the second exits  |
+| Status | Meaning                                                                                                    |
+| ------ | ---------------------------------------------------------------------------------------------------------- |
+| `0`    | Completed, including an open answer                                                                        |
+| `1`    | A failure, a missing reading, or a declined deletion                                                       |
+| `2`    | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing |
+| `130`  | Interrupted: the first `Ctrl+C` cancels, the second exits                                                  |
 
-A script reads the status in the result, not only the exit status.
+A syntax error points to the help. A name that matches nothing gives its own
+next step instead: the closest statements, the roles there are, or the command
+that lists saved checks. A script reads the status in the result, not only the
+exit status.
 
 ## Environment
 

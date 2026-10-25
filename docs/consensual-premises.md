@@ -7,8 +7,9 @@ existing rule, so it changes nothing until that rule is deliberately amended.
 
 On independently worded questions the engine usually stops at a located
 opening: the sources do not connect the question to an answer. Today the only
-way forward is for a person to notice what is missing and write it. The frozen
-independent-domain benchmark supports 0 of 4 warranted answers this way.
+way forward is for a person to notice what is missing and write it. The
+held-out domains support none of their 18 warranted answers by themselves
+([where they are lost](held-out-diagnosis.md)).
 
 ## The loop
 
@@ -63,7 +64,7 @@ project, with the frozen source and question readings unchanged:
   evidence. False support stayed at 0 and the unknown stayed open.
 - The premise has to be read correctly. Of about ten natural wordings, one
   parsed into the needed shape. The others dropped the shared location from
-  the conclusion, used `have-condition-91` (which the engine does not yet read
+  the conclusion, used `have-condition-91` (which the engine did not yet read
   as a rule), failed to decode, or read "curator" as `curmudgeon`.
 
 So the loop needs one more step before saving: show the person how their
