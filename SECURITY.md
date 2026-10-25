@@ -1,7 +1,7 @@
 # Security
 
-Tendora is a research prototype without releases; the `main` branch is the one
-supported.
+Tendora is a research prototype. Tags mark its versions; only the `main`
+branch is supported, and fixes land there.
 
 ## Reporting
 

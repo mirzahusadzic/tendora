@@ -18,8 +18,8 @@ their notice.
 | `docs/load-bearing.md`, the essay [Load-bearing as situated meaning](docs/load-bearing.md)                 | CC BY 4.0    | [License](licenses/CC-BY-4.0.txt), Mirza Husadzic    |
 
 `package.json` states the same scope as an SPDX expression:
-`Apache-2.0 AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0`. Versions before
-the switch were MIT.
+`Apache-2.0 AND GPL-3.0-only AND CC-BY-SA-4.0 AND CC-BY-4.0`, from v0.2.0.
+v0.1.0, the first release, and the commits before the switch were MIT.
 
 ## Installed by setup, not stored here
 
