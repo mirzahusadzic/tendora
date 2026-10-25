@@ -213,6 +213,7 @@ function probeBase(result, knowledge, limits, withheld, make) {
   return kept.view.base;
 }
 
+const caseId = 'case-cloze/s1';
 export function checkProbe(project, input, result, probe, { withhold = [], ...options } = {}) {
   const question = {
     id: `cloze:${probe.id}`,
@@ -223,7 +224,7 @@ export function checkProbe(project, input, result, probe, { withhold = [], ...op
   };
   // A conditional statement is asked with its condition as the only case.
   const caseStatement = probe.case && {
-    id: 'case-cloze/s1',
+    id: caseId,
     kind: 'case',
     placementId: 'case-cloze',
     text: `The condition of ${probe.sourceId}`,
@@ -298,13 +299,18 @@ export function outcome(probe, answer) {
   const own = (binding) => binding.sourceIds.includes(probe.sourceId);
   const readFrom = (binding) =>
     binding.ruleIds?.some((id) => id.startsWith(`${probe.sourceId}/clause/`));
+  // A participant the condition shares is bound through the case by the rule
+  // read from the statement: still the statement's own.
+  const shared =
+    probe.case?.nodes.some((node) => node.id === probe.blank) && `${caseId}#${probe.blank}`;
   const found =
     probe.kind !== 'truth'
       ? answers.filter((binding) =>
           binding.bindings?.some(
             (slot) =>
               slot.id === `${probe.sourceId}#${probe.blank}` ||
-              (probe.derived && readFrom(binding) && slot.id.endsWith(`:${probe.derived}`)),
+              (probe.derived && readFrom(binding) && slot.id.endsWith(`:${probe.derived}`)) ||
+              (shared && readFrom(binding) && slot.id === shared),
           ),
         )
       : answers.filter((binding) => binding.text === probe.expected);

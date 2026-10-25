@@ -71,6 +71,18 @@ try {
       ['s', ':ARG1', 'a'],
     ]),
   };
+  const restarts = {
+    id: `${root}/s9`,
+    kind: 'source',
+    placementId: root,
+    text: 'If the pump fails, the operator restarts the pump.',
+    graph: graph('r', { r: 'restart-01', o: 'operator', p: 'pump', f: 'fail-01' }, [
+      ['r', ':ARG0', 'o'],
+      ['r', ':ARG1', 'p'],
+      ['r', ':condition', 'f'],
+      ['f', ':ARG1', 'p'],
+    ]),
+  };
   const timed = {
     id: `${root}/s8`,
     kind: 'source',
@@ -83,7 +95,7 @@ try {
     ]),
   };
   const result = {
-    inputs: [technician, engineer, again, unbroken, broken, may, conditional, timed],
+    inputs: [technician, engineer, again, unbroken, broken, may, conditional, timed, restarts],
   };
   // The statements are the root's own, so the project's catalog holds them.
   const concept = project.data.concepts.find(
@@ -177,6 +189,11 @@ try {
     'Asked with its condition as the case, the rule read from the statement answers',
   );
   assert.equal(check(crew, [conditional.id]), 'conditional');
+  // A participant the condition shares ("If the pump fails, the operator
+  // restarts the pump") is the condition's own: the rule binds it through the
+  // case, and the statement still recovers it.
+  const pump = clozeProbes(restarts).find((probe) => probe.role === ':ARG1');
+  assert.equal(check(pump), 'recovered', 'A participant shared with the condition is recovered');
   // A reified condition (have-condition-91) is probed as its :condition form:
   // the consequent, with the condition as the case (review 2026-10-25, #9).
   const reified = {
