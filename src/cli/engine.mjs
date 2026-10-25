@@ -49,6 +49,7 @@ import { analogyReport, formatAnalogy } from '../project/inquiries/analogy.mjs';
 import { dialogueReport, formatDialogue } from '../project/inquiries/dialogue.mjs';
 import { describeBackends, trimBackends, useTrimBackend } from '../engine/trim-backend.mjs';
 import {
+  endedStatuses,
   listEngineRuns,
   readEngineRun,
   readEngineArtifact,
@@ -119,7 +120,7 @@ const changedSince = (run, digest) =>
 /** A saved check as JSON, marked when the statements changed since it. */
 // A check that ended without its answer: one saved before failures gave up
 // their answer may still hold it, never shown or exported as one.
-const ended = new Set(['failed', 'cancelled', 'interrupted']);
+const ended = endedStatuses;
 const answerless = (run) =>
   ended.has(run.status) && run.answer ? (({ answer: _answer, ...rest }) => rest)(run) : run;
 const saved = (run, digest) => ({

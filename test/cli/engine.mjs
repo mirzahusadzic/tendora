@@ -567,6 +567,11 @@ const bogusJson = await command(['backends', '--json'], { env: { TENDORA_BACKEND
 assert.equal(bogusJson.code, 2);
 assert.equal(JSON.parse(bogusJson.stdout).using, null);
 assert.match(JSON.parse(bogusJson.stdout).refused, /not a backend/u);
+assert.deepEqual(
+  JSON.parse(bogusJson.stdout).backends.map(({ name }) => name),
+  ['js', 'swift', 'metal', 'auto'],
+  'the refusal keeps the list',
+);
 const listed = machine(await command(['backends', '--json']));
 assert.deepEqual(
   listed.backends.map(({ name }) => name),

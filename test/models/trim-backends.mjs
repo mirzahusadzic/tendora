@@ -168,6 +168,7 @@ const malformed = {
   'a constant past terms': { ...mixed, rules: [{ vars: 1, patterns: [[VAR, 7, 2]] }] },
   'a pattern of two words': { ...mixed, rules: [{ vars: 1, patterns: [[VAR, 1]] }] },
   'negative facts': { ...mixed, facts: -1 },
+  'terms past the bound': { ...mixed, terms: 2 ** 28 + 1 },
 };
 for (const name of ['js', ...native.map((backend) => backend.name)])
   for (const [what, capture] of Object.entries(malformed))
@@ -176,6 +177,16 @@ for (const name of ['js', ...native.map((backend) => backend.name)])
       { code: 'CAPTURE_INVALID' },
       `${name}: ${what}`,
     );
+// auto checks before it chooses; a column longer than its facts is read up to
+// them by every backend alike (fourth review, #7).
+assert.throws(() => trimBackend('auto')(null), { code: 'CAPTURE_INVALID' });
+const longer = {
+  ...mixed,
+  // Past the page its column is padded to, so a native write would spill.
+  columns: mixed.columns.map((column) => Uint32Array.from([...column, ...Array(5000).fill(3)])),
+};
+for (const { name } of native)
+  assert.equal(list(trimBackend(name)(longer)), list(trimFast(longer)), `${name}: a longer column`);
 
 // The native program itself refuses what does not hold together, with a
 // reason and exit 2, and never stops on a signal; an empty store or no rules

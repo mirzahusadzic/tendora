@@ -53,9 +53,12 @@ final class Capture {
       refuse("meta.json is not a JSON object", 2)
     }
     func count(_ key: String) -> Int {
+      // As checkCapture: up to 2^28 facts or terms, so no term holds VAR;
+      // columns of 4 bytes a fact, padded to a page.
+      let limit = key == "columnBytes" ? 1 << 31 : 1 << 28
       guard let number = meta[key] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
-        let value = Int(exactly: number), value >= 0, value <= Int(UInt32.max)
-      else { refuse("meta.json: \(key) is not a count", 2) }
+        let value = Int(exactly: number), value >= 0, value <= limit
+      else { refuse("meta.json: \(key) is not a count the trim takes", 2) }
       return value
     }
     facts = count("facts")

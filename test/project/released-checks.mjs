@@ -14,7 +14,11 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdir, mkdtemp, readFile, unlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { openProject } from '../../src/project/authoring/project.mjs';
-import { listEngineRuns, saveEngineRun } from '../../src/project/storage/engine-runs.mjs';
+import {
+  listEngineRuns,
+  readEngineArtifact,
+  saveEngineRun,
+} from '../../src/project/storage/engine-runs.mjs';
 import { recordedAuthors } from '../../src/project/authoring/provenance.mjs';
 import { compactEngineStorage } from '../../src/project/inquiries/engine-storage.mjs';
 import {
@@ -23,6 +27,8 @@ import {
   storeRun,
 } from '../../src/project/storage/engine-artifacts.mjs';
 import { newestChecks } from '../../src/project/inquiries/investigation.mjs';
+import { rootCheck } from '../../src/project/inquiries/inspection.mjs';
+import { inquirySections } from '../../src/tui/engine/view.mjs';
 
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/released-checks-'));
@@ -165,6 +171,22 @@ assert.equal(
   json('ask', '--project', copy, '--question', invoice, '--offline').value.status,
   'supported',
 );
+// Nor any other question's (recheck of the v0.2.0 review, tests): another
+// question asked again offline answers as it did.
+const rootId = project.data.placements.find((placement) => placement.parentId === null).id;
+const other = runs.find(
+  (run) =>
+    run.questions[0].text !== invoice &&
+    run.scopePlacementId === rootId &&
+    !run.case &&
+    (run.answer ?? run.lastAnswer)?.status === 'supported',
+);
+assert(other, 'another supported question at the root');
+assert.equal(
+  json('ask', '--project', copy, '--question', other.questions[0].text, '--offline').value.status,
+  'supported',
+  other.questions[0].text,
+);
 // While a check runs, compact leaves the saved checks alone and says so; it
 // never reports them as already compact (the earlier review's partial fix).
 const running = {
@@ -299,12 +321,58 @@ assert.match(legacyJson.value.provenanceNotKept, /ended failed before it kept/u)
 const legacyText = tendora('show', '--project', again, '--run', legacy.id.slice(0, 8));
 assert.doesNotMatch(legacyText.stdout, /^Answer: /mu);
 
+// The failed check saved holding its answer serves none anywhere: not in a
+// listing, not as a question's newest answer, not in the workbench (fourth
+// review, #2).
+const servedRuns = await listEngineRuns(againProject);
+const servedLegacy = servedRuns.find((run) => run.id === legacy.id);
+assert.equal(servedLegacy.answer, undefined, 'a listed failed check holds no answer');
+const servedNewest = newestChecks(servedRuns, { digest: againProject.digest, purposes });
+assert(
+  servedNewest.runs.some((run) => run.id === newer.id),
+  'the answer before it stands',
+);
+assert(!servedNewest.runs.some((run) => run.id === legacy.id));
+const legacyRows = inquirySections(
+  servedLegacy,
+  await readEngineArtifact(againProject, servedLegacy.inputRef),
+  servedLegacy.resultRef ? await readEngineArtifact(againProject, servedLegacy.resultRef) : null,
+).find((section) => section.label === 'Result').rows;
+assert(!legacyRows.some((row) => row[0] === 'Answer'), 'the workbench shows no answer');
+// A check saved with its case's text alone (before runs kept the selection)
+// is known by that case: recoil finds it there, and it is never the root
+// check without a case (fourth review, #3).
+const caseOnly = {
+  ...full,
+  id: '00000000-0000-4000-8000-0000000000cc',
+  startedAt: new Date(Date.now() + 60_000).toISOString(),
+  case: 'A payment key leaks.',
+};
+delete caseOnly.caseSelection;
+await saveEngineRun(againProject, caseOnly);
+const recoiled = tendora(
+  'recoil',
+  '--project',
+  again,
+  '--question',
+  'Who notifies the customers?',
+  '--case-text',
+  'A payment key leaks.',
+);
+assert.equal(recoiled.status, 0, recoiled.stderr);
+assert.match(recoiled.stdout, /Case: A payment key leaks\./u);
+assert.deepEqual(
+  (await rootCheck(await openProject(again))).input.cases,
+  [],
+  'the root check has no case',
+);
+
 // A saved check whose bytes are intact but which is no check (no calls), or
 // which holds another check under its key, is left out of a listing too,
 // named, and kept as it is; reading it fails (recheck of the v0.2.0 review,
 // #2).
 const others = (await listEngineRuns(againProject)).filter(
-  (run) => ![newer.id, broken.id, legacy.id].includes(run.id),
+  (run) => ![newer.id, broken.id, legacy.id, caseOnly.id].includes(run.id),
 );
 const [callless, moved] = others;
 const movedKey = 'bbbbbbbb-0000-4000-8000-000000000000';

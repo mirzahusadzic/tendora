@@ -223,6 +223,30 @@ export async function corpusView(project) {
         cut = true;
       }
     }
+    // An identifier's value is read attached as :value by one reader and as
+    // :mod by another: one Alex 123 either way, so both are asked (fourth
+    // review, #4).
+    const identities = question.edges.filter(
+      (edge) =>
+        [':value', ':mod'].includes(edge.role) &&
+        literalValue(nodes.get(edge.to)) &&
+        identifying(question, nodes.get(edge.from), nodes).length,
+    );
+    for (const edge of identities) {
+      const role = edge.role === ':value' ? ':mod' : ':value';
+      const swap = (other) =>
+        other.from === edge.from && other.to === edge.to && other.role === edge.role
+          ? { ...other, role }
+          : other;
+      variants = variants.flatMap((variant) => [
+        variant,
+        { ...variant, edges: variant.edges.map(swap) },
+      ]);
+      if (variants.length > variantLimit) {
+        variants = variants.slice(0, variantLimit);
+        cut = true;
+      }
+    }
     const seen = new Set(),
       merged = { yes: [], no: [], qualified: [], status: 'open', limited: cut };
     for (const variant of variants) {
@@ -725,7 +749,37 @@ export function links(parts) {
       );
       return other ? [{ condition: other[0], conclusion: id }] : [];
     });
-  return [...shared, ...alike];
+  // A reader may also give "someone" and "they" two unnamed nodes: one
+  // unnamed participant on each side, of one kind (a person and a person),
+  // are one. Linked, the rule asks the same of them; left apart, its
+  // conclusion would hold of anyone, and Lee's missing note would answer a
+  // rule about whoever reviews logs (fourth review, #1).
+  const taken = {
+    condition: new Set([...shared, ...alike].map((link) => link.condition)),
+    conclusion: new Set([...shared, ...alike].map((link) => link.conclusion)),
+  };
+  const unnamed = (graph, side) => {
+    const names = new Set(namedNodes(graph).map(([id]) => id));
+    return graph.nodes.filter(
+      (node) =>
+        node.literal === undefined &&
+        node.concept &&
+        !/-\d+$/u.test(node.concept) &&
+        !names.has(node.id) &&
+        !taken[side].has(node.id) &&
+        argument(graph, node.id),
+    );
+  };
+  const before = unnamed(parts.condition, 'condition'),
+    after = unnamed(parts.conclusion, 'conclusion');
+  const kind = (nodes, concept) => nodes.filter((node) => node.concept === concept);
+  const generic = after.flatMap((node) => {
+    const same = kind(before, node.concept);
+    return same.length === 1 && kind(after, node.concept).length === 1
+      ? [{ condition: same[0].id, conclusion: node.id }]
+      : [];
+  });
+  return [...shared, ...alike, ...generic];
 }
 
 /** Who a node of a reading is: their name and the values that identify them

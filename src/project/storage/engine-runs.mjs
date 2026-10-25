@@ -107,6 +107,17 @@ export async function readEngineRun(project, id) {
     JSON.parse(await readFile(join(directory, 'run.json'), 'utf8'));
   return validateRun(project, run, id);
 }
+/** Checks that ended without their answer: one saved before failures gave
+ * it up may still hold it. */
+export const endedStatuses = new Set(['failed', 'cancelled', 'interrupted']);
+/** A run as every surface serves it: one that ended without its answer
+ * serves none, though it holds one; its result stays for diagnosis. Read
+ * here, the CLI, the workbench, the inspections and compaction agree
+ * (fourth review, #2). Nothing stored is rewritten. */
+const served = (run) =>
+  endedStatuses.has(run.status) && run.answer
+    ? Object.fromEntries(Object.entries(run).filter(([key]) => key !== 'answer'))
+    : run;
 function validateRun(project, run, id) {
   if (
     run.version !== 1 ||
@@ -128,14 +139,14 @@ function validateRun(project, run, id) {
       }
     }
     if (!alive)
-      return {
+      return served({
         ...run,
         status: 'interrupted',
         error:
           'The previous engine process ended before recording an outcome. Inspect its retained calls or rerun.',
-      };
+      });
   }
-  return run;
+  return served(run);
 }
 /** Every saved run, newest first. A damaged one (changed bytes, or a run
  * that is not one: another id, no calls, no start) fails the listing, unless

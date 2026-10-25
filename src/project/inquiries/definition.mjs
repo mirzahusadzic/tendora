@@ -9,14 +9,36 @@ import { kindReading } from '../../amr/kinds.mjs';
 import { propbankAuditor } from '../../models/propbank.mjs';
 import { corpusView, coverage, coverageLines } from './corpus.mjs';
 
+// Plurals no ending rule gives, by their singular.
+const irregular = new Map(
+  Object.entries({
+    men: 'man',
+    women: 'woman',
+    people: 'person',
+    children: 'child',
+    oxen: 'ox',
+    mice: 'mouse',
+    geese: 'goose',
+    feet: 'foot',
+    teeth: 'tooth',
+    criteria: 'criterion',
+    phenomena: 'phenomenon',
+    indices: 'index',
+    matrices: 'matrix',
+    vertices: 'vertex',
+  }),
+);
 // Plural or singular, a word is one term: the word itself, and the singulars
-// a plural ending gives (aliases alias, changes change, policies policy), are
-// compared, not one guessed stem, so alias and aliases, gas and gases, ox and
-// ox meet. A word that ends in s as a singular does (alias, gas, class,
-// status, analysis) is no plural: alias is not the plural of an alia.
+// a plural ending gives (aliases alias, changes change, policies policy,
+// analyses analysis) or an irregular plural names (oxen ox), are compared,
+// not one guessed stem, so alias and aliases, gas and gases, ox and ox meet.
+// A word that ends in s as a singular does (alias, gas, class, status,
+// analysis) is no plural: alias is not the plural of an alia.
 const forms = (word) => {
   const w = String(word).toLowerCase().replace(/-\d+$/u, '');
   const out = new Set([w]);
+  if (irregular.has(w)) out.add(irregular.get(w));
+  if (/ses$/u.test(w)) out.add(w.slice(0, -3) + 'sis');
   if (/[^aeiou]ies$/u.test(w)) out.add(w.slice(0, -3) + 'y');
   if (/(?:s|x|z|ch|sh)es$/u.test(w)) out.add(w.slice(0, -2));
   if (/[^s]s$/u.test(w) && !/(?:us|is|as)$/u.test(w)) out.add(w.slice(0, -1));

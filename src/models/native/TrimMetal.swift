@@ -571,7 +571,8 @@ func trimPipeline(_ device: MTLDevice, archivePath: String) throws -> (MTLComput
   let serializerDescriptor = MTL4PipelineDataSetSerializerDescriptor()
   serializerDescriptor.configuration = .captureBinaries
   let compilerDescriptor = MTL4CompilerDescriptor()
-  compilerDescriptor.pipelineDataSetSerializer = device.makePipelineDataSetSerializer(descriptor: serializerDescriptor)
+  let serializer = made(device.makePipelineDataSetSerializer(descriptor: serializerDescriptor), "a pipeline serializer")
+  compilerDescriptor.pipelineDataSetSerializer = serializer
   let compiler = try device.makeCompiler(descriptor: compilerDescriptor)
   let library = MTL4LibraryDescriptor()
   library.source = shaderSource
@@ -580,7 +581,7 @@ func trimPipeline(_ device: MTLDevice, archivePath: String) throws -> (MTLComput
   descriptor.computeFunctionDescriptor = function
   let state = try compiler.makeComputePipelineState(descriptor: descriptor)
   try? FileManager.default.removeItem(atPath: archivePath)
-  try compilerDescriptor.pipelineDataSetSerializer!.serializeAsArchiveAndFlush(url: URL(fileURLWithPath: archivePath))
+  try serializer.serializeAsArchiveAndFlush(url: URL(fileURLWithPath: archivePath))
   try shaderSource.write(toFile: stamp, atomically: true, encoding: .utf8)
   return (state, now() - t, false)
 }

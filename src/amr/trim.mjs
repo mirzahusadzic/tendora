@@ -20,13 +20,17 @@ export const VAR = 0x80000000,
  * and rules whose every word is a variable the rule has, a term, or MISSING.
  * Every backend refuses the same capture, so none pads, ignores or reads past
  * what another refuses (review of the Metal trim, 2026-10-25, #4). */
+export const captureBound = 2 ** 28;
 export function checkCapture(capture) {
   const refuse = (why) => {
     throw Object.assign(new Error(`Invalid trim capture: ${why}.`), { code: 'CAPTURE_INVALID' });
   };
   const { columns, rules, facts, terms } = capture ?? {};
-  const count = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
-  if (!count(facts) || !count(terms)) refuse('facts and terms are whole counts');
+  // Counts the trim takes: a term number below VAR (a word with its top bit
+  // is a variable), and no more than a store of 2^28 facts or terms.
+  const count = (n) => Number.isSafeInteger(n) && n >= 0 && n <= captureBound;
+  if (!count(facts) || !count(terms))
+    refuse(`facts and terms are whole counts up to ${captureBound}`);
   if (!Array.isArray(columns) || columns.length !== 3) refuse('it has three columns');
   columns.forEach((column, c) => {
     if (!(column?.length >= facts)) refuse(`column ${c} holds fewer than ${facts} facts`);

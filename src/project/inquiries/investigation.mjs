@@ -22,6 +22,9 @@ export const caseIdentity = (selection) =>
  * groups saved questions (review 2026-10-25, #8). */
 export const questionIdentity = (text, scopePlacementId, selection) =>
   JSON.stringify([text.trim(), scopePlacementId, caseIdentity(selection)]);
+/** A run's case by what it states: the text it records, or its selection's
+ * statements (a run saved before runs recorded the text); null for none. */
+export const runCase = (run) => caseIdentity(run.case || run.caseSelection);
 /** The newest saved check of each question (its text, scope and case) at a
  * revision, among `purposes`: `runs`, those whose newest check holds its
  * answer, and `released`, how many questions have a newest check compaction
@@ -35,7 +38,7 @@ export function newestChecks(runs, { digest, purposes }) {
     if (!text || run.projectDigest !== digest) continue;
     if (run.purpose && !purposes.includes(run.purpose)) continue;
     if (!run.answer && run.cache !== 'recheck') continue;
-    const key = questionIdentity(text, run.scopePlacementId, run.case || run.caseSelection);
+    const key = questionIdentity(text, run.scopePlacementId, runCase(run));
     if (!newest.has(key) || newest.get(key).startedAt < run.startedAt) newest.set(key, run);
   }
   const all = [...newest.values()];

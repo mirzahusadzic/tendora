@@ -531,9 +531,14 @@ assert(
   talk.some((finding) => finding.kind === 'clash' && kim(finding)),
   'dialogue: Kim reviews logs and files no note',
 );
-// Aporia: Kim's case is one finding (whichever kind holds it), Lee's none.
+// Aporia: Kim's case is one finding, named as the rule's case over a plain
+// contradiction of the same statements (fourth review, #5); Lee's none.
 const puzzle = (await aporiaReport(ledger, { role: 'Audit' })).findings;
-assert(!puzzle.some(lee) && puzzle.some(kim), 'aporia: Kim, never Lee');
+assert(!puzzle.some(lee), 'aporia: never Lee');
+assert(
+  puzzle.some((finding) => kim(finding) && finding.kind === 'in its case'),
+  "aporia: Kim's, in its case",
+);
 const tested = await elenchusReport(ledger, { statement: reviews });
 assert(!tested.findings.some(lee) && tested.findings.some(kim), 'elenchus: Kim refutes, Lee not');
 // Supposed, "Mo reviews logs" makes the rule apply to Mo: Kim's and Lee's
@@ -725,4 +730,69 @@ const splitText = formatDivision({ ...split, findings: [divided] });
 assert.match(splitText, /“The backup completes\.” \[Split\] \(Ada\)/u);
 assert.match(splitText, /“Priya reviews logs\.” \[Split\] \(Bo\)/u);
 
-console.log('ok method guards: what the three reviews found stays fixed');
+// The fourth review: "someone" and "they" read as two unnamed nodes are one
+// participant; the rule's findings stay on one occasion all the same.
+const unlinked = {
+  [reviews]:
+    '(f / file-01 :ARG0 (q / person) :ARG1 (n / note) :condition (r / review-01 :ARG0 (e / person) :ARG1 (l / log)))',
+  'Kim reviews logs.': logs['Kim reviews logs.'],
+  'Kim files no note.': logs['Kim files no note.'],
+  'Lee files no note.': logs['Lee files no note.'],
+};
+const apartNodes = await open('guard-two-unnamed', {
+  roles: { Audit: Object.keys(unlinked) },
+  extra: unlinked,
+  authors: { [reviews]: 'Robin', 'Lee files no note.': 'Lee', 'Kim files no note.': 'Kay' },
+});
+const apartCounter = (await counterexampleReport(apartNodes, { statement: reviews })).findings;
+assert(!apartCounter.some(lee) && apartCounter.some(kim), 'two unnamed nodes: Kim, never Lee');
+assert(
+  !(await dialogueReport(apartNodes)).findings.some(lee),
+  'two unnamed nodes: no clash with Lee',
+);
+assert(
+  !(await aporiaReport(apartNodes, { role: 'Audit' })).findings.some(lee),
+  'two unnamed nodes: aporia, never Lee',
+);
+// One identifier read as :value by one reading and :mod by another is one
+// Alex; another value is another (fourth review, #4).
+for (const [second, count] of [
+  [123, 1],
+  [456, 0],
+]) {
+  const approves = 'Alex with ID 123 approves the release.';
+  const refuses = `Alex with ID ${second} does not approve the release.`;
+  const report = await aporiaReport(
+    await open(`guard-attached-${second}`, {
+      roles: { People: [approves, refuses] },
+      extra: {
+        [approves]:
+          '(a / approve-01 :ARG0 (x / person :name (xn / name :op1 "Alex") :mod (i / identifier :value 123)) :ARG1 (r / release-01))',
+        [refuses]: `(d / approve-01 :polarity - :ARG0 (y / person :name (yn / name :op1 "Alex") :mod (j / identifier :mod ${second})) :ARG1 (rr / release-01))`,
+      },
+    }),
+    { role: 'People' },
+  );
+  assert.equal(report.findings.length, count, `:value 123 and :mod ${second}`);
+}
+// Plurals a suffix rule misses: analyses, oxen (fourth review, #6).
+const morph = await open('guard-morph', {
+  roles: { Words: ['An analysis is a study.', 'An ox is a beast.'] },
+  extra: {
+    'An analysis is a study.': '(s / study :domain (a / analysis))',
+    'An ox is a beast.': '(b / beast :domain (o / ox))',
+  },
+});
+for (const [term, genus] of [
+  ['analyses', ['An analysis is a study.']],
+  ['oxen', ['An ox is a beast.']],
+]) {
+  const report = await definitionReport(morph, { term });
+  assert.deepEqual(
+    report.genus.map((row) => row.statement),
+    genus,
+    `definition of ${term}`,
+  );
+}
+
+console.log('ok method guards: what the four reviews found stays fixed');

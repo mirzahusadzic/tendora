@@ -9,7 +9,7 @@ import { clozeProbes, checkProbe } from '../../engine/cloze.mjs';
 import { recoil, recoilContext, recoilFrontier, statementCatalog } from './recoil.mjs';
 import { opportunityTree } from './juxtaposition.mjs';
 import { resolveInquiryPlacement } from './scope.mjs';
-import { authorCase } from './investigation.mjs';
+import { authorCase, runCase } from './investigation.mjs';
 
 /** A statement named by its text, or by a part of it only one statement has. */
 export function findStatement(data, text) {
@@ -260,7 +260,7 @@ export async function rootCheck(project) {
         item.resultRef &&
         item.inputRef &&
         item.scopePlacementId === root &&
-        !item.caseSelection &&
+        !runCase(item) &&
         item.projectDigest === project.digest,
     )
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];

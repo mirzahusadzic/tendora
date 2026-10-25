@@ -115,7 +115,11 @@ function writeCapture(capture) {
   const page = 16384,
     columnBytes = Math.max(page, Math.ceil((capture.facts * 4) / page) * page);
   const columns = new Uint32Array((3 * columnBytes) / 4);
-  capture.columns.forEach((column, c) => columns.set(column, (c * columnBytes) / 4));
+  // A column longer than its facts is read up to them, as the JavaScript trim
+  // reads it.
+  capture.columns.forEach((column, c) =>
+    columns.set(column.subarray(0, capture.facts), (c * columnBytes) / 4),
+  );
   writeFileSync(join(scratch, 'columns.bin'), columns);
   const words = [capture.rules.length];
   for (const rule of capture.rules) {
@@ -266,6 +270,7 @@ export function trimBackend(name = 'js') {
   if (name === 'js') return trimFast;
   if (name === 'auto')
     return (capture) => {
+      checkCapture(capture);
       // The fastest here; a native one that fails as it runs (its device, its
       // memory) hands the trim to the next, Swift then JavaScript, which give
       // the same lists. Output that does not fit is a fault, never retried.

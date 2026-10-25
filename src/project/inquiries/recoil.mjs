@@ -16,7 +16,7 @@ import { sourceCatalog } from '../authoring/sources.mjs';
 import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { listEngineRuns } from '../storage/engine-runs.mjs';
 import { readAcquisitions } from '../storage/acquisitions.mjs';
-import { listInvestigations, questionIdentity } from './investigation.mjs';
+import { listInvestigations, questionIdentity, runCase } from './investigation.mjs';
 
 const questionPurposes = new Set(['inquiry', 'question-refresh']);
 export const recoilFrontier = {
@@ -96,17 +96,23 @@ export function recoil({ data, digest, runs, asks = [], readings = null }, locus
   // is the same question, whatever the case's own identifier.
   const questionKey = questionIdentity;
   const questions = new Map();
+  // A check that ended without an answer stands for none: an earlier answer
+  // or release does. A run saved with its case's text alone is named by it.
   for (const run of runs) {
     const text = run.questions?.[0]?.text;
     if (!text || (run.purpose && !questionPurposes.has(run.purpose))) continue;
-    const key = questionKey(text, run.scopePlacementId, run.caseSelection);
+    if (!run.answer && run.cache !== 'recheck') continue;
+    const key = questionKey(text, run.scopePlacementId, runCase(run));
     const prior = questions.get(key);
+    const stated = run.case
+      ? { sources: run.case.split('\n').map((source) => ({ text: source })) }
+      : null;
     if (!prior || prior.run.startedAt < run.startedAt)
       questions.set(key, {
         id: key,
         text,
         scopePlacementId: run.scopePlacementId,
-        caseSelection: run.caseSelection ?? prior?.caseSelection ?? null,
+        caseSelection: run.caseSelection ?? stated ?? prior?.caseSelection ?? null,
         run,
       });
   }

@@ -25,7 +25,7 @@ import { interpretationRevision } from '../../recording/revisions.mjs';
 import { listGrammarCaches } from '../storage/grammar.mjs';
 import { listDataFiles, readDataFile } from '../storage/data-files.mjs';
 import { recordingHandle } from './recordings.mjs';
-import { caseIdentity } from './investigation.mjs';
+import { runCase } from './investigation.mjs';
 
 // A soft cache bound, not a stop: recomputing a check costs far more than
 // keeping it, so completed checks and grammar caches are kept generously.
@@ -43,11 +43,7 @@ const artifactRefs = (run) =>
 // states (its text), as every inspection reads it: two askings of one case
 // are one question, whatever placement each gave it.
 const questionKey = (run) =>
-  JSON.stringify([
-    run.scopePlacementId,
-    run.questions?.map((q) => q.text.trim()),
-    caseIdentity(run.case || run.caseSelection),
-  ]);
+  JSON.stringify([run.scopePlacementId, run.questions?.map((q) => q.text.trim()), runCase(run)]);
 async function files(path) {
   try {
     return await readdir(path);

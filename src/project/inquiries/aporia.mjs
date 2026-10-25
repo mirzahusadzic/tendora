@@ -130,14 +130,16 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
         question: `When ${[...new Set(when)].join(' and ')}, both rules apply and oppose: which is meant?`,
       });
     }
-  // One pair is one aporia, however it was found.
-  const seen = new Set();
-  const unique = smallest(findings).filter((finding) => {
-    const key = finding.statements.map(commitment).sort().join('\u0001');
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  // One pair is one aporia, however it was found: the finding that names its
+  // case (when the condition holds) over a plain contradiction of the same
+  // statements, in the order they were found (fourth review, #5).
+  const kept = new Map();
+  const key = (finding) => finding.statements.map(commitment).sort().join('\u0001');
+  const narrowed = smallest(findings);
+  for (const finding of narrowed)
+    if (!kept.has(key(finding)) || (finding.case && !kept.get(key(finding)).case))
+      kept.set(key(finding), finding);
+  const unique = narrowed.filter((finding) => kept.get(key(finding)) === finding);
   return {
     revision: project.digest,
     ...(scope ? { role: view.role(chosen[0]?.id) ?? role } : {}),
