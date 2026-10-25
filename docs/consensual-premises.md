@@ -1,6 +1,8 @@
-# Proposal: consensual premises at openings
+# Consensual premises at openings
 
-Status: **proposal awaiting a decision; not implemented.** It touches an
+Status: **a design awaiting a decision; not implemented.** A model would
+suggest a premise; a person would consent to it. (A _proposal_, in the shipped
+engine, is something else: a connection a person confirms.) It touches an
 existing rule, so it changes nothing until that rule is deliberately amended.
 
 ## The gap it addresses
@@ -15,7 +17,7 @@ held-out domains support none of their 18 warranted answers by themselves
 
 ```text
 located opening
-  -> a model proposes one bridging premise in plain language
+  -> a model suggests one bridging premise in plain language
   -> the premise is read, and its reading and consequence are shown
   -> the person accepts, edits, rejects or asks again
   -> only a saved statement becomes authored material
@@ -23,26 +25,26 @@ located opening
   -> the opening closes only if the check now supports it
 ```
 
-The proposal enters through the existing anchored-statement editor, the same
+A suggested premise enters through the existing anchored-statement editor, the same
 path a person already uses from an opening. The engine and its checking rules
 stay as they are.
 
 ## Consent guards
 
-- **Every proposal is retained**, including rejected ones and every re-ask,
+- **Every suggestion is retained**, including rejected ones and every re-ask,
   bound to the opening and the model, prompt and revision that produced it. A
   "yes" chosen from many attempts stays visible as such.
 - **Saving is the only consent.** Silence, closing the editor or a timeout
   means no. Rejecting costs nothing and leaves no mark on the corpus.
-- **Authorship stays exact.** A saved statement records that it was proposed
+- **Authorship stays exact.** A saved statement records that it was suggested
   by the model and accepted (or edited) by the person. Neither can be passed
   off as the other's.
 - **The model never saves, edits sources, rephrases the question, aligns
-  graphs or answers.** Offline mode makes no proposals.
+  graphs or answers.** Offline mode makes no suggestions.
 
 ## What would show it failing
 
-Run on the independent-domain benchmark, predeclared before any proposal is
+Run on the independent-domain benchmark, predeclared before any suggestion is
 seen:
 
 1. any false support, at any point: stop;
@@ -73,10 +75,10 @@ premise was read and what it would let the engine conclude.
 ## The decision this needs
 
 [The agent guide](../AGENTS.md) currently says: "Do not add a second generative pass
-for source interpretation, paraphrases or alignment." This proposal leaves
+for source interpretation, paraphrases or alignment." This design leaves
 source interpretation and alignment untouched but puts a generative model
 inside the authoring loop. Adopting it means adding an exception such as:
 
-> A model may propose a premise at a located opening. It becomes authored
-> material only when a person saves it, and every proposal, accepted or not,
+> A model may suggest a premise at a located opening. It becomes authored
+> material only when a person saves it, and every suggestion, accepted or not,
 > is retained with its provenance.

@@ -8,7 +8,9 @@ supported.
 Report a vulnerability privately through GitHub: the repository's **Security**
 tab, **Report a vulnerability**. Please do not open a public issue. Say what
 you ran, what happened and what an attacker would gain; a reproduction on a copy
-of the demo is ideal. Reports are acknowledged as soon as they are read, and
+of the demo is ideal. Before you paste output, remove API keys, tokens, the
+contents of key files, statements from your own corpora and paths that say
+more than they need to: the smallest output that shows the fault is enough. Reports are acknowledged as soon as they are read, and
 fixed with a test that shows the fault.
 
 ## In scope

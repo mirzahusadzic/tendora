@@ -7,10 +7,15 @@ reading was compared with the readings of its expected evidence, offline, as of
 in `test/support/development-snapshot.json`
 (`node test/acceptance/independent-domain.mjs`).
 
-| Questions                                 | Answered | One confirmation away | Unknowns kept open | Wrong |
-| ----------------------------------------- | -------- | --------------------- | ------------------ | ----- |
-| Original wording: 18 warranted, 5 unknown | 0 of 18  | 4                     | 5 of 5             | 0     |
-| Reworded blind: 46 questions              | 1 of 34  | 5                     | 9 of 9             | 0     |
+| Questions                                          | Answered | One confirmation away | Unknowns kept open | Wrong |
+| -------------------------------------------------- | -------- | --------------------- | ------------------ | ----- |
+| Original wording: 18 warranted, 5 unknown          | 0 of 18  | 4                     | 5 of 5             | 0     |
+| Reworded blind: 34 warranted, 9 unknown, 3 partial | 1 of 34  | 5                     | 9 of 9             | 0     |
+
+A partial question is compound with only one part supported ("Who books the
+freezer van, and who pays the carrier's invoice?"). The 3 are left to review:
+they count in neither the answered nor the unknown columns, nor in the
+confirmation trials.
 
 ## Where the 18 are lost
 

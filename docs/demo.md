@@ -126,8 +126,8 @@ Priya) and stays ambiguous: the engine does not choose.
 
 ## 4. Juxtaposition: what questions bring together
 
-`tensions` reads, over every saved check, which branches of the role tree a
-question's answer draws on:
+`tensions` reads, over the latest check of each question, scope and case,
+which branches of the role tree a question's answer draws on:
 
 ```
 $ npx tendora tensions --project .proj/payments-demo
@@ -202,8 +202,8 @@ An open line is a place to ask or to author, never an answer.
 
 ## 5. Recoil: down, up and sideways
 
-Recoil walks the saved checks from a question, a statement or a role, and
-checks nothing again.
+Recoil walks the saved checks from a question, a statement or a role; it
+acquires nothing and saves nothing.
 
 **Down**, what an answer rests on:
 

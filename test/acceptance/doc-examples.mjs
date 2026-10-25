@@ -1,7 +1,7 @@
 /** Every CLI example in the README, the CLI reference and the demo tour runs as
  * written, from a checkout after `npm run demo`, and shows what the document
- * says it shows. A tour block gives its output after the command, trimmed
- * where it says `…`. Nothing is acquired. */
+ * says it shows. A block whose commands start with `$ ` gives each one's
+ * output after it, trimmed where it says `…`. Nothing is acquired. */
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -11,12 +11,14 @@ const repo = resolve('.');
 await mkdir('tmp', { recursive: true });
 const directory = await mkdtemp(resolve('tmp/doc-examples-'));
 
-/** The CLI commands of a document's fenced blocks: a tour's start with `$ `
- * and are followed by their output; the others are commands alone. */
-function examples(markdown, prompted) {
+/** The CLI commands of a document's fenced blocks: in a block with prompts
+ * they start with `$ ` and are followed by their output; in the others they
+ * are commands alone. */
+function examples(markdown) {
   const found = [];
   for (const [, body] of markdown.matchAll(/```[a-z]*\n([\s\S]*?)```/gu)) {
     const lines = body.split('\n');
+    const prompted = lines.some((line) => line.startsWith('$ '));
     for (let i = 0; i < lines.length; i++) {
       // A bare `tendora` is taken too: it fails as it would in a checkout.
       const start = prompted ? /^\$ (npx )?tendora / : /^(npx )?tendora /;
@@ -67,15 +69,10 @@ try {
   );
   await chmod(shim, 0o755);
 
-  const documents = [
-    ['README.md', false],
-    ['docs/cli.md', false],
-    ['docs/demo.md', true],
-  ];
   let count = 0;
-  for (const [document, prompted] of documents) {
+  for (const document of ['README.md', 'docs/cli.md', 'docs/demo.md']) {
     const markdown = await readFile(join(repo, document), 'utf8');
-    const found = examples(markdown, prompted);
+    const found = examples(markdown);
     assert(found.length, `${document} has CLI examples`);
     // A command in running text cannot be run as written: it belongs in a block.
     const inline = markdown.replace(/```[\s\S]*?```/gu, '').match(/`(npx )?tendora [^`]*`/gu);

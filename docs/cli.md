@@ -6,11 +6,13 @@ both use the same engine.
 
 ```sh
 npx tendora --help                 # in a checkout; npm link installs it on PATH
+npx tendora --version
 npm run --silent engine -- --help  # the same CLI through npm
 ```
 
 Every command but `backends` takes `--project <directory>`; all take `--json`
-and `-h, --help`, and each help ends with an example on the bundled demo.
+and `-h, --help`, and each help ends with an example. `--version` is taken by
+`tendora` itself, not by a command.
 
 ## Commands
 
@@ -30,33 +32,29 @@ and `-h, --help`, and each help ends with an example on the bundled demo.
 | `knowledge` | Imports authored engine knowledge (advanced)                           | `--file`                                            |
 | `backends`  | Lists where the trim can run on this machine (no project)              |                                                     |
 
-`run` is an alias for `ask`, `juxtaposition` for `tensions`. `--question -` reads the question from standard
-input.
+`run` is an alias for `ask`, `juxtaposition` for `tensions`. `--question -`
+reads the question from standard input.
 
 ## ask
 
-```sh
-npx tendora ask --project .proj/payments-demo \
+```console
+$ npx tendora ask --project .proj/payments-demo \
   --question "Who notifies the customers?" --case-text "A certificate expires." --offline
-```
-
-```
 supported: Who notifies the customers? (case: A certificate expires.)
 Answer: Sam
   rests on the case and 2 statements
-Saved as 0fee2666 in 0.09 s.
+Saved as … in … s.
 ```
 
-The first line is the status and the question: `supported`, `conditional` (it
-holds under a clause the answer names), `open`, `ambiguous`, `conflict`,
-`limited`, `needs-reading` (a statement in scope has no reading, so the answer
-may change) or a failure (`needs-amr`, `failed`). Then each answer and what it
-rests on; an open check says why, what is one confirmation away (confirmed in
-the workbench, Development, `d`) and the closest statements; a check missing a
-reading says which. The last line names the saved check: its first 8
-characters serve wherever a check is named (`show`, `delete`). `--explain`
-adds sources, rules, evidence, readings and vocabulary findings, and prints
-each stage of the check as it runs.
+The first line is the [status](#statuses) and the question. Then each answer
+and what it rests on; an open check says why, what is one confirmation away
+(confirmed in the workbench, Development, `d`) and the closest statements; a
+check missing a reading says which. The last line names the saved check: its
+first 8 characters serve wherever a check is named (`show`, `delete`).
+`--explain` adds sources, rules, evidence, readings and vocabulary findings,
+and prints each stage of the check as it runs. `--trace` also keeps the local
+comparison diagnostics (SEMCAT's correspondence between the question's reading
+and the statements'); they never change the answer.
 
 `--json` writes the full result with the provenance the check kept: the
 project, the revision checked, the digest of the `provenance.json` it read
@@ -76,10 +74,16 @@ every CLI check records `via: cli`.
 
 ## Inspecting saved checks
 
-`show` reads one saved check and `runs` lists them; each says when the
+`show` reads one saved check and `runs` lists every one; each says when the
 statements changed since a check (`statementsChanged` in JSON). `recoil`,
-`tensions`, `probe` and `fidelity` read the saved checks at the project's current revision.
-None of them checks again or saves anything.
+`tensions`, `probe` and `fidelity` read the latest check of each question,
+scope and case at the project's current revision, so they can count fewer
+checks than `runs` lists.
+
+All six are offline by construction: they acquire nothing and save nothing.
+`probe` and `fidelity` evaluate the retained readings in memory, so they can
+take a while; the four inspections accept `--offline` for scripts that pass it
+everywhere, and it changes nothing.
 
 ```sh
 npx tendora recoil --project .proj/payments-demo \
@@ -144,17 +148,39 @@ Results go to stdout; diagnostics and progress to stderr, progress only on a
 terminal or with `--explain`. With `--json`, stdout is JSON only. No output
 uses color.
 
-| Status | Meaning                                                                                                    |
-| ------ | ---------------------------------------------------------------------------------------------------------- |
-| `0`    | Completed, including an open answer                                                                        |
-| `1`    | A failure, a missing reading, or a declined deletion                                                       |
-| `2`    | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing |
-| `130`  | Interrupted: the first `Ctrl+C` cancels, the second exits                                                  |
+| Exit  | Meaning                                                                                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------------- |
+| `0`   | Completed, including an open answer; `show` and `runs` exit 0 whatever status the checks they read have             |
+| `1`   | A failure: `ask` whose check ended in a status marked 1 below, an error reading the project, or a declined deletion |
+| `2`   | Invalid arguments: an unknown command or option, or a project, run, role or statement that matches nothing          |
+| `130` | Interrupted: the first `Ctrl+C` cancels, the second exits                                                           |
 
 A syntax error points to the help. A name that matches nothing gives its own
 next step instead: the closest statements, the roles there are, or the command
 that lists saved checks. A script reads the status in the result, not only the
 exit status.
+
+### Statuses
+
+| Status          | Means                                                                                          | `ask` exits |
+| --------------- | ---------------------------------------------------------------------------------------------- | ----------- |
+| `supported`     | Answered from the statements in scope (and the case)                                           | 0           |
+| `conditional`   | Answered, under a clause the answer names                                                      | 0           |
+| `open`          | No answer the statements support; it says why and names the closest statements                 | 0           |
+| `ambiguous`     | Several distinct answers; the engine does not choose                                           | 0           |
+| `conflict`      | Statements answer a yes/no question both ways                                                  | 0           |
+| `limited`       | A search or alignment budget was reached before the check completed; never reported as open    | 0           |
+| `needs-reading` | It would be supported or conditional, but a statement or case in scope has no reading          | 1           |
+| `needs-amr`     | The question has no reading (offline, or eGemma unavailable); answering did not run            | 1           |
+| `invalid-amr`   | The question's reading could not be normalized; answering did not run                          | 1           |
+| `stale`         | The statements changed while the check ran; the result belongs to the snapshot it started from | 1           |
+| `failed`        | The check stopped on an error, kept with the check                                             | 1           |
+| `cancelled`     | Interrupted with `Ctrl+C`                                                                      | 130         |
+| `interrupted`   | Read back only: the process ended before it recorded an outcome                                | none        |
+| `saved`         | Listed by `runs` only: a check released by compaction to its question and last answer          | none        |
+
+A check missing a reading is incomplete, not wrong: an open check stays
+`open` and names the statement without one.
 
 ## Environment
 

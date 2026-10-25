@@ -20,17 +20,26 @@ hash-checked when read; what can be made again is marked so.
 Logical JSON files in five areas (`corpora/`, `records/`, `acquisitions/`,
 `role-matching/`, `investigations/`), packed into blocks:
 
-| Table                | Columns                                                 | Holds                                                                                            |
-| -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `blocks`             | `hash`, `payload`                                       | Up to 4 MiB of files as `[path, text]` pairs, Brotli; `hash` is the SHA-256 of the decoded bytes |
-| `files`              | `path`, `block`, `checksum`                             | A logical file and its block                                                                     |
-| `role_vector_models` | `profile`, `model`, `config`                            | The embedding model and settings a vector came from                                              |
-| `role_vectors`       | `ref`, `model_id`, `text`, `acquired`, `origin`, `slot` | A role text and where its vector came from                                                       |
-| `role_embeddings`    | `embedding float[128]` (sqlite-vec, cosine)             | The vectors                                                                                      |
-| `role_vector_texts`  | `path`, `checksum`, `ref`                               | Which retained text a vector is for                                                              |
+| Table    | Columns                     | Holds                                                                                            |
+| -------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `blocks` | `hash`, `payload`           | Up to 4 MiB of files as `[path, text]` pairs, Brotli; `hash` is the SHA-256 of the decoded bytes |
+| `files`  | `path`, `block`, `checksum` | A logical file and its block                                                                     |
 
-Triggers drop a vector when the file it came from changes or goes, so the
-index never outlives its source and can be rebuilt from the retained vectors.
+Role vectors are retained as files in `role-matching/`. The first time an
+inquiry ranks roles, Tendora builds an index of them beside the two tables, so
+a project that has never ranked roles, the bundled demo among them, has only
+`blocks` and `files`:
+
+| Table                | Columns                                                                      | Holds                                               |
+| -------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------- |
+| `role_vector_models` | `id` (key), `profile`, `model`, `config`                                     | The embedding model and settings a vector came from |
+| `role_vectors`       | `id` (key), `ref` (unique), `model_id`, `text`, `acquired`, `origin`, `slot` | A role text and where its vector came from          |
+| `role_embeddings`    | `vec0(id, embedding float[128] distance_metric=cosine, chunk_size=8)`        | The vectors, in sqlite-vec                          |
+| `role_vector_texts`  | `path` (key), `checksum`, `ref`                                              | Which retained text a vector is for                 |
+
+Triggers on `files` drop a vector when the file it came from changes or goes,
+so the index never outlives its source and can be rebuilt from the retained
+vectors.
 
 ## engine/artifacts.sqlite
 
@@ -41,9 +50,12 @@ index never outlives its source and can be rebuilt from the retained vectors.
 | `runs`      | `id`, `payload`, `checksum` | A saved check: question, scope, case, status, answer, provenance, actor and via, and its input and result             |
 | `grammars`  | `key`, `ref`, `updated`     | A scope's compiled grammar, reused while its statements stay the same                                                 |
 
+A saved check keeps the text of the statements it read and cites, with their
+provenance, so it reads as it was after the statements change;
+`material.sqlite` stays the authoritative copy of what was authored.
 Compaction releases old checks to what they found (the question, its last
 answer, the statements it rests on and its provenance); `tendora delete`
-removes saved checks. Authored statements are never in this store.
+removes saved checks, and those copies with them.
 
 ## Guarantees
 

@@ -29,6 +29,10 @@ and [the agent guide](AGENTS.md) set the boundaries a change keeps.
 | Statements are written in the workbench | So a script's statements cannot pass for a person's                                                    |
 | The demo changes only through its tools | `demo/payments-on-call` is built, refreshed and drawn by `tools/` ([development](docs/development.md)) |
 
+A new test file is registered once in `test/suites.mjs`, in the group it
+belongs to; `architecture/test-layout` fails a file that is missing or listed
+twice, so a test that passes alone can still fail the check.
+
 While iterating, `npm run check:changed` runs the suites a change reaches and
 `npm run format:changed` checks its formatting; run the full `npm run check`
 before you send it. A documentation change keeps every CLI example running as

@@ -86,3 +86,30 @@ keeps the first 128, and they only order exploration
 Missing readings stay visible as `needs-amr`. Check the selected Python
 environment if graph preparation fails, and the eGemma URL/key if new language
 cannot be acquired. The offline demo and CI do not need a service or credentials.
+
+## Your own project
+
+Statements are new language, so they need eGemma (above). Outside the
+checkout, or anywhere but `.proj/`, which holds the demo's copy:
+
+```sh
+npx tendora init --project ~/tendora/payments --name "Payments" --root "Incident Commander"
+npm run workbench -- --project ~/tendora/payments
+```
+
+1. `c` adds a child role under the selected one, for example
+   "Security Engineer"; `s` adds a sibling.
+2. `n` adds a statement at the selected role ("The security engineer rotates
+   expired certificates."); `Ctrl+S` saves it, and eGemma reads it.
+3. `a` asks a question at the selected role ("Who rotates expired
+   certificates?"); the answer names the statement it rests on.
+4. `o` opens Development: saved questions, their answers and openings.
+
+The same project from a script:
+
+```sh
+npx tendora ask --project ~/tendora/payments --question "Who rotates expired certificates?"
+npx tendora runs --project ~/tendora/payments
+```
+
+[The core objects](architecture.md#core-objects) name what the workbench shows.

@@ -9,7 +9,7 @@ Knowledge as a corpus of plain-language statements, by role: it answers only wha
 
 Write statements, organize them by role, and ask questions within a scope. A deterministic engine answers only what the statements support, names every statement an answer rests on, and keeps what they do not settle open.
 
-**Research prototype.** Reading new text uses [eGemma](https://github.com/mirzahusadzic/egemma); everything after the reading runs locally. The bundled demo replays offline.
+**Research prototype.** [eGemma](https://github.com/mirzahusadzic/egemma) reads new text into Abstract Meaning Representation (AMR) graphs; everything after the reading runs locally. The bundled demo replays offline.
 
 ## How it works
 
@@ -139,7 +139,7 @@ flowchart LR
     class OUT,IN group
 ```
 
-<p align="center"><em>Everything here is in the <a href="docs/demo.md">capability tour</a>, on the bundled demo, with the graphs of each step. Inspection reads the saved checks and checks nothing again.</em></p>
+<p align="center"><em>Everything here is in the <a href="docs/demo.md">capability tour</a>, on the bundled demo, with the graphs of each step. Inspection acquires nothing and saves nothing; probe and fidelity evaluate the retained readings in memory.</em></p>
 
 ## Capabilities
 
@@ -154,18 +154,18 @@ flowchart LR
 | Probes              | Each statement asked back from its own reading                                                                                                  | `probe`                     | a statement                  | [6](docs/demo.md#6-asked-back-from-its-own-reading)             |
 | Corpus fidelity     | What the statements can be asked back for, what questions rest on; with withholding, the [load-bearing](docs/load-bearing.md) test per variable | `fidelity`                  | the root role                | [7](docs/demo.md#7-corpus-fidelity)                             |
 | Provenance          | Who wrote each statement an answer rests on, kept with the check                                                                                | `ask --json`, `show --json` | a statement                  | [8](docs/demo.md#8-who-wrote-what)                              |
-| Saved checks        | Every check kept with its evidence; said when the statements changed since                                                                      | `runs`, `show`, `delete`    | `o` Development              | [CLI](docs/cli.md)                                              |
+| Saved checks        | Every check kept, with its evidence until compaction releases it to a summary; said when the statements changed since                           | `runs`, `show`, `delete`    | `o` Development              | [CLI](docs/cli.md)                                              |
 
 ## Where it stands
 
 It answers only what its sources support: answers stay attributed, unknowns stay open, and withdrawing a statement retracts only what depended on it. The open problem is questions worded independently of a domain's statements ([where they are lost](docs/held-out-diagnosis.md)):
 
-| Held-out questions                         | Answered | One confirmation away | Unknowns kept open | Wrong |
-| ------------------------------------------ | -------- | --------------------- | ------------------ | ----- |
-| Three domains, two blind with a sealed key | 0 of 18  | 4                     | 5 of 5             | 0     |
-| The same, reworded blind (46 questions)    | 1 of 34  | 5                     | 9 of 9             | 0     |
+| Held-out questions                                           | Answered | One confirmation away | Unknowns kept open | Wrong |
+| ------------------------------------------------------------ | -------- | --------------------- | ------------------ | ----- |
+| Three domains, two blind with a sealed key                   | 0 of 18  | 4                     | 5 of 5             | 0     |
+| The same, reworded blind: 34 warranted, 9 unknown, 3 partial | 1 of 34  | 5                     | 9 of 9             | 0     |
 
-A claim about generalisation needs a new sealed domain (`node test/acceptance/independent-domain.mjs`).
+A partial question is compound with only one part supported; the 3 are left to review, outside the answered and unknown counts and the confirmation trials. A claim about generalisation needs a new sealed domain (`node test/acceptance/independent-domain.mjs`).
 
 ## Start
 
@@ -182,7 +182,7 @@ npx tendora ask --project .proj/payments-demo --offline \
   --question "Who notifies the customers?" --case-text "A certificate expires."
 ```
 
-In the workbench, choose a role; `n` adds statements, `a` asks, `o` opens Development, where saved questions show their answer, what it rests on and what it brings together. `?` lists every key. [The CLI reference](docs/cli.md) covers every command.
+In the workbench, choose a role; `n` adds statements, `a` asks, `o` opens Development, where saved questions show their answer, what it rests on and what it brings together. `?` lists every key. [The core objects](docs/architecture.md#core-objects) name what it shows, [your own project](docs/setup.md#your-own-project) starts from `init`, and [the CLI reference](docs/cli.md) covers every command.
 
 ## Performance
 

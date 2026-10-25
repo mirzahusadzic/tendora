@@ -5,6 +5,24 @@ statements in its scope (a role and its children), by a deterministic engine
 that retains its sources, intermediate artifacts and dependencies, so an answer
 can be inspected and revisited as the statements change.
 
+## Core objects
+
+| Object    | What it is                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| Project   | A directory: the role tree, statements, readings and saved checks ([storage](storage.md))              |
+| Role      | A place in the project's tree ("Security Engineer"); statements are placed at roles                    |
+| Statement | A plain-language sentence a person wrote, at a role, recording who wrote it                            |
+| Rule      | A statement with a condition ("If a certificate expires, …") or a kind ("A deployment is a change.")   |
+| Scope     | The role a question is asked at, with its children: the statements a check may use                     |
+| Case      | The circumstances of one check, as text or a role; rules apply to it, and it never becomes a statement |
+| Reading   | The AMR graph of a text, read once by eGemma and retained by exact text                                |
+| Check     | One question at a scope with a case: its status, answers and what they rest on, saved                  |
+| Opening   | Where a check stops: what is missing, and the closest statements                                       |
+| Proposal  | A connection read differently in the question and a statement; it answers once a person confirms it    |
+| Fact      | One relation of a reading, as the engine holds it during inference                                     |
+| Trim      | Dropping, each inference round, the facts no rule can still use, before the engine joins               |
+| Backend   | Where the trim runs: JavaScript (the default), Swift or Metal ([trim backends](cli.md#trim-backends))  |
+
 ## Reading
 
 eGemma reads text into an Abstract Meaning Representation (AMR); the PENMAN
@@ -50,8 +68,9 @@ recognition alone is not entailment.
 - **Open:** an open answer says why and names the closest statements; several
   answers leave it ambiguous. Search and alignment have budgets and report
   when one is reached (_limited_, never open). A statement or case in scope
-  without a usable reading could deny an answer, so the check is incomplete
-  (_needs-reading_), never supported.
+  without a usable reading could deny an answer, so an answer that would be
+  supported or conditional is marked _needs-reading_ instead; an open check
+  stays open and names what has no reading.
 
 SEMCAT supplies bounded local Smatch++ and RoSE comparisons; similarity and
 embeddings help compare and navigate ([what embeddings do](storage.md#embeddings))
@@ -119,8 +138,8 @@ Readings can be wrong; lexical checks and source inspection help review them.
 Answers rest on shared vocabulary: a question worded differently from its
 sources usually stays open or becomes a proposal. Offline replay uses retained
 wording. The cooperative frame is a first slice: no hypothetical-premise
-overlay, branch merging or neural answer realization; those remain proposals,
-as does [proposing premises at openings](consensual-premises.md).
+overlay, branch merging or neural answer realization; those remain designs,
+as do [suggested premises at openings](consensual-premises.md).
 [Load-bearing as situated meaning](load-bearing.md) defines the counterfactual
 test that corpus fidelity's withholding applies per variable, and says which of
 its five checks Tendora meets.
