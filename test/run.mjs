@@ -44,11 +44,11 @@ async function runSuite(path) {
     unexpected.push(String(url));
     throw new Error(`Unexpected network request in an offline test: ${url}`);
   };
+  // The limit detects a hang; it is no budget. CI runners differ by half
+  // again in speed, so a suite of 40 seconds on one crosses a minute on another.
   const timeoutMs = ['acceptance:hand', 'acceptance:tendora'].includes(profile ?? workerProfile)
     ? 600_000
-    : ['project/background.mjs', 'project/role-matching.mjs'].includes(path)
-      ? 180_000
-      : 60_000;
+    : 180_000;
   const timeout = setTimeout(() => {
     console.error(`Timed out after ${timeoutMs / 1000} seconds: ${path}`);
     process.exit(1);

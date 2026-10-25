@@ -45,6 +45,15 @@ jobs:
         run: .venv/bin/python -c "import sys; assert sys.version_info[:2] == (3, 14), sys.version"
       - run: npm run format:check
       - run: npm run check
+      # A terminal test that fails shows its last frame; the capture holds every one.
+      - name: Keep the terminal captures of a failed check
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: terminal-captures-${{ matrix.os }}-node-${{ matrix.node }}
+          path: tmp/**/*.capture.jsonl
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Install pinned Bolinas reference
         run: npm run setup:bolinas
       - name: Cross-check grammar extraction

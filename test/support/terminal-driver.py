@@ -202,10 +202,12 @@ try:
         drain(request.get('wait', .2))
         deadline = time.monotonic() + request.get('timeout', 55)
         alternatives = request.get('waitForAny', [])
-        while ((request.get('waitFor') and request['waitFor'] not in screen()) or
+        # An expected text is waited for as waitFor is: keys queue behind work the
+        # application is still doing, and a slower machine draws it later.
+        required = request.get('expect', []) + ([request['waitFor']] if request.get('waitFor') else [])
+        while (any(value not in screen() for value in required) or
                (alternatives and not any(value in screen() for value in alternatives))) and time.monotonic() < deadline:
             drain(.2)
-        required = request.get('expect', []) + ([request['waitFor']] if request.get('waitFor') else [])
         missing = [value for value in required if value not in screen()]
         if alternatives and not any(value in screen() for value in alternatives): missing.append('one of ' + repr(alternatives))
         forbidden = [value for value in request.get('reject', []) if value in screen()]

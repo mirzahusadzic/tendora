@@ -72,14 +72,20 @@ try {
       await step({
         mouse: [{ x: screen().split('\n')[y].indexOf(walkthrough) + 2, y: y + 1 }],
       });
-      await step({ waitFor: 'Answer: deployments', timeout: 30 });
+      // The list's preview already shows the answer; the saved check shows
+      // where it comes from once it has loaded.
+      await step({ waitFor: 'Answer comes from', expect: ['Answer: deployments'], timeout: 30 });
       await step({
         keys: ['ESC', 'a', 'ALT_U'],
         text: 'Who freezes deployments during a major incident?',
-        expect: ['Ask'],
+        expect: ['Case: None (optional)'],
       });
       await step({ keys: ['ENTER'], waitFor: 'Answer: Morgan', timeout: 30 });
-      await step({ keys: ['ESC', 'a', 'ALT_U'], text: question, expect: ['Ask'] });
+      await step({
+        keys: ['ESC', 'a', 'ALT_U'],
+        text: question,
+        expect: ['Case: None (optional)'],
+      });
       await step({ keys: ['ENTER'], waitFor: 'Answer: leaked payment key', timeout: 30 });
     },
   );
