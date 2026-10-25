@@ -89,13 +89,18 @@ export async function aporiaReport(project, { role = null, signal } = {}) {
       const [a, b] = [rules[i], rules[j]];
       if (top(a) !== top(b) || negated(a) === negated(b)) continue;
       signal?.throwIfAborted();
-      const truth = view.truth(a.parts.conclusion, {
-        cases: [a.parts.condition, b.parts.condition],
-      });
-      const fromB = sides(truth).filter((binding) =>
-        binding.ruleIds.some((id) => view.ruleSource(id) === b.item.id),
+      // Asked both ways: a conclusion that describes more (the release Morgan
+      // manages) may not meet the other's, while the other's meets it.
+      const cases = [a.parts.condition, b.parts.condition];
+      const opposed = [
+        [a, b],
+        [b, a],
+      ].some(([asked, other]) =>
+        sides(view.truth(asked.parts.conclusion, { cases })).some((binding) =>
+          binding.ruleIds.some((id) => view.ruleSource(id) === other.item.id),
+        ),
       );
-      if (!fromB.length) continue;
+      if (!opposed) continue;
       const when = [condition(a), condition(b)];
       findings.push({
         method: 'aporia',

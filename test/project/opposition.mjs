@@ -86,6 +86,20 @@ assert(
   ),
 );
 assert(aporia.findings.every((finding) => finding.question.endsWith('which is meant?')));
+// Two rules under different conditions, met together: asked both ways, since
+// the release the key rule ships is the one Morgan manages, a description the
+// freeze rule's conclusion does not have.
+const joint = await aporiaReport(
+  await openProject(
+    await methodsDemo('opposition-joint', {
+      statements: ['If a payment key leaks, Morgan, the release manager, ships a release.'],
+    }),
+  ),
+);
+assert.deepEqual(
+  joint.findings.map((finding) => [finding.kind, finding.case]),
+  [['joint case', ['a payment key leaks', 'a major incident is open']]],
+);
 const policy = await aporiaReport(project, { role: 'Security Engineer' });
 assert.deepEqual(policy.findings, [], 'The security engineer’s statements hold together');
 

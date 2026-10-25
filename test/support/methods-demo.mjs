@@ -27,6 +27,8 @@ export const readings = {
     '(z0 / renew-01 :ARG0 (z1 / person :wiki - :name (z2 / name :op1 "Priya")) :ARG1 (z3 / certificate) :condition (z4 / leak-01 :ARG1 (z5 / key :instrument-of (z6 / pay-01))))',
   'A payment key expires.': '(z0 / expire-01 :ARG1 (z1 / key :instrument-of (z2 / pay-01)))',
   'A certificate expires.': '(z0 / expire-01 :ARG1 (z1 / certificate))',
+  'If a payment key leaks, Morgan, the release manager, ships a release.':
+    '(z0 / ship-01 :ARG0 (z1 / company :wiki "Morgan Stanley" :name (z2 / name :op1 "Morgan") :ARG0-of (z3 / manage-01 :ARG1 (z4 / release-01))) :ARG1 z4 :condition (z5 / leak-01 :ARG1 (z6 / key :mod (z7 / pay-01))))',
 };
 
 /** Theses that are not statements, read by eGemma, for elenchus. */
