@@ -19,7 +19,7 @@ import { knowledgeSnapshot } from '../authoring/knowledge.mjs';
 import { readProvenance, recordedAuthors } from '../authoring/provenance.mjs';
 import { sentenceRevision } from '../authoring/sources.mjs';
 import { acquiredTexts, retainAcquisitions } from '../storage/acquisitions.mjs';
-import { listEngineRuns } from '../storage/engine-runs.mjs';
+import { listEngineRuns, readEngineArtifact } from '../storage/engine-runs.mjs';
 import { parseTexts } from '../../models/acquisition.mjs';
 import { prepareGraphs, normalizedRoleProfile } from '../../models/graph-preparation.mjs';
 import { propbankAuditor } from '../../models/propbank.mjs';
@@ -27,7 +27,7 @@ import { validateGraph } from '../../amr/revision.mjs';
 import { repairReading } from '../../amr/lexical-audit.mjs';
 import { proofGraph, traceRelations, withheldSupport } from '../../amr/inference.mjs';
 import { answerBase, evaluateAnswer } from '../../recording/answers.mjs';
-import { answerRecording } from '../../engine/answer.mjs';
+import { answerRecording, checkAnswer } from '../../engine/answer.mjs';
 import { truthQuestion } from '../../engine/cloze.mjs';
 import { roleName, rootCheck } from './inspection.mjs';
 
@@ -469,5 +469,51 @@ export function smallest(findings) {
         const within = [...theirs].every((text) => mine.has(text));
         return within && (theirs.size < mine.size || j < i);
       }),
+  );
+}
+
+/** A saved check's input and result, or null when compaction released them. */
+export async function savedCheck(project, run) {
+  if (!run.inputRef || !run.resultRef) return null;
+  const [input, result] = await Promise.all([
+    readEngineArtifact(project, run.inputRef),
+    readEngineArtifact(project, run.resultRef),
+  ]);
+  return { input, result };
+}
+
+/** A saved check checked again in memory, with cases given (a check that had
+ * none) and statements set beside its own. */
+export function recheck(project, check, { cases = [], extra = [], knowledge }) {
+  const caseEntries = cases.map((graph, index) => ({
+    id: `case-method/s${index + 1}`,
+    kind: 'case',
+    placementId: 'case-method',
+    text: `The case of the method, part ${index + 1}`,
+    graph,
+  }));
+  const inputs = check.result.inputs;
+  return checkAnswer(
+    project,
+    caseEntries.length
+      ? {
+          ...check.input,
+          caseSelection: {
+            projectId: project.data.id,
+            placementId: 'case-method',
+            sources: caseEntries.map((item) => ({ text: item.text })),
+          },
+        }
+      : check.input,
+    {
+      ...check.result,
+      inputs: [
+        ...inputs.filter((item) => item.kind !== 'question'),
+        ...extra,
+        ...caseEntries,
+        ...inputs.filter((item) => item.kind === 'question'),
+      ],
+    },
+    { knowledge },
   );
 }

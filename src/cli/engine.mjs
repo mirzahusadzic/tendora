@@ -40,6 +40,9 @@ import {
   counterexampleReport,
   formatCounterexample,
 } from '../project/inquiries/counterexample.mjs';
+import { formatMaieutics, maieuticsReport } from '../project/inquiries/maieutics.mjs';
+import { equivocationReport, formatEquivocation } from '../project/inquiries/equivocation.mjs';
+import { definitionReport, formatDefinition } from '../project/inquiries/definition.mjs';
 import { describeBackends, trimBackends, useTrimBackend } from '../engine/trim-backend.mjs';
 import {
   listEngineRuns,
@@ -407,9 +410,18 @@ try {
     // The trim backend of a check: --backend, else TENDORA_BACKEND, else js;
     // worker threads and processes inherit it through the environment.
     if (
-      ['ask', 'suppose', 'elenchus', 'aporia', 'counterexample', 'probe', 'fidelity'].includes(
-        action,
-      )
+      [
+        'ask',
+        'suppose',
+        'elenchus',
+        'aporia',
+        'counterexample',
+        'maieutics',
+        'equivocation',
+        'definition',
+        'probe',
+        'fidelity',
+      ].includes(action)
     ) {
       if (values.backend) process.env.TENDORA_BACKEND = values.backend;
       try {
@@ -632,6 +644,18 @@ try {
       named(() => recoilLocus(project, { statement: values.statement }), demo);
       const report = await counterexampleReport(project, { statement: values.statement });
       output = values.json ? report : formatCounterexample(report);
+    } else if (action === 'maieutics') {
+      const report = await maieuticsReport(project, {
+        question: values.question ?? null,
+        signal: controller.signal,
+      });
+      output = values.json ? report : formatMaieutics(report);
+    } else if (action === 'equivocation') {
+      const report = await equivocationReport(project, { signal: controller.signal });
+      output = values.json ? report : formatEquivocation(report);
+    } else if (action === 'definition') {
+      const report = await definitionReport(project, { term: values.term });
+      output = values.json ? report : formatDefinition(report);
     } else if (action === 'probe') {
       if (values.statement)
         named(() => recoilLocus(project, { statement: values.statement }), demo);

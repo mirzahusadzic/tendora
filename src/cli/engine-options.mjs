@@ -10,7 +10,8 @@ const options = {
   'case-text': ['string', '<text>', 'Use an independent case without adding sources.'],
   question: ['string', '<text>', 'The question to check; - reads it from standard input.'],
   statement: ['string', '<text>', 'A statement, by its text or a part only it has.'],
-  text: ['string', '<text>', 'The statement to suppose; it is never saved.'],
+  text: ['string', '<text>', 'The statement to suppose, or the thesis; it is never saved.'],
+  term: ['string', '<word>', 'The term to define, as the statements use it.'],
   role: ['string', '<role-or-path>', 'A role: its label, /Root/Child path or placement ID.'],
   grain: ['string', '<depth>', 'Branch depth under the root role; defaults to 1.'],
   run: ['string', '<id>', 'Saved check identity from ask or runs.'],
@@ -102,6 +103,37 @@ export const engineCommands = {
       'two rules with opposed conclusions whose conditions meet. Each comes with both',
       'sides and a question for their authors. --role keeps the statements at and under',
       'a role. Read-only and offline.',
+    ],
+  },
+  maieutics: {
+    description: 'Maieutics: questions for authors that would complete what stays open.',
+    options: ['question', 'backend', 'offline'],
+    example: '--question "Who notifies the customers?"',
+    notes: [
+      'For each saved question left open or answered under a rule: the premise that',
+      'would answer it, walked back through the rules that would bring it about and',
+      'tried as its case, asked back to the rule’s author in the rule’s words, the',
+      'deepest first; and statements holding its relation without joining it.',
+    ],
+  },
+  equivocation: {
+    description: 'Equivocation: words read in more than one sense.',
+    options: ['backend', 'offline'],
+    example: '',
+    notes: [
+      'A predicate lemma read in two or more PropBank senses across the statements,',
+      'each with its gloss and statements; and saved questions reading a lemma in a',
+      'sense no statement has. Reword, or confirm two meanings.',
+    ],
+  },
+  definition: {
+    description: 'Definition: what a term is, by what the statements say.',
+    options: ['term', 'backend', 'offline'],
+    required: '--term <word>',
+    example: '--term deployment',
+    notes: [
+      'Its genus, species and siblings from kind statements, what is said of it, and',
+      'what is said of it and of no sibling; what nothing says becomes a question.',
     ],
   },
   counterexample: {
@@ -226,7 +258,10 @@ export const engineCommands = {
 };
 const sections = [
   ['Check questions', ['ask', 'runs', 'show']],
-  ['Socratic methods (nothing saved)', ['suppose', 'elenchus', 'aporia', 'counterexample']],
+  [
+    'Socratic methods (nothing saved)',
+    ['suppose', 'elenchus', 'aporia', 'counterexample', 'maieutics', 'equivocation', 'definition'],
+  ],
   ['Inspect saved checks (read-only, offline)', ['recoil', 'tensions', 'probe', 'fidelity']],
   ['Manage a project', ['init', 'delete', 'storage', 'compact', 'knowledge']],
   ['This machine', ['backends']],
@@ -400,6 +435,7 @@ export function parseEngineArguments(args) {
   if (['suppose', 'hypothesis'].includes(action)) requireOption('text');
   if (action === 'elenchus') exactlyOne(['text', 'statement']);
   if (action === 'counterexample') requireOption('statement');
+  if (action === 'definition') requireOption('term');
   if (action === 'recoil') {
     exactlyOne(['statement', 'role', 'question']);
     if (!values.question && (values.scope || values['case-text']))
