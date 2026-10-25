@@ -341,8 +341,21 @@ try {
     const location = resolve(values.project);
     const project =
       action === 'init'
-        ? await createProject(location, values.name ?? basename(location), values.root ?? 'Root')
+        ? await createProject(
+            location,
+            values.name ?? basename(location),
+            values.root ?? 'Root',
+          ).catch((error) => {
+            if (error.code === 'EEXIST')
+              error.hint = `Open it (${program} runs --project ${values.project}), or choose another directory.`;
+            throw error;
+          })
         : await openProject(location).catch((error) => {
+            if (error instanceof SyntaxError)
+              throw Object.assign(
+                new Error(`${join(location, 'project.json')} is not valid JSON: ${error.message}`),
+                { hint: 'Restore it from version control or from a copy of the project.' },
+              );
             if (error.code !== 'ENOENT') throw error;
             throw new EngineUsageError(
               `No project at ${location}: project.json is missing. Create one with: ${program} init --project ${values.project}`,
@@ -380,9 +393,20 @@ try {
       const result = await compactProjectStorage(project, { force: true });
       output = values.json
         ? result
-        : `Compacted: ${bytes(result.before.allocated)} on disk before, ${bytes(result.after.allocated)} after.`;
+        : result.after.allocated < result.before.allocated
+          ? `Compacted: ${bytes(result.before.allocated)} on disk before, ${bytes(result.after.allocated)} after.`
+          : `Already compact: ${bytes(result.after.allocated)} on disk.`;
     } else if (action === 'knowledge') {
-      const entry = JSON.parse(await readFile(resolve(values.file), 'utf8'));
+      const text = await readFile(resolve(values.file), 'utf8').catch((error) => {
+        if (error.code !== 'ENOENT') throw error;
+        throw new EngineUsageError(`No file at ${values.file}.`, { syntax: false });
+      });
+      let entry;
+      try {
+        entry = JSON.parse(text);
+      } catch (error) {
+        throw new Error(`${values.file} is not valid JSON: ${error.message}`);
+      }
       await saveProject(project, authorEngineKnowledge(project.data, entry));
       output = values.json
         ? { id: entry.id, name: entry.name }
@@ -425,7 +449,7 @@ try {
         process.stderr.isTTY &&
         !(await confirm(`Delete ${what}? The statements stay. [y/N] `))
       ) {
-        output = 'Nothing was deleted.';
+        output = values.json ? { deleted: [], declined: true } : 'Nothing was deleted.';
         process.exitCode = 1;
       } else {
         const result = await deleteEngineRuns(
@@ -452,7 +476,12 @@ try {
       );
       const report = await recoilReport(project, locus).catch((error) => {
         if (/^No such /u.test(error.message))
-          throw new EngineUsageError(error.message, { syntax: false });
+          throw new EngineUsageError(error.message, {
+            syntax: false,
+            hint: /saved question/u.test(error.message)
+              ? `Ask it first (${program} ask --project ${values.project} --question …), or list saved checks: ${program} runs --project ${values.project}`
+              : null,
+          });
         throw error;
       });
       output = values.json ? report : formatRecoil(report);

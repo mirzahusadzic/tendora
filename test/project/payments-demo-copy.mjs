@@ -18,6 +18,17 @@ const target = join(directory, 'payments-demo'),
   copy = (...args) =>
     run(process.execPath, ['tools/payments-demo.mjs', '--target', target, ...args]);
 try {
+  // Help, and an unknown option refused without a stack (docs review 2026-10-25, #6).
+  const help = await run(process.execPath, ['tools/payments-demo.mjs', '--help']);
+  assert.match(help.stdout, /^Usage: npm run demo -- \[--reset\] \[--target <directory>\]\n/u);
+  await assert.rejects(
+    run(process.execPath, ['tools/payments-demo.mjs', '--nope']),
+    (error) =>
+      error.code === 2 &&
+      error.stdout === '' &&
+      /^Error: Unknown option '--nope'/u.test(error.stderr) &&
+      !/\n\s+at /u.test(error.stderr),
+  );
   const bundled = await readFile('demo/payments-on-call/project.json', 'utf8');
   const demoId = JSON.parse(bundled).id;
   await copy();

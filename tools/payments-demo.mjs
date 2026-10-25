@@ -8,12 +8,33 @@ import { refuseTarget } from './demo-target.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = join(root, 'demo/payments-on-call');
-const { values } = parseArgs({
-  options: {
-    reset: { type: 'boolean', default: false },
-    target: { type: 'string', default: join(root, '.proj/payments-demo') },
-  },
-});
+const usage = `Usage: npm run demo -- [--reset] [--target <directory>]
+
+Copy the bundled demo (demo/payments-on-call) to .proj/payments-demo.
+
+Options:
+  --reset               Renew an existing copy; it replaces only a copy of the demo.
+  --target <directory>  Copy somewhere else.
+  -h, --help            Show this help.`;
+let values;
+try {
+  ({ values } = parseArgs({
+    options: {
+      reset: { type: 'boolean', default: false },
+      target: { type: 'string', default: join(root, '.proj/payments-demo') },
+      help: { type: 'boolean', short: 'h', default: false },
+    },
+  }));
+} catch (error) {
+  console.error(
+    `Error: ${error.message.replace(/\. To specify a positional.*$/su, '.')}\n\n${usage}`,
+  );
+  process.exit(2);
+}
+if (values.help) {
+  console.log(usage);
+  process.exit(0);
+}
 const target = resolve(values.target),
   shown = relative(process.cwd(), target) || '.';
 const exists = await stat(target).then(

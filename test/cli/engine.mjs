@@ -212,6 +212,21 @@ const original = await readFile(project.path, 'utf8');
 const repeated = await command(['init', '--project', location]);
 assert.equal(repeated.code, 1);
 assert.equal(repeated.stdout, '');
+// Each error names its next step (docs review 2026-10-25, #9).
+assert.match(
+  repeated.stderr,
+  /^Error: A project already exists at .*\nOpen it \(tendora runs --project .*\), or choose another directory\.\n$/u,
+);
+const corrupt = join(directory, 'corrupt');
+await mkdir(corrupt);
+await writeFile(join(corrupt, 'project.json'), '{');
+const unreadable = await command(['runs', '--project', corrupt, '--json']);
+assert.equal(unreadable.code, 1);
+assert.equal(unreadable.stdout, '');
+assert.match(
+  unreadable.stderr,
+  /^Error: .*corrupt\/project\.json is not valid JSON: .*\nRestore it from version control or from a copy of the project\.\n$/u,
+);
 assert.equal(await readFile(project.path, 'utf8'), original, 'Existing project was not replaced');
 // Storage left without its manifest belongs to another project (final review
 // #11): init refuses it and changes nothing, rather than mixing two projects.
@@ -443,6 +458,19 @@ assert.match(
   recoiled.stdout,
   /Up: what rests on it[^\n]*\n {2}rests on: question “Who repairs bicycles\?”/u,
 );
+// A question never checked: ask it first, or list what was (docs review 2026-10-25, #9).
+const neverAsked = await command([
+  'recoil',
+  '--project',
+  location,
+  '--question',
+  'Who was never asked about?',
+]);
+assert.equal(neverAsked.code, 2);
+assert.match(
+  neverAsked.stderr,
+  /^Error: No such saved question in this project\.\nAsk it first \(tendora ask --project .* --question …\), or list saved checks: tendora runs --project .*\n$/u,
+);
 const recoilJson = machine(
   await command(['recoil', '--project', location, '--question', question, '--json']),
 );
@@ -634,6 +662,36 @@ const terminal = spawnSync(
 );
 assert.equal(terminal.status, 0, terminal.stdout + terminal.stderr);
 assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), before);
+// Declined with --json, stdout is still JSON (docs review 2026-10-25, #4).
+const declinedJson = spawnSync(
+  'python3',
+  [
+    'test/support/terminal-driver.py',
+    '--check',
+    '--',
+    process.execPath,
+    'src/cli/engine.mjs',
+    'delete',
+    '--project',
+    location,
+    '--run',
+    cancelled.id,
+    '--json',
+  ],
+  {
+    input:
+      [
+        { waitFor: '[y/N]', timeout: 20 },
+        { text: 'n\r', waitFor: '"declined": true', expectExit: true, exitCode: 1, timeout: 20 },
+      ]
+        .map((step) => JSON.stringify(step))
+        .join('\n') + '\n',
+    encoding: 'utf8',
+  },
+);
+assert.equal(declinedJson.status, 0, declinedJson.stdout + declinedJson.stderr);
+assert.doesNotMatch(declinedJson.stdout, /Nothing was deleted/u);
+assert.deepEqual(machine(await command(['runs', '--project', location, '--json'])), before);
 // A question given as - is read from standard input.
 const piped = machine(
   await command(['ask', '--project', location, '--question', '-', '--offline', '--json'], {
@@ -671,7 +729,17 @@ const malformed = await command([
 ]);
 assert.equal(malformed.code, 1);
 assert.equal(malformed.stdout, '');
+assert.match(malformed.stderr, /^Error: .*knowledge\.json is not valid JSON: /u);
 assert.equal((await openProject(location)).digest, frozenDigest);
+const missingFile = await command([
+  'knowledge',
+  '--project',
+  location,
+  '--file',
+  join(directory, 'absent.json'),
+]);
+assert.equal(missingFile.code, 2);
+assert.match(missingFile.stderr, /^Error: No file at .*absent\.json\.\n$/u);
 await writeFile(
   knowledgePath,
   JSON.stringify({
@@ -694,6 +762,11 @@ const storage = machine(await command(['storage', '--project', location, '--json
 assert(storage.bytes > 0 && storage.allocated > 0);
 const compact = machine(await command(['compact', '--project', location, '--json']));
 assert(compact.after.allocated > 0);
+// Compacted again, nothing is gained, and it says so (docs review 2026-10-25, #14).
+assert.match(
+  (await command(['compact', '--project', location])).stdout,
+  /^Already compact: .* on disk\.\n$/u,
+);
 // A released check keeps the statements its answer rests on (review
 // 2026-10-25, #4): shown again, it exports the same provenance.
 await compactEngineStorage(await openProject(location), { force: true, budget: 32 * 1024 });
