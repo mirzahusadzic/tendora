@@ -19,9 +19,9 @@
  * up). Metal's pool is sized to what the trim used, found by a first run.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism, cpus, release } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '../..');
 const args = process.argv.slice(2);
@@ -48,6 +48,8 @@ const binary = join(repo, 'tmp/lean/trim');
 const source = join(repo, 'bench/lean-core'),
   native = join(repo, 'src/models/native');
 const swiftFlags = ['-O', '-enforce-exclusivity=unchecked', '-swift-version 5', '-D TRIM_METAL'];
+// A fresh checkout has no tmp/lean.
+mkdirSync(dirname(binary), { recursive: true });
 execFileSync(
   'swiftc',
   [
