@@ -4,10 +4,11 @@ import { statSync, mkdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { brotliCompressSync, brotliDecompressSync, constants } from 'node:zlib';
+import { brotliCompressSync, constants } from 'node:zlib';
 import { withFileLease } from './locks.mjs';
 import { loadSqliteVec } from './sqlite-vec.mjs';
 import { refuseLinks, sqliteFiles } from './links.mjs';
+import { decompress, writable } from './decoded.mjs';
 
 export const dataAreas = ['corpora', 'records', 'acquisitions', 'role-matching', 'investigations'];
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -108,7 +109,7 @@ function decode(entry, hash) {
   if (block) return block.files;
   const row = entry.db.prepare('SELECT payload FROM blocks WHERE hash = ?').get(hash);
   if (!row) throw new Error('Missing project data block');
-  const bytes = brotliDecompressSync(row.payload);
+  const bytes = decompress(row.payload, 'A project data block');
   if (digest(bytes) !== hash) throw new Error('Stored project data changed');
   const pairs = JSON.parse(bytes);
   if (
@@ -141,8 +142,15 @@ function stored(entry, key) {
   return bytes;
 }
 function storeBlock(db, pairs) {
-  const bytes = JSON.stringify(pairs),
-    hash = digest(bytes);
+  const what = `Project data (${pairs.map(([key]) => key).join(', ')})`;
+  // Refused before the copy when the text alone is too large.
+  writable(
+    pairs.reduce((total, [key, bytes]) => total + key.length + bytes.length, 0),
+    what,
+  );
+  const bytes = JSON.stringify(pairs);
+  writable(Buffer.byteLength(bytes), what);
+  const hash = digest(bytes);
   const payload = brotliCompressSync(Buffer.from(bytes), {
     params: { [constants.BROTLI_PARAM_QUALITY]: 6 },
   });

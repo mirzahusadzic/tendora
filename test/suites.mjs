@@ -64,6 +64,7 @@ export const suites = {
     'project/payments-demo-copy.mjs',
     'project/data-files.mjs',
     'project/storage-links.mjs',
+    'project/decoded-limits.mjs',
     'project/engine-storage.mjs',
     'project/recoil.mjs',
     'project/provenance.mjs',

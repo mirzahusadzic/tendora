@@ -3,9 +3,10 @@ import { access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { brotliCompressSync, brotliDecompressSync, constants } from 'node:zlib';
+import { brotliCompressSync, constants } from 'node:zlib';
 import { readObject } from './objects.mjs';
 import { refuseLinks, sqliteFiles } from './links.mjs';
+import { decodedBudget, decompress, writable } from './decoded.mjs';
 
 const encode = (value) => Buffer.from(JSON.stringify(value) + '\n');
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -45,6 +46,7 @@ export function openArtifactDatabase(path) {
 
 export function storeRun(db, run) {
   const bytes = encode(run);
+  writable(bytes.length, 'An engine run');
   db.prepare('INSERT OR REPLACE INTO runs VALUES (?, ?, ?)').run(
     run.id,
     brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 4 } }),
@@ -57,7 +59,7 @@ export function storedRuns(db, id) {
     ? db.prepare('SELECT payload, checksum FROM runs WHERE id = ?').all(id)
     : db.prepare('SELECT payload, checksum FROM runs').all();
   return rows.map(({ payload, checksum }) => {
-    const bytes = brotliDecompressSync(payload);
+    const bytes = decompress(payload, 'A stored engine run');
     if (digest(bytes) !== checksum) throw new Error('Stored engine run changed');
     return JSON.parse(bytes);
   });
@@ -96,6 +98,7 @@ function estimate(value, sizes) {
 export function storeArtifact(db, value) {
   const sizes = new Map();
   estimate(value, sizes);
+  writable(sizes.get(value) ?? 0, 'An engine artifact');
   // Bottom up: every fragment's bytes and name.
   const fragments = new Map(),
     named = new Map();
@@ -222,11 +225,14 @@ export function loadArtifact(db, hash) {
   const select = db.prepare('SELECT payload FROM fragments WHERE hash = ?');
   const loaded = new Map(),
     texts = new Map(),
-    active = new Set();
+    active = new Set(),
+    // Every use of a fragment is parsed again; together they stay bounded.
+    spend = decodedBudget('An engine artifact');
   // A fragment named by its bytes is checked by them once, and each of its uses
   // is parsed on its own, so callers receive ordinary values without copying.
   function parsed(ref) {
     active.add(ref);
+    spend(texts.get(ref).length);
     const { data, parts } = JSON.parse(texts.get(ref));
     if (!Array.isArray(parts)) throw new Error('Invalid engine fragment');
     for (const [path, child] of parts) {
@@ -250,13 +256,14 @@ export function loadArtifact(db, hash) {
     if (loaded.has(ref)) return loaded.get(ref);
     const row = select.get(ref);
     if (!row) throw new Error('Missing engine fragment: ' + ref);
-    const bytes = brotliDecompressSync(row.payload);
+    const bytes = decompress(row.payload, 'An engine fragment');
     if (bytes.subarray(0, fragmentPrefix.length).equals(fragmentPrefix)) {
       if (digest(bytes) !== ref) throw new Error('Stored object changed');
       texts.set(ref, bytes.subarray(fragmentPrefix.length).toString());
       return parsed(ref);
     }
     // An earlier fragment: named by the digest of its whole decoded JSON.
+    spend(bytes.length);
     active.add(ref);
     const { data, parts } = JSON.parse(bytes);
     if (!Array.isArray(parts)) throw new Error('Invalid engine fragment');

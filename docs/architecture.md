@@ -94,7 +94,8 @@ their decoded bytes and references preserved. sqlite-vec stores 128-dimension
 vectors for ranking, rebuildable from the readings. Engine artifacts and
 recordings are rebuildable; the demo bundles its 36 answers with their
 evidence. Storage inside a project (its stores, leases and directories) is
-refused when it is a symbolic link; the project directory may be one.
+refused when it is a symbolic link; the project directory may be one. A stored
+block, run or artifact decodes within 256 MiB, before its hash is checked.
 
 | Location               | Responsibility                                                    |
 | ---------------------- | ----------------------------------------------------------------- |
