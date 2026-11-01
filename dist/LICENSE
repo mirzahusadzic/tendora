@@ -1,0 +1,42 @@
+Tendora Demo Engine License
+
+Copyright (c) 2026 Mirza Husadzic. All rights reserved.
+
+This license covers the files in dist/ (the "Engine"). The other files in
+this repository carry their own licenses: see LICENSE and
+THIRD_PARTY_NOTICES.md.
+
+1. Permission. You may download the Engine and run it, unmodified, on
+   computers you control: to evaluate Tendora, to run its bundled demo and
+   Gadfly's batteries against it, to ask your own questions, and for research
+   and teaching. You may publish what you observe, including measurements and
+   outputs.
+
+2. Restrictions. You may not:
+   a. copy, distribute, sublicense, sell or rent the Engine, except by
+      pointing others to this repository;
+   b. modify, translate, decompile, disassemble, deobfuscate or reverse
+      engineer the Engine, or attempt to derive its source code, except to the
+      extent that applicable law expressly permits it despite this
+      limitation;
+   c. use the Engine to provide a hosted or managed service to others, or to
+      build a product or service that competes with Tendora;
+   d. remove or alter any notice in the Engine or in this repository.
+
+3. Your content. The corpora, questions and projects you make with the Engine
+   are yours.
+
+4. Trademarks. This license grants no right to use the name "Tendora" except
+   to describe the origin of the Engine.
+
+5. No warranty. The Engine is provided "as is", without warranty of any
+   kind, express or implied, including merchantability, fitness for a
+   particular purpose and non-infringement. To the extent the law allows, the
+   author is not liable for any claim, damages or other liability arising
+   from the Engine or its use.
+
+6. Termination. This license ends automatically if you break its terms; you
+   must then stop using the Engine and delete your copies.
+
+For commercial use, a hosted service or other terms, contact the author
+through https://github.com/mirzahusadzic.

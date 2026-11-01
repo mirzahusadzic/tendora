@@ -1,0 +1,42 @@
+{
+  "frame": "gemma-who-freezes-deployments-during-a-major-i-ff8ea515",
+  "hash": "4bea42fa1bed60f70e16fac65cc6c3fdf140266809354c35ac73d7e241b78d66",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "who-freezes-deployments": "unresolved"
+    },
+    "evidence": [
+      "who-freezes-deployments: the baseline and repeat sessions split (another answer, conflict)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-deployments",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "conflict",
+        "ablation": "open",
+        "sham-1": "Morgan, Maya",
+        "sham-2": "Morgan, Maya",
+        "placement": "another answer",
+        "control": "open"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (another answer, conflict)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

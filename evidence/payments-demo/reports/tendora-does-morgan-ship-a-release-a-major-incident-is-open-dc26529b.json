@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-does-morgan-ship-a-release-a-major-incident-is-open-dc26529b",
+  "hash": "7b9330e02e4594de39b5cf1ab640aa18e4d6ca02d0d91ae275fd71964132bf60",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "a-major-incident-is-open": "carried"
+    },
+    "evidence": [
+      "a-major-incident-is-open: ablation moved it No -> open; held under 2 shams",
+      "a-major-incident-is-open: the control moved it No -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "a-major-incident-is-open",
+      "category": "carried",
+      "levels": {
+        "baseline": "No",
+        "repeat": "No",
+        "ablation": "open",
+        "sham-1": "No",
+        "sham-2": "No",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it No -> open; held under 2 shams",
+        "the control moved it No -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

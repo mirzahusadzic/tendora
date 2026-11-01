@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-what-does-the-database-administrator-kee-2377f947",
+  "hash": "379f4d33c51b632e157f5c39977e6914316d6f499af7c6a108a5b0867eb3e98d",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-does-the-database-a": "carried"
+    },
+    "evidence": [
+      "what-does-the-database-a: ablation moved it break-glass credentials -> open; held under 2 shams",
+      "what-does-the-database-a: the control moved it break-glass credentials -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-database-a",
+      "category": "carried",
+      "levels": {
+        "baseline": "break-glass credentials",
+        "repeat": "break-glass credentials",
+        "ablation": "open",
+        "sham-1": "break-glass credentials",
+        "sham-2": "break-glass credentials",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it break-glass credentials -> open; held under 2 shams",
+        "the control moved it break-glass credentials -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

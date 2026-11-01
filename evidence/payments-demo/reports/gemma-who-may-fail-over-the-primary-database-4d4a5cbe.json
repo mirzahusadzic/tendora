@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-who-may-fail-over-the-primary-database-4d4a5cbe",
+  "hash": "c8345da068d9a1df1acf1c1d4eec14d218f0b6b826ad11ff4ae30b1963685fd5",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "who-may-fail-over-the-pr": "unresolved"
+    },
+    "evidence": [
+      "who-may-fail-over-the-pr: a sham moved it too (sham-2); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-may-fail-over-the-pr",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "Jordan",
+        "repeat": "Jordan",
+        "ablation": "open",
+        "sham-1": "Jordan",
+        "sham-2": "another answer",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-2); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

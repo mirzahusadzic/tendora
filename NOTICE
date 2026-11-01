@@ -1,0 +1,9 @@
+Tendora
+Copyright 2026 Mirza Husadzic
+
+The engine bundle in dist/ is under the Tendora Demo Engine License
+(dist/LICENSE), not the Apache License. The payments corpus, the evidence, the
+documents and the essay's helper are licensed under the Apache License,
+Version 2.0 (licenses/Apache-2.0.txt). Other parts carry other terms; LICENSE
+names each part's license, and THIRD_PARTY_NOTICES.md lists every path,
+installed component and notice.

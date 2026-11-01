@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-which-engineer-acknowledges-every-page-w-0a4a6e4f",
+  "hash": "43bea2523f8d062beb54d23d8f3ee8e9a7f67a540e2724a5646af24e04ffd04d",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "which-engineer-acknowled": "carried"
+    },
+    "evidence": [
+      "which-engineer-acknowled: ablation moved it Alex -> open; held under 2 shams",
+      "which-engineer-acknowled: the control moved it Alex -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-engineer-acknowled",
+      "category": "carried",
+      "levels": {
+        "baseline": "Alex",
+        "repeat": "Alex",
+        "ablation": "open",
+        "sham-1": "Alex",
+        "sham-2": "Alex",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Alex -> open; held under 2 shams",
+        "the control moved it Alex -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

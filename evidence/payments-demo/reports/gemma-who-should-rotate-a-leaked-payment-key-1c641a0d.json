@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-who-should-rotate-a-leaked-payment-key-1c641a0d",
+  "hash": "a3abcccea067391065afdd3ff0deba7b58aa4585727c96873b0572864000b3ab",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-should-rotate-a-leak": "carried"
+    },
+    "evidence": [
+      "who-should-rotate-a-leak: ablation moved it Priya -> open; held under 2 shams",
+      "who-should-rotate-a-leak: the control moved it Priya -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-should-rotate-a-leak",
+      "category": "carried",
+      "levels": {
+        "baseline": "Priya",
+        "repeat": "Priya",
+        "ablation": "open",
+        "sham-1": "Priya",
+        "sham-2": "Priya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Priya -> open; held under 2 shams",
+        "the control moved it Priya -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

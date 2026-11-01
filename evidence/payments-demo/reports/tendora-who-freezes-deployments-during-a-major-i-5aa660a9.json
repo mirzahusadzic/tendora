@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-who-freezes-deployments-during-a-major-i-5aa660a9",
+  "hash": "b3a93119ad955aeb05b1c1d99d216ac6c7f24b004062ae28ae82a673160ab985",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-freezes-deployments": "carried"
+    },
+    "evidence": [
+      "who-freezes-deployments: ablation moved it Morgan -> open; held under 2 shams",
+      "who-freezes-deployments: the control moved it Morgan -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-deployments",
+      "category": "carried",
+      "levels": {
+        "baseline": "Morgan",
+        "repeat": "Morgan",
+        "ablation": "open",
+        "sham-1": "Morgan",
+        "sham-2": "Morgan",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Morgan -> open; held under 2 shams",
+        "the control moved it Morgan -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

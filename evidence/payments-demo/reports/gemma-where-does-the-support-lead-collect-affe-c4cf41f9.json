@@ -1,0 +1,39 @@
+{
+  "frame": "gemma-where-does-the-support-lead-collect-affe-c4cf41f9",
+  "hash": "fbaaedfde12d751562373480dbac7d60d45ca9dd47e367e92f7b71ee3b1eb755",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "where-does-the-support-l": "unresolved"
+    },
+    "evidence": [
+      "where-does-the-support-l: the baseline and repeat sessions split (incident channel, another answer)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "where-does-the-support-l",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "incident channel",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "incident channel",
+        "sham-2": "incident channel",
+        "control": "open"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (incident channel, another answer)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

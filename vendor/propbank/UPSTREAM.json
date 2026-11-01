@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/propbank/propbank-frames",
+  "release": "v3.4.0",
+  "commit": "4087fa9ab5c40907c34ff91a56acc2cab1670145",
+  "archive": "https://codeload.github.com/propbank/propbank-frames/zip/refs/tags/v3.4.0",
+  "archiveSha256": "b59a978cb05fd7e2d9f175633bf93716ca279b42dd55ab8a425599f5040d67b8",
+  "license": "CC-BY-SA-4.0",
+  "frames": 11205,
+  "mergedRolesets": [
+    "overhang-01"
+  ],
+  "indexSha256": "4123e8d6501309ba776a2d3a9df4935c382619b715b9c17ea774f0f862df9b13",
+  "licenseSha256": "1fdd47d0526982b4e71694ca4faf1de06ef8957faec92e3d023a26d187ac9cd3"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "tendora",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "tendora": "dist/bin/engine.mjs"
+  },
+  "scripts": {
+    "demo": "node dist/bin/payments-demo.mjs",
+    "workbench": "node dist/bin/workbench.mjs",
+    "serve": "node dist/bin/serve.mjs",
+    "setup:python": "node dist/bin/setup-python.mjs"
+  },
+  "dependencies": {
+    "sqlite-vec": "0.1.9",
+    "terminal-kit": "^3.1.4"
+  }
+}

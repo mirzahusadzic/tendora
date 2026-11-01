@@ -1,0 +1,43 @@
+{
+  "frame": "gemma-may-jordan-the-database-administrator-re-the-incident-commander-h-05270b99",
+  "hash": "ef058c86eaa4ac84eaa51e4fbd6ddd130adfffb9a003499aa267569ef16df277",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "the-incident-commander-h": "carried"
+    },
+    "evidence": [
+      "the-incident-commander-h: ablation moved it conditional -> open; held under 2 shams",
+      "the-incident-commander-h: the control left it at conditional"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "monotonicity: the control removes the anchors and more, yet left it at conditional"
+    ]
+  },
+  "findings": [
+    {
+      "input": "the-incident-commander-h",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "conditional"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control left it at conditional"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "monotonicity: the control removes the anchors and more, yet left it at conditional"
+      ]
+    }
+  ]
+}

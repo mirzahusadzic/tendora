@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-who-freezes-deployments-during-a-major-i-5aa660a9",
+  "hash": "766f8cb8b15d3cb9e326eea62db11b396b9357f5dec9d3e6b80a80da649fd9e3",
+  "reader": "egemma",
+  "overall": {
+    "category": "cooled",
+    "inputs": {
+      "who-freezes-deployments": "cooled"
+    },
+    "evidence": [
+      "who-freezes-deployments: ablation left it at Morgan, Maya",
+      "who-freezes-deployments: the control moved it Morgan, Maya -> open: the scorer can tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-deployments",
+      "category": "cooled",
+      "levels": {
+        "baseline": "Morgan, Maya",
+        "repeat": "Morgan, Maya",
+        "ablation": "Morgan, Maya",
+        "sham-1": "Morgan, Maya",
+        "sham-2": "Morgan, Maya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at Morgan, Maya",
+        "the control moved it Morgan, Maya -> open: the scorer can tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

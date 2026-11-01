@@ -1,0 +1,42 @@
+{
+  "frame": "gemma-are-access-logs-reviewed-2a9de24f",
+  "hash": "7df0c01af46c145b28a9fb8a2496ca51a50489eab8974efda819910cc0134461",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "are-access-logs-reviewed": "unresolved"
+    },
+    "evidence": [
+      "are-access-logs-reviewed: ablation left it at open, and so did the control: the scorer cannot tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "discrimination: the control left it at open too"
+    ]
+  },
+  "findings": [
+    {
+      "input": "are-access-logs-reviewed",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "open",
+        "repeat": "open",
+        "ablation": "open",
+        "sham-1": "open",
+        "sham-2": "open",
+        "placement": "open",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at open, and so did the control: the scorer cannot tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "discrimination: the control left it at open too"
+      ]
+    }
+  ]
+}

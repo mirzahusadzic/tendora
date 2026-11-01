@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-does-jordan-test-a-backup-before-restori-09c9f247",
+  "hash": "cefc6449331ace9e54c5dc5ae4eeecaedc16a18eb109c88fa7ee6ef973e99a79",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "does-jordan-test-a-backu": "unresolved"
+    },
+    "evidence": [
+      "does-jordan-test-a-backu: a sham moved it too (sham-1, sham-2); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "does-jordan-test-a-backu",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-1, sham-2); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

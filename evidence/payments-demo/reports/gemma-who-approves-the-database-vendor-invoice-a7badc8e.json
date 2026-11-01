@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-who-approves-the-database-vendor-invoice-a7badc8e",
+  "hash": "d300d6fa6bff893792934136f271ec024cc48038c40a93373f9336b7fbc5961a",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "who-approves-the-databas": "unresolved"
+    },
+    "evidence": [
+      "who-approves-the-databas: a sham moved it too (sham-1); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-approves-the-databas",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "Maya",
+        "repeat": "Maya",
+        "ablation": "open",
+        "sham-1": "another answer",
+        "sham-2": "Maya",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-1); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

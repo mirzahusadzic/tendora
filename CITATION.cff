@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this evidence or the essay, please cite it as below. The evidence is under Apache-2.0 and the essay under CC BY 4.0; LICENSE names the license of every part."
+title: "Tendora"
+abstract: "Tendora answers questions from a corpus of plain-language statements, by role: only what the statements support, with every statement an answer rests on named. This repository holds Gadfly's evidence of what its answers rest on, the payments corpus it answers from, and the essay Load-bearing as situated meaning."
+type: software
+authors:
+  - family-names: "Husadzic"
+    given-names: "Mirza"
+repository-code: "https://github.com/mirzahusadzic/tendora"
+license-url: "https://github.com/mirzahusadzic/tendora/blob/main/LICENSE"
+keywords:
+  - question answering
+  - provenance
+  - deterministic
+  - abstract meaning representation
+  - load-bearing

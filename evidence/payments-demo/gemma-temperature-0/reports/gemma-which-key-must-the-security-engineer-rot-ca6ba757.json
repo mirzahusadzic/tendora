@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-which-key-must-the-security-engineer-rot-ca6ba757",
+  "hash": "fe55513b054f5c5e2ba9767885e0a1c44ce16b504d3268c57132c8c8f59132d6",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "which-key-must-the-secur": "unresolved"
+    },
+    "evidence": [
+      "which-key-must-the-secur: ablation left it at open, and so did the control: the scorer cannot tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "discrimination: the control left it at open too"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-key-must-the-secur",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "open",
+        "repeat": "open",
+        "ablation": "open",
+        "sham-1": "open",
+        "sham-2": "open",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at open, and so did the control: the scorer cannot tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "discrimination: the control left it at open too"
+      ]
+    }
+  ]
+}

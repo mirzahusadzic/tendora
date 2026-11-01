@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-may-jordan-the-database-administrator-re-75955e68",
+  "hash": "2ad8f16139d36c78955d5e62d203a71b85c4eda4897f73b8b3c298eaccc9c91f",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "may-jordan-the-database": "unresolved"
+    },
+    "evidence": [
+      "may-jordan-the-database: ablation left it at open, and so did the control: the scorer cannot tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "discrimination: the control left it at open too"
+    ]
+  },
+  "findings": [
+    {
+      "input": "may-jordan-the-database",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "open",
+        "repeat": "open",
+        "ablation": "open",
+        "sham-1": "open",
+        "sham-2": "open",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at open, and so did the control: the scorer cannot tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "discrimination: the control left it at open too"
+      ]
+    }
+  ]
+}

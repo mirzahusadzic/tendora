@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-what-does-the-release-manager-freeze-dur-5efdde6d",
+  "hash": "0d94a719b6be1759139db09714880cf149caf3e0abf58212450e1801cca0b8eb",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-does-the-release-ma": "carried"
+    },
+    "evidence": [
+      "what-does-the-release-ma: ablation moved it deployments -> open; held under 2 shams",
+      "what-does-the-release-ma: the control moved it deployments -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-release-ma",
+      "category": "carried",
+      "levels": {
+        "baseline": "deployments",
+        "repeat": "deployments",
+        "ablation": "open",
+        "sham-1": "deployments",
+        "sham-2": "deployments",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it deployments -> open; held under 2 shams",
+        "the control moved it deployments -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

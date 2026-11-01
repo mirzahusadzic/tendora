@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-which-manager-freezes-deployments-during-12965c01",
+  "hash": "dd6f343e020053c8575e14878c0e8ab3760881c24c0bd211b066b631c1133a53",
+  "reader": "egemma",
+  "overall": {
+    "category": "cooled",
+    "inputs": {
+      "which-manager-freezes-de": "cooled"
+    },
+    "evidence": [
+      "which-manager-freezes-de: ablation left it at Morgan",
+      "which-manager-freezes-de: the control moved it Morgan -> open: the scorer can tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-manager-freezes-de",
+      "category": "cooled",
+      "levels": {
+        "baseline": "Morgan",
+        "repeat": "Morgan",
+        "ablation": "Morgan",
+        "sham-1": "Morgan",
+        "sham-2": "Morgan",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at Morgan",
+        "the control moved it Morgan -> open: the scorer can tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

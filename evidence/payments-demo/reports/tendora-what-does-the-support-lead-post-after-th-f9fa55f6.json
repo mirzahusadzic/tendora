@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-what-does-the-support-lead-post-after-th-f9fa55f6",
+  "hash": "a2f0530622c9bfbf5c8d7c954c7414132f0f1db3c186f74657ac09af59e526fa",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-does-the-support-le": "carried"
+    },
+    "evidence": [
+      "what-does-the-support-le: ablation moved it customer updates -> open; held under 2 shams",
+      "what-does-the-support-le: the control moved it customer updates -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-support-le",
+      "category": "carried",
+      "levels": {
+        "baseline": "customer updates",
+        "repeat": "customer updates",
+        "ablation": "open",
+        "sham-1": "customer updates",
+        "sham-2": "customer updates",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it customer updates -> open; held under 2 shams",
+        "the control moved it customer updates -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

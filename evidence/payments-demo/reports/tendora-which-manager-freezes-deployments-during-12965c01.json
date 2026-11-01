@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-which-manager-freezes-deployments-during-12965c01",
+  "hash": "f5f8aea73be0286ce6985c6bbbdeeb5f8f8fc90182e5030814ff26a565beff03",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "which-manager-freezes-de": "carried"
+    },
+    "evidence": [
+      "which-manager-freezes-de: ablation moved it conditional -> open; held under 2 shams",
+      "which-manager-freezes-de: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-manager-freezes-de",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-which-key-must-the-security-engineer-rot-ca6ba757",
+  "hash": "87a7f6267c532b401f8d3f59ef4559452c3d9a28729a07c149471b1ac1d27ff4",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "which-key-must-the-secur": "carried"
+    },
+    "evidence": [
+      "which-key-must-the-secur: ablation moved it conditional -> open; held under 2 shams",
+      "which-key-must-the-secur: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-key-must-the-secur",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

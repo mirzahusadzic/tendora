@@ -1,0 +1,40 @@
+{
+  "frame": "gemma-who-freezes-changes-during-a-major-incid-f3718f40",
+  "hash": "d4fc307bd47e37a09c1382e57023cc8b2d91f1c1c91f4caa4693310b805acb32",
+  "reader": "egemma",
+  "overall": {
+    "category": "coupled but misaligned",
+    "inputs": {
+      "who-freezes-changes-duri": "coupled but misaligned"
+    },
+    "evidence": [
+      "who-freezes-changes-duri: ablation moved it Morgan, Maya -> another answer, which the frame does not allow"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-changes-duri",
+      "category": "coupled but misaligned",
+      "levels": {
+        "baseline": "Morgan, Maya",
+        "repeat": "Morgan, Maya",
+        "ablation": "another answer",
+        "sham-1": "Morgan, Maya",
+        "sham-2": "Morgan, Maya",
+        "placement": "Morgan, Maya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Morgan, Maya -> another answer, which the frame does not allow"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

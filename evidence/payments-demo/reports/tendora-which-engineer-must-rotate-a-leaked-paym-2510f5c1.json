@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-which-engineer-must-rotate-a-leaked-paym-2510f5c1",
+  "hash": "f3793eeaca862c4c607cd49f540bb91cb84bd561d07c4f1868b92bd0c5a25c76",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "which-engineer-must-rota": "carried"
+    },
+    "evidence": [
+      "which-engineer-must-rota: ablation moved it conditional -> open; held under 2 shams",
+      "which-engineer-must-rota: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-engineer-must-rota",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

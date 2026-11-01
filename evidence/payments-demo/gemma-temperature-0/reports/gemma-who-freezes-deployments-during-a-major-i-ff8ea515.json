@@ -1,0 +1,42 @@
+{
+  "frame": "gemma-who-freezes-deployments-during-a-major-i-ff8ea515",
+  "hash": "f30a3b196861e590ebe46402fd145d1937e260a57ab3b63d1766f8e8e3f67bbc",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "who-freezes-deployments": "unresolved"
+    },
+    "evidence": [
+      "who-freezes-deployments: a sham moved it too (sham-1, sham-2); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-deployments",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "Morgan, Maya",
+        "sham-2": "Morgan, Maya",
+        "placement": "another answer",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-1, sham-2); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

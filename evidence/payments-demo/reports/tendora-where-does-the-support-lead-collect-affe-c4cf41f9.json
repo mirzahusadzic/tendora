@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-where-does-the-support-lead-collect-affe-c4cf41f9",
+  "hash": "5f86308026219b0246e23534f2a4f3f7e7642ebc5b40c59cb27dc69f55f5c3a5",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "where-does-the-support-l": "carried"
+    },
+    "evidence": [
+      "where-does-the-support-l: ablation moved it incident channel -> open; held under 2 shams",
+      "where-does-the-support-l: the control moved it incident channel -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "where-does-the-support-l",
+      "category": "carried",
+      "levels": {
+        "baseline": "incident channel",
+        "repeat": "incident channel",
+        "ablation": "open",
+        "sham-1": "incident channel",
+        "sham-2": "incident channel",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it incident channel -> open; held under 2 shams",
+        "the control moved it incident channel -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-does-the-support-lead-post-after-th-f9fa55f6",
+  "hash": "1d719d3e05e1da6d8aa4a5e12415bc82ad7a559339d674f7f913e141629586c9",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "what-does-the-support-le": "unresolved"
+    },
+    "evidence": [
+      "what-does-the-support-le: a sham moved it too (sham-1, sham-2); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-support-le",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "customer updates",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-1, sham-2); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-does-the-release-manager-freeze-dur-5efdde6d",
+  "hash": "e6f46c1bc293a374fd183080ad56cf8ffedd8c85439489e43c259ad2bcc45cfb",
+  "reader": "egemma",
+  "overall": {
+    "category": "coupled but misaligned",
+    "inputs": {
+      "what-does-the-release-ma": "coupled but misaligned"
+    },
+    "evidence": [
+      "what-does-the-release-ma: ablation moved it deployments -> another answer, which the frame does not allow"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-release-ma",
+      "category": "coupled but misaligned",
+      "levels": {
+        "baseline": "deployments",
+        "repeat": "deployments",
+        "ablation": "another answer",
+        "sham-1": "another answer",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it deployments -> another answer, which the frame does not allow"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

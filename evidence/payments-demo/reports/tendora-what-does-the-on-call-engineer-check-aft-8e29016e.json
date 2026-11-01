@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-what-does-the-on-call-engineer-check-aft-8e29016e",
+  "hash": "a34913e1ce8c1a37ce95fe812baeb7a3ade9d981ba755976a1c80b2966d16e2f",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-does-the-on-call-en": "carried"
+    },
+    "evidence": [
+      "what-does-the-on-call-en: ablation moved it conditional -> open; held under 2 shams",
+      "what-does-the-on-call-en: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-on-call-en",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

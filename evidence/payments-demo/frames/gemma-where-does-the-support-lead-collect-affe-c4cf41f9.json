@@ -1,0 +1,262 @@
+{
+  "name": "gemma-where-does-the-support-lead-collect-affe-c4cf41f9",
+  "relation": "the answer to \u201cWhere does the support lead collect affected customer reports?\u201d rests on the statements it cites",
+  "locus": "the engine's check of one saved question, at its scope and case",
+  "role": "a person asking the workbench",
+  "grain": "one statement of the corpus",
+  "purpose": "know what the answer rests on",
+  "trajectory": "the statements in scope and the case, the engine's check, the answer shown",
+  "crossing": "the check's answer line: its status and its text",
+  "promise": "the answer is incident channel only while the cited statements are in scope; without them the question stays open",
+  "baseline": {
+    "check": "c4cf41f9-3dfa-4537-bd15-f3a7eeeb8a16",
+    "revision": "7e872d27e4e1aff9263bb0000884f613a5bebf75dfbd4d888482de1149168042",
+    "packs": "{'lock': 'sha256:a423f1940bab11d3faf30daad832b3f0750c365e9a005904d92dafe91d61b8e2', 'packs': [{'id': 'en-general', 'version': '23.0.0', 'digest': 'sha256:3cdd46d617c881179301fd5fa7e3a0279d8120d8a6347d065009c356f05f28d2'}, {'id': 'en-normalization', 'version': '2.1.16', 'digest': 'sha256:c81676f95fa11a3eefe4413c775c5eb794ae0d3f8f7076bce42a0bb315aa9f7c'}]}",
+    "engine": "tendora 1",
+    "kinds": "each statement's role, as show --json reads it"
+  },
+  "body": {
+    "spans": [
+      {
+        "id": "s01",
+        "text": "Maya, the incident commander, declares a major incident when payment failures last more than ten minutes.",
+        "kind": "incident-commander"
+      },
+      {
+        "id": "s02",
+        "text": "Maya, the incident commander, may approve a rollback of the payments service.",
+        "kind": "incident-commander"
+      },
+      {
+        "id": "s03",
+        "text": "Maya, the incident commander, must close a major incident after the release manager confirms that payments are healthy.",
+        "kind": "incident-commander"
+      },
+      {
+        "id": "s04",
+        "text": "Alex, the on-call engineer, acknowledges every page within five minutes.",
+        "kind": "on-call-engineer"
+      },
+      {
+        "id": "s05",
+        "text": "Alex, the on-call engineer, checks the payment error rate after acknowledging a page.",
+        "kind": "on-call-engineer"
+      },
+      {
+        "id": "s06",
+        "text": "Alex, the on-call engineer, may restart the payments service when the error rate stays above five percent.",
+        "kind": "on-call-engineer"
+      },
+      {
+        "id": "s07",
+        "text": "Morgan, the release manager, freezes deployments during a major incident.",
+        "kind": "release-manager"
+      },
+      {
+        "id": "s08",
+        "text": "Morgan, the release manager, may roll back the latest payments release after the incident commander approves the rollback.",
+        "kind": "release-manager"
+      },
+      {
+        "id": "s09",
+        "text": "Morgan, the release manager, confirms that payments are healthy before the incident commander closes a major incident.",
+        "kind": "release-manager"
+      },
+      {
+        "id": "s10",
+        "text": "Sam, the support lead, posts customer updates after the incident commander declares a major incident.",
+        "kind": "support-lead"
+      },
+      {
+        "id": "s11",
+        "text": "Sam, the support lead, must not promise a recovery time before the on-call engineer identifies the cause.",
+        "kind": "support-lead"
+      },
+      {
+        "id": "s12",
+        "text": "Sam, the support lead, collects affected customer reports in the incident channel.",
+        "kind": "support-lead"
+      },
+      {
+        "id": "s13",
+        "text": "Jordan, the database administrator, may fail over the primary database after the on-call engineer confirms replication lag.",
+        "kind": "database-administrator"
+      },
+      {
+        "id": "s14",
+        "text": "Jordan, the database administrator, keeps break-glass credentials in the password vault.",
+        "kind": "database-administrator"
+      },
+      {
+        "id": "s15",
+        "text": "Jordan, the database administrator, may restore the database from a backup only after the incident commander approves the restore.",
+        "kind": "database-administrator"
+      },
+      {
+        "id": "s16",
+        "text": "Priya, the security engineer, reviews access logs when a payment key is exposed.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s17",
+        "text": "Priya, the security engineer, must rotate a leaked payment key before the incident commander closes the incident.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s18",
+        "text": "Priya, the security engineer, reports a leaked payment key to the incident commander.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s19",
+        "text": "Maya, the incident commander, approves the database vendor invoice.",
+        "kind": "incident-commander"
+      },
+      {
+        "id": "s20",
+        "text": "A deployment is a change.",
+        "kind": "release-manager"
+      },
+      {
+        "id": "s21",
+        "text": "If a major incident is open, Morgan, the release manager, does not ship a release.",
+        "kind": "release-manager"
+      },
+      {
+        "id": "s22",
+        "text": "If a certificate expires, Priya, the security engineer, renews the certificate.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s23",
+        "text": "If Priya renews the certificate, Sam, the support lead, notifies the customers.",
+        "kind": "support-lead"
+      },
+      {
+        "id": "s24",
+        "text": "Alex, the on-call engineer, reviews access logs after every rollback.",
+        "kind": "on-call-engineer"
+      },
+      {
+        "id": "s25",
+        "text": "Jordan, the database administrator, tests a backup before restoring it.",
+        "kind": "database-administrator"
+      },
+      {
+        "id": "s26",
+        "text": "If a payment key leaks, Morgan, the release manager, ships a release.",
+        "kind": "release-manager"
+      },
+      {
+        "id": "s27",
+        "text": "If a payment key leaks, Priya, the security engineer, renews the certificate.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s28",
+        "text": "Either a certificate expires or a payment key leaks.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s29",
+        "text": "If Priya reviews access logs, she files an audit note.",
+        "kind": "security-engineer"
+      },
+      {
+        "id": "s30",
+        "text": "On Friday payment failures lasted more than ten minutes, and Maya, the incident commander, did not declare a major incident.",
+        "kind": "incident-commander"
+      }
+    ]
+  },
+  "anchors": [
+    "s12"
+  ],
+  "inputs": [
+    {
+      "id": "where-does-the-support-l",
+      "text": "Question: Where does the support lead collect affected customer reports?"
+    }
+  ],
+  "observe": {
+    "labels": [
+      "Alex",
+      "Jordan",
+      "Maya",
+      "Morgan",
+      "Morgan, Maya",
+      "No",
+      "Priya",
+      "Sam",
+      "Yes",
+      "affected customer reports",
+      "break-glass credentials",
+      "customer updates",
+      "deployments",
+      "incident channel",
+      "leaked payment key",
+      "major incident",
+      "payment error rate",
+      "conditional",
+      "ambiguous",
+      "conflict",
+      "another answer",
+      "open"
+    ],
+    "instruction": "Answer the question for the case from the statements above and nothing else. Give the one answer the statements make; 'conditional' if they give one only under a condition the case does not settle; 'ambiguous' if they give several answers where one is asked; 'conflict' if they give both yes and no; 'another answer' for any other kind of answer; 'open' if the statements do not settle it."
+  },
+  "interventions": {
+    "repeat": true,
+    "ablation": true,
+    "control": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s05",
+      "s06",
+      "s07",
+      "s08",
+      "s09",
+      "s10",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20",
+      "s21",
+      "s22",
+      "s23",
+      "s24",
+      "s25",
+      "s26",
+      "s27",
+      "s28",
+      "s29",
+      "s30"
+    ],
+    "sham": {
+      "draws": 2
+    }
+  },
+  "allowed": {
+    "ablation": [
+      "open"
+    ]
+  },
+  "standing": {
+    "quorum": 1,
+    "agree": 1,
+    "stable": true
+  },
+  "materialized": true,
+  "battery": {
+    "kind": "egemma"
+  },
+  "carriage": "listed"
+}

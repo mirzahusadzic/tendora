@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-who-confirms-that-payments-are-healthy-dd1d5981",
+  "hash": "dc7e8dca39a3e6af4c46263c27c07578eab66f610b9dc92919cd355f1c7534df",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-confirms-that-paymen": "carried"
+    },
+    "evidence": [
+      "who-confirms-that-paymen: ablation moved it Morgan, Maya -> open; held under 2 shams",
+      "who-confirms-that-paymen: the control moved it Morgan, Maya -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-confirms-that-paymen",
+      "category": "carried",
+      "levels": {
+        "baseline": "Morgan, Maya",
+        "repeat": "Morgan, Maya",
+        "ablation": "open",
+        "sham-1": "Morgan, Maya",
+        "sham-2": "Morgan, Maya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Morgan, Maya -> open; held under 2 shams",
+        "the control moved it Morgan, Maya -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

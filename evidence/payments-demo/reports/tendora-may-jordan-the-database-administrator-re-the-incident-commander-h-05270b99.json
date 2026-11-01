@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-may-jordan-the-database-administrator-re-the-incident-commander-h-05270b99",
+  "hash": "51443737efa294d7c4e56dca3160625b9673d1605f3042809c71144fa4e61d11",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "the-incident-commander-h": "carried"
+    },
+    "evidence": [
+      "the-incident-commander-h: ablation moved it No -> open; held under 2 shams",
+      "the-incident-commander-h: the control moved it No -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "the-incident-commander-h",
+      "category": "carried",
+      "levels": {
+        "baseline": "No",
+        "repeat": "No",
+        "ablation": "open",
+        "sham-1": "No",
+        "sham-2": "No",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it No -> open; held under 2 shams",
+        "the control moved it No -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

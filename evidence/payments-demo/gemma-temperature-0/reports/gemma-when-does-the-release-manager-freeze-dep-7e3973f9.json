@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-when-does-the-release-manager-freeze-dep-7e3973f9",
+  "hash": "247ec6f2cc6a3dd0aeb301037ebab3a1147bc9ab96f63a7dcfc8291e6b9d7898",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "when-does-the-release-ma": "unresolved"
+    },
+    "evidence": [
+      "when-does-the-release-ma: ablation left it at open, and so did the control: the scorer cannot tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "discrimination: the control left it at open too"
+    ]
+  },
+  "findings": [
+    {
+      "input": "when-does-the-release-ma",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "open",
+        "repeat": "open",
+        "ablation": "open",
+        "sham-1": "open",
+        "sham-2": "open",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at open, and so did the control: the scorer cannot tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "discrimination: the control left it at open too"
+      ]
+    }
+  ]
+}

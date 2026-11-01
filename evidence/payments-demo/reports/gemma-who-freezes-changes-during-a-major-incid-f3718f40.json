@@ -1,0 +1,42 @@
+{
+  "frame": "gemma-who-freezes-changes-during-a-major-incid-f3718f40",
+  "hash": "c3aa4a59c4ea76f3f09a2d9773ac07e07f849982fe76a34492921ddeefc8e8bd",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "who-freezes-changes-duri": "unresolved"
+    },
+    "evidence": [
+      "who-freezes-changes-duri: the baseline and repeat sessions split (Morgan, Maya, another answer)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-changes-duri",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "Morgan, Maya",
+        "repeat": "another answer",
+        "ablation": "Morgan, Maya",
+        "sham-1": "Morgan, Maya",
+        "sham-2": "another answer",
+        "placement": "Morgan, Maya",
+        "control": "open"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (Morgan, Maya, another answer)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

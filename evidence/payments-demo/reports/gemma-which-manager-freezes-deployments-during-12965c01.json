@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-which-manager-freezes-deployments-during-12965c01",
+  "hash": "f5b6d4c4f98196c67a10cd5d9b0ed178a5a2c31095b36a31dc85f5288ee7f292",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "which-manager-freezes-de": "unresolved"
+    },
+    "evidence": [
+      "which-manager-freezes-de: the baseline and repeat sessions split (Morgan, Morgan, Maya)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-manager-freezes-de",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "Morgan",
+        "repeat": "Morgan, Maya",
+        "ablation": "Morgan",
+        "sham-1": "another answer",
+        "sham-2": "Morgan",
+        "control": "open"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (Morgan, Morgan, Maya)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

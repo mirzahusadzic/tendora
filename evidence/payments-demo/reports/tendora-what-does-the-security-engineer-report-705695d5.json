@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-what-does-the-security-engineer-report-705695d5",
+  "hash": "0056a4adf44471bbf3d166f065af4b6e5ffa20fc5724a9d853f3ec2b0631f9df",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-does-the-security-e": "carried"
+    },
+    "evidence": [
+      "what-does-the-security-e: ablation moved it conditional -> open; held under 2 shams",
+      "what-does-the-security-e: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-security-e",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

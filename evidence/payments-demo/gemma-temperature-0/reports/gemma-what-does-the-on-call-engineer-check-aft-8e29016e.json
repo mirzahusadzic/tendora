@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-does-the-on-call-engineer-check-aft-8e29016e",
+  "hash": "d21bae9ea745ad09cb4662ae6bdcfe6fdd0131eba4fb7d10fecf098f2681daef",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "what-does-the-on-call-en": "unresolved"
+    },
+    "evidence": [
+      "what-does-the-on-call-en: a sham moved it too (sham-1); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-on-call-en",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "payment error rate",
+        "repeat": "payment error rate",
+        "ablation": "open",
+        "sham-1": "another answer",
+        "sham-2": "payment error rate",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-1); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

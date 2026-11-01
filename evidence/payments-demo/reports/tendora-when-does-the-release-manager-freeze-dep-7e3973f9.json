@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-when-does-the-release-manager-freeze-dep-7e3973f9",
+  "hash": "71a64e671cd227886e12827b9c2a08ffe617b82c3dc84206b7d14558c3781fe0",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "when-does-the-release-ma": "carried"
+    },
+    "evidence": [
+      "when-does-the-release-ma: ablation moved it major incident -> open; held under 2 shams",
+      "when-does-the-release-ma: the control moved it major incident -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "when-does-the-release-ma",
+      "category": "carried",
+      "levels": {
+        "baseline": "major incident",
+        "repeat": "major incident",
+        "ablation": "open",
+        "sham-1": "major incident",
+        "sham-2": "major incident",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it major incident -> open; held under 2 shams",
+        "the control moved it major incident -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

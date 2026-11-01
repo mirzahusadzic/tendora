@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-who-approves-the-database-vendor-invoice-a7badc8e",
+  "hash": "64380621dc721e42deabd0d16c26d24d0bab0ddba87568e85a6d6e81243b8282",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-approves-the-databas": "carried"
+    },
+    "evidence": [
+      "who-approves-the-databas: ablation moved it Maya -> open; held under 2 shams",
+      "who-approves-the-databas: the control moved it Maya -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-approves-the-databas",
+      "category": "carried",
+      "levels": {
+        "baseline": "Maya",
+        "repeat": "Maya",
+        "ablation": "open",
+        "sham-1": "Maya",
+        "sham-2": "Maya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Maya -> open; held under 2 shams",
+        "the control moved it Maya -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-does-the-on-call-engineer-check-aft-8e29016e",
+  "hash": "5977aea486feb24c5ec03c13845999a0d7c4f5ae445037e1f07958452b59501e",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "what-does-the-on-call-en": "unresolved"
+    },
+    "evidence": [
+      "what-does-the-on-call-en: the baseline and repeat sessions split (payment error rate, another answer)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-on-call-en",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "payment error rate",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "another answer",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (payment error rate, another answer)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

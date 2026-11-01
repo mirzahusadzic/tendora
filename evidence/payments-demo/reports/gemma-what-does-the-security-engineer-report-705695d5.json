@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-does-the-security-engineer-report-705695d5",
+  "hash": "81deca73df96abe1b4441dc1fb425e88b176e0ec361bb2a5bfa9e589874f689a",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "what-does-the-security-e": "unresolved"
+    },
+    "evidence": [
+      "what-does-the-security-e: the baseline and repeat sessions split (another answer, open)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-security-e",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "open",
+        "ablation": "open",
+        "sham-1": "open",
+        "sham-2": "open",
+        "control": "open"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (another answer, open)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

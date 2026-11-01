@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-who-may-fail-over-the-primary-database-4d4a5cbe",
+  "hash": "8b765a2f92d2c3ecc95df62c200b60bb2b7b07611308df7fde6896e749f4f710",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-may-fail-over-the-pr": "carried"
+    },
+    "evidence": [
+      "who-may-fail-over-the-pr: ablation moved it conditional -> open; held under 2 shams",
+      "who-may-fail-over-the-pr: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-may-fail-over-the-pr",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

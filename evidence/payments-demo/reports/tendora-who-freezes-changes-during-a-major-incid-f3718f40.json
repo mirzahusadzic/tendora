@@ -1,0 +1,41 @@
+{
+  "frame": "tendora-who-freezes-changes-during-a-major-incid-f3718f40",
+  "hash": "9747abe984d0e18a5a8b3286e03c5e63844a4046eb3dfb14242fd6fdaa946ec6",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-freezes-changes-duri": "carried"
+    },
+    "evidence": [
+      "who-freezes-changes-duri: ablation moved it Morgan -> open; held under placement, 2 shams",
+      "who-freezes-changes-duri: the control moved it Morgan -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-freezes-changes-duri",
+      "category": "carried",
+      "levels": {
+        "baseline": "Morgan",
+        "repeat": "Morgan",
+        "ablation": "open",
+        "sham-1": "Morgan",
+        "sham-2": "Morgan",
+        "placement": "Morgan",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Morgan -> open; held under placement, 2 shams",
+        "the control moved it Morgan -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

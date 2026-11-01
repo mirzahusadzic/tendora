@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-does-jordan-test-a-backup-before-restori-09c9f247",
+  "hash": "d1d5d6f135d372edcfcc3756f1ace50f9e96416625a8a04e8bf3d9918c1e7830",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "does-jordan-test-a-backu": "carried"
+    },
+    "evidence": [
+      "does-jordan-test-a-backu: ablation moved it Yes -> open; held under 2 shams",
+      "does-jordan-test-a-backu: the control moved it Yes -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "does-jordan-test-a-backu",
+      "category": "carried",
+      "levels": {
+        "baseline": "Yes",
+        "repeat": "Yes",
+        "ablation": "open",
+        "sham-1": "Yes",
+        "sham-2": "Yes",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Yes -> open; held under 2 shams",
+        "the control moved it Yes -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

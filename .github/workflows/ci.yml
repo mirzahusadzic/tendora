@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  demo:
+    name: Demo and evidence (Node 24)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run demo
+      - name: The demo's saved checks
+        run: npx tendora runs --project .proj/payments-demo --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const n=JSON.parse(s).length;console.log(n+' saved checks');if(n<40)process.exit(1)})"
+      - name: The engine serves the demo
+        run: |
+          npm run --silent serve -- --project .proj/payments-demo --port 0 --offline > serve.log 2>&1 &
+          for i in $(seq 1 60); do grep -q " at http://" serve.log && break; sleep 1; done
+          head -1 serve.log
+          grep -q " at http://" serve.log
+      - run: node test/acceptance/load-bearing.mjs
+      - run: node test/acceptance/evidence.mjs
+      - run: node test/acceptance/helpers.mjs
+      - run: node test/acceptance/claims.mjs
+      - run: node tools/check-links.mjs
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - name: Gadfly reads every kept verdict again
+        run: node test/acceptance/recompute.mjs
+        env:
+          GADFLY: uvx --from midwife==0.6.0 gadfly

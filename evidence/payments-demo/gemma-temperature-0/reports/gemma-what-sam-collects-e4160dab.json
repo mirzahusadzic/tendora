@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-sam-collects-e4160dab",
+  "hash": "10470fa27a946f2277db993df7e0a936119d78173d3faa1920cb7710538fafce",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "what-sam-collects": "unresolved"
+    },
+    "evidence": [
+      "what-sam-collects: a sham moved it too (sham-2); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-sam-collects",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "another answer",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-2); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-sam-collects-e4160dab",
+  "hash": "b9e998eb6de907fecb49c106f529618ee4d62681f861b5852a00f3529e9af8a9",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-sam-collects": "carried"
+    },
+    "evidence": [
+      "what-sam-collects: ablation moved it another answer -> open; held under 2 shams",
+      "what-sam-collects: the control moved it another answer -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-sam-collects",
+      "category": "carried",
+      "levels": {
+        "baseline": "another answer",
+        "repeat": "another answer",
+        "ablation": "open",
+        "sham-1": "another answer",
+        "sham-2": "another answer",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it another answer -> open; held under 2 shams",
+        "the control moved it another answer -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

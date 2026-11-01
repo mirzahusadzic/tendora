@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-who-should-rotate-a-leaked-payment-key-1c641a0d",
+  "hash": "69a4487724fc1f03105b5e2de8ce4a98b3884c7c5963534159cb7aa19bfec26c",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-should-rotate-a-leak": "carried"
+    },
+    "evidence": [
+      "who-should-rotate-a-leak: ablation moved it conditional -> open; held under 2 shams",
+      "who-should-rotate-a-leak: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-should-rotate-a-leak",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-what-does-the-database-administrator-kee-2377f947",
+  "hash": "4dc6127992d00bcd84ec215d215082ca3435887d3801872dd9065a6b04955582",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "what-does-the-database-a": "unresolved"
+    },
+    "evidence": [
+      "what-does-the-database-a: a sham moved it too (sham-2); the change is not specific"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-the-database-a",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "break-glass credentials",
+        "repeat": "break-glass credentials",
+        "ablation": "open",
+        "sham-1": "break-glass credentials",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "a sham moved it too (sham-2); the change is not specific"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+node_modules/
+.proj/
+.venv/
+/runs/
+serve.log
+.DS_Store

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-does-morgan-ship-a-release-a-major-incident-is-open-dc26529b",
+  "hash": "b485c46ae3c7ac7cb195646acef6a6aba7b174d983cbaf20ecc177e82760b05a",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "a-major-incident-is-open": "carried"
+    },
+    "evidence": [
+      "a-major-incident-is-open: ablation moved it conditional -> open; held under 2 shams",
+      "a-major-incident-is-open: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "a-major-incident-is-open",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

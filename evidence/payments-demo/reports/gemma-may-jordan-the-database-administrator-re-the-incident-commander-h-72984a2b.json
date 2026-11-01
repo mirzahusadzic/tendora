@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-may-jordan-the-database-administrator-re-the-incident-commander-h-72984a2b",
+  "hash": "3499f566317582f02f43b62a858a1ceb09e73555eb35c8b985b7c556e5c31c29",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "the-incident-commander-h": "unresolved"
+    },
+    "evidence": [
+      "the-incident-commander-h: the baseline and repeat sessions split (open, conditional)"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-1, sham-2 moved it too; the change is not specific"
+    ]
+  },
+  "findings": [
+    {
+      "input": "the-incident-commander-h",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "open",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "conditional"
+      },
+      "evidence": [
+        "the baseline and repeat sessions split (open, conditional)"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-1, sham-2 moved it too; the change is not specific"
+      ]
+    }
+  ]
+}

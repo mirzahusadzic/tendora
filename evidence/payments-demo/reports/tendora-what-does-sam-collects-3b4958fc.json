@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-what-does-sam-collects-3b4958fc",
+  "hash": "60569a4462016c4dd068b58a4c0944e939d5db640e47a2b5c9eab3327497abc9",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "what-does-sam-collects": "carried"
+    },
+    "evidence": [
+      "what-does-sam-collects: ablation moved it conditional -> open; held under 2 shams",
+      "what-does-sam-collects: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "what-does-sam-collects",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

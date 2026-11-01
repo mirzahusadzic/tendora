@@ -1,0 +1,40 @@
+{
+  "frame": "tendora-may-jordan-the-database-administrator-re-75955e68",
+  "hash": "ec78859f3d4ded7379bef0e15b6c2ba2c650d8b2d3c76efc8544fbaa7f8efb88",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "may-jordan-the-database": "carried"
+    },
+    "evidence": [
+      "may-jordan-the-database: ablation moved it conditional -> open; held under 2 shams",
+      "may-jordan-the-database: the control moved it conditional -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "may-jordan-the-database",
+      "category": "carried",
+      "levels": {
+        "baseline": "conditional",
+        "repeat": "conditional",
+        "ablation": "open",
+        "sham-1": "conditional",
+        "sham-2": "conditional",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it conditional -> open; held under 2 shams",
+        "the control moved it conditional -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

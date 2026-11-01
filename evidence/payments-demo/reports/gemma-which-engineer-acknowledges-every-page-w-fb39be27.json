@@ -1,0 +1,43 @@
+{
+  "frame": "gemma-which-engineer-acknowledges-every-page-w-fb39be27",
+  "hash": "be6e3ba6b94c42074f030d958045c04a4e7460afe8a0a4285c898918b28b656f",
+  "reader": "egemma",
+  "overall": {
+    "category": "unresolved",
+    "inputs": {
+      "which-engineer-acknowled": "unresolved"
+    },
+    "evidence": [
+      "which-engineer-acknowled: ablation left it at open, and so did the control: the scorer cannot tell"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared",
+      "specificity: sham-2 moved it too; the change is not specific",
+      "discrimination: the control left it at open too"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-engineer-acknowled",
+      "category": "unresolved",
+      "levels": {
+        "baseline": "open",
+        "repeat": "open",
+        "ablation": "open",
+        "sham-1": "open",
+        "sham-2": "another answer",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation left it at open, and so did the control: the scorer cannot tell"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared",
+        "specificity: sham-2 moved it too; the change is not specific",
+        "discrimination: the control left it at open too"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-who-reports-a-leaked-payment-key-to-the-e762c9c6",
+  "hash": "682d6db11606a7a38ce05237ae57f786d5035461644012d93d3016c2fd46a691",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "who-reports-a-leaked-pay": "carried"
+    },
+    "evidence": [
+      "who-reports-a-leaked-pay: ablation moved it Priya -> open; held under 2 shams",
+      "who-reports-a-leaked-pay: the control moved it Priya -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "who-reports-a-leaked-pay",
+      "category": "carried",
+      "levels": {
+        "baseline": "Priya",
+        "repeat": "Priya",
+        "ablation": "open",
+        "sham-1": "Priya",
+        "sham-2": "Priya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Priya -> open; held under 2 shams",
+        "the control moved it Priya -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}

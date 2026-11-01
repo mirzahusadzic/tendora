@@ -1,0 +1,41 @@
+{
+  "frame": "gemma-which-engineer-must-rotate-a-leaked-paym-2510f5c1",
+  "hash": "f016ccb4109032a8a1db9e352c1f1bc879ee1e279ec6e290ac78aa91c44f27d8",
+  "reader": "egemma",
+  "overall": {
+    "category": "carried",
+    "inputs": {
+      "which-engineer-must-rota": "carried"
+    },
+    "evidence": [
+      "which-engineer-must-rota: ablation moved it Priya -> open; held under 2 shams",
+      "which-engineer-must-rota: the control moved it Priya -> open"
+    ],
+    "obligations": [
+      "no hidden fallback: no bypass trial was declared",
+      "presentation invariance: no presentation trial was declared"
+    ]
+  },
+  "findings": [
+    {
+      "input": "which-engineer-must-rota",
+      "category": "carried",
+      "levels": {
+        "baseline": "Priya",
+        "repeat": "Priya",
+        "ablation": "open",
+        "sham-1": "Priya",
+        "sham-2": "Priya",
+        "control": "open"
+      },
+      "evidence": [
+        "ablation moved it Priya -> open; held under 2 shams",
+        "the control moved it Priya -> open"
+      ],
+      "obligations": [
+        "no hidden fallback: no bypass trial was declared",
+        "presentation invariance: no presentation trial was declared"
+      ]
+    }
+  ]
+}
