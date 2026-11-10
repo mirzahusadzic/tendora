@@ -5,6 +5,7 @@
 [![Corpus and evidence: Apache-2.0](https://img.shields.io/badge/corpus%20%26%20evidence-Apache--2.0-blue)](licenses/Apache-2.0.txt)
 [![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Platform: macOS | Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)](#try-it)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24094773.svg)](https://doi.org/10.5281/zenodo.24094773)
 
 Tendora answers questions from a corpus of plain-language statements, organized by role: it answers only what the statements support, names every statement an answer rests on, and keeps the rest open.
 
