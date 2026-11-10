@@ -159,6 +159,23 @@ A domain's statements become a corpus Tendora answers from through corpus develo
 
 Tendora comes from _tendon_, where load is carried and resistance felt: a question is pressed into a bounded check against scoped sources, and what cannot be supported stays visible as an opening.
 
+## Cite
+
+The working paper on Zenodo describes how Tendora renders a corpus as a river, and tests which of its shapes the corpus makes and which the drawing rules make. The paper is under CC BY 4.0; its DOI always resolves to its latest version:
+
+```bibtex
+@misc{husadzic2026river,
+  author    = {Husadzic, Mirza},
+  title     = {The River and Its Rules: Rendering a Corpus's
+               Co-activation and Testing What It Makes},
+  year      = {2026},
+  publisher = {Zenodo},
+  note      = {Working paper},
+  doi       = {10.5281/zenodo.24094773},
+  url       = {https://doi.org/10.5281/zenodo.24094773}
+}
+```
+
 ## License
 
 The engine bundle in `dist/` is under the [Tendora Demo Engine License](dist/LICENSE): run it, unmodified, to evaluate, demo and research; it may not be redistributed, reverse engineered or offered as a hosted service. The payments corpus (`demo/`), the evidence, the documents and the essay's helper are under the [Apache License 2.0](licenses/Apache-2.0.txt) (with its [NOTICE](NOTICE)); the essay is under [CC BY 4.0](licenses/CC-BY-4.0.txt); the PropBank-derived lexicon under CC BY-SA 4.0. [Licensing and third-party notices](THIRD_PARTY_NOTICES.md) lists every part.
